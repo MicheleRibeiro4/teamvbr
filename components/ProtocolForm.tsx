@@ -19,33 +19,6 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
     }
   }, [data.consultantName]);
 
-  useEffect(() => {
-    const weight = parseFloat(data.physicalData.weight.replace(',', '.')) || 0;
-    const height = parseFloat(data.physicalData.height.replace(',', '.')) || 0;
-    const protein = parseFloat(data.macros.protein.value) || 0;
-
-    let updated = false;
-    const newData = { ...data };
-
-    if (weight > 0 && height > 0) {
-      const imc = (weight / (height * height)).toFixed(1);
-      if (newData.physicalData.imc !== imc) {
-        newData.physicalData.imc = imc;
-        updated = true;
-      }
-    }
-
-    if (weight > 0 && protein > 0) {
-      const ratio = `≈ ${(protein / weight).toFixed(1)}g/kg`;
-      if (newData.macros.protein.ratio !== ratio) {
-        newData.macros.protein.ratio = ratio;
-        updated = true;
-      }
-    }
-
-    if (updated) onChange(newData);
-  }, [data.physicalData.weight, data.physicalData.height, data.macros.protein.value]);
-
   const handleChange = (path: string, value: any) => {
     const newData = { ...data };
     const keys = path.split('.');
@@ -56,40 +29,40 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
   };
 
   const handleAISuggestion = async () => {
-    // Verificação rigorosa conforme diretrizes do SDK
+    // A chave DEVE ser capturada do process.env no momento exato do clique
     const apiKey = process.env.API_KEY;
     
     if (!apiKey) {
-      alert("⚠️ ERRO: Chave de API não configurada. A Inteligência VBR requer uma chave ativa no ambiente.");
+      alert("❌ ERRO: Chave de API (Gemini) não encontrada no ambiente.");
       return;
     }
 
     if (!data.clientName || !data.physicalData.weight) {
-      alert("⚠️ Por favor, preencha pelo menos o NOME e o PESO para que a IA possa analisar.");
+      alert("⚠️ Preencha o Nome e o Peso para que a IA possa analisar.");
       return;
     }
 
     setIsGenerating(true);
     try {
-      // Inicialização direta no momento do uso para evitar stale closure
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+      // Inicialização explícita conforme documentação do SDK
+      const ai = new GoogleGenAI({ apiKey: apiKey });
       
-      const prompt = `Aja como o Master Coach do Team VBR. Crie um protocolo de elite para:
+      const prompt = `Aja como o Head Coach do Team VBR. Crie um protocolo profissional de elite:
       Aluno: ${data.clientName}
       Sexo: ${data.physicalData.gender}
       Objetivo: ${data.protocolTitle}
       Peso: ${data.physicalData.weight}kg
       BF: ${data.physicalData.bodyFat}%
       
-      Gere um JSON puro com:
-      - nutritionalStrategy (texto motivador e estratégico)
-      - kcalGoal (número aproximado)
+      Gere um JSON rigorosamente estruturado com:
+      - nutritionalStrategy (texto impactante)
+      - kcalGoal (string)
       - kcalSubtext (estratégia calórica)
       - macros (protein.value, carbs.value, fats.value)
-      - meals (array com time, name, details)
-      - supplements (array com name, dosage, timing)
-      - trainingDays (array com title, focus, exercises[{name, sets}])
-      - generalObservations (conclusão impactante)`;
+      - meals (array de objetos com time, name, details)
+      - supplements (array de objetos com name, dosage, timing)
+      - trainingDays (array de objetos com title, focus, exercises[{name, sets}])
+      - generalObservations (conclusão técnica)`;
 
       const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
@@ -141,7 +114,8 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
         }
       });
 
-      const suggestion = JSON.parse(response.text);
+      const jsonText = response.text.trim();
+      const suggestion = JSON.parse(jsonText);
       
       const updatedData = {
         ...data,
@@ -157,7 +131,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
 
       onChange(updatedData);
     } catch (error: any) {
-      console.error("Erro na IA VBR:", error);
+      console.error("Erro IA:", error);
       alert(`❌ Falha na Inteligência VBR: ${error.message}`);
     } finally {
       setIsGenerating(false);
@@ -239,7 +213,9 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
           </div>
           <div>
             <h3 className="font-black text-2xl text-white uppercase tracking-tighter leading-none">Inteligência VBR</h3>
-            <p className="text-[10px] text-[#d4af37] font-black uppercase tracking-[0.2em] mt-2">Geração automática de protocolo</p>
+            <p className="text-[10px] text-[#d4af37] font-black uppercase tracking-[0.2em] mt-2">
+              {isGenerating ? 'Analisando dados do aluno...' : 'Pronta para gerar o protocolo'}
+            </p>
           </div>
         </div>
         <button 
@@ -247,7 +223,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
           disabled={isGenerating}
           className="bg-white text-black px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] flex items-center gap-3 hover:scale-105 transition-all disabled:opacity-50 shadow-2xl"
         >
-          {isGenerating ? 'Analisando...' : 'Gerar Protocolo'}
+          {isGenerating ? 'Processando...' : 'Gerar com IA'}
         </button>
       </div>
 
@@ -432,7 +408,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
           className={inputClass + " h-32"} 
           value={data.generalObservations} 
           onChange={(e) => handleChange('generalObservations', e.target.value)} 
-          placeholder="Recomendações finais..."
+          placeholder="Recomendações finais do coach..."
         />
       </section>
     </div>

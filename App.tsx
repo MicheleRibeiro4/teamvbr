@@ -37,7 +37,7 @@ const App: React.FC = () => {
       setCloudStatus('online');
     } catch (e: any) {
       setCloudStatus('error');
-      console.error("Erro na conexão com o Banco de Dados:", e);
+      console.error("Erro na carga inicial:", e);
     } finally {
       setIsSyncing(false);
     }
@@ -48,6 +48,11 @@ const App: React.FC = () => {
   }, []);
 
   const handleSave = async () => {
+    if (!data.clientName) {
+      alert("⚠️ Defina o nome do aluno antes de salvar.");
+      return;
+    }
+    
     setIsSyncing(true);
     try {
       const currentId = data.id || "vbr-" + Math.random().toString(36).substr(2, 9);
@@ -72,7 +77,7 @@ const App: React.FC = () => {
     } catch (err: any) {
       console.error(err);
       setCloudStatus('error');
-      alert(`⚠️ ERRO NO BANCO DE DADOS: ${err.message}`);
+      alert(`⚠️ ERRO NO SUPABASE: ${err.message}`);
     } finally {
       setIsSyncing(false);
     }
@@ -101,23 +106,25 @@ const App: React.FC = () => {
     }
   };
 
-  const sqlScript = `-- 1. CRIAR TABELA COM COLUNA client_name EXPLÍCITA
-CREATE TABLE IF NOT EXISTS public.protocols (
+  const sqlScript = `-- SCRIPT DE REPARO DEFINITIVO VBR
+-- 1. Remove para garantir limpeza de cache
+DROP TABLE IF EXISTS public.protocols;
+
+-- 2. Cria a tabela com a estrutura exata exigida pelo app
+CREATE TABLE public.protocols (
   id text NOT NULL PRIMARY KEY,
   client_name text NOT NULL,
   updated_at timestamp with time zone DEFAULT now(),
   data jsonb NOT NULL
 );
 
--- 2. DESATIVAR RLS PARA TESTES (OU CONFIGURAR PERMISSÕES)
+-- 3. Abre permissões para o App Web (Anon)
 ALTER TABLE public.protocols DISABLE ROW LEVEL SECURITY;
-
--- 3. GARANTIR PERMISSÕES AO USUÁRIO ANON (WEB)
 GRANT ALL ON TABLE public.protocols TO anon;
 GRANT ALL ON TABLE public.protocols TO authenticated;
 GRANT ALL ON TABLE public.protocols TO service_role;
 
--- 4. FORÇAR RECARREGAMENTO DO CACHE DE ESQUEMA (MUITO IMPORTANTE)
+-- 4. Comando para atualizar o cache do Supabase IMEDIATAMENTE
 NOTIFY pgrst, 'reload schema';`;
 
   return (
@@ -126,7 +133,7 @@ NOTIFY pgrst, 'reload schema';`;
       {showToast && (
         <div className="fixed bottom-10 right-10 z-[100] animate-in slide-in-from-right-10 duration-500">
            <div className="bg-[#d4af37] text-black px-8 py-4 rounded-2xl font-black uppercase text-xs flex items-center gap-3 shadow-[0_0_40px_rgba(212,175,55,0.4)]">
-              <CheckCircle2 size={20} /> Banco de Dados Atualizado
+              <CheckCircle2 size={20} /> Banco Atualizado
            </div>
         </div>
       )}
@@ -144,13 +151,13 @@ NOTIFY pgrst, 'reload schema';`;
               cloudStatus === 'online' ? 'bg-green-500' : 'bg-red-500'
             }`}></div>
             <span className="text-[10px] font-black uppercase tracking-widest text-white/40">
-              {isSyncing ? 'Conectando...' : cloudStatus === 'online' ? 'Banco de Dados Online' : 'Erro de Conexão'}
+              {isSyncing ? 'Sincronizando...' : cloudStatus === 'online' ? 'Supabase Online' : 'Erro de Estrutura'}
             </span>
           </div>
         </div>
 
         <div className="flex items-center gap-2 md:gap-4">
-          <button onClick={() => setActiveView('search')} className="p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all text-white/60 hover:text-white" title="Listar Alunos do Banco">
+          <button onClick={() => setActiveView('search')} className="p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all text-white/60 hover:text-white" title="Lista de Alunos">
             <FolderOpen size={20} />
           </button>
           <button onClick={handleNew} className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-white px-4 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all">
@@ -163,7 +170,7 @@ NOTIFY pgrst, 'reload schema';`;
               className="flex items-center gap-2 bg-[#d4af37] text-black px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all shadow-lg disabled:opacity-50"
             >
               {isSyncing ? <RefreshCw size={16} className="animate-spin" /> : <Database size={16} />}
-              Salvar Banco
+              Salvar Nuvem
             </button>
           )}
         </div>
@@ -174,15 +181,15 @@ NOTIFY pgrst, 'reload schema';`;
         {cloudStatus === 'error' && (
           <div className="bg-red-500/10 border border-red-500/20 p-8 rounded-[2rem] mb-10">
             <div className="flex flex-col md:flex-row items-center gap-6 justify-between">
-              <div className="flex items-center gap-4">
-                <AlertTriangle className="text-red-500" size={40} />
+              <div className="flex items-center gap-4 text-left">
+                <AlertTriangle className="text-red-500 shrink-0" size={40} />
                 <div>
-                  <h4 className="font-black uppercase text-sm text-red-400">Falha de Esquema no Banco de Dados</h4>
-                  <p className="text-xs text-white/60">A coluna 'client_name' ou a tabela não foram encontradas. Execute o script abaixo:</p>
+                  <h4 className="font-black uppercase text-sm text-red-400">Falha de Colunas no Supabase</h4>
+                  <p className="text-xs text-white/60">O banco não reconheceu 'client_name'. Clique no botão ao lado para copiar o reparo.</p>
                 </div>
               </div>
               <button 
-                onClick={() => { navigator.clipboard.writeText(sqlScript); alert('Script SQL robusto copiado! Cole no SQL Editor do Supabase.'); }}
+                onClick={() => { navigator.clipboard.writeText(sqlScript); alert('Script SQL Copiado! Cole no SQL Editor do seu Supabase e clique em RUN.'); }}
                 className="flex items-center gap-2 bg-white/5 hover:bg-white/10 px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all border border-white/10"
               >
                 <Code size={16} /> Copiar SQL de Reparo

@@ -3,7 +3,6 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { ProtocolData } from '../types';
 
 const SUPABASE_URL = "https://xqwzmvzfemjkvaquxedz.supabase.co";
-// Chave Anon JWT correta
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhxd3ptdnpmZW1qa3ZhcXV4ZWR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5OTc1NjQsImV4cCI6MjA4NjU3MzU2NH0.R2MdOlktktHFuBe0JKbUwceqkrYIFsiphEThrYPWsZ8";
 
 const getSupabaseClient = (): SupabaseClient | null => {
@@ -20,7 +19,7 @@ const getSupabaseClient = (): SupabaseClient | null => {
 
 export const supabase = getSupabaseClient();
 
-const LOCAL_STORAGE_KEY = 'vbr_db_cache';
+const LOCAL_STORAGE_KEY = 'vbr_db_cache_v3';
 
 export const db = {
   isCloudEnabled(): boolean {
@@ -37,8 +36,8 @@ export const db = {
         .order('updated_at', { ascending: false });
 
       if (error) {
-        if (error.message.includes('client_name')) {
-          throw new Error("A coluna 'client_name' não foi detectada. Por favor, execute o script SQL de reparo no painel do Supabase.");
+        if (error.message.includes('client_name') || error.message.includes('relation "protocols" does not exist')) {
+           throw new Error("Estrutura do Supabase incompatível ou inexistente.");
         }
         throw error;
       }
@@ -54,7 +53,7 @@ export const db = {
       }
       return [];
     } catch (err: any) {
-      console.warn("Usando cache local devido a erro de conexão/esquema:", err.message);
+      console.warn("Falha ao buscar na nuvem. Tentando cache local...", err.message);
       const cache = localStorage.getItem(LOCAL_STORAGE_KEY);
       return cache ? JSON.parse(cache) : [];
     }
@@ -66,6 +65,7 @@ export const db = {
     const updatedAt = new Date().toISOString();
     const updatedProtocol = { ...protocol, updatedAt };
 
+    // Verificação de segurança: upsert exige id e client_name
     const { error } = await supabase
       .from('protocols')
       .upsert({
@@ -76,9 +76,9 @@ export const db = {
       }, { onConflict: 'id' });
 
     if (error) {
-      console.error("Erro ao salvar no banco:", error);
+      console.error("Erro no salvamento Supabase:", error);
       if (error.message.includes('client_name')) {
-        throw new Error("Coluna 'client_name' ausente. Use o botão 'Copiar SQL de Reparo' no topo da página.");
+        throw new Error("A coluna 'client_name' não foi encontrada. Rode o SQL de reparo.");
       }
       throw new Error(error.message);
     }
