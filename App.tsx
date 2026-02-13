@@ -135,7 +135,7 @@ const App: React.FC = () => {
       <header className="h-24 border-b border-white/10 px-8 flex items-center justify-between sticky top-0 bg-[#0a0a0a]/90 backdrop-blur-xl z-50 no-print">
         <div className="flex items-center gap-6">
           <button onClick={() => setActiveView('home')} className="hover:scale-105 transition-transform">
-            <img src={LOGO_RHINO_BLACK} alt="VBR Rhino" className="h-20 w-auto" />
+            <img src={LOGO_RHINO_BLACK} alt="VBR Logo" className="h-20 w-auto" />
           </button>
           <div className="h-8 w-px bg-white/10 hidden md:block"></div>
           
@@ -243,27 +243,33 @@ const App: React.FC = () => {
         )}
 
         {activeView === 'protocol' && (
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
-            <div className="space-y-8 animate-in fade-in slide-in-from-left-4 duration-500 no-print">
-               <div className="bg-white/5 p-8 rounded-[3rem] border border-white/10">
-                  <h3 className="text-[#d4af37] font-black text-xs uppercase tracking-widest mb-8 flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-[#d4af37] shadow-[0_0_10px_#d4af37]"></div> Console de Configuração
+          <div className="flex flex-col gap-16">
+            <div className="space-y-8 animate-in fade-in slide-in-from-top-4 duration-500 no-print max-w-4xl mx-auto w-full">
+               <div className="bg-white/5 p-10 rounded-[3rem] border border-white/10 shadow-xl">
+                  <h3 className="text-[#d4af37] font-black text-sm uppercase tracking-widest mb-10 flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-[#d4af37] shadow-[0_0_10px_#d4af37]"></div> 
+                    Configuração do Protocolo
                   </h3>
                   <ProtocolForm data={data} onChange={setData} />
                </div>
             </div>
-            <div className="relative">
-              <div className="sticky top-48 flex flex-col items-center">
-                <div className="bg-black/40 text-[#d4af37] px-8 py-3 rounded-full font-black text-[11px] uppercase tracking-widest mb-10 no-print border border-[#d4af37]/30 backdrop-blur-md shadow-2xl">Visualização HD de Documento</div>
-                <div className="w-full flex justify-center bg-[#111] p-4 md:p-12 rounded-[4rem] border border-white/5 shadow-2xl overflow-hidden min-h-[1200px]">
+
+            <div className="relative w-full">
+              <div className="flex flex-col items-center">
+                <div className="bg-black/40 text-[#d4af37] px-10 py-4 rounded-full font-black text-[12px] uppercase tracking-widest mb-12 no-print border border-[#d4af37]/30 backdrop-blur-md shadow-2xl">
+                  Visualização do Documento (A4)
+                </div>
+                
+                <div className="w-full flex justify-center bg-[#111] p-4 md:p-16 rounded-[4rem] border border-white/5 shadow-inner overflow-hidden min-h-[1200px]">
                    <ProtocolPreview data={data} />
                 </div>
-                <div className="flex gap-4 mt-8 no-print">
-                  <button onClick={handleSave} className="flex items-center gap-4 bg-[#d4af37] text-black px-12 py-5 rounded-[2rem] font-black text-[12px] uppercase tracking-[0.3em] hover:scale-105 transition-all shadow-xl">
-                    <Save size={20} /> Sincronizar Agora
+
+                <div className="flex gap-6 mt-16 no-print mb-20">
+                  <button onClick={handleSave} className="flex items-center gap-4 bg-[#d4af37] text-black px-16 py-6 rounded-[2.5rem] font-black text-[14px] uppercase tracking-[0.3em] hover:scale-105 transition-all shadow-2xl">
+                    <Save size={24} /> Sincronizar Tudo
                   </button>
-                  <button onClick={() => window.print()} className="flex items-center gap-4 bg-white text-black px-12 py-5 rounded-[2rem] font-black text-[12px] uppercase tracking-[0.3em] hover:scale-105 transition-all shadow-xl">
-                    <Printer size={20} /> Imprimir PDF
+                  <button onClick={() => window.print()} className="flex items-center gap-4 bg-white text-black px-16 py-6 rounded-[2.5rem] font-black text-[14px] uppercase tracking-[0.3em] hover:scale-105 transition-all shadow-2xl">
+                    <Printer size={24} /> Exportar PDF
                   </button>
                 </div>
               </div>
@@ -301,7 +307,7 @@ const App: React.FC = () => {
       </main>
 
       <footer className="mt-20 border-t border-white/5 p-16 text-center no-print opacity-20">
-         <img src={LOGO_RHINO_BLACK} alt="VBR Rhino" className="h-20 mx-auto mb-6 grayscale" />
+         <img src={LOGO_RHINO_BLACK} alt="VBR Logo" className="h-20 mx-auto mb-6 grayscale" />
          <p className="text-[11px] font-black text-white uppercase tracking-[0.8em]">Team VBR Engineering • Cloud Persistent Mode © {new Date().getFullYear()}</p>
       </footer>
     </div>

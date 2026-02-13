@@ -9,7 +9,7 @@ interface Props {
 
 const ProtocolPreview: React.FC<Props> = ({ data }) => {
   return (
-    <div className="flex flex-col items-center w-full max-w-[850px] mx-auto bg-transparent">
+    <div className="flex flex-col items-center w-full max-w-[850px] mx-auto bg-transparent print:max-w-none">
       
       {/* PÁGINA 1: CAPA PREMIUM - A4 FIXED HEIGHT */}
       <div className="bg-[#0a0a0a] text-white w-full h-[1120px] min-h-[1120px] flex flex-col items-center justify-between p-16 relative page-break border-b-[24px] border-[#d4af37] overflow-hidden">
@@ -17,14 +17,13 @@ const ProtocolPreview: React.FC<Props> = ({ data }) => {
         
         <div className="flex flex-col items-center pt-32 w-full relative z-10">
           <div className="p-4 bg-white/5 rounded-[3rem] border border-white/10 backdrop-blur-md mb-20 shadow-[0_0_60px_rgba(212,175,55,0.25)]">
-            {/* Logo principal com tratamento de erro e carregamento prioritário */}
             <img 
                 src={LOGO_RHINO_BLACK} 
                 alt="Logo VBR" 
                 className="w-80 h-auto" 
                 onError={(e) => {
                     const target = e.target as HTMLImageElement;
-                    target.src = "https://i.ibb.co/m5vjF6P9/vbr-logo-gold.png"; // Fallback para logo antigo se o novo falhar
+                    target.src = "https://i.ibb.co/m5vjF6P9/vbr-logo-gold.png"; 
                 }}
             />
           </div>
@@ -57,7 +56,7 @@ const ProtocolPreview: React.FC<Props> = ({ data }) => {
       {/* PÁGINA 2: AVALIAÇÃO FÍSICA HD */}
       <div className="bg-white w-full h-[1120px] min-h-[1120px] p-20 flex flex-col page-break text-black border-b-[1px] border-gray-100 relative">
         <div className="absolute top-10 right-10 opacity-20">
-           <img src={LOGO_RHINO_WHITE} alt="" className="w-40" />
+           <img src={LOGO_RHINO_WHITE} alt="Logo VBR" className="w-40" />
         </div>
         <div className="flex justify-between items-end border-b-8 border-[#d4af37] pb-10 mb-16">
           <div>
@@ -120,7 +119,7 @@ const ProtocolPreview: React.FC<Props> = ({ data }) => {
       {/* PÁGINA 3: NUTRIÇÃO E MACROS */}
       <div className="bg-white w-full h-[1120px] min-h-[1120px] p-20 flex flex-col page-break text-black border-b-[1px] border-gray-100 relative">
         <div className="absolute top-10 right-10 opacity-20">
-           <img src={LOGO_RHINO_WHITE} alt="" className="w-40" />
+           <img src={LOGO_RHINO_WHITE} alt="Logo VBR" className="w-40" />
         </div>
         <div className="flex justify-between items-end border-b-8 border-[#d4af37] pb-10 mb-16">
           <div>
@@ -166,7 +165,7 @@ const ProtocolPreview: React.FC<Props> = ({ data }) => {
       {/* PÁGINA 4: CRONOGRAMA DE REFEIÇÕES */}
       <div className="bg-white w-full h-[1120px] min-h-[1120px] p-20 flex flex-col page-break text-black border-b-[1px] border-gray-100 relative">
         <div className="absolute top-10 right-10 opacity-20">
-           <img src={LOGO_RHINO_WHITE} alt="" className="w-40" />
+           <img src={LOGO_RHINO_WHITE} alt="Logo VBR" className="w-40" />
         </div>
         <div className="flex justify-between items-end border-b-8 border-[#d4af37] pb-10 mb-16">
           <div>
@@ -201,7 +200,7 @@ const ProtocolPreview: React.FC<Props> = ({ data }) => {
       {/* PÁGINA 5: TREINAMENTO ELITE */}
       <div className="bg-white w-full h-[1120px] min-h-[1120px] p-20 flex flex-col page-break text-black border-b-[1px] border-gray-100 relative">
         <div className="absolute top-10 right-10 opacity-20">
-           <img src={LOGO_RHINO_WHITE} alt="" className="w-40" />
+           <img src={LOGO_RHINO_WHITE} alt="Logo VBR" className="w-40" />
         </div>
         <div className="flex justify-between items-end border-b-8 border-[#d4af37] pb-10 mb-16">
           <div>
@@ -245,7 +244,7 @@ const ProtocolPreview: React.FC<Props> = ({ data }) => {
            </div>
            
            <div className="pt-24 flex flex-col items-center">
-             <img src={LOGO_RHINO_BLACK} alt="VBR Rhino" className="w-80 mx-auto mb-16 drop-shadow-[0_0_30px_rgba(212,175,55,0.4)]" />
+             <img src={LOGO_RHINO_BLACK} alt="VBR Logo" className="w-80 mx-auto mb-16 drop-shadow-[0_0_30px_rgba(212,175,55,0.4)]" />
              <p className="text-5xl font-black tracking-[0.8em] uppercase font-montserrat">TEAM VBR</p>
              <div className="w-64 h-2 bg-[#d4af37] my-10 shadow-[0_0_20px_rgba(212,175,55,0.6)]"></div>
              <p className="text-[16px] font-black text-white/40 tracking-[2em] uppercase">NO EXCUSES • NO LIMITS</p>

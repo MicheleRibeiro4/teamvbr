@@ -1,10 +1,9 @@
 
 import { ProtocolData } from './types';
 
-// Logos oficiais Team VBR (Rhino Edition)
-// Usando i.ibb para garantir persistência - Caso a imagem não carregue, verifique se a URL está ativa.
-export const LOGO_RHINO_BLACK = "https://i.ibb.co/3ykXW2K/vbr-rhino-black.png"; 
-export const LOGO_RHINO_WHITE = "https://i.ibb.co/Csq9zX9/vbr-rhino-white.png"; 
+// Utilizando o logo local conforme solicitado pelo usuário
+export const LOGO_RHINO_BLACK = "logo.png"; 
+export const LOGO_RHINO_WHITE = "logo.png"; 
 
 export const CONSULTANT_DEFAULT = {
   consultantName: "Vinicius Brasil dos Santos Otero",
@@ -54,7 +53,7 @@ CLÁUSULA 5 – RESPONSABILIDADES DO CONTRATADO
 a) Fornecer os materiais informativos contratados dentro do prazo acordado;
 b) Responder dúvidas do contratante em até 24 (vinte e quatro) horas, em dias úteis, por meio do canal oficial de comunicação (WhatsApp/e-mail), limitando-se a esclarecimentos sobre os conteúdos informativos fornecidos;
 c) Manter sigilo absoluto sobre os dados e informações do contratante, nos termos da LGPD.
-5.2. O contratado NÃO RESPONDE por lesões, danos ou prejuízos decorrentes da execução das atividades, por se tratar de conteúdo informativo e não prescritivo, cabendo ao contratante a decisão livre e informada de seguir ou não as sugestões repassadas.
+5.2. O contratado NÃO RESPONDE por lenções, danos ou prejuízos decorrentes da execução das atividades, por se tratar de conteúdo informativo e não prescritivo, cabendo ao contratante a decisão livre e informada de seguir ou não as sugestões repassadas.
 
 CLÁUSULA 6 – RESULTADOS
 6.1. O contratante declara estar ciente de que:
