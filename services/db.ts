@@ -1,35 +1,116 @@
 
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { ProtocolData } from '../types';
 
-const STORAGE_KEY = 'vbr_cloud_data';
+// Credenciais oficiais do projeto fornecidas
+const SUPABASE_URL = "https://xqwzmvzfemjkvaquxedz.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_C3BBDC86gpANb_LYU0rwGg_kwQPLeVQ";
+
+// Inicialização do Cliente
+const getSupabaseClient = (): SupabaseClient | null => {
+  if (SUPABASE_URL && SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.includes('sb_publishable')) {
+     // Aviso: Chaves que começam com sb_publishable costumam ser de outros serviços.
+     // Supabase Anon Keys geralmente começam com 'eyJ'. 
+     // Mas usaremos conforme fornecido.
+  }
+  
+  try {
+    return createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  } catch (e) {
+    console.error('Erro ao conectar com Supabase:', e);
+    return null;
+  }
+};
+
+export const supabase = getSupabaseClient();
+
+const LOCAL_STORAGE_KEY = 'vbr_cloud_sync_cache';
 
 export const db = {
-  // Simula uma chamada de API para o banco de dados
+  isCloudEnabled(): boolean {
+    return !!supabase;
+  },
+
   async getAll(): Promise<ProtocolData[]> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const data = localStorage.getItem(STORAGE_KEY);
-        resolve(data ? JSON.parse(data) : []);
-      }, 500); // Simula latência de rede
-    });
+    if (supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('protocols')
+          .select('*')
+          .order('updated_at', { ascending: false });
+
+        if (!error && data) {
+          const cloudProtocols = data.map(item => ({
+            ...item.data,
+            id: item.id,
+            updatedAt: item.updated_at
+          }));
+          // Atualiza cache local para modo offline
+          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(cloudProtocols));
+          return cloudProtocols;
+        }
+      } catch (err) {
+        console.warn('Erro Cloud, carregando local:', err);
+      }
+    }
+
+    const localData = localStorage.getItem(LOCAL_STORAGE_KEY);
+    return localData ? JSON.parse(localData) : [];
   },
 
-  async save(protocols: ProtocolData[]): Promise<void> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(protocols));
-        resolve();
-      }, 800);
-    });
+  async saveProtocol(protocol: ProtocolData): Promise<void> {
+    const updatedAt = new Date().toISOString();
+    const updatedProtocol = { ...protocol, updatedAt };
+
+    // 1. Salva no cache local imediatamente (Offline-First)
+    const all = await this.getAll();
+    const index = all.findIndex(p => p.id === protocol.id);
+    if (index >= 0) {
+      all[index] = updatedProtocol;
+    } else {
+      all.unshift(updatedProtocol);
+    }
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(all));
+
+    // 2. Tenta sincronizar com Supabase
+    if (supabase) {
+      const { error } = await supabase
+        .from('protocols')
+        .upsert({
+          id: protocol.id,
+          client_name: protocol.clientName,
+          updated_at: updatedAt,
+          data: updatedProtocol
+        });
+
+      if (error) {
+        console.error('Erro de Sincronização:', error);
+        throw new Error('Erro ao salvar na nuvem. Verifique sua conexão.');
+      }
+    }
   },
 
-  // Funções de Backup Manual
+  async deleteProtocol(id: string): Promise<void> {
+    // Remove local
+    const all = await this.getAll();
+    const filtered = all.filter(p => p.id !== id);
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(filtered));
+
+    // Remove Nuvem
+    if (supabase) {
+      const { error } = await supabase
+        .from('protocols')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    }
+  },
+
   exportBackup(protocols: ProtocolData[]) {
     const dataStr = JSON.stringify(protocols, null, 2);
     const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    
-    const exportFileDefaultName = `vbr_backup_${new Date().toISOString().split('T')[0]}.json`;
-    
+    const exportFileDefaultName = `vbr_backup_full_${new Date().toISOString().split('T')[0]}.json`;
     const linkElement = document.createElement('a');
     linkElement.setAttribute('href', dataUri);
     linkElement.setAttribute('download', exportFileDefaultName);
@@ -42,14 +123,9 @@ export const db = {
       reader.onload = (e) => {
         try {
           const content = e.target?.result as string;
-          const parsed = JSON.parse(content);
-          if (Array.isArray(parsed)) {
-            resolve(parsed);
-          } else {
-            reject('Formato de backup inválido');
-          }
+          resolve(JSON.parse(content));
         } catch (err) {
-          reject('Erro ao ler arquivo de backup');
+          reject('Erro ao ler arquivo');
         }
       };
       reader.readAsText(file);

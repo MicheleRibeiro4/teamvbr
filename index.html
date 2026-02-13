@@ -25,7 +25,6 @@
         font-family: 'Montserrat', sans-serif;
       }
       
-      /* Ajustes Críticos de Impressão */
       @media print {
         @page {
           margin: 0;
@@ -45,8 +44,8 @@
           break-after: page !important;
           margin: 0 !important;
           padding: 0 !important;
-          height: 297mm !important; /* Altura exata A4 */
-          width: 210mm !important; /* Largura exata A4 */
+          height: 297mm !important;
+          width: 210mm !important;
           overflow: hidden;
         }
         * {
@@ -55,7 +54,6 @@
         }
       }
 
-      /* Scrollbar */
       ::-webkit-scrollbar { width: 6px; }
       ::-webkit-scrollbar-track { background: #0a0a0a; }
       ::-webkit-scrollbar-thumb { background: #d4af37; border-radius: 10px; }
@@ -69,6 +67,7 @@
         "react-dom": "https://esm.sh/react-dom@^19.2.4",
         "react-dom/client": "https://esm.sh/react-dom@^19.2.4/client",
         "@google/genai": "https://esm.sh/@google/genai@^1.41.0",
+        "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2",
         "react-dom/": "https://esm.sh/react-dom@^19.2.4/"
       }
     }

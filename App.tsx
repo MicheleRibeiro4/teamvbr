@@ -17,15 +17,15 @@ import {
   ScrollText, 
   Printer,
   FolderOpen,
-  Home,
   ArrowLeft,
   History,
-  Cloud,
-  CloudOff,
   RefreshCw,
   Download,
   Upload,
-  Database
+  Database,
+  CloudOff,
+  Cloud,
+  CheckCircle2
 } from 'lucide-react';
 
 type ViewMode = 'home' | 'search' | 'protocol' | 'contract' | 'evolution' | 'settings';
@@ -36,16 +36,23 @@ const App: React.FC = () => {
   const [savedProtocols, setSavedProtocols] = useState<ProtocolData[]>([]);
   const [isSyncing, setIsSyncing] = useState(false);
   const [cloudStatus, setCloudStatus] = useState<'online' | 'offline' | 'syncing'>('online');
+  const [showToast, setShowToast] = useState(false);
 
-  // Carregamento Inicial do "Banco de Dados"
-  useEffect(() => {
-    const loadData = async () => {
-      setCloudStatus('syncing');
+  const loadData = async () => {
+    setIsSyncing(true);
+    setCloudStatus('syncing');
+    try {
       const protocols = await db.getAll();
       setSavedProtocols(protocols);
-      if (protocols.length > 0) setData(protocols[0]);
-      setCloudStatus('online');
-    };
+      setCloudStatus(db.isCloudEnabled() ? 'online' : 'offline');
+    } catch (e) {
+      setCloudStatus('offline');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  useEffect(() => {
     loadData();
   }, []);
 
@@ -53,26 +60,37 @@ const App: React.FC = () => {
     setIsSyncing(true);
     setCloudStatus('syncing');
     
-    const now = new Date().toISOString();
-    let updatedList: ProtocolData[];
-    const currentId = data.id || "vbr-" + Math.random().toString(36).substr(2, 9);
-    const index = savedProtocols.findIndex(p => p.id === currentId);
-    
-    const updatedProtocol = { ...data, id: currentId, updatedAt: now };
-    
-    if (index >= 0) {
-      updatedList = [...savedProtocols];
-      updatedList[index] = updatedProtocol;
-    } else {
-      updatedList = [updatedProtocol, ...savedProtocols];
+    try {
+      const currentId = data.id || "vbr-" + Math.random().toString(36).substr(2, 9);
+      const updatedProtocol = { 
+        ...data, 
+        id: currentId, 
+        updatedAt: new Date().toISOString() 
+      };
+      
+      await db.saveProtocol(updatedProtocol);
+      
+      // Atualização imediata da UI
+      setSavedProtocols(prev => {
+        const index = prev.findIndex(p => p.id === currentId);
+        if (index >= 0) {
+          const newList = [...prev];
+          newList[index] = updatedProtocol;
+          return newList;
+        }
+        return [updatedProtocol, ...prev];
+      });
+      
       setData(updatedProtocol);
+      setCloudStatus('online');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+    } catch (err: any) {
+      alert(err.message || 'Erro ao sincronizar');
+      setCloudStatus('offline');
+    } finally {
+      setIsSyncing(false);
     }
-
-    await db.save(updatedList);
-    setSavedProtocols(updatedList);
-    setIsSyncing(false);
-    setCloudStatus('online');
-    alert('✅ Dados sincronizados com a nuvem VBR!');
   };
 
   const handleExport = () => db.exportBackup(savedProtocols);
@@ -82,13 +100,13 @@ const App: React.FC = () => {
     if (file) {
       try {
         const imported = await db.importBackup(file);
-        if (confirm(`Deseja importar ${imported.length} registros? Isso substituirá os dados atuais.`)) {
-          await db.save(imported);
-          setSavedProtocols(imported);
-          alert('Backup importado com sucesso!');
+        if (confirm(`Importar ${imported.length} registros para a nuvem?`)) {
+          for (const p of imported) await db.saveProtocol(p);
+          await loadData();
+          alert('Backup restaurado com sucesso!');
         }
       } catch (err) {
-        alert(err);
+        alert('Erro ao importar backup.');
       }
     }
   };
@@ -102,7 +120,6 @@ const App: React.FC = () => {
     setActiveView('protocol');
   };
 
-  // Fix: Added handleNewCheckin to create a new session record for the same student
   const handleNewCheckin = () => {
     const newCheckin: ProtocolData = {
       ...data,
@@ -111,7 +128,7 @@ const App: React.FC = () => {
     };
     setData(newCheckin);
     setActiveView('protocol');
-    alert('🚀 Novo check-in iniciado! Atualize os dados físicos e o protocolo.');
+    alert('🚀 Novo check-in de evolução iniciado!');
   };
 
   const loadStudent = (student: ProtocolData, view: ViewMode = 'protocol') => {
@@ -120,18 +137,29 @@ const App: React.FC = () => {
   };
 
   const deleteStudent = async (id: string) => {
-    if(confirm('Excluir este registro permanentemente?')) {
-      const filtered = savedProtocols.filter(p => p.id !== id);
-      await db.save(filtered);
-      setSavedProtocols(filtered);
-      if (activeView !== 'home') setActiveView('home');
+    if(confirm('Excluir este aluno permanentemente da nuvem?')) {
+      try {
+        await db.deleteProtocol(id);
+        setSavedProtocols(prev => prev.filter(p => p.id !== id));
+        if (activeView !== 'home') setActiveView('home');
+      } catch (err) {
+        alert('Erro ao deletar.');
+      }
     }
   };
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white font-sans selection:bg-[#d4af37] selection:text-black">
       
-      {/* HEADER COM STATUS DE NUVEM */}
+      {/* TOAST DE SUCESSO */}
+      {showToast && (
+        <div className="fixed bottom-10 right-10 z-[100] animate-in slide-in-from-right-10 duration-500">
+           <div className="bg-[#d4af37] text-black px-8 py-4 rounded-2xl font-black uppercase text-xs flex items-center gap-3 shadow-[0_0_40px_rgba(212,175,55,0.4)]">
+              <CheckCircle2 size={20} /> Sincronizado com Nuvem VBR
+           </div>
+        </div>
+      )}
+
       <header className="h-24 border-b border-white/10 px-8 flex items-center justify-between sticky top-0 bg-[#0a0a0a]/90 backdrop-blur-xl z-50 no-print">
         <div className="flex items-center gap-6">
           <button onClick={() => setActiveView('home')} className="hover:scale-105 transition-transform">
@@ -139,21 +167,27 @@ const App: React.FC = () => {
           </button>
           <div className="h-8 w-px bg-white/10 hidden md:block"></div>
           
-          {/* Cloud Indicator */}
           <div className="hidden lg:flex items-center gap-3 px-4 py-2 bg-white/5 rounded-full border border-white/5">
-            <div className={`w-2 h-2 rounded-full ${cloudStatus === 'syncing' ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'} shadow-[0_0_10px_rgba(34,197,94,0.4)]`}></div>
+            <div className={`w-2 h-2 rounded-full ${
+              cloudStatus === 'syncing' ? 'bg-yellow-500 animate-pulse' : 
+              cloudStatus === 'online' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.4)]' : 
+              'bg-red-500 opacity-50'
+            }`}></div>
             <span className="text-[10px] font-black uppercase tracking-widest text-white/40">
-              {cloudStatus === 'syncing' ? 'Sincronizando...' : 'Nuvem VBR: Ativa'}
+              {cloudStatus === 'syncing' ? 'Sincronizando...' : 
+               cloudStatus === 'online' ? 'Cloud VBR: Conectado' : 
+               'Offline / Erro de Chave'}
             </span>
+            {cloudStatus === 'online' ? <Cloud size={12} className="text-[#d4af37]" /> : <CloudOff size={12} className="text-red-500" />}
           </div>
         </div>
 
         <div className="flex items-center gap-2 md:gap-4">
           <div className="flex items-center gap-1 bg-white/5 p-1 rounded-xl no-print mr-2">
-            <button onClick={handleExport} className="p-2.5 hover:bg-white/10 rounded-lg text-white/40 hover:text-[#d4af37] transition-all" title="Exportar Backup JSON">
+            <button onClick={handleExport} className="p-2.5 hover:bg-white/10 rounded-lg text-white/40 hover:text-[#d4af37] transition-all" title="Backup Cloud">
               <Download size={18} />
             </button>
-            <label className="p-2.5 hover:bg-white/10 rounded-lg text-white/40 hover:text-[#d4af37] transition-all cursor-pointer" title="Importar Backup JSON">
+            <label className="p-2.5 hover:bg-white/10 rounded-lg text-white/40 hover:text-[#d4af37] transition-all cursor-pointer" title="Importar">
               <Upload size={18} />
               <input type="file" className="hidden" onChange={handleImport} accept=".json" />
             </label>
@@ -174,13 +208,12 @@ const App: React.FC = () => {
               className="flex items-center gap-2 bg-[#d4af37] text-black px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all shadow-lg disabled:opacity-50"
             >
               {isSyncing ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
-              {isSyncing ? 'Sincronizando' : 'Sincronizar'}
+              {isSyncing ? 'Sincronizando' : 'Sincronizar Cloud'}
             </button>
           )}
         </div>
       </header>
 
-      {/* Navegação Secundária */}
       {activeView !== 'home' && activeView !== 'search' && (
         <nav className="flex justify-center bg-[#0a0a0a] border-b border-white/5 no-print sticky top-24 z-40 bg-[#0a0a0a]/95 backdrop-blur-md">
           <div className="flex gap-4 md:gap-8 p-4 overflow-x-auto no-scrollbar">
@@ -206,25 +239,27 @@ const App: React.FC = () => {
           <div className="space-y-12">
             <MainDashboard protocols={savedProtocols} onNew={handleNew} onList={() => setActiveView('search')} onLoadStudent={loadStudent} />
             
-            {/* Widget de Banco de Dados */}
+            {/* CARD DE STATUS DA NUVEM */}
             <div className="bg-white/5 p-10 rounded-[3rem] border border-white/10 flex flex-col md:flex-row items-center justify-between gap-8">
               <div className="flex items-center gap-6">
-                <div className="w-16 h-16 bg-[#d4af37]/10 rounded-2xl flex items-center justify-center text-[#d4af37]">
+                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${cloudStatus === 'online' ? 'bg-[#d4af37]/10 text-[#d4af37]' : 'bg-red-500/10 text-red-500'}`}>
                   <Database size={32} />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-black uppercase tracking-tighter">Gerenciamento de Dados</h3>
-                  <p className="text-white/40 text-sm font-medium">Seus dados estão protegidos localmente e prontos para sincronização em nuvem.</p>
+                  <h3 className="text-2xl font-black uppercase tracking-tighter">
+                    {cloudStatus === 'online' ? 'Base de Dados VBR Cloud' : 'Erro de Conexão Cloud'}
+                  </h3>
+                  <p className="text-white/40 text-sm font-medium max-w-xl">
+                    {cloudStatus === 'online' 
+                      ? 'Todos os seus protocolos estão salvos de forma segura no Supabase e disponíveis em qualquer dispositivo.' 
+                      : 'Não foi possível conectar ao Supabase. Verifique se as chaves fornecidas são válidas e se a tabela "protocols" foi criada.'}
+                  </p>
                 </div>
               </div>
               <div className="flex gap-4">
-                <button onClick={handleExport} className="flex items-center gap-3 bg-white/5 hover:bg-white/10 text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all">
-                  <Download size={18} /> Exportar Backup
+                <button onClick={loadData} className="flex items-center gap-3 bg-white/5 hover:bg-white/10 text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all">
+                  <RefreshCw size={18} className={isSyncing ? 'animate-spin' : ''} /> Atualizar Lista
                 </button>
-                <label className="flex items-center gap-3 bg-[#d4af37] text-black px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all cursor-pointer">
-                  <Upload size={18} /> Importar Dados
-                  <input type="file" className="hidden" onChange={handleImport} accept=".json" />
-                </label>
               </div>
             </div>
           </div>
@@ -248,7 +283,7 @@ const App: React.FC = () => {
                <div className="bg-white/5 p-10 rounded-[3rem] border border-white/10 shadow-xl">
                   <h3 className="text-[#d4af37] font-black text-sm uppercase tracking-widest mb-10 flex items-center gap-3">
                     <div className="w-2 h-2 rounded-full bg-[#d4af37] shadow-[0_0_10px_#d4af37]"></div> 
-                    Configuração do Protocolo
+                    Configuração do Protocolo Técnico
                   </h3>
                   <ProtocolForm data={data} onChange={setData} />
                </div>
@@ -257,19 +292,19 @@ const App: React.FC = () => {
             <div className="relative w-full">
               <div className="flex flex-col items-center">
                 <div className="bg-black/40 text-[#d4af37] px-10 py-4 rounded-full font-black text-[12px] uppercase tracking-widest mb-12 no-print border border-[#d4af37]/30 backdrop-blur-md shadow-2xl">
-                  Visualização do Documento (A4)
+                  Visualização do Documento Profissional (A4)
                 </div>
                 
                 <div className="w-full flex justify-center bg-[#111] p-4 md:p-16 rounded-[4rem] border border-white/5 shadow-inner overflow-hidden min-h-[1200px]">
                    <ProtocolPreview data={data} />
                 </div>
 
-                <div className="flex gap-6 mt-16 no-print mb-20">
-                  <button onClick={handleSave} className="flex items-center gap-4 bg-[#d4af37] text-black px-16 py-6 rounded-[2.5rem] font-black text-[14px] uppercase tracking-[0.3em] hover:scale-105 transition-all shadow-2xl">
-                    <Save size={24} /> Sincronizar Tudo
+                <div className="flex flex-col md:flex-row gap-6 mt-16 no-print mb-20">
+                  <button onClick={handleSave} disabled={isSyncing} className="flex items-center gap-4 bg-[#d4af37] text-black px-16 py-6 rounded-[2.5rem] font-black text-[14px] uppercase tracking-[0.3em] hover:scale-105 transition-all shadow-2xl disabled:opacity-50">
+                    <Save size={24} /> {isSyncing ? 'Sincronizando...' : 'Sincronizar Cloud'}
                   </button>
                   <button onClick={() => window.print()} className="flex items-center gap-4 bg-white text-black px-16 py-6 rounded-[2.5rem] font-black text-[14px] uppercase tracking-[0.3em] hover:scale-105 transition-all shadow-2xl">
-                    <Printer size={24} /> Exportar PDF
+                    <Printer size={24} /> Exportar para Aluno (PDF)
                   </button>
                 </div>
               </div>
@@ -281,7 +316,7 @@ const App: React.FC = () => {
           <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
              <div className="flex justify-end mb-4 no-print gap-4">
                 <button onClick={handleSave} className="flex items-center gap-3 bg-[#d4af37] text-black px-10 py-5 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:scale-105 transition-all shadow-xl">
-                  <Save size={20} /> Salvar Alterações
+                  <Save size={20} /> Salvar Alterações Cloud
                 </button>
                 <button onClick={() => window.print()} className="flex items-center gap-3 bg-white text-black px-10 py-5 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:scale-105 transition-all shadow-xl">
                   <Printer size={20} /> Imprimir Contrato
@@ -295,10 +330,10 @@ const App: React.FC = () => {
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
              <div className="flex justify-end no-print gap-4">
                 <button onClick={handleSave} className="flex items-center gap-3 bg-white/5 text-white px-8 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-white/10 transition-all border border-white/10">
-                  <Save size={18} /> Salvar Notas
+                  <Save size={18} /> Salvar Notas de Coach
                 </button>
                 <button onClick={handleNewCheckin} className="flex items-center gap-3 bg-[#d4af37] text-black px-8 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:scale-105 transition-all shadow-xl">
-                  <History size={18} /> Novo Check-in de Evolução
+                  <History size={18} /> Registrar Novo Check-in
                 </button>
              </div>
              <EvolutionTracker currentProtocol={data} history={savedProtocols.filter(p => p.clientName === data.clientName)} onNotesChange={(n) => setData({...data, privateNotes: n})} />
@@ -308,7 +343,7 @@ const App: React.FC = () => {
 
       <footer className="mt-20 border-t border-white/5 p-16 text-center no-print opacity-20">
          <img src={LOGO_RHINO_BLACK} alt="VBR Logo" className="h-20 mx-auto mb-6 grayscale" />
-         <p className="text-[11px] font-black text-white uppercase tracking-[0.8em]">Team VBR Engineering • Cloud Persistent Mode © {new Date().getFullYear()}</p>
+         <p className="text-[11px] font-black text-white uppercase tracking-[0.8em]">Team VBR Engineering • Cloud Native Edition © {new Date().getFullYear()}</p>
       </footer>
     </div>
   );

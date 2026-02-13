@@ -1,9 +1,9 @@
 
 import { ProtocolData } from './types';
 
-// Definindo o caminho para o arquivo local logo.png na raiz do projeto
-export const LOGO_RHINO_BLACK = "./logo.png"; 
-export const LOGO_RHINO_WHITE = "./logo.png"; 
+// Atualizado para o link oficial do Supabase Storage
+export const LOGO_RHINO_BLACK = "https://xqwzmvzfemjkvaquxedz.supabase.co/storage/v1/object/public/LOGO/logo.png"; 
+export const LOGO_RHINO_WHITE = "https://xqwzmvzfemjkvaquxedz.supabase.co/storage/v1/object/public/LOGO/logo.png"; 
 
 export const CONSULTANT_DEFAULT = {
   consultantName: "Vinicius Brasil dos Santos Otero",
