@@ -20,32 +20,32 @@ const ContractPreview: React.FC<Props> = ({ data }) => {
   };
 
   return (
-    <div className="flex flex-col items-center bg-white p-12 md:p-16 shadow-2xl w-[210mm] min-h-[297mm] mx-auto text-black leading-[1.6] font-sans text-[12px] print:shadow-none print:m-0">
+    <div className="flex flex-col items-center bg-white p-[2cm] shadow-2xl w-[210mm] min-h-[297mm] h-auto mx-auto text-black leading-[1.6] font-sans text-[12px] print:shadow-none print:m-0 print:w-[210mm] print:h-auto overflow-hidden">
       
       {/* TÍTULO */}
-      <div className="w-full flex flex-col items-center mb-8">
-        <h1 className="text-center font-bold text-[14px] uppercase tracking-tight mb-8">
+      <div className="w-full flex flex-col items-center mb-12">
+        <h1 className="text-center font-bold text-[16px] uppercase tracking-tight mb-8">
           CONTRATO DE ASSESSORIA EM ESTILO DE VIDA SAUDÁVEL
         </h1>
       </div>
 
-      <div className="w-full space-y-6">
+      <div className="w-full space-y-8">
         {/* QUALIFICAÇÃO CONTRATANTE */}
-        <section className="avoid-break">
-          <h2 className="font-bold uppercase border-b border-gray-100 pb-1 mb-2">CONTRATANTE:</h2>
-          <div className="grid grid-cols-2 gap-y-1">
-            <p><span className="font-bold">Nome:</span> {data.clientName || "________________________________"}</p>
-            <p><span className="font-bold">CPF:</span> {data.contract.cpf || "________________________________"}</p>
-            <p><span className="font-bold">Telefone:</span> {data.contract.phone || "________________________________"}</p>
-            <p><span className="font-bold">E-mail:</span> {data.contract.email || "________________________________"}</p>
-            <p className="col-span-2"><span className="font-bold">Endereço:</span> {data.contract.address || "________________________________"}</p>
+        <section className="avoid-break bg-gray-50/50 p-6 rounded-2xl border border-gray-100">
+          <h2 className="font-bold uppercase border-b border-gray-200 pb-2 mb-4 text-[#d4af37]">CONTRATANTE (ALUNO):</h2>
+          <div className="grid grid-cols-2 gap-y-2 gap-x-6">
+            <p><span className="font-bold">Nome:</span> {data.clientName || "_________________________"}</p>
+            <p><span className="font-bold">CPF:</span> {data.contract.cpf || "_________________________"}</p>
+            <p><span className="font-bold">Telefone:</span> {data.contract.phone || "_________________________"}</p>
+            <p><span className="font-bold">E-mail:</span> {data.contract.email || "_________________________"}</p>
+            <p className="col-span-2"><span className="font-bold">Endereço:</span> {data.contract.address || "_________________________"}</p>
           </div>
         </section>
 
         {/* QUALIFICAÇÃO CONTRATADO */}
-        <section className="avoid-break">
-          <h2 className="font-bold uppercase border-b border-gray-100 pb-1 mb-2">CONTRATADO:</h2>
-          <div className="grid grid-cols-2 gap-y-1">
+        <section className="avoid-break bg-gray-50/50 p-6 rounded-2xl border border-gray-100">
+          <h2 className="font-bold uppercase border-b border-gray-200 pb-2 mb-4 text-[#d4af37]">CONTRATADO (CONSULTOR):</h2>
+          <div className="grid grid-cols-2 gap-y-2 gap-x-6">
             <p><span className="font-bold">Nome:</span> {data.consultantName}</p>
             <p><span className="font-bold">CPF:</span> {data.consultantCpf}</p>
             <p><span className="font-bold">E-mail:</span> {data.consultantEmail}</p>
@@ -53,40 +53,34 @@ const ContractPreview: React.FC<Props> = ({ data }) => {
           </div>
         </section>
 
-        <p className="mt-4 text-justify avoid-break">
+        <p className="mt-4 text-justify avoid-break italic font-medium">
           As partes acima identificadas celebram o presente contrato, mediante as seguintes cláusulas e condições:
         </p>
 
-        {/* CORPO DAS CLÁUSULAS - FLUIDO */}
-        <div className="whitespace-pre-line text-justify space-y-4">
+        {/* CORPO DAS CLÁUSULAS */}
+        <div className="whitespace-pre-line text-justify space-y-6 text-[11px]">
           {renderContractText()}
         </div>
 
         {/* ASSINATURAS FINAIS */}
-        <div className="pt-12 space-y-10 avoid-break">
-          <p className="text-justify">
-            E, por estarem justas e contratadas, as partes assinam o presente instrumento em 2 (duas) vias de igual teor e forma, para que produza seus jurídicos e legais efeitos.
-          </p>
-          
-          <div className="flex gap-8">
-            <p><span className="font-bold">Cidade:</span> {data.contract.city}</p>
+        <div className="pt-16 space-y-12 avoid-break">
+          <div className="flex justify-between items-center border-t border-b border-gray-100 py-4">
+            <p><span className="font-bold">Local:</span> {data.contract.city}</p>
             <p><span className="font-bold">Data:</span> {data.contract.contractDate}</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-20 pt-16">
+          <div className="grid grid-cols-2 gap-24 pt-12">
             <div className="text-center">
-              <div className="border-t border-black pt-2">
+              <div className="border-t-2 border-black pt-4">
                 <p className="font-bold uppercase text-[10px]">CONTRATANTE</p>
-                <p className="text-[11px] mt-1">{data.clientName}</p>
-                <p className="text-[10px] text-gray-500">CPF: {data.contract.cpf}</p>
+                <p className="text-[12px] mt-1 font-black">{data.clientName}</p>
               </div>
             </div>
             
             <div className="text-center">
-              <div className="border-t border-black pt-2">
+              <div className="border-t-2 border-black pt-4">
                 <p className="font-bold uppercase text-[10px]">CONTRATADO</p>
-                <p className="text-[11px] mt-1">{data.consultantName}</p>
-                <p className="text-[10px] text-gray-500">CPF: {data.consultantCpf}</p>
+                <p className="text-[12px] mt-1 font-black">{data.consultantName}</p>
               </div>
             </div>
           </div>
