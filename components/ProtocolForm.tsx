@@ -36,6 +36,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
 
     setIsGenerating(true);
     try {
+      // Criação da instância com a chave do ambiente
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       
       const prompt = `Atue como o Master Coach Vinícius Brasil do Team VBR. Crie um protocolo de ELITE baseado nos dados:
@@ -103,7 +104,11 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
         }
       });
 
-      const suggestion = JSON.parse(response.text || "{}");
+      // Extração correta da propriedade .text
+      const text = response.text;
+      if (!text) throw new Error("Resposta da IA vazia");
+
+      const suggestion = JSON.parse(text.trim());
       
       const updatedData = {
         ...data,
@@ -120,7 +125,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
       onChange(updatedData);
     } catch (error: any) {
       console.error("Erro na Geração IA:", error);
-      alert(`❌ ERRO NA GERAÇÃO: Verifique sua conexão e chave de API.`);
+      alert(`❌ ERRO NA IA: ${error.message || "Tente novamente em instantes."}`);
     } finally {
       setIsGenerating(false);
     }

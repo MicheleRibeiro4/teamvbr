@@ -60,12 +60,24 @@
           break-before: page !important;
           width: 210mm !important;
           min-height: 297mm !important;
+          height: 297mm !important;
           position: relative;
           overflow: hidden !important;
           margin: 0 !important;
           padding: 0 !important;
           box-sizing: border-box;
           border: none !important;
+        }
+        .page-break-dynamic {
+          display: block;
+          page-break-before: always !important;
+          break-before: page !important;
+          width: 210mm !important;
+          min-height: 297mm !important;
+          position: relative;
+          margin: 0 !important;
+          padding: 0 !important;
+          box-sizing: border-box;
         }
         .avoid-break {
           page-break-inside: avoid !important;
