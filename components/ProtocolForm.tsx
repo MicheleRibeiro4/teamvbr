@@ -29,34 +29,43 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
   };
 
   const handleAISuggestion = async () => {
-    // A chave de API deve vir exclusivamente do process.env.API_KEY conforme regras do SDK
+    // A chave de API deve vir exclusivamente de process.env.API_KEY
     const apiKey = process.env.API_KEY;
     
     if (!apiKey) {
-      alert("❌ ERRO: A Chave de API da Inteligência VBR não foi encontrada. Certifique-se de que a variável de ambiente API_KEY está configurada.");
+      alert("❌ ERRO: Chave de API Gemini não encontrada. Verifique se a variável API_KEY está configurada.");
       return;
     }
 
     if (!data.clientName || !data.physicalData.weight) {
-      alert("⚠️ INFORMAÇÕES INSUFICIENTES: Preencha o Nome e o Peso para análise metabólica.");
+      alert("⚠️ INFORMAÇÕES INSUFICIENTES: Preencha o Nome e o Peso para que a IA possa analisar.");
       return;
     }
 
     setIsGenerating(true);
     try {
+      // Inicialização oficial do Google GenAI SDK
       const ai = new GoogleGenAI({ apiKey });
       
-      const prompt = `Você é o Master Coach do Team VBR. Crie um protocolo de ELITE baseado nos dados:
-      Aluno: ${data.clientName} | Peso: ${data.physicalData.weight}kg | Objetivo: ${data.protocolTitle}
+      const prompt = `Você é o Master Coach do Team VBR. Com base nos dados abaixo, gere um protocolo completo e de elite.
+      Nome: ${data.clientName} | Peso: ${data.physicalData.weight}kg | Altura: ${data.physicalData.height}m | BF: ${data.physicalData.bodyFat}%
+      Objetivo solicitado: ${data.protocolTitle || "Hipertrofia/Recomposição"}
       
-      Gere um JSON estruturado com:
-      - nutritionalStrategy (texto motivador longo)
-      - kcalGoal (número aproximado)
-      - macros (protein.value, carbs.value, fats.value)
-      - meals (array com time, name, details)
-      - supplements (array com name, dosage, timing)
-      - trainingDays (array com title, focus, exercises[{name, sets}])
-      - generalObservations (texto final)`;
+      Retorne um JSON rigoroso:
+      {
+        "nutritionalStrategy": "Explicação técnica da dieta",
+        "kcalGoal": "Valor numérico (ex: 2800)",
+        "kcalSubtext": "(TEXTO CURTO)",
+        "macros": {
+          "protein": { "value": "180" },
+          "carbs": { "value": "350" },
+          "fats": { "value": "70" }
+        },
+        "meals": [{"time": "08:00", "name": "Café", "details": "Detalhes"}],
+        "supplements": [{"name": "Creatina", "dosage": "5g", "timing": "Pós"}],
+        "trainingDays": [{"title": "DIA A", "focus": "Peito", "exercises": [{"name": "Supino", "sets": "4x10"}]}],
+        "generalObservations": "Finalização técnica"
+      }`;
 
       const response = await ai.models.generateContent({
         model: "gemini-3-pro-preview",
@@ -68,6 +77,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
             properties: {
               nutritionalStrategy: { type: Type.STRING },
               kcalGoal: { type: Type.STRING },
+              kcalSubtext: { type: Type.STRING },
               macros: {
                 type: Type.OBJECT,
                 properties: {
@@ -101,7 +111,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
         }
       });
 
-      const suggestion = JSON.parse(response.text);
+      const suggestion = JSON.parse(response.text || "{}");
       
       const updatedData = {
         ...data,

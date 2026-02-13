@@ -19,7 +19,7 @@ const getSupabaseClient = (): SupabaseClient | null => {
 
 export const supabase = getSupabaseClient();
 
-const LOCAL_STORAGE_KEY = 'vbr_db_cache_v4';
+const LOCAL_STORAGE_KEY = 'vbr_db_cache_v7';
 
 export const db = {
   isCloudEnabled(): boolean {
@@ -36,10 +36,9 @@ export const db = {
         .order('updated_at', { ascending: false });
 
       if (error) {
-        console.error("Supabase Query Error:", error.message);
-        // Detectar se o erro é por colunas faltantes (comum ao mudar esquema)
-        if (error.message.includes('client_name') || error.message.includes('column') || error.message.includes('relation')) {
-           throw new Error("Mismatch de Esquema: A tabela no Supabase não corresponde ao que o código espera.");
+        console.error("Supabase Query Error:", error);
+        if (error.code === 'PGRST204' || error.message.includes('client_name')) {
+           throw new Error("Erro de Esquema: A coluna 'client_name' não foi encontrada. Use o SQL de reparo.");
         }
         throw error;
       }
@@ -55,9 +54,9 @@ export const db = {
       }
       return [];
     } catch (err: any) {
-      console.warn("Recuperação offline ativada devido a erro no servidor:", err.message);
+      console.warn("Erro no Supabase:", err.message);
       const cache = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (err.message.includes('Mismatch')) throw err; // Repassa erro de esquema para a UI
+      if (err.message.includes('client_name') || err.message.includes('PGRST204')) throw err;
       return cache ? JSON.parse(cache) : [];
     }
   },
@@ -68,7 +67,6 @@ export const db = {
     const updatedAt = new Date().toISOString();
     const updatedProtocol = { ...protocol, updatedAt };
 
-    // Verificação de segurança obrigatória
     const { error } = await supabase
       .from('protocols')
       .upsert({
@@ -80,8 +78,8 @@ export const db = {
 
     if (error) {
       console.error("Supabase Save Error:", error);
-      if (error.message.includes('client_name')) {
-        throw new Error("Estrutura da tabela incorreta. Rode o script de reparo no app.");
+      if (error.code === 'PGRST204' || error.message.includes('client_name')) {
+        throw new Error("Coluna 'client_name' não encontrada no banco. Rode o SQL de reparo no App.");
       }
       throw new Error(error.message);
     }

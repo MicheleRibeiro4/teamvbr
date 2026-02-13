@@ -106,8 +106,8 @@ const App: React.FC = () => {
     }
   };
 
-  const sqlRepairScript = `-- SCRIPT DE REPARO DEFINITIVO VBR (COPIE E COLE NO SQL EDITOR)
--- 1. Remove tabelas conflitantes antigas (Importante!)
+  const sqlRepairScript = `-- SCRIPT DE REPARO VBR (RESOLVE ERRO DE COLUNA E CACHE)
+-- 1. Remove TODAS as tabelas do esquema antigo que causam conflito
 DROP TABLE IF EXISTS public.contracts CASCADE;
 DROP TABLE IF EXISTS public.exercises CASCADE;
 DROP TABLE IF EXISTS public.meals CASCADE;
@@ -117,7 +117,7 @@ DROP TABLE IF EXISTS public.students CASCADE;
 DROP TABLE IF EXISTS public.consultants CASCADE;
 DROP TABLE IF EXISTS public.protocols CASCADE;
 
--- 2. Cria a tabela única otimizada para JSONB
+-- 2. Cria a tabela única otimizada com a coluna 'client_name'
 CREATE TABLE public.protocols (
   id text NOT NULL PRIMARY KEY,
   client_name text NOT NULL,
@@ -125,13 +125,13 @@ CREATE TABLE public.protocols (
   data jsonb NOT NULL
 );
 
--- 3. Abre permissões públicas (RLS Off)
+-- 3. Libera permissões públicas
 ALTER TABLE public.protocols DISABLE ROW LEVEL SECURITY;
 GRANT ALL ON TABLE public.protocols TO anon;
 GRANT ALL ON TABLE public.protocols TO authenticated;
 GRANT ALL ON TABLE public.protocols TO service_role;
 
--- 4. Força o recarregamento do cache do Supabase
+-- 4. Força a atualização do cache do Supabase
 NOTIFY pgrst, 'reload schema';`;
 
   return (
@@ -193,15 +193,15 @@ NOTIFY pgrst, 'reload schema';`;
                 <div>
                   <h4 className="font-black uppercase text-sm text-red-500">Mapeamento de Banco de Dados Incorreto</h4>
                   <p className="text-xs text-white/60 max-w-xl">
-                    Sua tabela no Supabase não possui a coluna 'client_name' ou está usando um esquema antigo. 
-                    Para corrigir, copie o script abaixo e rode no seu SQL Editor do Supabase.
+                    Seu Supabase está com tabelas que não possuem a coluna 'client_name'. 
+                    Clique no botão ao lado, cole o script no SQL Editor do Supabase e rode para consertar.
                   </p>
                 </div>
               </div>
               <button 
                 onClick={() => { 
                   navigator.clipboard.writeText(sqlRepairScript); 
-                  alert('Script SQL Copiado!\n\nPassos:\n1. Vá ao Supabase\n2. SQL Editor -> New Query\n3. Cole o script e clique em RUN\n4. Recarregue esta página.'); 
+                  alert('Script SQL de Reparo Copiado!\n\nNo Supabase:\n1. SQL Editor -> New Query\n2. Cole o script e clique em RUN\n3. Recarregue esta página.'); 
                 }}
                 className="flex items-center gap-3 bg-white/5 hover:bg-white/10 px-8 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all border border-white/10 group"
               >
