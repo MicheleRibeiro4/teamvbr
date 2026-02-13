@@ -36,10 +36,12 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
 
     setIsGenerating(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       
-      const prompt = `Como Master Coach do Team VBR, crie um protocolo de ELITE (Nutrição + Treino) baseado nestes dados:
-      Aluno: ${data.clientName} | Peso: ${data.physicalData.weight}kg | Objetivo: ${data.protocolTitle || "Performance Máxima"}
+      const prompt = `Atue como o Master Coach Vinícius Brasil do Team VBR. Crie um protocolo de ELITE baseado nos dados:
+      Aluno: ${data.clientName} | Peso: ${data.physicalData.weight}kg | Altura: ${data.physicalData.height}m | Idade: ${data.physicalData.age} | Objetivo: ${data.protocolTitle || "Performance Máxima"}.
+      
+      Gere um plano de nutrição e um treino completo. O treino deve conter pelo menos 4 exercícios por dia.
       
       Retorne um JSON rigoroso:
       {
@@ -47,9 +49,9 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
         "kcalGoal": "Valor (ex: 3200)",
         "kcalSubtext": "(TEXTO EM CAIXA ALTA)",
         "macros": {
-          "protein": { "value": "200" },
-          "carbs": { "value": "450" },
-          "fats": { "value": "80" }
+          "protein": { "value": "200", "ratio": "2.2g/kg" },
+          "carbs": { "value": "450", "ratio": "4.5g/kg" },
+          "fats": { "value": "80", "ratio": "0.8g/kg" }
         },
         "meals": [{"time": "08:00", "name": "Refeição 1", "details": "Alimentos e quantidades"}],
         "supplements": [{"name": "Creatina", "dosage": "5g", "timing": "Qualquer horário"}],
@@ -71,9 +73,9 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
               macros: {
                 type: Type.OBJECT,
                 properties: {
-                  protein: { type: Type.OBJECT, properties: { value: { type: Type.STRING } } },
-                  carbs: { type: Type.OBJECT, properties: { value: { type: Type.STRING } } },
-                  fats: { type: Type.OBJECT, properties: { value: { type: Type.STRING } } },
+                  protein: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } },
+                  carbs: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } },
+                  fats: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } },
                 }
               },
               meals: { 
@@ -118,7 +120,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
       onChange(updatedData);
     } catch (error: any) {
       console.error("Erro na Geração IA:", error);
-      alert(`❌ ERRO NA GERAÇÃO: ${error.message}`);
+      alert(`❌ ERRO NA GERAÇÃO: Verifique a conexão. Detalhe: ${error.message}`);
     } finally {
       setIsGenerating(false);
     }
@@ -148,7 +150,6 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
 
   return (
     <div className="space-y-10 no-print">
-      
       <section>
         <div className={sectionHeaderClass}>
           <User className="text-[#d4af37]" size={20} />
@@ -193,7 +194,6 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
       </section>
 
       <div className="bg-gradient-to-br from-[#d4af37]/20 via-black to-black p-8 rounded-[3rem] border border-[#d4af37]/40 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl relative overflow-hidden group">
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 pointer-events-none"></div>
         <div className="flex items-center gap-5 relative z-10">
           <div className="w-16 h-16 bg-[#d4af37] rounded-[1.5rem] flex items-center justify-center text-black shadow-[0_0_30px_rgba(212,175,55,0.4)] group-hover:scale-110 transition-transform">
             {isGenerating ? <Loader2 size={32} className="animate-spin" /> : <Sparkles size={32} />}

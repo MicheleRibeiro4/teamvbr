@@ -2,7 +2,6 @@
 import React from 'react';
 import { ProtocolData } from '../types';
 import { LOGO_RHINO_BLACK, LOGO_RHINO_WHITE } from '../constants';
-import { Printer } from 'lucide-react';
 
 interface Props {
   data: ProtocolData;
@@ -10,23 +9,11 @@ interface Props {
 
 const ProtocolPreview: React.FC<Props> = ({ data }) => {
   // Configuração para A4: min-h e overflow-visible garantem que nada seja cortado
-  const pageClass = "bg-white w-[210mm] min-h-[297mm] mx-auto flex flex-col page-break text-black relative shadow-2xl print:shadow-none print:m-0 print:rounded-none print:overflow-visible overflow-hidden";
-
-  const handlePrint = () => {
-    window.print();
-  };
+  const pageClass = "bg-white w-[210mm] min-h-[297mm] mx-auto flex flex-col page-break text-black relative shadow-2xl print:shadow-none print:m-0 print:rounded-none print:overflow-visible overflow-visible mb-10";
 
   return (
     <div className="flex flex-col items-center w-full gap-8 bg-transparent print:gap-0 print-container pb-20 print:pb-0">
       
-      {/* Botão de Impressão Flutuante - Não aparece no PDF */}
-      <button 
-        onClick={handlePrint}
-        className="no-print fixed bottom-10 right-10 bg-[#d4af37] text-black p-5 rounded-full shadow-[0_0_40px_rgba(212,175,55,0.6)] hover:scale-110 transition-all z-[60] flex items-center gap-3 font-black uppercase text-xs tracking-widest"
-      >
-        <Printer size={24} /> Imprimir / PDF
-      </button>
-
       {/* PÁGINA 1: CAPA PREMIUM */}
       <div className={`${pageClass} !bg-[#0a0a0a] !text-white border-b-[20px] border-[#d4af37] justify-between p-[2cm] h-[297mm]`}>
         <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_top_right,_rgba(212,175,55,0.15)_0%,_transparent_60%)]"></div>
@@ -75,9 +62,6 @@ const ProtocolPreview: React.FC<Props> = ({ data }) => {
           <div>
             <span className="text-[12px] font-black text-[#d4af37] uppercase tracking-[0.5em]">Módulo 01</span>
             <h2 className="text-5xl font-black uppercase font-montserrat tracking-tighter text-black leading-none">Bioimpedância</h2>
-          </div>
-          <div className="text-right">
-            <span className="text-2xl font-black">{new Date().toLocaleDateString('pt-BR')}</span>
           </div>
         </div>
         
@@ -130,9 +114,6 @@ const ProtocolPreview: React.FC<Props> = ({ data }) => {
 
       {/* PÁGINA 3: PLANO NUTRICIONAL */}
       <div className={`${pageClass} p-[1.5cm]`}>
-        <div className="absolute top-10 right-10 opacity-10">
-           <img src={LOGO_RHINO_WHITE} alt="Logo" className="w-32" />
-        </div>
         <div className="flex justify-between items-end border-b-8 border-[#d4af37] pb-8 mb-12">
           <div>
             <span className="text-[12px] font-black text-[#d4af37] uppercase tracking-[0.5em]">Módulo 02</span>
@@ -144,9 +125,6 @@ const ProtocolPreview: React.FC<Props> = ({ data }) => {
           <span className="text-[14px] font-black text-[#d4af37] mb-6 tracking-[0.8em] uppercase">Aporte Calórico</span>
           <div className="text-[100px] font-black font-montserrat tracking-tighter leading-none">
             {data.kcalGoal || '0000'} <span className="text-2xl text-[#d4af37]">KCAL</span>
-          </div>
-          <div className="bg-[#d4af37] text-black px-6 py-2 rounded-full font-black uppercase text-[10px] tracking-widest mt-8">
-            {data.kcalSubtext || 'FOCO EM PERFORMANCE'}
           </div>
         </div>
 

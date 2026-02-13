@@ -16,7 +16,8 @@ import {
   CheckCircle2,
   AlertTriangle,
   Code,
-  Database
+  Database,
+  Printer
 } from 'lucide-react';
 
 type ViewMode = 'home' | 'search' | 'protocol' | 'contract' | 'evolution' | 'settings';
@@ -106,10 +107,11 @@ const App: React.FC = () => {
     }
   };
 
-  const sqlRepairScript = `-- SCRIPT DE REPARO DEFINITIVO VBR (RESOLVE ERRO DE ESQUEMA ANTIGO)
--- Execute este script para limpar as tabelas relacionais e habilitar a tabela unificada.
+  const handlePrint = () => {
+    window.print();
+  };
 
--- 1. Remover TODAS as tabelas do esquema normalizado anterior
+  const sqlRepairScript = `-- SCRIPT DE REPARO DEFINITIVO VBR (RESOLVE ERRO DE ESQUEMA ANTIGO)
 DROP TABLE IF EXISTS public.exercises CASCADE;
 DROP TABLE IF EXISTS public.meals CASCADE;
 DROP TABLE IF EXISTS public.supplements CASCADE;
@@ -119,7 +121,6 @@ DROP TABLE IF EXISTS public.students CASCADE;
 DROP TABLE IF EXISTS public.consultants CASCADE;
 DROP TABLE IF EXISTS public.protocols CASCADE;
 
--- 2. Criar a nova tabela unificada otimizada para JSONB
 CREATE TABLE public.protocols (
   id text NOT NULL PRIMARY KEY,
   client_name text NOT NULL,
@@ -127,13 +128,10 @@ CREATE TABLE public.protocols (
   data jsonb NOT NULL
 );
 
--- 3. Configurar permissões de acesso
 ALTER TABLE public.protocols DISABLE ROW LEVEL SECURITY;
 GRANT ALL ON TABLE public.protocols TO anon;
 GRANT ALL ON TABLE public.protocols TO authenticated;
 GRANT ALL ON TABLE public.protocols TO service_role;
-
--- 4. Forçar atualização do cache do PostgREST (Crítico)
 NOTIFY pgrst, 'reload schema';`;
 
   return (
@@ -169,9 +167,21 @@ NOTIFY pgrst, 'reload schema';`;
           <button onClick={() => setActiveView('search')} className="p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all text-white/60 hover:text-white" title="Lista de Alunos">
             <FolderOpen size={20} />
           </button>
+          
+          {(activeView === 'protocol' || activeView === 'contract') && (
+            <button 
+              onClick={handlePrint} 
+              className="p-3 bg-[#d4af37]/10 hover:bg-[#d4af37] text-[#d4af37] hover:text-black border border-[#d4af37]/30 rounded-xl transition-all flex items-center gap-2 font-black text-[10px] uppercase"
+              title="Gerar PDF"
+            >
+              <Printer size={20} /> <span className="hidden lg:inline">Imprimir PDF</span>
+            </button>
+          )}
+
           <button onClick={handleNew} className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-white px-4 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all">
             <Plus size={16} /> <span className="hidden md:inline">Novo Aluno</span>
           </button>
+
           {activeView !== 'home' && activeView !== 'search' && (
             <button 
               onClick={handleSave} 
@@ -195,15 +205,14 @@ NOTIFY pgrst, 'reload schema';`;
                 <div>
                   <h4 className="font-black uppercase text-sm text-red-500">Erro de Mapeamento de Banco de Dados</h4>
                   <p className="text-xs text-white/60 max-w-xl">
-                    Seu Supabase ainda possui as tabelas antigas. Para salvar seus protocolos, você precisa limpar o esquema. 
-                    Copie o script abaixo, cole no SQL Editor do Supabase e clique em RUN.
+                    Seu Supabase ainda possui as tabelas antigas. Use o SQL de reparo.
                   </p>
                 </div>
               </div>
               <button 
                 onClick={() => { 
                   navigator.clipboard.writeText(sqlRepairScript); 
-                  alert('Script SQL de Reparo Copiado!\n\nNo Supabase:\n1. SQL Editor -> New Query\n2. Cole o script e clique em RUN\n3. Recarregue esta página.'); 
+                  alert('Script SQL de Reparo Copiado!'); 
                 }}
                 className="flex items-center gap-3 bg-white/5 hover:bg-white/10 px-8 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all border border-white/10 group"
               >
@@ -229,13 +238,13 @@ NOTIFY pgrst, 'reload schema';`;
                   <ProtocolForm data={data} onChange={setData} />
                </div>
             </div>
-            <div className="w-full flex justify-center bg-[#111] p-4 md:p-16 rounded-[4rem] border border-white/5 shadow-inner overflow-hidden min-h-[1200px]">
+            <div className="w-full flex justify-center bg-[#111] p-4 md:p-16 rounded-[4rem] border border-white/5 shadow-inner min-h-[1200px]">
                <ProtocolPreview data={data} />
             </div>
           </div>
         )}
 
-        {activeView === 'contract' && <div className="no-print"><ContractWorkspace data={data} onChange={setData} /></div>}
+        {activeView === 'contract' && <div className="w-full flex justify-center p-4 md:p-16 rounded-[4rem] bg-gray-900/50"><div className="w-full"><ContractWorkspace data={data} onChange={setData} /></div></div>}
         
         {activeView === 'evolution' && (
           <EvolutionTracker 
