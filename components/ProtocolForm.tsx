@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { ProtocolData, Meal, Supplement, TrainingDay } from '../types';
-import { Plus, Trash2, Activity, Utensils, Dumbbell, Target, Sparkles, Loader2, User, Pill, ClipboardList, AlertCircle } from 'lucide-react';
+import { Plus, Trash2, Activity, Utensils, Dumbbell, Target, Sparkles, Loader2, User, Pill, ClipboardList } from 'lucide-react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { CONSULTANT_DEFAULT } from '../constants';
 
@@ -56,24 +56,42 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
   };
 
   const handleAISuggestion = async () => {
+    // Verificação rigorosa conforme diretrizes do SDK
     const apiKey = process.env.API_KEY;
+    
     if (!apiKey) {
-      alert("⚠️ A Chave de API da Inteligência VBR não foi detectada no ambiente. A geração automática está desabilitada.");
+      alert("⚠️ ERRO: Chave de API não configurada. A Inteligência VBR requer uma chave ativa no ambiente.");
       return;
     }
 
     if (!data.clientName || !data.physicalData.weight) {
-      alert("⚠️ Por favor, preencha o NOME e o PESO para análise da IA.");
+      alert("⚠️ Por favor, preencha pelo menos o NOME e o PESO para que a IA possa analisar.");
       return;
     }
 
     setIsGenerating(true);
     try {
-      // Inicialização segura dentro da função conforme diretrizes
-      const ai = new GoogleGenAI({ apiKey });
-      const prompt = `Aja como um Coach de Elite Team VBR. Crie protocolo para: Aluno: ${data.clientName}, Sexo: ${data.physicalData.gender}, Objetivo: ${data.protocolTitle}, Peso: ${data.physicalData.weight}kg, BF: ${data.physicalData.bodyFat}%. Retorne JSON puro com nutritionalStrategy, kcalGoal, kcalSubtext, macros (protein.value, carbs.value, fats.value), meals (time, name, details), supplements (name, dosage, timing), trainingDays (title, focus, exercises[{name, sets}]), generalObservations.`;
+      // Inicialização direta no momento do uso para evitar stale closure
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+      
+      const prompt = `Aja como o Master Coach do Team VBR. Crie um protocolo de elite para:
+      Aluno: ${data.clientName}
+      Sexo: ${data.physicalData.gender}
+      Objetivo: ${data.protocolTitle}
+      Peso: ${data.physicalData.weight}kg
+      BF: ${data.physicalData.bodyFat}%
+      
+      Gere um JSON puro com:
+      - nutritionalStrategy (texto motivador e estratégico)
+      - kcalGoal (número aproximado)
+      - kcalSubtext (estratégia calórica)
+      - macros (protein.value, carbs.value, fats.value)
+      - meals (array com time, name, details)
+      - supplements (array com name, dosage, timing)
+      - trainingDays (array com title, focus, exercises[{name, sets}])
+      - generalObservations (conclusão impactante)`;
 
-      const result = await ai.models.generateContent({
+      const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
         contents: prompt,
         config: {
@@ -92,16 +110,38 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
                   fats: { type: Type.OBJECT, properties: { value: { type: Type.STRING } } },
                 }
               },
-              meals: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { time: { type: Type.STRING }, name: { type: Type.STRING }, details: { type: Type.STRING } } } },
-              supplements: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { name: { type: Type.STRING }, dosage: { type: Type.STRING }, timing: { type: Type.STRING } } } },
-              trainingDays: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { title: { type: Type.STRING }, focus: { type: Type.STRING }, exercises: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { name: { type: Type.STRING }, sets: { type: Type.STRING } } } } } } },
+              meals: { 
+                type: Type.ARRAY, 
+                items: { 
+                  type: Type.OBJECT, 
+                  properties: { time: { type: Type.STRING }, name: { type: Type.STRING }, details: { type: Type.STRING } } 
+                } 
+              },
+              supplements: { 
+                type: Type.ARRAY, 
+                items: { 
+                  type: Type.OBJECT, 
+                  properties: { name: { type: Type.STRING }, dosage: { type: Type.STRING }, timing: { type: Type.STRING } } 
+                } 
+              },
+              trainingDays: { 
+                type: Type.ARRAY, 
+                items: { 
+                  type: Type.OBJECT, 
+                  properties: { 
+                    title: { type: Type.STRING }, 
+                    focus: { type: Type.STRING }, 
+                    exercises: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { name: { type: Type.STRING }, sets: { type: Type.STRING } } } } 
+                  } 
+                } 
+              },
               generalObservations: { type: Type.STRING }
             }
           }
         }
       });
 
-      const suggestion = JSON.parse(result.text);
+      const suggestion = JSON.parse(response.text);
       
       const updatedData = {
         ...data,
@@ -116,10 +156,9 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
       };
 
       onChange(updatedData);
-      alert("✅ Protocolo gerado com sucesso pela Inteligência VBR!");
     } catch (error: any) {
       console.error("Erro na IA VBR:", error);
-      alert(`❌ Erro ao gerar sugestão: ${error.message || 'Falha na conexão com Gemini'}`);
+      alert(`❌ Falha na Inteligência VBR: ${error.message}`);
     } finally {
       setIsGenerating(false);
     }
@@ -200,14 +239,12 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
           </div>
           <div>
             <h3 className="font-black text-2xl text-white uppercase tracking-tighter leading-none">Inteligência VBR</h3>
-            <p className="text-[10px] text-[#d4af37] font-black uppercase tracking-[0.2em] mt-2">
-              {!process.env.API_KEY ? '⚠️ Chave de API Ausente' : 'Geração automática completa'}
-            </p>
+            <p className="text-[10px] text-[#d4af37] font-black uppercase tracking-[0.2em] mt-2">Geração automática de protocolo</p>
           </div>
         </div>
         <button 
           onClick={handleAISuggestion}
-          disabled={isGenerating || !process.env.API_KEY}
+          disabled={isGenerating}
           className="bg-white text-black px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] flex items-center gap-3 hover:scale-105 transition-all disabled:opacity-50 shadow-2xl"
         >
           {isGenerating ? 'Analisando...' : 'Gerar Protocolo'}

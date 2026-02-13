@@ -3,7 +3,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { ProtocolData } from '../types';
 
 const SUPABASE_URL = "https://xqwzmvzfemjkvaquxedz.supabase.co";
-// Chave Anon JWT fornecida pelo usuário
+// Chave Anon JWT correta
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhxd3ptdnpmZW1qa3ZhcXV4ZWR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5OTc1NjQsImV4cCI6MjA4NjU3MzU2NH0.R2MdOlktktHFuBe0JKbUwceqkrYIFsiphEThrYPWsZ8";
 
 const getSupabaseClient = (): SupabaseClient | null => {
@@ -13,93 +13,80 @@ const getSupabaseClient = (): SupabaseClient | null => {
       auth: { persistSession: false }
     });
   } catch (e) {
-    console.error('Erro ao inicializar Supabase:', e);
+    console.error('Supabase Init Error:', e);
     return null;
   }
 };
 
 export const supabase = getSupabaseClient();
 
-const LOCAL_STORAGE_KEY = 'vbr_cloud_sync_cache';
+const LOCAL_STORAGE_KEY = 'vbr_db_cache';
 
 export const db = {
   isCloudEnabled(): boolean {
-    return !!supabase && SUPABASE_ANON_KEY.startsWith('eyJ');
+    return !!supabase;
   },
 
   async getAll(): Promise<ProtocolData[]> {
-    if (supabase) {
-      try {
-        const { data, error, status } = await supabase
-          .from('protocols')
-          .select('*')
-          .order('updated_at', { ascending: false });
+    if (!supabase) return [];
+    
+    try {
+      const { data, error } = await supabase
+        .from('protocols')
+        .select('*')
+        .order('updated_at', { ascending: false });
 
-        if (error) {
-          console.error(`Erro Supabase (${status}):`, error.message, error.details);
-          if (status === 400 || status === 404) {
-             console.warn("DICA: Execute o script SQL no painel do Supabase para criar a tabela 'protocols'.");
-          }
-        } else if (data) {
-          const cloudProtocols = data.map(item => ({
-            ...item.data,
-            id: item.id,
-            updatedAt: item.updated_at
-          }));
-          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(cloudProtocols));
-          return cloudProtocols;
+      if (error) {
+        if (error.message.includes('client_name')) {
+          throw new Error("A coluna 'client_name' não foi detectada. Por favor, execute o script SQL de reparo no painel do Supabase.");
         }
-      } catch (err: any) {
-        if (err.name === 'TypeError' || err.message === 'Load failed') {
-          console.warn('Conexão com Supabase bloqueada por AdBlock ou Rede.');
-        }
+        throw error;
       }
+
+      if (data) {
+        const protocols = data.map(item => ({
+          ...item.data,
+          id: item.id,
+          updatedAt: item.updated_at
+        }));
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(protocols));
+        return protocols;
+      }
+      return [];
+    } catch (err: any) {
+      console.warn("Usando cache local devido a erro de conexão/esquema:", err.message);
+      const cache = localStorage.getItem(LOCAL_STORAGE_KEY);
+      return cache ? JSON.parse(cache) : [];
     }
-    const localData = localStorage.getItem(LOCAL_STORAGE_KEY);
-    return localData ? JSON.parse(localData) : [];
   },
 
   async saveProtocol(protocol: ProtocolData): Promise<void> {
+    if (!supabase) throw new Error("Banco de dados não conectado.");
+
     const updatedAt = new Date().toISOString();
     const updatedProtocol = { ...protocol, updatedAt };
 
-    // Cache Local sempre
-    const all = await this.getAll();
-    const index = all.findIndex(p => p.id === protocol.id);
-    if (index >= 0) {
-      all[index] = updatedProtocol;
-    } else {
-      all.unshift(updatedProtocol);
-    }
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(all));
+    const { error } = await supabase
+      .from('protocols')
+      .upsert({
+        id: protocol.id,
+        client_name: protocol.clientName || 'Sem Nome',
+        updated_at: updatedAt,
+        data: updatedProtocol
+      }, { onConflict: 'id' });
 
-    if (supabase) {
-      const { error, status } = await supabase
-        .from('protocols')
-        .upsert({
-          id: protocol.id,
-          client_name: protocol.clientName || 'Sem Nome',
-          updated_at: updatedAt,
-          data: updatedProtocol
-        }, { onConflict: 'id' });
-
-      if (error) {
-        console.error(`FALHA NO UPSERT (${status}):`, error);
-        let msg = `Erro ${status}: ${error.message}`;
-        if (status === 400) msg = "Tabela 'protocols' não encontrada ou colunas incorretas. Verifique o SQL Editor.";
-        throw new Error(msg);
+    if (error) {
+      console.error("Erro ao salvar no banco:", error);
+      if (error.message.includes('client_name')) {
+        throw new Error("Coluna 'client_name' ausente. Use o botão 'Copiar SQL de Reparo' no topo da página.");
       }
+      throw new Error(error.message);
     }
   },
 
   async deleteProtocol(id: string): Promise<void> {
-    const all = await this.getAll();
-    const filtered = all.filter(p => p.id !== id);
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(filtered));
-
-    if (supabase) {
-      const { error } = await supabase.from('protocols').delete().eq('id', id);
-      if (error) throw error;
-    }
+    if (!supabase) return;
+    const { error } = await supabase.from('protocols').delete().eq('id', id);
+    if (error) throw error;
   }
 };

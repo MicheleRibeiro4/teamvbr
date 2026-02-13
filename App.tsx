@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { ProtocolData } from './types';
-import { INITIAL_DATA, EMPTY_DATA, LOGO_RHINO_BLACK } from './constants';
+import { EMPTY_DATA, LOGO_RHINO_BLACK } from './constants';
 import { db } from './services/db';
 import ProtocolForm from './components/ProtocolForm';
 import ProtocolPreview from './components/ProtocolPreview';
@@ -10,38 +10,34 @@ import EvolutionTracker from './components/EvolutionTracker';
 import MainDashboard from './components/MainDashboard';
 import StudentSearch from './components/StudentSearch';
 import { 
-  FileText, 
-  Save, 
   Plus, 
   FolderOpen,
   RefreshCw,
   CheckCircle2,
   AlertTriangle,
   Code,
-  ShieldAlert,
   Database
 } from 'lucide-react';
 
 type ViewMode = 'home' | 'search' | 'protocol' | 'contract' | 'evolution' | 'settings';
 
 const App: React.FC = () => {
-  const [data, setData] = useState<ProtocolData>(INITIAL_DATA);
+  const [data, setData] = useState<ProtocolData>(EMPTY_DATA);
   const [activeView, setActiveView] = useState<ViewMode>('home');
   const [savedProtocols, setSavedProtocols] = useState<ProtocolData[]>([]);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [cloudStatus, setCloudStatus] = useState<'online' | 'offline' | 'error'>('online');
+  const [cloudStatus, setCloudStatus] = useState<'online' | 'error'>('online');
   const [showToast, setShowToast] = useState(false);
-  const [networkBlocked, setNetworkBlocked] = useState(false);
 
   const loadData = async () => {
     setIsSyncing(true);
     try {
       const protocols = await db.getAll();
       setSavedProtocols(protocols);
-      setCloudStatus(db.isCloudEnabled() ? 'online' : 'error');
+      setCloudStatus('online');
     } catch (e: any) {
       setCloudStatus('error');
-      if (e.message?.includes('Load failed') || e.name === 'TypeError') setNetworkBlocked(true);
+      console.error("Erro na conexão com o Banco de Dados:", e);
     } finally {
       setIsSyncing(false);
     }
@@ -76,7 +72,7 @@ const App: React.FC = () => {
     } catch (err: any) {
       console.error(err);
       setCloudStatus('error');
-      alert(`⚠️ ERRO NA NUVEM: ${err.message}\n\nCertifique-se de que a tabela 'protocols' foi criada no Supabase SQL Editor.`);
+      alert(`⚠️ ERRO NO BANCO DE DADOS: ${err.message}`);
     } finally {
       setIsSyncing(false);
     }
@@ -94,26 +90,35 @@ const App: React.FC = () => {
   };
 
   const deleteStudent = async (id: string) => {
-    if(confirm('Excluir este aluno permanentemente?')) {
+    if(confirm('Excluir este aluno permanentemente do Banco de Dados?')) {
       try {
         await db.deleteProtocol(id);
         setSavedProtocols(prev => prev.filter(p => p.id !== id));
         if (activeView !== 'home') setActiveView('home');
       } catch (err) {
-        alert('Erro ao deletar.');
+        alert('Erro ao excluir do banco.');
       }
     }
   };
 
-  const sqlScript = `CREATE TABLE IF NOT EXISTS public.protocols (
+  const sqlScript = `-- 1. CRIAR TABELA COM COLUNA client_name EXPLÍCITA
+CREATE TABLE IF NOT EXISTS public.protocols (
   id text NOT NULL PRIMARY KEY,
   client_name text NOT NULL,
   updated_at timestamp with time zone DEFAULT now(),
   data jsonb NOT NULL
 );
+
+-- 2. DESATIVAR RLS PARA TESTES (OU CONFIGURAR PERMISSÕES)
 ALTER TABLE public.protocols DISABLE ROW LEVEL SECURITY;
+
+-- 3. GARANTIR PERMISSÕES AO USUÁRIO ANON (WEB)
 GRANT ALL ON TABLE public.protocols TO anon;
-GRANT ALL ON TABLE public.protocols TO authenticated;`;
+GRANT ALL ON TABLE public.protocols TO authenticated;
+GRANT ALL ON TABLE public.protocols TO service_role;
+
+-- 4. FORÇAR RECARREGAMENTO DO CACHE DE ESQUEMA (MUITO IMPORTANTE)
+NOTIFY pgrst, 'reload schema';`;
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white font-sans selection:bg-[#d4af37] selection:text-black">
@@ -121,7 +126,7 @@ GRANT ALL ON TABLE public.protocols TO authenticated;`;
       {showToast && (
         <div className="fixed bottom-10 right-10 z-[100] animate-in slide-in-from-right-10 duration-500">
            <div className="bg-[#d4af37] text-black px-8 py-4 rounded-2xl font-black uppercase text-xs flex items-center gap-3 shadow-[0_0_40px_rgba(212,175,55,0.4)]">
-              <CheckCircle2 size={20} /> Sincronizado com Nuvem VBR
+              <CheckCircle2 size={20} /> Banco de Dados Atualizado
            </div>
         </div>
       )}
@@ -139,13 +144,13 @@ GRANT ALL ON TABLE public.protocols TO authenticated;`;
               cloudStatus === 'online' ? 'bg-green-500' : 'bg-red-500'
             }`}></div>
             <span className="text-[10px] font-black uppercase tracking-widest text-white/40">
-              {isSyncing ? 'Sincronizando...' : cloudStatus === 'online' ? 'Nuvem Conectada' : 'Nuvem em Erro'}
+              {isSyncing ? 'Conectando...' : cloudStatus === 'online' ? 'Banco de Dados Online' : 'Erro de Conexão'}
             </span>
           </div>
         </div>
 
         <div className="flex items-center gap-2 md:gap-4">
-          <button onClick={() => setActiveView('search')} className="p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all text-white/60 hover:text-white" title="Buscar Alunos">
+          <button onClick={() => setActiveView('search')} className="p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all text-white/60 hover:text-white" title="Listar Alunos do Banco">
             <FolderOpen size={20} />
           </button>
           <button onClick={handleNew} className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-white px-4 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all">
@@ -157,8 +162,8 @@ GRANT ALL ON TABLE public.protocols TO authenticated;`;
               disabled={isSyncing}
               className="flex items-center gap-2 bg-[#d4af37] text-black px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all shadow-lg disabled:opacity-50"
             >
-              {isSyncing ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
-              Salvar na Nuvem
+              {isSyncing ? <RefreshCw size={16} className="animate-spin" /> : <Database size={16} />}
+              Salvar Banco
             </button>
           )}
         </div>
@@ -170,27 +175,19 @@ GRANT ALL ON TABLE public.protocols TO authenticated;`;
           <div className="bg-red-500/10 border border-red-500/20 p-8 rounded-[2rem] mb-10">
             <div className="flex flex-col md:flex-row items-center gap-6 justify-between">
               <div className="flex items-center gap-4">
-                <Database className="text-red-500" size={40} />
+                <AlertTriangle className="text-red-500" size={40} />
                 <div>
-                  <h4 className="font-black uppercase text-sm">Banco de Dados não Configurado (Erro 400)</h4>
-                  <p className="text-xs text-white/60">Os dados estão sendo salvos apenas localmente. Para ativar a nuvem, você deve criar a tabela:</p>
+                  <h4 className="font-black uppercase text-sm text-red-400">Falha de Esquema no Banco de Dados</h4>
+                  <p className="text-xs text-white/60">A coluna 'client_name' ou a tabela não foram encontradas. Execute o script abaixo:</p>
                 </div>
               </div>
               <button 
-                onClick={() => { navigator.clipboard.writeText(sqlScript); alert('Script SQL copiado! Cole no SQL Editor do Supabase.'); }}
+                onClick={() => { navigator.clipboard.writeText(sqlScript); alert('Script SQL robusto copiado! Cole no SQL Editor do Supabase.'); }}
                 className="flex items-center gap-2 bg-white/5 hover:bg-white/10 px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all border border-white/10"
               >
-                <Code size={16} /> Copiar Script de Correção
+                <Code size={16} /> Copiar SQL de Reparo
               </button>
             </div>
-            {networkBlocked && (
-              <div className="mt-4 p-4 bg-orange-500/10 border border-orange-500/20 rounded-xl flex items-center gap-3">
-                <ShieldAlert className="text-orange-500" size={20} />
-                <p className="text-[11px] font-bold text-orange-200">
-                  Detectamos um possível bloqueio de rede (AdBlock). Se o erro persistir após o SQL, desative bloqueadores para este site.
-                </p>
-              </div>
-            )}
           </div>
         )}
 
