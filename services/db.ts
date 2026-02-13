@@ -2,22 +2,23 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { ProtocolData } from '../types';
 
-// Credenciais oficiais do projeto fornecidas
+// URL do seu projeto Supabase
 const SUPABASE_URL = "https://xqwzmvzfemjkvaquxedz.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_C3BBDC86gpANb_LYU0rwGg_kwQPLeVQ";
 
-// Inicialização do Cliente
+// CHAVE ATUALIZADA: Usando o JWT (Anon Key) fornecido pelo usuário
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhxd3ptdnpmZW1qa3ZhcXV4ZWR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5OTc1NjQsImV4cCI6MjA4NjU3MzU2NH0.R2MdOlktktHFuBe0JKbUwceqkrYIFsiphEThrYPWsZ8";
+
 const getSupabaseClient = (): SupabaseClient | null => {
-  if (SUPABASE_URL && SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.includes('sb_publishable')) {
-     // Aviso: Chaves que começam com sb_publishable costumam ser de outros serviços.
-     // Supabase Anon Keys geralmente começam com 'eyJ'. 
-     // Mas usaremos conforme fornecido.
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.includes('sb_publishable')) {
+    console.warn('Aguardando Chave Anon JWT válida (começa com eyJ)');
+    return null;
   }
-  
   try {
-    return createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: false }
+    });
   } catch (e) {
-    console.error('Erro ao conectar com Supabase:', e);
+    console.error('Falha crítica na conexão Supabase:', e);
     return null;
   }
 };
@@ -28,7 +29,7 @@ const LOCAL_STORAGE_KEY = 'vbr_cloud_sync_cache';
 
 export const db = {
   isCloudEnabled(): boolean {
-    return !!supabase;
+    return !!supabase && SUPABASE_ANON_KEY.startsWith('eyJ');
   },
 
   async getAll(): Promise<ProtocolData[]> {
@@ -39,21 +40,26 @@ export const db = {
           .select('*')
           .order('updated_at', { ascending: false });
 
-        if (!error && data) {
+        if (error) {
+          console.error('Erro de Banco de Dados (Supabase):', error.message);
+        } else if (data) {
           const cloudProtocols = data.map(item => ({
             ...item.data,
             id: item.id,
             updatedAt: item.updated_at
           }));
-          // Atualiza cache local para modo offline
           localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(cloudProtocols));
           return cloudProtocols;
         }
-      } catch (err) {
-        console.warn('Erro Cloud, carregando local:', err);
+      } catch (err: any) {
+        // "Load failed" ou "Failed to fetch" geralmente é AdBlock ou rede bloqueada
+        if (err.message === 'Load failed' || err.name === 'TypeError') {
+          console.warn('Conexão bloqueada pelo navegador (AdBlock?) ou erro de rede.');
+        } else {
+          console.error('Erro inesperado:', err);
+        }
       }
     }
-
     const localData = localStorage.getItem(LOCAL_STORAGE_KEY);
     return localData ? JSON.parse(localData) : [];
   },
@@ -62,7 +68,7 @@ export const db = {
     const updatedAt = new Date().toISOString();
     const updatedProtocol = { ...protocol, updatedAt };
 
-    // 1. Salva no cache local imediatamente (Offline-First)
+    // 1. Sempre salvar LocalStorage primeiro (Offline-first)
     const all = await this.getAll();
     const index = all.findIndex(p => p.id === protocol.id);
     if (index >= 0) {
@@ -72,31 +78,40 @@ export const db = {
     }
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(all));
 
-    // 2. Tenta sincronizar com Supabase
+    // 2. Tentar salvar na Nuvem
     if (supabase) {
-      const { error } = await supabase
-        .from('protocols')
-        .upsert({
-          id: protocol.id,
-          client_name: protocol.clientName,
-          updated_at: updatedAt,
-          data: updatedProtocol
-        });
+      try {
+        const { error } = await supabase
+          .from('protocols')
+          .upsert({
+            id: protocol.id,
+            client_name: protocol.clientName || 'Sem Nome',
+            updated_at: updatedAt,
+            data: updatedProtocol
+          }, { onConflict: 'id' });
 
-      if (error) {
-        console.error('Erro de Sincronização:', error);
-        throw new Error('Erro ao salvar na nuvem. Verifique sua conexão.');
+        if (error) {
+          if (error.code === '42P01') {
+            throw new Error("Tabela não encontrada. Execute o SQL de criação no painel do Supabase.");
+          }
+          throw new Error(error.message);
+        }
+      } catch (err: any) {
+        if (err.message === 'Load failed' || err.name === 'TypeError') {
+          throw new Error("A conexão com o Supabase foi bloqueada pelo seu navegador ou rede. Desative AdBlockers para este site.");
+        }
+        throw err;
       }
+    } else {
+      throw new Error("Cliente Supabase não inicializado. Verifique a Anon Key.");
     }
   },
 
   async deleteProtocol(id: string): Promise<void> {
-    // Remove local
     const all = await this.getAll();
     const filtered = all.filter(p => p.id !== id);
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(filtered));
 
-    // Remove Nuvem
     if (supabase) {
       const { error } = await supabase
         .from('protocols')
@@ -105,30 +120,5 @@ export const db = {
       
       if (error) throw error;
     }
-  },
-
-  exportBackup(protocols: ProtocolData[]) {
-    const dataStr = JSON.stringify(protocols, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    const exportFileDefaultName = `vbr_backup_full_${new Date().toISOString().split('T')[0]}.json`;
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
-  },
-
-  async importBackup(file: File): Promise<ProtocolData[]> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const content = e.target?.result as string;
-          resolve(JSON.parse(content));
-        } catch (err) {
-          reject('Erro ao ler arquivo');
-        }
-      };
-      reader.readAsText(file);
-    });
   }
 };

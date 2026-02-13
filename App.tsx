@@ -11,21 +11,15 @@ import MainDashboard from './components/MainDashboard';
 import StudentSearch from './components/StudentSearch';
 import { 
   FileText, 
-  TrendingUp, 
   Save, 
   Plus, 
-  ScrollText, 
-  Printer,
   FolderOpen,
-  ArrowLeft,
-  History,
   RefreshCw,
-  Download,
-  Upload,
-  Database,
-  CloudOff,
-  Cloud,
-  CheckCircle2
+  CheckCircle2,
+  AlertTriangle,
+  Code,
+  Key,
+  ShieldAlert
 } from 'lucide-react';
 
 type ViewMode = 'home' | 'search' | 'protocol' | 'contract' | 'evolution' | 'settings';
@@ -35,18 +29,21 @@ const App: React.FC = () => {
   const [activeView, setActiveView] = useState<ViewMode>('home');
   const [savedProtocols, setSavedProtocols] = useState<ProtocolData[]>([]);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [cloudStatus, setCloudStatus] = useState<'online' | 'offline' | 'syncing'>('online');
+  const [cloudStatus, setCloudStatus] = useState<'online' | 'offline' | 'error'>('online');
   const [showToast, setShowToast] = useState(false);
+  const [networkError, setNetworkError] = useState(false);
 
   const loadData = async () => {
     setIsSyncing(true);
-    setCloudStatus('syncing');
     try {
       const protocols = await db.getAll();
       setSavedProtocols(protocols);
-      setCloudStatus(db.isCloudEnabled() ? 'online' : 'offline');
-    } catch (e) {
-      setCloudStatus('offline');
+      // Se conseguir carregar mas a lista for menor que o esperado e der erro silencioso no db.ts, o status mudará
+      setCloudStatus(db.isCloudEnabled() ? 'online' : 'error');
+    } catch (e: any) {
+      console.error("Erro ao carregar:", e);
+      setCloudStatus('error');
+      if (e.message?.includes('Load failed')) setNetworkError(true);
     } finally {
       setIsSyncing(false);
     }
@@ -58,8 +55,6 @@ const App: React.FC = () => {
 
   const handleSave = async () => {
     setIsSyncing(true);
-    setCloudStatus('syncing');
-    
     try {
       const currentId = data.id || "vbr-" + Math.random().toString(36).substr(2, 9);
       const updatedProtocol = { 
@@ -70,7 +65,6 @@ const App: React.FC = () => {
       
       await db.saveProtocol(updatedProtocol);
       
-      // Atualização imediata da UI
       setSavedProtocols(prev => {
         const index = prev.findIndex(p => p.id === currentId);
         if (index >= 0) {
@@ -83,52 +77,29 @@ const App: React.FC = () => {
       
       setData(updatedProtocol);
       setCloudStatus('online');
+      setNetworkError(false);
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
     } catch (err: any) {
-      alert(err.message || 'Erro ao sincronizar');
-      setCloudStatus('offline');
+      console.error(err);
+      if (err.message?.includes('navegador') || err.message?.includes('Load failed')) {
+        setNetworkError(true);
+      }
+      setCloudStatus('error');
+      alert(`⚠️ ERRO NA NUVEM: ${err.message}`);
     } finally {
       setIsSyncing(false);
     }
   };
 
-  const handleExport = () => db.exportBackup(savedProtocols);
-
-  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      try {
-        const imported = await db.importBackup(file);
-        if (confirm(`Importar ${imported.length} registros para a nuvem?`)) {
-          for (const p of imported) await db.saveProtocol(p);
-          await loadData();
-          alert('Backup restaurado com sucesso!');
-        }
-      } catch (err) {
-        alert('Erro ao importar backup.');
-      }
-    }
-  };
-
   const handleNew = () => {
+    const newId = "vbr-" + Math.random().toString(36).substr(2, 9);
     setData({
       ...EMPTY_DATA,
-      id: "vbr-" + Math.random().toString(36).substr(2, 9),
+      id: newId,
       updatedAt: new Date().toISOString()
     });
     setActiveView('protocol');
-  };
-
-  const handleNewCheckin = () => {
-    const newCheckin: ProtocolData = {
-      ...data,
-      id: "vbr-" + Math.random().toString(36).substr(2, 9),
-      updatedAt: new Date().toISOString()
-    };
-    setData(newCheckin);
-    setActiveView('protocol');
-    alert('🚀 Novo check-in de evolução iniciado!');
   };
 
   const loadStudent = (student: ProtocolData, view: ViewMode = 'protocol') => {
@@ -137,7 +108,7 @@ const App: React.FC = () => {
   };
 
   const deleteStudent = async (id: string) => {
-    if(confirm('Excluir este aluno permanentemente da nuvem?')) {
+    if(confirm('Excluir este aluno permanentemente?')) {
       try {
         await db.deleteProtocol(id);
         setSavedProtocols(prev => prev.filter(p => p.id !== id));
@@ -151,7 +122,6 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white font-sans selection:bg-[#d4af37] selection:text-black">
       
-      {/* TOAST DE SUCESSO */}
       {showToast && (
         <div className="fixed bottom-10 right-10 z-[100] animate-in slide-in-from-right-10 duration-500">
            <div className="bg-[#d4af37] text-black px-8 py-4 rounded-2xl font-black uppercase text-xs flex items-center gap-3 shadow-[0_0_40px_rgba(212,175,55,0.4)]">
@@ -169,38 +139,22 @@ const App: React.FC = () => {
           
           <div className="hidden lg:flex items-center gap-3 px-4 py-2 bg-white/5 rounded-full border border-white/5">
             <div className={`w-2 h-2 rounded-full ${
-              cloudStatus === 'syncing' ? 'bg-yellow-500 animate-pulse' : 
-              cloudStatus === 'online' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.4)]' : 
-              'bg-red-500 opacity-50'
+              isSyncing ? 'bg-yellow-500 animate-pulse' : 
+              cloudStatus === 'online' ? 'bg-green-500' : 'bg-red-500'
             }`}></div>
             <span className="text-[10px] font-black uppercase tracking-widest text-white/40">
-              {cloudStatus === 'syncing' ? 'Sincronizando...' : 
-               cloudStatus === 'online' ? 'Cloud VBR: Conectado' : 
-               'Offline / Erro de Chave'}
+              {isSyncing ? 'Sincronizando...' : cloudStatus === 'online' ? 'Nuvem Ativa' : 'Erro de Conexão'}
             </span>
-            {cloudStatus === 'online' ? <Cloud size={12} className="text-[#d4af37]" /> : <CloudOff size={12} className="text-red-500" />}
           </div>
         </div>
 
         <div className="flex items-center gap-2 md:gap-4">
-          <div className="flex items-center gap-1 bg-white/5 p-1 rounded-xl no-print mr-2">
-            <button onClick={handleExport} className="p-2.5 hover:bg-white/10 rounded-lg text-white/40 hover:text-[#d4af37] transition-all" title="Backup Cloud">
-              <Download size={18} />
-            </button>
-            <label className="p-2.5 hover:bg-white/10 rounded-lg text-white/40 hover:text-[#d4af37] transition-all cursor-pointer" title="Importar">
-              <Upload size={18} />
-              <input type="file" className="hidden" onChange={handleImport} accept=".json" />
-            </label>
-          </div>
-
           <button onClick={() => setActiveView('search')} className="p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all text-white/60 hover:text-white">
             <FolderOpen size={20} />
           </button>
-          
           <button onClick={handleNew} className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-white px-4 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all">
             <Plus size={16} /> <span className="hidden md:inline">Novo Aluno</span>
           </button>
-
           {activeView !== 'home' && activeView !== 'search' && (
             <button 
               onClick={handleSave} 
@@ -208,143 +162,99 @@ const App: React.FC = () => {
               className="flex items-center gap-2 bg-[#d4af37] text-black px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all shadow-lg disabled:opacity-50"
             >
               {isSyncing ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
-              {isSyncing ? 'Sincronizando' : 'Sincronizar Cloud'}
+              Salvar Nuvem
             </button>
           )}
         </div>
       </header>
 
-      {activeView !== 'home' && activeView !== 'search' && (
-        <nav className="flex justify-center bg-[#0a0a0a] border-b border-white/5 no-print sticky top-24 z-40 bg-[#0a0a0a]/95 backdrop-blur-md">
-          <div className="flex gap-4 md:gap-8 p-4 overflow-x-auto no-scrollbar">
-            {[
-              { id: 'protocol', label: 'Protocolo', icon: <FileText size={16}/> },
-              { id: 'contract', label: 'Contrato', icon: <ScrollText size={16}/> },
-              { id: 'evolution', label: 'Evolução', icon: <TrendingUp size={16}/> },
-            ].map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setActiveView(item.id as ViewMode)}
-                className={`flex items-center gap-2 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all whitespace-nowrap ${activeView === item.id ? 'text-[#d4af37] bg-[#d4af37]/10' : 'text-white/40 hover:text-white'}`}
-              >
-                {item.icon} {item.label}
-              </button>
-            ))}
-          </div>
-        </nav>
-      )}
-
       <main className="max-w-[1600px] mx-auto p-4 md:p-10">
-        {activeView === 'home' && (
-          <div className="space-y-12">
-            <MainDashboard protocols={savedProtocols} onNew={handleNew} onList={() => setActiveView('search')} onLoadStudent={loadStudent} />
+        
+        {/* Alerta de Erro de Conexão ou Configuração */}
+        {cloudStatus === 'error' && (
+          <div className="bg-red-500/10 border border-red-500/30 p-8 rounded-[2rem] mb-10 space-y-4 animate-in fade-in duration-300">
+            <div className="flex items-center gap-4">
+              <AlertTriangle className="text-red-500" size={32} />
+              <div>
+                <h4 className="font-black uppercase text-sm">Falha de Comunicação com a Nuvem</h4>
+                <p className="text-xs text-white/60">O app está funcionando em modo Local (salvando apenas no seu computador).</p>
+              </div>
+            </div>
             
-            {/* CARD DE STATUS DA NUVEM */}
-            <div className="bg-white/5 p-10 rounded-[3rem] border border-white/10 flex flex-col md:flex-row items-center justify-between gap-8">
-              <div className="flex items-center gap-6">
-                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${cloudStatus === 'online' ? 'bg-[#d4af37]/10 text-[#d4af37]' : 'bg-red-500/10 text-red-500'}`}>
-                  <Database size={32} />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-black uppercase tracking-tighter">
-                    {cloudStatus === 'online' ? 'Base de Dados VBR Cloud' : 'Erro de Conexão Cloud'}
-                  </h3>
-                  <p className="text-white/40 text-sm font-medium max-w-xl">
-                    {cloudStatus === 'online' 
-                      ? 'Todos os seus protocolos estão salvos de forma segura no Supabase e disponíveis em qualquer dispositivo.' 
-                      : 'Não foi possível conectar ao Supabase. Verifique se as chaves fornecidas são válidas e se a tabela "protocols" foi criada.'}
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-4">
-                <button onClick={loadData} className="flex items-center gap-3 bg-white/5 hover:bg-white/10 text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all">
-                  <RefreshCw size={18} className={isSyncing ? 'animate-spin' : ''} /> Atualizar Lista
-                </button>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-white/5">
+               {networkError ? (
+                 <div className="bg-orange-500/10 p-5 rounded-2xl border border-orange-500/20 md:col-span-2">
+                   <h5 className="flex items-center gap-2 text-orange-400 font-black uppercase text-[10px] mb-2">
+                     <ShieldAlert size={14}/> Possível Bloqueio de Rede (TypeError: Load failed)
+                   </h5>
+                   <p className="text-[11px] text-white/60 mb-2">
+                     Seu navegador ou uma extensão (como <b>uBlock</b> ou <b>AdBlock</b>) pode estar bloqueando a conexão com o banco de dados Supabase.
+                   </p>
+                   <p className="text-[11px] font-bold text-white/40 italic">
+                     Sugestão: Tente desativar o AdBlock para este domínio ou usar uma janela anônima para testar.
+                   </p>
+                 </div>
+               ) : (
+                 <>
+                   <div className="bg-black/40 p-5 rounded-2xl border border-white/5">
+                     <h5 className="flex items-center gap-2 text-[#d4af37] font-black uppercase text-[10px] mb-2">
+                       <Code size={14}/> Passo 1: SQL Editor
+                     </h5>
+                     <p className="text-[11px] text-white/40 mb-4">Certifique-se que a tabela 'protocols' existe no seu Supabase.</p>
+                     <button 
+                      onClick={() => alert('Script SQL:\n\nCREATE TABLE IF NOT EXISTS protocols (\n  id TEXT PRIMARY KEY,\n  client_name TEXT NOT NULL,\n  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\n  data JSONB NOT NULL\n);\n\nALTER TABLE protocols DISABLE ROW LEVEL SECURITY;')}
+                      className="w-full bg-white/5 hover:bg-white/10 py-2 rounded-lg font-black text-[9px] uppercase transition-all"
+                     >
+                       Ver Script SQL de Criação
+                     </button>
+                   </div>
+                   <div className="bg-black/40 p-5 rounded-2xl border border-white/5">
+                     <h5 className="flex items-center gap-2 text-[#d4af37] font-black uppercase text-[10px] mb-2">
+                       <Key size={14}/> Passo 2: Verificação de Chave
+                     </h5>
+                     <p className="text-[11px] text-white/40 mb-4">Agora o sistema está usando a chave JWT correta fornecida. Se o erro persistir, verifique as permissões da tabela.</p>
+                   </div>
+                 </>
+               )}
             </div>
           </div>
         )}
 
+        {activeView === 'home' && (
+          <MainDashboard protocols={savedProtocols} onNew={handleNew} onList={() => setActiveView('search')} onLoadStudent={loadStudent} />
+        )}
+
         {activeView === 'search' && (
-          <div className="space-y-8 animate-in fade-in duration-500">
-            <div className="flex items-center gap-4 mb-4">
-              <button onClick={() => setActiveView('home')} className="p-2 hover:bg-white/10 rounded-full transition-colors">
-                <ArrowLeft size={24} className="text-[#d4af37]" />
-              </button>
-              <h2 className="text-3xl font-black uppercase tracking-tighter">Gestão de Alunos</h2>
-            </div>
-            <StudentSearch protocols={savedProtocols} onLoad={loadStudent} onDelete={deleteStudent} />
-          </div>
+          <StudentSearch protocols={savedProtocols} onLoad={loadStudent} onDelete={deleteStudent} />
         )}
 
         {activeView === 'protocol' && (
           <div className="flex flex-col gap-16">
-            <div className="space-y-8 animate-in fade-in slide-in-from-top-4 duration-500 no-print max-w-4xl mx-auto w-full">
+            <div className="max-w-4xl mx-auto w-full no-print">
                <div className="bg-white/5 p-10 rounded-[3rem] border border-white/10 shadow-xl">
-                  <h3 className="text-[#d4af37] font-black text-sm uppercase tracking-widest mb-10 flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-[#d4af37] shadow-[0_0_10px_#d4af37]"></div> 
-                    Configuração do Protocolo Técnico
-                  </h3>
                   <ProtocolForm data={data} onChange={setData} />
                </div>
             </div>
-
-            <div className="relative w-full">
-              <div className="flex flex-col items-center">
-                <div className="bg-black/40 text-[#d4af37] px-10 py-4 rounded-full font-black text-[12px] uppercase tracking-widest mb-12 no-print border border-[#d4af37]/30 backdrop-blur-md shadow-2xl">
-                  Visualização do Documento Profissional (A4)
-                </div>
-                
-                <div className="w-full flex justify-center bg-[#111] p-4 md:p-16 rounded-[4rem] border border-white/5 shadow-inner overflow-hidden min-h-[1200px]">
-                   <ProtocolPreview data={data} />
-                </div>
-
-                <div className="flex flex-col md:flex-row gap-6 mt-16 no-print mb-20">
-                  <button onClick={handleSave} disabled={isSyncing} className="flex items-center gap-4 bg-[#d4af37] text-black px-16 py-6 rounded-[2.5rem] font-black text-[14px] uppercase tracking-[0.3em] hover:scale-105 transition-all shadow-2xl disabled:opacity-50">
-                    <Save size={24} /> {isSyncing ? 'Sincronizando...' : 'Sincronizar Cloud'}
-                  </button>
-                  <button onClick={() => window.print()} className="flex items-center gap-4 bg-white text-black px-16 py-6 rounded-[2.5rem] font-black text-[14px] uppercase tracking-[0.3em] hover:scale-105 transition-all shadow-2xl">
-                    <Printer size={24} /> Exportar para Aluno (PDF)
-                  </button>
-                </div>
-              </div>
+            <div className="w-full flex justify-center bg-[#111] p-4 md:p-16 rounded-[4rem] border border-white/5 shadow-inner overflow-hidden min-h-[1200px]">
+               <ProtocolPreview data={data} />
             </div>
           </div>
         )}
 
         {activeView === 'contract' && (
-          <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-             <div className="flex justify-end mb-4 no-print gap-4">
-                <button onClick={handleSave} className="flex items-center gap-3 bg-[#d4af37] text-black px-10 py-5 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:scale-105 transition-all shadow-xl">
-                  <Save size={20} /> Salvar Alterações Cloud
-                </button>
-                <button onClick={() => window.print()} className="flex items-center gap-3 bg-white text-black px-10 py-5 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:scale-105 transition-all shadow-xl">
-                  <Printer size={20} /> Imprimir Contrato
-                </button>
-             </div>
-             <ContractWorkspace data={data} onChange={setData} />
+          <div className="no-print">
+            <ContractWorkspace data={data} onChange={setData} />
           </div>
         )}
-
+        
         {activeView === 'evolution' && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
-             <div className="flex justify-end no-print gap-4">
-                <button onClick={handleSave} className="flex items-center gap-3 bg-white/5 text-white px-8 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-white/10 transition-all border border-white/10">
-                  <Save size={18} /> Salvar Notas de Coach
-                </button>
-                <button onClick={handleNewCheckin} className="flex items-center gap-3 bg-[#d4af37] text-black px-8 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:scale-105 transition-all shadow-xl">
-                  <History size={18} /> Registrar Novo Check-in
-                </button>
-             </div>
-             <EvolutionTracker currentProtocol={data} history={savedProtocols.filter(p => p.clientName === data.clientName)} onNotesChange={(n) => setData({...data, privateNotes: n})} />
-          </div>
+          <EvolutionTracker 
+            currentProtocol={data} 
+            history={savedProtocols.filter(p => p.clientName === data.clientName)} 
+            onNotesChange={(n) => setData({...data, privateNotes: n})} 
+          />
         )}
       </main>
-
-      <footer className="mt-20 border-t border-white/5 p-16 text-center no-print opacity-20">
-         <img src={LOGO_RHINO_BLACK} alt="VBR Logo" className="h-20 mx-auto mb-6 grayscale" />
-         <p className="text-[11px] font-black text-white uppercase tracking-[0.8em]">Team VBR Engineering • Cloud Native Edition © {new Date().getFullYear()}</p>
-      </footer>
     </div>
   );
 };
