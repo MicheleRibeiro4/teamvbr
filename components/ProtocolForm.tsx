@@ -29,54 +29,35 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
   };
 
   const handleAISuggestion = async () => {
-    // A chave de API deve vir exclusivamente do process.env.API_KEY conforme regras
+    // A chave de API deve vir exclusivamente do process.env.API_KEY conforme regras do SDK
     const apiKey = process.env.API_KEY;
     
     if (!apiKey) {
-      alert("❌ ERRO DE CONFIGURAÇÃO: A Chave de API da Inteligência VBR não foi detectada no ambiente. Verifique o arquivo .env ou as chaves de sistema.");
+      alert("❌ ERRO: A Chave de API da Inteligência VBR não foi encontrada. Certifique-se de que a variável de ambiente API_KEY está configurada.");
       return;
     }
 
     if (!data.clientName || !data.physicalData.weight) {
-      alert("⚠️ INFORMAÇÕES INSUFICIENTES: Preencha o Nome e o Peso para que a IA possa realizar os cálculos metabólicos.");
+      alert("⚠️ INFORMAÇÕES INSUFICIENTES: Preencha o Nome e o Peso para análise metabólica.");
       return;
     }
 
     setIsGenerating(true);
     try {
-      // Inicialização segura no momento do uso
       const ai = new GoogleGenAI({ apiKey });
       
-      const prompt = `Você é o Master Coach do Team VBR. Analise os dados abaixo e gere um protocolo de ELITE completo.
-      DADOS DO ALUNO:
-      - Nome: ${data.clientName}
-      - Sexo: ${data.physicalData.gender}
-      - Objetivo: ${data.protocolTitle}
-      - Peso: ${data.physicalData.weight}kg
-      - BF Estimado: ${data.physicalData.bodyFat}%
+      const prompt = `Você é o Master Coach do Team VBR. Crie um protocolo de ELITE baseado nos dados:
+      Aluno: ${data.clientName} | Peso: ${data.physicalData.weight}kg | Objetivo: ${data.protocolTitle}
       
-      INSTRUÇÕES TÉCNICAS:
-      - Nutrição: Calcule macros para o objetivo de ${data.protocolTitle}.
-      - Treino: Monte uma rotina focada e eficiente.
-      - Tom de Voz: Profissional, motivador e técnico.
+      Gere um JSON estruturado com:
+      - nutritionalStrategy (texto motivador longo)
+      - kcalGoal (número aproximado)
+      - macros (protein.value, carbs.value, fats.value)
+      - meals (array com time, name, details)
+      - supplements (array com name, dosage, timing)
+      - trainingDays (array com title, focus, exercises[{name, sets}])
+      - generalObservations (texto final)`;
 
-      Gere um JSON rigorosamente estruturado:
-      {
-        "nutritionalStrategy": "Texto estratégico longo",
-        "kcalGoal": "Ex: 2800",
-        "kcalSubtext": "(SUPERÁVIT CONTROLADO)",
-        "macros": {
-          "protein": { "value": "180", "ratio": "≈ 2.2g/kg" },
-          "carbs": { "value": "350", "ratio": "Energia" },
-          "fats": { "value": "80", "ratio": "Hormonal" }
-        },
-        "meals": [{"time": "08:00", "name": "Refeição 1", "details": "Detalhes quantitativos"}],
-        "supplements": [{"name": "Creatina", "dosage": "5g", "timing": "Pós-treino"}],
-        "trainingDays": [{"title": "DIA A", "focus": "Peito e Tríceps", "exercises": [{"name": "Supino Reto", "sets": "4x 10"}]}],
-        "generalObservations": "Dicas finais do mestre"
-      }`;
-
-      // Usando Gemini 3 Pro para tarefas que exigem raciocínio complexo de protocolos de saúde
       const response = await ai.models.generateContent({
         model: "gemini-3-pro-preview",
         contents: prompt,
@@ -87,28 +68,21 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
             properties: {
               nutritionalStrategy: { type: Type.STRING },
               kcalGoal: { type: Type.STRING },
-              kcalSubtext: { type: Type.STRING },
               macros: {
                 type: Type.OBJECT,
                 properties: {
-                  protein: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } },
-                  carbs: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } },
-                  fats: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } },
+                  protein: { type: Type.OBJECT, properties: { value: { type: Type.STRING } } },
+                  carbs: { type: Type.OBJECT, properties: { value: { type: Type.STRING } } },
+                  fats: { type: Type.OBJECT, properties: { value: { type: Type.STRING } } },
                 }
               },
               meals: { 
                 type: Type.ARRAY, 
-                items: { 
-                  type: Type.OBJECT, 
-                  properties: { time: { type: Type.STRING }, name: { type: Type.STRING }, details: { type: Type.STRING } } 
-                } 
+                items: { type: Type.OBJECT, properties: { time: { type: Type.STRING }, name: { type: Type.STRING }, details: { type: Type.STRING } } } 
               },
               supplements: { 
                 type: Type.ARRAY, 
-                items: { 
-                  type: Type.OBJECT, 
-                  properties: { name: { type: Type.STRING }, dosage: { type: Type.STRING }, timing: { type: Type.STRING } } 
-                } 
+                items: { type: Type.OBJECT, properties: { name: { type: Type.STRING }, dosage: { type: Type.STRING }, timing: { type: Type.STRING } } } 
               },
               trainingDays: { 
                 type: Type.ARRAY, 
@@ -143,8 +117,8 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
 
       onChange(updatedData);
     } catch (error: any) {
-      console.error("Erro na Inteligência VBR:", error);
-      alert(`❌ FALHA NA GERAÇÃO: ${error.message || 'Erro de conexão com o servidor da IA.'}`);
+      console.error("Erro Gemini:", error);
+      alert(`❌ FALHA NA GERAÇÃO: ${error.message}`);
     } finally {
       setIsGenerating(false);
     }

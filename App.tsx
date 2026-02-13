@@ -106,19 +106,18 @@ const App: React.FC = () => {
     }
   };
 
-  const sqlRepairScript = `-- SCRIPT DE REPARO TEAM VBR (RESOLVE ERRO DE COLUNAS)
--- Este script deleta as tabelas antigas e cria a estrutura correta para este App.
-
--- 1. Remover tabelas que possam causar conflito de nomes
+  const sqlRepairScript = `-- SCRIPT DE REPARO DEFINITIVO VBR (COPIE E COLE NO SQL EDITOR)
+-- 1. Remove tabelas conflitantes antigas (Importante!)
 DROP TABLE IF EXISTS public.contracts CASCADE;
 DROP TABLE IF EXISTS public.exercises CASCADE;
 DROP TABLE IF EXISTS public.meals CASCADE;
 DROP TABLE IF EXISTS public.supplements CASCADE;
 DROP TABLE IF EXISTS public.training_days CASCADE;
 DROP TABLE IF EXISTS public.students CASCADE;
+DROP TABLE IF EXISTS public.consultants CASCADE;
 DROP TABLE IF EXISTS public.protocols CASCADE;
 
--- 2. Criar a tabela única de protocolos (Modo JSONB Flexível)
+-- 2. Cria a tabela única otimizada para JSONB
 CREATE TABLE public.protocols (
   id text NOT NULL PRIMARY KEY,
   client_name text NOT NULL,
@@ -126,13 +125,13 @@ CREATE TABLE public.protocols (
   data jsonb NOT NULL
 );
 
--- 3. Liberar permissões para o App (Anon)
+-- 3. Abre permissões públicas (RLS Off)
 ALTER TABLE public.protocols DISABLE ROW LEVEL SECURITY;
 GRANT ALL ON TABLE public.protocols TO anon;
 GRANT ALL ON TABLE public.protocols TO authenticated;
 GRANT ALL ON TABLE public.protocols TO service_role;
 
--- 4. Notificar o sistema para atualizar o cache de esquema
+-- 4. Força o recarregamento do cache do Supabase
 NOTIFY pgrst, 'reload schema';`;
 
   return (
@@ -159,7 +158,7 @@ NOTIFY pgrst, 'reload schema';`;
               cloudStatus === 'online' ? 'bg-green-500' : 'bg-red-500'
             }`}></div>
             <span className="text-[10px] font-black uppercase tracking-widest text-white/40">
-              {isSyncing ? 'Sincronizando...' : cloudStatus === 'online' ? 'Supabase Conectado' : 'Erro de Esquema'}
+              {isSyncing ? 'Sincronizando...' : cloudStatus === 'online' ? 'Supabase Conectado' : 'Erro de Estrutura'}
             </span>
           </div>
         </div>
@@ -202,7 +201,7 @@ NOTIFY pgrst, 'reload schema';`;
               <button 
                 onClick={() => { 
                   navigator.clipboard.writeText(sqlRepairScript); 
-                  alert('Script SQL de Reparo Copiado!\n\nPassos:\n1. Vá ao painel do Supabase\n2. SQL Editor -> New Query\n3. Cole o script e clique em RUN\n4. Recarregue esta página.'); 
+                  alert('Script SQL Copiado!\n\nPassos:\n1. Vá ao Supabase\n2. SQL Editor -> New Query\n3. Cole o script e clique em RUN\n4. Recarregue esta página.'); 
                 }}
                 className="flex items-center gap-3 bg-white/5 hover:bg-white/10 px-8 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all border border-white/10 group"
               >
