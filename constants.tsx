@@ -9,7 +9,7 @@ export const CONSULTANT_DEFAULT = {
   consultantName: "Vinicius Brasil dos Santos Otero",
   consultantCpf: "143.436.487-96",
   consultantEmail: "viniicius.br2@gmail.com",
-  consultantAddress: "Rua Serra da boa esperança, 540, Serra Dourada, Vespasiano - Minas Gerais",
+  consultantAddress: "Rua Serra da Boa Esperança, 540, Serra Dourada, Vespasiano - Minas Gerais",
 };
 
 export const DEFAULT_CONTRACT_TEMPLATE = `CLÁUSULA 1 – OBJETO

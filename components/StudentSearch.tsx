@@ -1,11 +1,11 @@
 
 import React, { useState } from 'react';
 import { ProtocolData } from '../types';
-import { Search, Trash2, ChevronRight, Calendar, User, Target } from 'lucide-react';
+import { Search, Trash2, ChevronRight, Calendar, User, Target, FileText, TrendingUp, ScrollText } from 'lucide-react';
 
 interface Props {
   protocols: ProtocolData[];
-  onLoad: (protocol: ProtocolData) => void;
+  onLoad: (protocol: ProtocolData, view: 'protocol' | 'contract' | 'evolution') => void;
   onDelete: (id: string) => void;
 }
 
@@ -23,7 +23,7 @@ const StudentSearch: React.FC<Props> = ({ protocols, onLoad, onDelete }) => {
         <div className="relative flex-1 w-full">
           <input
             type="text"
-            placeholder="Pesquisar aluno..."
+            placeholder="Pesquisar por nome ou protocolo..."
             className="w-full p-5 pl-14 bg-white/5 border border-white/10 rounded-[1.5rem] focus:ring-2 focus:ring-[#d4af37] outline-none font-bold text-white text-lg"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -54,7 +54,7 @@ const StudentSearch: React.FC<Props> = ({ protocols, onLoad, onDelete }) => {
                   </span>
                   <div className="flex items-center gap-3 text-[10px] font-black text-white/40 uppercase tracking-widest">
                     <span className="flex items-center gap-1 text-[#d4af37] px-2 py-0.5 bg-[#d4af37]/10 rounded-md">
-                      <Target size={12}/> {p.protocolTitle}
+                      <Target size={12}/> {p.protocolTitle || 'Sem Objetivo'}
                     </span>
                     <span className="w-1 h-1 bg-white/10 rounded-full"></span>
                     <span className="flex items-center gap-1">
@@ -66,18 +66,40 @@ const StudentSearch: React.FC<Props> = ({ protocols, onLoad, onDelete }) => {
               </div>
 
               <div className="flex items-center gap-3 border-t border-white/5 md:border-t-0 pt-4 md:pt-0">
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => onLoad(p, 'protocol')}
+                    className="p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all text-white/40 flex flex-col items-center gap-1 min-w-[65px]"
+                    title="Ver Protocolo"
+                  >
+                    <FileText size={18} />
+                    <span className="text-[7px] font-black uppercase">Protocolo</span>
+                  </button>
+                  <button 
+                    onClick={() => onLoad(p, 'evolution')}
+                    className="p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all text-white/40 flex flex-col items-center gap-1 min-w-[65px]"
+                    title="Ver Evolução"
+                  >
+                    <TrendingUp size={18} />
+                    <span className="text-[7px] font-black uppercase">Evolução</span>
+                  </button>
+                  <button 
+                    onClick={() => onLoad(p, 'contract')}
+                    className="p-3 bg-[#d4af37]/10 hover:bg-[#d4af37] hover:text-black rounded-xl transition-all text-[#d4af37] flex flex-col items-center gap-1 min-w-[65px] border border-[#d4af37]/20"
+                    title="Ver Contrato"
+                  >
+                    <ScrollText size={18} />
+                    <span className="text-[7px] font-black uppercase">Contrato</span>
+                  </button>
+                </div>
+
+                <div className="h-10 w-px bg-white/5 mx-2 hidden md:block"></div>
+
                 <button 
                   onClick={() => onDelete(p.id)}
-                  className="p-4 text-white/20 hover:text-red-500 hover:bg-red-500/10 rounded-2xl transition-all"
-                  title="Remover"
+                  className="p-4 text-white/10 hover:text-red-500 hover:bg-red-500/10 rounded-2xl transition-all"
                 >
                   <Trash2 size={20} />
-                </button>
-                <button 
-                  onClick={() => onLoad(p)}
-                  className="flex items-center gap-3 bg-[#d4af37] text-black px-8 py-4 rounded-2xl text-[12px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl active:scale-95"
-                >
-                  Abrir Perfil <ChevronRight size={18} />
                 </button>
               </div>
             </div>

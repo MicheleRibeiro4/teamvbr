@@ -9,7 +9,6 @@ interface Props {
 }
 
 const ProtocolPreview: React.FC<Props> = ({ data }) => {
-  // Classes para controle de página A4
   const fixedPageClass = "bg-white w-[210mm] h-[297mm] mx-auto flex flex-col page-break text-black relative shadow-2xl print:shadow-none print:m-0 print:rounded-none mb-10";
   const dynamicPageClass = "bg-white w-[210mm] min-h-[297mm] mx-auto flex flex-col page-break-dynamic text-black relative shadow-2xl print:shadow-none print:m-0 print:rounded-none mb-10";
 
@@ -20,7 +19,6 @@ const ProtocolPreview: React.FC<Props> = ({ data }) => {
   return (
     <div className="flex flex-col items-center w-full bg-transparent print:gap-0 print-container pb-20 print:pb-0">
       
-      {/* Botão de Impressão Flutuante (Oculto na Impressão) */}
       <button 
         onClick={handlePrint}
         className="no-print fixed bottom-8 right-8 z-[100] bg-[#d4af37] text-black px-8 py-5 rounded-full shadow-[0_0_50px_rgba(212,175,55,0.6)] hover:scale-110 active:scale-95 transition-all font-black uppercase text-xs flex items-center gap-3 border-2 border-black/10"
@@ -28,7 +26,7 @@ const ProtocolPreview: React.FC<Props> = ({ data }) => {
         <Printer size={20} /> Gerar PDF / Imprimir Protocolo
       </button>
 
-      {/* PÁGINA 1: CAPA PREMIUM */}
+      {/* PÁGINA 1: CAPA */}
       <div className={`${fixedPageClass} !bg-[#0a0a0a] !text-white border-b-[24px] border-[#d4af37] justify-between p-[2cm]`}>
         <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_top_right,_rgba(212,175,55,0.2)_0%,_transparent_60%)]"></div>
         
@@ -65,11 +63,8 @@ const ProtocolPreview: React.FC<Props> = ({ data }) => {
         </div>
       </div>
 
-      {/* PÁGINA 2: AVALIAÇÃO FÍSICA */}
+      {/* PÁGINA 2: AVALIAÇÃO */}
       <div className={`${fixedPageClass} p-[1.5cm]`}>
-        <div className="absolute top-10 right-10 opacity-5">
-           <img src={LOGO_RHINO_WHITE} alt="Logo" className="w-48" />
-        </div>
         <div className="flex justify-between items-end border-b-8 border-[#d4af37] pb-10 mb-14">
           <div>
             <span className="text-[14px] font-black text-[#d4af37] uppercase tracking-[0.6em]">Módulo 01</span>
@@ -127,7 +122,7 @@ const ProtocolPreview: React.FC<Props> = ({ data }) => {
         </div>
       </div>
 
-      {/* PÁGINA 3: PLANO NUTRICIONAL */}
+      {/* PÁGINA 3: NUTRIÇÃO */}
       <div className={`${fixedPageClass} p-[1.5cm]`}>
         <div className="flex justify-between items-end border-b-8 border-[#d4af37] pb-10 mb-14">
           <div>
@@ -166,7 +161,7 @@ const ProtocolPreview: React.FC<Props> = ({ data }) => {
         </div>
       </div>
 
-      {/* PÁGINA 4: ROTINA ALIMENTAR */}
+      {/* PÁGINA 4: REFEIÇÕES */}
       <div className={`${dynamicPageClass} p-[1.5cm]`}>
         <div className="flex justify-between items-end border-b-8 border-[#d4af37] pb-10 mb-14">
           <div>
@@ -198,7 +193,7 @@ const ProtocolPreview: React.FC<Props> = ({ data }) => {
         </div>
       </div>
 
-      {/* PÁGINA 5: METODOLOGIA DE TREINO */}
+      {/* PÁGINA 5: TREINO */}
       <div className={`${dynamicPageClass} p-[1.5cm]`}>
         <div className="flex justify-between items-end border-b-8 border-[#d4af37] pb-10 mb-14">
           <div>
@@ -229,7 +224,7 @@ const ProtocolPreview: React.FC<Props> = ({ data }) => {
         </div>
       </div>
 
-      {/* PÁGINA 6: OBSERVAÇÕES DO COACH */}
+      {/* PÁGINA 6: CONCLUSÃO */}
       <div className={`${fixedPageClass} !bg-[#0a0a0a] !text-white justify-center p-[2cm] border-t-[24px] border-[#d4af37]`}>
         <div className="max-w-3xl text-center space-y-20 relative z-10 mx-auto">
            <div className="bg-white/5 border-2 border-[#d4af37]/40 p-20 rounded-[5rem] backdrop-blur-2xl shadow-[0_0_100px_rgba(212,175,55,0.2)] relative">

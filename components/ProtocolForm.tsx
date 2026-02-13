@@ -30,34 +30,33 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
 
   const handleAISuggestion = async () => {
     if (!data.clientName || !data.physicalData.weight) {
-      alert("⚠️ DADOS NECESSÁRIOS: Preencha o Nome e o Peso para que a IA possa analisar.");
+      alert("⚠️ DADOS NECESSÁRIOS: Preencha o Nome e o Peso para que a IA possa analisar o metabolismo do aluno.");
       return;
     }
 
     setIsGenerating(true);
     try {
-      // Criação da instância com a chave do ambiente
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       
-      const prompt = `Atue como o Master Coach Vinícius Brasil do Team VBR. Crie um protocolo de ELITE baseado nos dados:
-      Aluno: ${data.clientName} | Peso: ${data.physicalData.weight}kg | Altura: ${data.physicalData.height}m | Idade: ${data.physicalData.age} | Objetivo: ${data.protocolTitle || "Performance Máxima"}.
+      const prompt = `Atue como o Master Coach Vinícius Brasil do Team VBR. Crie um protocolo profissional de elite baseado nos seguintes dados:
+      Nome: ${data.clientName} | Peso: ${data.physicalData.weight}kg | Altura: ${data.physicalData.height}m | Idade: ${data.physicalData.age} | Objetivo: ${data.protocolTitle || "Performance Máxima"}.
       
-      Gere um plano de nutrição e um treino completo. O treino deve conter pelo menos 4 exercícios por dia.
+      Gere uma estratégia nutricional detalhada, meta de macros coerente e treinos.
       
-      Retorne um JSON rigoroso:
+      Retorne APENAS o JSON:
       {
-        "nutritionalStrategy": "Explicação técnica da estratégia",
-        "kcalGoal": "Valor (ex: 3200)",
+        "nutritionalStrategy": "Explicação técnica",
+        "kcalGoal": "Valor total",
         "kcalSubtext": "(TEXTO EM CAIXA ALTA)",
         "macros": {
-          "protein": { "value": "200", "ratio": "2.2g/kg" },
-          "carbs": { "value": "450", "ratio": "4.5g/kg" },
-          "fats": { "value": "80", "ratio": "0.8g/kg" }
+          "protein": { "value": "g", "ratio": "g/kg" },
+          "carbs": { "value": "g", "ratio": "g/kg" },
+          "fats": { "value": "g", "ratio": "g/kg" }
         },
-        "meals": [{"time": "08:00", "name": "Refeição 1", "details": "Alimentos e quantidades"}],
-        "supplements": [{"name": "Creatina", "dosage": "5g", "timing": "Qualquer horário"}],
-        "trainingDays": [{"title": "DIA A", "focus": "PEITO/OMBRO", "exercises": [{"name": "Supino Reto", "sets": "4x10"}]}],
-        "generalObservations": "Instruções finais do coach"
+        "meals": [{"time": "00:00", "name": "Nome", "details": "Detalhes"}],
+        "supplements": [{"name": "Suplemento", "dosage": "dose", "timing": "horário"}],
+        "trainingDays": [{"title": "DIA", "focus": "FOCO", "exercises": [{"name": "Exercício", "sets": "séries"}]}],
+        "generalObservations": "Instruções"
       }`;
 
       const response = await ai.models.generateContent({
@@ -104,11 +103,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
         }
       });
 
-      // Extração correta da propriedade .text
-      const text = response.text;
-      if (!text) throw new Error("Resposta da IA vazia");
-
-      const suggestion = JSON.parse(text.trim());
+      const suggestion = JSON.parse(response.text || '{}');
       
       const updatedData = {
         ...data,
@@ -124,8 +119,8 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
 
       onChange(updatedData);
     } catch (error: any) {
-      console.error("Erro na Geração IA:", error);
-      alert(`❌ ERRO NA IA: ${error.message || "Tente novamente em instantes."}`);
+      console.error("Erro IA:", error);
+      alert("❌ Falha ao gerar com IA. Verifique sua conexão e tente novamente.");
     } finally {
       setIsGenerating(false);
     }
