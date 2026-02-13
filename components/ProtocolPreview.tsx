@@ -22,14 +22,9 @@ const ProtocolPreview: React.FC<Props> = ({ data }) => {
           <div className="p-6 bg-white/5 rounded-[3rem] border border-white/10 backdrop-blur-md mb-20 shadow-[0_0_60px_rgba(212,175,55,0.25)]">
             <img 
                 src={LOGO_RHINO_BLACK} 
-                alt="Logo VBR" 
-                className="w-80 h-auto" 
-                onLoad={() => console.log('Logo principal carregado')}
-                onError={(e) => {
-                    console.error('Falha ao carregar logo local, tentando fallback...');
-                    const target = e.target as HTMLImageElement;
-                    target.src = "https://i.ibb.co/m5vjF6P9/vbr-logo-gold.png"; 
-                }}
+                alt="Logo Team VBR" 
+                className="w-80 h-auto block" 
+                style={{ minHeight: '100px' }}
             />
           </div>
           
@@ -61,7 +56,7 @@ const ProtocolPreview: React.FC<Props> = ({ data }) => {
       {/* PÁGINA 2: BIOIMPEDÂNCIA */}
       <div className={`${pageClass} p-[1.5cm] rounded-[2rem]`}>
         <div className="absolute top-10 right-10 opacity-10">
-           <img src={LOGO_RHINO_WHITE} alt="Logo VBR" className="w-32" />
+           <img src={LOGO_RHINO_WHITE} alt="Logo" className="w-32" />
         </div>
         <div className="flex justify-between items-end border-b-8 border-[#d4af37] pb-8 mb-12">
           <div>
@@ -123,7 +118,7 @@ const ProtocolPreview: React.FC<Props> = ({ data }) => {
       {/* PÁGINA 3: PLANO NUTRICIONAL */}
       <div className={`${pageClass} p-[1.5cm] rounded-[2rem]`}>
         <div className="absolute top-10 right-10 opacity-10">
-           <img src={LOGO_RHINO_WHITE} alt="Logo VBR" className="w-32" />
+           <img src={LOGO_RHINO_WHITE} alt="Logo" className="w-32" />
         </div>
         <div className="flex justify-between items-end border-b-8 border-[#d4af37] pb-8 mb-12">
           <div>
@@ -239,7 +234,7 @@ const ProtocolPreview: React.FC<Props> = ({ data }) => {
            </div>
            
            <div className="pt-20 flex flex-col items-center">
-             <img src={LOGO_RHINO_BLACK} alt="VBR Logo" className="w-72 mx-auto mb-12 drop-shadow-[0_0_30px_rgba(212,175,55,0.4)]" />
+             <img src={LOGO_RHINO_BLACK} alt="Logo" className="w-72 mx-auto mb-12 drop-shadow-[0_0_30px_rgba(212,175,55,0.4)]" />
              <p className="text-4xl font-black tracking-[0.6em] uppercase font-montserrat">TEAM VBR</p>
              <div className="w-48 h-1 bg-[#d4af37] my-8 shadow-[0_0_20px_rgba(212,175,55,0.6)]"></div>
              <p className="text-[14px] font-black text-white/40 tracking-[1.5em] uppercase">NO EXCUSES • NO LIMITS</p>

@@ -1,9 +1,9 @@
 
 import { ProtocolData } from './types';
 
-// Garantindo caminho absoluto para o logo na raiz do projeto
-export const LOGO_RHINO_BLACK = "/logo.png"; 
-export const LOGO_RHINO_WHITE = "/logo.png"; 
+// Definindo o caminho para o arquivo local logo.png na raiz do projeto
+export const LOGO_RHINO_BLACK = "./logo.png"; 
+export const LOGO_RHINO_WHITE = "./logo.png"; 
 
 export const CONSULTANT_DEFAULT = {
   consultantName: "Vinicius Brasil dos Santos Otero",
@@ -58,7 +58,7 @@ c) Manter sigilo absoluto sobre os dados e informações do contratante, nos ter
 CLÁUSULA 6 – RESULTADOS
 6.1. O contratante declara estar ciente de que:
 a) Os resultados obtidos variam conforme fatores individuais, como genética, adesão, alimentação, sono, descanso e acompanhamento profissional especializado;
-b) Não há qualquer garantia de resultados específicos, tampouco promessa de emagrecimento, ganho de massa muscular, performance atlética ou qualquer outro benefício estético ou funcional;
+b) Não há qualquer garantia de resultados específicos, tampouco promessa de emagrecimento, ganho de massa muscular, performance atlética ou qualquer outro beneficio estético ou funcional;
 c) O serviço prestado é de meio, não de fim, dependendo exclusivamente do esforço e disciplina do contratante.
 
 CLÁUSULA 7 – DESISTÊNCIA, CANCELAMENTO E REEMBOLSO
