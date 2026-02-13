@@ -1,6 +1,10 @@
 
 import { ProtocolData } from './types';
 
+// Logos oficiais Team VBR (Rhino Edition)
+export const LOGO_RHINO_BLACK = "https://i.ibb.co/3ykXW2K/vbr-rhino-black.png"; // Versão para fundos pretos
+export const LOGO_RHINO_WHITE = "https://i.ibb.co/Csq9zX9/vbr-rhino-white.png"; // Versão para fundos brancos
+
 export const CONSULTANT_DEFAULT = {
   consultantName: "Vinicius Brasil dos Santos Otero",
   consultantCpf: "143.436.487-96",

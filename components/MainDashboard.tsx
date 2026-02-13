@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { ProtocolData } from '../types';
+import { LOGO_RHINO_BLACK } from '../constants';
 import { 
   Users, 
   DollarSign, 
@@ -55,10 +56,11 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
       {/* Banner Principal */}
       <div className="bg-[#0a0a0a] rounded-[3rem] p-10 border-b-[12px] border-[#d4af37] relative overflow-hidden shadow-2xl flex flex-col md:flex-row justify-between items-center gap-8">
         <div className="absolute top-0 right-0 p-10 opacity-[0.03] pointer-events-none">
-          <img src="https://i.ibb.co/m5vjF6P9/vbr-logo-gold.png" alt="" className="w-80" />
+          <img src={LOGO_RHINO_BLACK} alt="" className="w-96" />
         </div>
         
-        <div className="relative z-10 text-center md:text-left">
+        <div className="relative z-10 text-center md:text-left flex items-center gap-6">
+          <img src={LOGO_RHINO_BLACK} alt="Team VBR Rhino" className="w-48 h-auto hidden md:block" />
           <h1 className="text-4xl md:text-7xl font-black text-white uppercase tracking-tighter leading-none">
             Team VBR
           </h1>

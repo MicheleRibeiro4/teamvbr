@@ -19,42 +19,57 @@
         background-color: var(--vbr-black);
         color: white;
         margin: 0;
+        -webkit-font-smoothing: antialiased;
       }
       .font-montserrat {
         font-family: 'Montserrat', sans-serif;
       }
+      
+      /* Ajustes de Impressão e PDF */
       @media print {
+        @page {
+          margin: 0;
+          size: A4;
+        }
         .no-print {
           display: none !important;
-        }
-        .page-break {
-          page-break-after: always !important;
-          break-after: page !important;
-          display: block;
         }
         body {
           background-color: white !important;
           color: black !important;
         }
+        .page-break {
+          page-break-after: always !important;
+          break-after: page !important;
+          display: block;
+          clear: both;
+        }
+        /* Força fundos e cores no PDF */
         * {
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
+          color-adjust: exact !important;
         }
       }
+
+      /* Scrollbar Customizada */
+      ::-webkit-scrollbar { width: 6px; }
+      ::-webkit-scrollbar-track { background: #0a0a0a; }
+      ::-webkit-scrollbar-thumb { background: #d4af37; border-radius: 10px; }
     </style>
     <script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@^19.2.4",
-    "react/": "https://esm.sh/react@^19.2.4/",
-    "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
-    "react-dom": "https://esm.sh/react-dom@^19.2.4",
-    "react-dom/client": "https://esm.sh/react-dom@^19.2.4/client",
-    "@google/genai": "https://esm.sh/@google/genai@^1.41.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/"
-  }
-}
-</script>
+    {
+      "imports": {
+        "react": "https://esm.sh/react@^19.2.4",
+        "react/": "https://esm.sh/react@^19.2.4/",
+        "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
+        "react-dom": "https://esm.sh/react-dom@^19.2.4",
+        "react-dom/client": "https://esm.sh/react-dom@^19.2.4/client",
+        "@google/genai": "https://esm.sh/@google/genai@^1.41.0",
+        "react-dom/": "https://esm.sh/react-dom@^19.2.4/"
+      }
+    }
+    </script>
   </head>
   <body class="bg-[#0a0a0a]">
     <div id="root"></div>
