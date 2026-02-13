@@ -29,43 +29,56 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
   };
 
   const handleAISuggestion = async () => {
-    // A chave DEVE ser capturada do process.env no momento exato do clique
+    // A chave de API deve vir exclusivamente do process.env.API_KEY conforme regras
     const apiKey = process.env.API_KEY;
     
     if (!apiKey) {
-      alert("❌ ERRO: Chave de API (Gemini) não encontrada no ambiente.");
+      alert("❌ ERRO DE CONFIGURAÇÃO: A Chave de API da Inteligência VBR não foi detectada no ambiente. Verifique o arquivo .env ou as chaves de sistema.");
       return;
     }
 
     if (!data.clientName || !data.physicalData.weight) {
-      alert("⚠️ Preencha o Nome e o Peso para que a IA possa analisar.");
+      alert("⚠️ INFORMAÇÕES INSUFICIENTES: Preencha o Nome e o Peso para que a IA possa realizar os cálculos metabólicos.");
       return;
     }
 
     setIsGenerating(true);
     try {
-      // Inicialização explícita conforme documentação do SDK
-      const ai = new GoogleGenAI({ apiKey: apiKey });
+      // Inicialização segura no momento do uso
+      const ai = new GoogleGenAI({ apiKey });
       
-      const prompt = `Aja como o Head Coach do Team VBR. Crie um protocolo profissional de elite:
-      Aluno: ${data.clientName}
-      Sexo: ${data.physicalData.gender}
-      Objetivo: ${data.protocolTitle}
-      Peso: ${data.physicalData.weight}kg
-      BF: ${data.physicalData.bodyFat}%
+      const prompt = `Você é o Master Coach do Team VBR. Analise os dados abaixo e gere um protocolo de ELITE completo.
+      DADOS DO ALUNO:
+      - Nome: ${data.clientName}
+      - Sexo: ${data.physicalData.gender}
+      - Objetivo: ${data.protocolTitle}
+      - Peso: ${data.physicalData.weight}kg
+      - BF Estimado: ${data.physicalData.bodyFat}%
       
-      Gere um JSON rigorosamente estruturado com:
-      - nutritionalStrategy (texto impactante)
-      - kcalGoal (string)
-      - kcalSubtext (estratégia calórica)
-      - macros (protein.value, carbs.value, fats.value)
-      - meals (array de objetos com time, name, details)
-      - supplements (array de objetos com name, dosage, timing)
-      - trainingDays (array de objetos com title, focus, exercises[{name, sets}])
-      - generalObservations (conclusão técnica)`;
+      INSTRUÇÕES TÉCNICAS:
+      - Nutrição: Calcule macros para o objetivo de ${data.protocolTitle}.
+      - Treino: Monte uma rotina focada e eficiente.
+      - Tom de Voz: Profissional, motivador e técnico.
 
+      Gere um JSON rigorosamente estruturado:
+      {
+        "nutritionalStrategy": "Texto estratégico longo",
+        "kcalGoal": "Ex: 2800",
+        "kcalSubtext": "(SUPERÁVIT CONTROLADO)",
+        "macros": {
+          "protein": { "value": "180", "ratio": "≈ 2.2g/kg" },
+          "carbs": { "value": "350", "ratio": "Energia" },
+          "fats": { "value": "80", "ratio": "Hormonal" }
+        },
+        "meals": [{"time": "08:00", "name": "Refeição 1", "details": "Detalhes quantitativos"}],
+        "supplements": [{"name": "Creatina", "dosage": "5g", "timing": "Pós-treino"}],
+        "trainingDays": [{"title": "DIA A", "focus": "Peito e Tríceps", "exercises": [{"name": "Supino Reto", "sets": "4x 10"}]}],
+        "generalObservations": "Dicas finais do mestre"
+      }`;
+
+      // Usando Gemini 3 Pro para tarefas que exigem raciocínio complexo de protocolos de saúde
       const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-3-pro-preview",
         contents: prompt,
         config: {
           responseMimeType: "application/json",
@@ -78,9 +91,9 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
               macros: {
                 type: Type.OBJECT,
                 properties: {
-                  protein: { type: Type.OBJECT, properties: { value: { type: Type.STRING } } },
-                  carbs: { type: Type.OBJECT, properties: { value: { type: Type.STRING } } },
-                  fats: { type: Type.OBJECT, properties: { value: { type: Type.STRING } } },
+                  protein: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } },
+                  carbs: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } },
+                  fats: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } },
                 }
               },
               meals: { 
@@ -114,8 +127,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
         }
       });
 
-      const jsonText = response.text.trim();
-      const suggestion = JSON.parse(jsonText);
+      const suggestion = JSON.parse(response.text);
       
       const updatedData = {
         ...data,
@@ -131,8 +143,8 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
 
       onChange(updatedData);
     } catch (error: any) {
-      console.error("Erro IA:", error);
-      alert(`❌ Falha na Inteligência VBR: ${error.message}`);
+      console.error("Erro na Inteligência VBR:", error);
+      alert(`❌ FALHA NA GERAÇÃO: ${error.message || 'Erro de conexão com o servidor da IA.'}`);
     } finally {
       setIsGenerating(false);
     }
@@ -206,24 +218,25 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
         </div>
       </section>
 
-      <div className="bg-gradient-to-br from-[#d4af37]/20 via-black to-black p-8 rounded-[3rem] border border-[#d4af37]/40 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl">
-        <div className="flex items-center gap-5">
-          <div className="w-16 h-16 bg-[#d4af37] rounded-[1.5rem] flex items-center justify-center text-black shadow-[0_0_30px_rgba(212,175,55,0.4)]">
+      <div className="bg-gradient-to-br from-[#d4af37]/20 via-black to-black p-8 rounded-[3rem] border border-[#d4af37]/40 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl relative overflow-hidden group">
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 pointer-events-none"></div>
+        <div className="flex items-center gap-5 relative z-10">
+          <div className="w-16 h-16 bg-[#d4af37] rounded-[1.5rem] flex items-center justify-center text-black shadow-[0_0_30px_rgba(212,175,55,0.4)] group-hover:scale-110 transition-transform">
             {isGenerating ? <Loader2 size={32} className="animate-spin" /> : <Sparkles size={32} />}
           </div>
           <div>
-            <h3 className="font-black text-2xl text-white uppercase tracking-tighter leading-none">Inteligência VBR</h3>
+            <h3 className="font-black text-2xl text-white uppercase tracking-tighter leading-none">Inteligência VBR Pro</h3>
             <p className="text-[10px] text-[#d4af37] font-black uppercase tracking-[0.2em] mt-2">
-              {isGenerating ? 'Analisando dados do aluno...' : 'Pronta para gerar o protocolo'}
+              {isGenerating ? 'Analisando metabolismo do aluno...' : 'Clique para gerar um protocolo profissional'}
             </p>
           </div>
         </div>
         <button 
           onClick={handleAISuggestion}
           disabled={isGenerating}
-          className="bg-white text-black px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] flex items-center gap-3 hover:scale-105 transition-all disabled:opacity-50 shadow-2xl"
+          className="bg-white text-black px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] flex items-center gap-3 hover:scale-105 transition-all disabled:opacity-50 shadow-2xl relative z-10"
         >
-          {isGenerating ? 'Processando...' : 'Gerar com IA'}
+          {isGenerating ? 'Trabalhando...' : 'Gerar com IA'}
         </button>
       </div>
 

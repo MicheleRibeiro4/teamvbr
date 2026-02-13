@@ -106,11 +106,19 @@ const App: React.FC = () => {
     }
   };
 
-  const sqlScript = `-- SCRIPT DE REPARO DEFINITIVO VBR
--- 1. Remove para garantir limpeza de cache
-DROP TABLE IF EXISTS public.protocols;
+  const sqlRepairScript = `-- SCRIPT DE REPARO TEAM VBR (RESOLVE ERRO DE COLUNAS)
+-- Este script deleta as tabelas antigas e cria a estrutura correta para este App.
 
--- 2. Cria a tabela com a estrutura exata exigida pelo app
+-- 1. Remover tabelas que possam causar conflito de nomes
+DROP TABLE IF EXISTS public.contracts CASCADE;
+DROP TABLE IF EXISTS public.exercises CASCADE;
+DROP TABLE IF EXISTS public.meals CASCADE;
+DROP TABLE IF EXISTS public.supplements CASCADE;
+DROP TABLE IF EXISTS public.training_days CASCADE;
+DROP TABLE IF EXISTS public.students CASCADE;
+DROP TABLE IF EXISTS public.protocols CASCADE;
+
+-- 2. Criar a tabela única de protocolos (Modo JSONB Flexível)
 CREATE TABLE public.protocols (
   id text NOT NULL PRIMARY KEY,
   client_name text NOT NULL,
@@ -118,13 +126,13 @@ CREATE TABLE public.protocols (
   data jsonb NOT NULL
 );
 
--- 3. Abre permissões para o App Web (Anon)
+-- 3. Liberar permissões para o App (Anon)
 ALTER TABLE public.protocols DISABLE ROW LEVEL SECURITY;
 GRANT ALL ON TABLE public.protocols TO anon;
 GRANT ALL ON TABLE public.protocols TO authenticated;
 GRANT ALL ON TABLE public.protocols TO service_role;
 
--- 4. Comando para atualizar o cache do Supabase IMEDIATAMENTE
+-- 4. Notificar o sistema para atualizar o cache de esquema
 NOTIFY pgrst, 'reload schema';`;
 
   return (
@@ -133,7 +141,7 @@ NOTIFY pgrst, 'reload schema';`;
       {showToast && (
         <div className="fixed bottom-10 right-10 z-[100] animate-in slide-in-from-right-10 duration-500">
            <div className="bg-[#d4af37] text-black px-8 py-4 rounded-2xl font-black uppercase text-xs flex items-center gap-3 shadow-[0_0_40px_rgba(212,175,55,0.4)]">
-              <CheckCircle2 size={20} /> Banco Atualizado
+              <CheckCircle2 size={20} /> Sincronizado com Sucesso
            </div>
         </div>
       )}
@@ -151,7 +159,7 @@ NOTIFY pgrst, 'reload schema';`;
               cloudStatus === 'online' ? 'bg-green-500' : 'bg-red-500'
             }`}></div>
             <span className="text-[10px] font-black uppercase tracking-widest text-white/40">
-              {isSyncing ? 'Sincronizando...' : cloudStatus === 'online' ? 'Supabase Online' : 'Erro de Estrutura'}
+              {isSyncing ? 'Sincronizando...' : cloudStatus === 'online' ? 'Supabase Conectado' : 'Erro de Esquema'}
             </span>
           </div>
         </div>
@@ -179,20 +187,27 @@ NOTIFY pgrst, 'reload schema';`;
       <main className="max-w-[1600px] mx-auto p-4 md:p-10">
         
         {cloudStatus === 'error' && (
-          <div className="bg-red-500/10 border border-red-500/20 p-8 rounded-[2rem] mb-10">
+          <div className="bg-red-600/10 border border-red-600/30 p-8 rounded-[2.5rem] mb-10 animate-in fade-in zoom-in duration-300">
             <div className="flex flex-col md:flex-row items-center gap-6 justify-between">
               <div className="flex items-center gap-4 text-left">
                 <AlertTriangle className="text-red-500 shrink-0" size={40} />
                 <div>
-                  <h4 className="font-black uppercase text-sm text-red-400">Falha de Colunas no Supabase</h4>
-                  <p className="text-xs text-white/60">O banco não reconheceu 'client_name'. Clique no botão ao lado para copiar o reparo.</p>
+                  <h4 className="font-black uppercase text-sm text-red-500">Mapeamento de Banco de Dados Incorreto</h4>
+                  <p className="text-xs text-white/60 max-w-xl">
+                    Sua tabela no Supabase não possui a coluna 'client_name' ou está usando um esquema antigo. 
+                    Para corrigir, copie o script abaixo e rode no seu SQL Editor do Supabase.
+                  </p>
                 </div>
               </div>
               <button 
-                onClick={() => { navigator.clipboard.writeText(sqlScript); alert('Script SQL Copiado! Cole no SQL Editor do seu Supabase e clique em RUN.'); }}
-                className="flex items-center gap-2 bg-white/5 hover:bg-white/10 px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all border border-white/10"
+                onClick={() => { 
+                  navigator.clipboard.writeText(sqlRepairScript); 
+                  alert('Script SQL de Reparo Copiado!\n\nPassos:\n1. Vá ao painel do Supabase\n2. SQL Editor -> New Query\n3. Cole o script e clique em RUN\n4. Recarregue esta página.'); 
+                }}
+                className="flex items-center gap-3 bg-white/5 hover:bg-white/10 px-8 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all border border-white/10 group"
               >
-                <Code size={16} /> Copiar SQL de Reparo
+                <Code size={18} className="text-[#d4af37] group-hover:scale-110 transition-transform" /> 
+                Copiar SQL de Reparo
               </button>
             </div>
           </div>
