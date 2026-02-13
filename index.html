@@ -30,7 +30,9 @@
           margin: 0;
           size: A4;
         }
-        body {
+        html, body {
+          width: 210mm;
+          height: auto;
           background: white !important;
           color: black !important;
           margin: 0 !important;
@@ -39,18 +41,29 @@
         .no-print {
           display: none !important;
         }
-        .page-break {
-          page-break-after: always !important;
-          break-after: page !important;
+        .print-container {
+          width: 210mm !important;
           margin: 0 !important;
           padding: 0 !important;
-          height: 297mm !important;
-          width: 210mm !important;
-          overflow: hidden;
         }
+        /* Força cores no PDF */
         * {
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
+          color-adjust: exact !important;
+        }
+        .page-break {
+          display: block;
+          page-break-after: always !important;
+          break-after: page !important;
+          position: relative;
+          width: 210mm !important;
+          min-height: 297mm !important;
+        }
+        /* Evita quebras dentro de blocos importantes */
+        tr, .avoid-break {
+          page-break-inside: avoid !important;
+          break-inside: avoid !important;
         }
       }
 
