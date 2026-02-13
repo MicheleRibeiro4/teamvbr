@@ -28,7 +28,7 @@
       @media print {
         @page {
           margin: 0;
-          size: A4;
+          size: A4 portrait;
         }
         html, body {
           width: 210mm;
@@ -43,11 +43,12 @@
         }
         .print-container {
           width: 210mm !important;
-          margin: 0 !important;
+          margin: 0 auto !important;
           padding: 0 !important;
           display: block !important;
+          background: white !important;
         }
-        /* Força cores no PDF */
+        /* Força cores e fundos no PDF */
         * {
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
@@ -55,13 +56,17 @@
         }
         .page-break {
           display: block;
-          page-break-after: always !important;
-          break-after: page !important;
+          page-break-before: always !important;
+          break-before: page !important;
           width: 210mm !important;
           min-height: 297mm !important;
-          overflow: visible !important;
+          position: relative;
+          overflow: hidden !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          box-sizing: border-box;
+          border: none !important;
         }
-        /* Evita quebras dentro de blocos importantes */
         .avoid-break {
           page-break-inside: avoid !important;
           break-inside: avoid !important;

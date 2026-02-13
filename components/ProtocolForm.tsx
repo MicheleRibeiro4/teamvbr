@@ -120,7 +120,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
       onChange(updatedData);
     } catch (error: any) {
       console.error("Erro na Geração IA:", error);
-      alert(`❌ ERRO NA GERAÇÃO: Verifique a conexão. Detalhe: ${error.message}`);
+      alert(`❌ ERRO NA GERAÇÃO: Verifique sua conexão e chave de API.`);
     } finally {
       setIsGenerating(false);
     }
