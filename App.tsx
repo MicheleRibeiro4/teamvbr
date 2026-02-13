@@ -102,6 +102,18 @@ const App: React.FC = () => {
     setActiveView('protocol');
   };
 
+  // Fix: Added handleNewCheckin to create a new session record for the same student
+  const handleNewCheckin = () => {
+    const newCheckin: ProtocolData = {
+      ...data,
+      id: "vbr-" + Math.random().toString(36).substr(2, 9),
+      updatedAt: new Date().toISOString()
+    };
+    setData(newCheckin);
+    setActiveView('protocol');
+    alert('🚀 Novo check-in iniciado! Atualize os dados físicos e o protocolo.');
+  };
+
   const loadStudent = (student: ProtocolData, view: ViewMode = 'protocol') => {
     setData(student);
     setActiveView(view);

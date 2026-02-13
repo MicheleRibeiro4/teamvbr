@@ -2,8 +2,9 @@
 import { ProtocolData } from './types';
 
 // Logos oficiais Team VBR (Rhino Edition)
-export const LOGO_RHINO_BLACK = "https://i.ibb.co/3ykXW2K/vbr-rhino-black.png"; // Versão para fundos pretos
-export const LOGO_RHINO_WHITE = "https://i.ibb.co/Csq9zX9/vbr-rhino-white.png"; // Versão para fundos brancos
+// Usando i.ibb para garantir persistência - Caso a imagem não carregue, verifique se a URL está ativa.
+export const LOGO_RHINO_BLACK = "https://i.ibb.co/3ykXW2K/vbr-rhino-black.png"; 
+export const LOGO_RHINO_WHITE = "https://i.ibb.co/Csq9zX9/vbr-rhino-white.png"; 
 
 export const CONSULTANT_DEFAULT = {
   consultantName: "Vinicius Brasil dos Santos Otero",
@@ -23,7 +24,7 @@ b) O contratado NÃO POSSUI REGISTRO nos respectivos conselhos profissionais (CR
 c) Os materiais fornecidos NÃO CONSTITUEM PRESCRIÇÃO INDIVIDUALIZADA, PERIODIZAÇÃO CIENTÍFICA, AVALIAÇÃO FUNCIONAL OU DIAGNÓSTICO.
 1.3. NÃO constitui objeto deste contrato:
 • Elaboração de programas de treinamento com base em avaliação física;
-• Diagnóstico, tratamento, prevenção ou reabilitação de lesões, doenças ou condições de saúde;
+• Diagnóstico, tratamento, prevenção ou reabilitação de lenções, doenças ou condições de saúde;
 • Qualquer atividade privativa de profissionais registrados no CREF, CRN ou CRM.
 
 CLÁUSULA 2 – DURAÇÃO E RENOVAÇÃO
