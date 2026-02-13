@@ -18,8 +18,8 @@ import {
   CheckCircle2,
   AlertTriangle,
   Code,
-  Key,
-  ShieldAlert
+  ShieldAlert,
+  Database
 } from 'lucide-react';
 
 type ViewMode = 'home' | 'search' | 'protocol' | 'contract' | 'evolution' | 'settings';
@@ -31,19 +31,17 @@ const App: React.FC = () => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [cloudStatus, setCloudStatus] = useState<'online' | 'offline' | 'error'>('online');
   const [showToast, setShowToast] = useState(false);
-  const [networkError, setNetworkError] = useState(false);
+  const [networkBlocked, setNetworkBlocked] = useState(false);
 
   const loadData = async () => {
     setIsSyncing(true);
     try {
       const protocols = await db.getAll();
       setSavedProtocols(protocols);
-      // Se conseguir carregar mas a lista for menor que o esperado e der erro silencioso no db.ts, o status mudará
       setCloudStatus(db.isCloudEnabled() ? 'online' : 'error');
     } catch (e: any) {
-      console.error("Erro ao carregar:", e);
       setCloudStatus('error');
-      if (e.message?.includes('Load failed')) setNetworkError(true);
+      if (e.message?.includes('Load failed') || e.name === 'TypeError') setNetworkBlocked(true);
     } finally {
       setIsSyncing(false);
     }
@@ -57,11 +55,7 @@ const App: React.FC = () => {
     setIsSyncing(true);
     try {
       const currentId = data.id || "vbr-" + Math.random().toString(36).substr(2, 9);
-      const updatedProtocol = { 
-        ...data, 
-        id: currentId, 
-        updatedAt: new Date().toISOString() 
-      };
+      const updatedProtocol = { ...data, id: currentId, updatedAt: new Date().toISOString() };
       
       await db.saveProtocol(updatedProtocol);
       
@@ -77,16 +71,12 @@ const App: React.FC = () => {
       
       setData(updatedProtocol);
       setCloudStatus('online');
-      setNetworkError(false);
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
     } catch (err: any) {
       console.error(err);
-      if (err.message?.includes('navegador') || err.message?.includes('Load failed')) {
-        setNetworkError(true);
-      }
       setCloudStatus('error');
-      alert(`⚠️ ERRO NA NUVEM: ${err.message}`);
+      alert(`⚠️ ERRO NA NUVEM: ${err.message}\n\nCertifique-se de que a tabela 'protocols' foi criada no Supabase SQL Editor.`);
     } finally {
       setIsSyncing(false);
     }
@@ -94,11 +84,7 @@ const App: React.FC = () => {
 
   const handleNew = () => {
     const newId = "vbr-" + Math.random().toString(36).substr(2, 9);
-    setData({
-      ...EMPTY_DATA,
-      id: newId,
-      updatedAt: new Date().toISOString()
-    });
+    setData({ ...EMPTY_DATA, id: newId, updatedAt: new Date().toISOString() });
     setActiveView('protocol');
   };
 
@@ -118,6 +104,16 @@ const App: React.FC = () => {
       }
     }
   };
+
+  const sqlScript = `CREATE TABLE IF NOT EXISTS public.protocols (
+  id text NOT NULL PRIMARY KEY,
+  client_name text NOT NULL,
+  updated_at timestamp with time zone DEFAULT now(),
+  data jsonb NOT NULL
+);
+ALTER TABLE public.protocols DISABLE ROW LEVEL SECURITY;
+GRANT ALL ON TABLE public.protocols TO anon;
+GRANT ALL ON TABLE public.protocols TO authenticated;`;
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white font-sans selection:bg-[#d4af37] selection:text-black">
@@ -143,13 +139,13 @@ const App: React.FC = () => {
               cloudStatus === 'online' ? 'bg-green-500' : 'bg-red-500'
             }`}></div>
             <span className="text-[10px] font-black uppercase tracking-widest text-white/40">
-              {isSyncing ? 'Sincronizando...' : cloudStatus === 'online' ? 'Nuvem Ativa' : 'Erro de Conexão'}
+              {isSyncing ? 'Sincronizando...' : cloudStatus === 'online' ? 'Nuvem Conectada' : 'Nuvem em Erro'}
             </span>
           </div>
         </div>
 
         <div className="flex items-center gap-2 md:gap-4">
-          <button onClick={() => setActiveView('search')} className="p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all text-white/60 hover:text-white">
+          <button onClick={() => setActiveView('search')} className="p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all text-white/60 hover:text-white" title="Buscar Alunos">
             <FolderOpen size={20} />
           </button>
           <button onClick={handleNew} className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-white px-4 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all">
@@ -162,7 +158,7 @@ const App: React.FC = () => {
               className="flex items-center gap-2 bg-[#d4af37] text-black px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all shadow-lg disabled:opacity-50"
             >
               {isSyncing ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
-              Salvar Nuvem
+              Salvar na Nuvem
             </button>
           )}
         </div>
@@ -170,53 +166,31 @@ const App: React.FC = () => {
 
       <main className="max-w-[1600px] mx-auto p-4 md:p-10">
         
-        {/* Alerta de Erro de Conexão ou Configuração */}
         {cloudStatus === 'error' && (
-          <div className="bg-red-500/10 border border-red-500/30 p-8 rounded-[2rem] mb-10 space-y-4 animate-in fade-in duration-300">
-            <div className="flex items-center gap-4">
-              <AlertTriangle className="text-red-500" size={32} />
-              <div>
-                <h4 className="font-black uppercase text-sm">Falha de Comunicação com a Nuvem</h4>
-                <p className="text-xs text-white/60">O app está funcionando em modo Local (salvando apenas no seu computador).</p>
+          <div className="bg-red-500/10 border border-red-500/20 p-8 rounded-[2rem] mb-10">
+            <div className="flex flex-col md:flex-row items-center gap-6 justify-between">
+              <div className="flex items-center gap-4">
+                <Database className="text-red-500" size={40} />
+                <div>
+                  <h4 className="font-black uppercase text-sm">Banco de Dados não Configurado (Erro 400)</h4>
+                  <p className="text-xs text-white/60">Os dados estão sendo salvos apenas localmente. Para ativar a nuvem, você deve criar a tabela:</p>
+                </div>
               </div>
+              <button 
+                onClick={() => { navigator.clipboard.writeText(sqlScript); alert('Script SQL copiado! Cole no SQL Editor do Supabase.'); }}
+                className="flex items-center gap-2 bg-white/5 hover:bg-white/10 px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all border border-white/10"
+              >
+                <Code size={16} /> Copiar Script de Correção
+              </button>
             </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-white/5">
-               {networkError ? (
-                 <div className="bg-orange-500/10 p-5 rounded-2xl border border-orange-500/20 md:col-span-2">
-                   <h5 className="flex items-center gap-2 text-orange-400 font-black uppercase text-[10px] mb-2">
-                     <ShieldAlert size={14}/> Possível Bloqueio de Rede (TypeError: Load failed)
-                   </h5>
-                   <p className="text-[11px] text-white/60 mb-2">
-                     Seu navegador ou uma extensão (como <b>uBlock</b> ou <b>AdBlock</b>) pode estar bloqueando a conexão com o banco de dados Supabase.
-                   </p>
-                   <p className="text-[11px] font-bold text-white/40 italic">
-                     Sugestão: Tente desativar o AdBlock para este domínio ou usar uma janela anônima para testar.
-                   </p>
-                 </div>
-               ) : (
-                 <>
-                   <div className="bg-black/40 p-5 rounded-2xl border border-white/5">
-                     <h5 className="flex items-center gap-2 text-[#d4af37] font-black uppercase text-[10px] mb-2">
-                       <Code size={14}/> Passo 1: SQL Editor
-                     </h5>
-                     <p className="text-[11px] text-white/40 mb-4">Certifique-se que a tabela 'protocols' existe no seu Supabase.</p>
-                     <button 
-                      onClick={() => alert('Script SQL:\n\nCREATE TABLE IF NOT EXISTS protocols (\n  id TEXT PRIMARY KEY,\n  client_name TEXT NOT NULL,\n  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\n  data JSONB NOT NULL\n);\n\nALTER TABLE protocols DISABLE ROW LEVEL SECURITY;')}
-                      className="w-full bg-white/5 hover:bg-white/10 py-2 rounded-lg font-black text-[9px] uppercase transition-all"
-                     >
-                       Ver Script SQL de Criação
-                     </button>
-                   </div>
-                   <div className="bg-black/40 p-5 rounded-2xl border border-white/5">
-                     <h5 className="flex items-center gap-2 text-[#d4af37] font-black uppercase text-[10px] mb-2">
-                       <Key size={14}/> Passo 2: Verificação de Chave
-                     </h5>
-                     <p className="text-[11px] text-white/40 mb-4">Agora o sistema está usando a chave JWT correta fornecida. Se o erro persistir, verifique as permissões da tabela.</p>
-                   </div>
-                 </>
-               )}
-            </div>
+            {networkBlocked && (
+              <div className="mt-4 p-4 bg-orange-500/10 border border-orange-500/20 rounded-xl flex items-center gap-3">
+                <ShieldAlert className="text-orange-500" size={20} />
+                <p className="text-[11px] font-bold text-orange-200">
+                  Detectamos um possível bloqueio de rede (AdBlock). Se o erro persistir após o SQL, desative bloqueadores para este site.
+                </p>
+              </div>
+            )}
           </div>
         )}
 
@@ -241,11 +215,7 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {activeView === 'contract' && (
-          <div className="no-print">
-            <ContractWorkspace data={data} onChange={setData} />
-          </div>
-        )}
+        {activeView === 'contract' && <div className="no-print"><ContractWorkspace data={data} onChange={setData} /></div>}
         
         {activeView === 'evolution' && (
           <EvolutionTracker 

@@ -2,23 +2,18 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { ProtocolData } from '../types';
 
-// URL do seu projeto Supabase
 const SUPABASE_URL = "https://xqwzmvzfemjkvaquxedz.supabase.co";
-
-// CHAVE ATUALIZADA: Usando o JWT (Anon Key) fornecido pelo usuário
+// Chave Anon JWT fornecida pelo usuário
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhxd3ptdnpmZW1qa3ZhcXV4ZWR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5OTc1NjQsImV4cCI6MjA4NjU3MzU2NH0.R2MdOlktktHFuBe0JKbUwceqkrYIFsiphEThrYPWsZ8";
 
 const getSupabaseClient = (): SupabaseClient | null => {
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.includes('sb_publishable')) {
-    console.warn('Aguardando Chave Anon JWT válida (começa com eyJ)');
-    return null;
-  }
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return null;
   try {
     return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: { persistSession: false }
     });
   } catch (e) {
-    console.error('Falha crítica na conexão Supabase:', e);
+    console.error('Erro ao inicializar Supabase:', e);
     return null;
   }
 };
@@ -35,13 +30,16 @@ export const db = {
   async getAll(): Promise<ProtocolData[]> {
     if (supabase) {
       try {
-        const { data, error } = await supabase
+        const { data, error, status } = await supabase
           .from('protocols')
           .select('*')
           .order('updated_at', { ascending: false });
 
         if (error) {
-          console.error('Erro de Banco de Dados (Supabase):', error.message);
+          console.error(`Erro Supabase (${status}):`, error.message, error.details);
+          if (status === 400 || status === 404) {
+             console.warn("DICA: Execute o script SQL no painel do Supabase para criar a tabela 'protocols'.");
+          }
         } else if (data) {
           const cloudProtocols = data.map(item => ({
             ...item.data,
@@ -52,11 +50,8 @@ export const db = {
           return cloudProtocols;
         }
       } catch (err: any) {
-        // "Load failed" ou "Failed to fetch" geralmente é AdBlock ou rede bloqueada
-        if (err.message === 'Load failed' || err.name === 'TypeError') {
-          console.warn('Conexão bloqueada pelo navegador (AdBlock?) ou erro de rede.');
-        } else {
-          console.error('Erro inesperado:', err);
+        if (err.name === 'TypeError' || err.message === 'Load failed') {
+          console.warn('Conexão com Supabase bloqueada por AdBlock ou Rede.');
         }
       }
     }
@@ -68,7 +63,7 @@ export const db = {
     const updatedAt = new Date().toISOString();
     const updatedProtocol = { ...protocol, updatedAt };
 
-    // 1. Sempre salvar LocalStorage primeiro (Offline-first)
+    // Cache Local sempre
     const all = await this.getAll();
     const index = all.findIndex(p => p.id === protocol.id);
     if (index >= 0) {
@@ -78,32 +73,22 @@ export const db = {
     }
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(all));
 
-    // 2. Tentar salvar na Nuvem
     if (supabase) {
-      try {
-        const { error } = await supabase
-          .from('protocols')
-          .upsert({
-            id: protocol.id,
-            client_name: protocol.clientName || 'Sem Nome',
-            updated_at: updatedAt,
-            data: updatedProtocol
-          }, { onConflict: 'id' });
+      const { error, status } = await supabase
+        .from('protocols')
+        .upsert({
+          id: protocol.id,
+          client_name: protocol.clientName || 'Sem Nome',
+          updated_at: updatedAt,
+          data: updatedProtocol
+        }, { onConflict: 'id' });
 
-        if (error) {
-          if (error.code === '42P01') {
-            throw new Error("Tabela não encontrada. Execute o SQL de criação no painel do Supabase.");
-          }
-          throw new Error(error.message);
-        }
-      } catch (err: any) {
-        if (err.message === 'Load failed' || err.name === 'TypeError') {
-          throw new Error("A conexão com o Supabase foi bloqueada pelo seu navegador ou rede. Desative AdBlockers para este site.");
-        }
-        throw err;
+      if (error) {
+        console.error(`FALHA NO UPSERT (${status}):`, error);
+        let msg = `Erro ${status}: ${error.message}`;
+        if (status === 400) msg = "Tabela 'protocols' não encontrada ou colunas incorretas. Verifique o SQL Editor.";
+        throw new Error(msg);
       }
-    } else {
-      throw new Error("Cliente Supabase não inicializado. Verifique a Anon Key.");
     }
   },
 
@@ -113,11 +98,7 @@ export const db = {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(filtered));
 
     if (supabase) {
-      const { error } = await supabase
-        .from('protocols')
-        .delete()
-        .eq('id', id);
-      
+      const { error } = await supabase.from('protocols').delete().eq('id', id);
       if (error) throw error;
     }
   }
