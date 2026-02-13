@@ -2,20 +2,33 @@
 import React from 'react';
 import { ProtocolData } from '../types';
 import { LOGO_RHINO_BLACK, LOGO_RHINO_WHITE } from '../constants';
+import { Printer } from 'lucide-react';
 
 interface Props {
   data: ProtocolData;
 }
 
 const ProtocolPreview: React.FC<Props> = ({ data }) => {
-  // Configuração para A4 Perfeito: w-210mm total, mas usamos min-h para fluidez
-  const pageClass = "bg-white w-[210mm] min-h-[297mm] mx-auto flex flex-col page-break text-black relative shadow-2xl print:shadow-none print:m-0 print:rounded-none overflow-hidden";
+  // Configuração para A4: min-h e overflow-visible garantem que nada seja cortado
+  const pageClass = "bg-white w-[210mm] min-h-[297mm] mx-auto flex flex-col page-break text-black relative shadow-2xl print:shadow-none print:m-0 print:rounded-none print:overflow-visible overflow-hidden";
+
+  const handlePrint = () => {
+    window.print();
+  };
 
   return (
-    <div className="flex flex-col items-center w-full gap-8 bg-transparent print:gap-0 print-container">
+    <div className="flex flex-col items-center w-full gap-8 bg-transparent print:gap-0 print-container pb-20 print:pb-0">
       
+      {/* Botão de Impressão Flutuante - Não aparece no PDF */}
+      <button 
+        onClick={handlePrint}
+        className="no-print fixed bottom-10 right-10 bg-[#d4af37] text-black p-5 rounded-full shadow-[0_0_40px_rgba(212,175,55,0.6)] hover:scale-110 transition-all z-[60] flex items-center gap-3 font-black uppercase text-xs tracking-widest"
+      >
+        <Printer size={24} /> Imprimir / PDF
+      </button>
+
       {/* PÁGINA 1: CAPA PREMIUM */}
-      <div className={`${pageClass} !bg-[#0a0a0a] !text-white border-b-[20px] border-[#d4af37] justify-between p-[2cm] rounded-[2rem] h-[297mm]`}>
+      <div className={`${pageClass} !bg-[#0a0a0a] !text-white border-b-[20px] border-[#d4af37] justify-between p-[2cm] h-[297mm]`}>
         <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_top_right,_rgba(212,175,55,0.15)_0%,_transparent_60%)]"></div>
         
         <div className="flex flex-col items-center pt-[3cm] w-full relative z-10">
@@ -54,7 +67,7 @@ const ProtocolPreview: React.FC<Props> = ({ data }) => {
       </div>
 
       {/* PÁGINA 2: BIOIMPEDÂNCIA */}
-      <div className={`${pageClass} p-[1.5cm] rounded-[2rem]`}>
+      <div className={`${pageClass} p-[1.5cm]`}>
         <div className="absolute top-10 right-10 opacity-10">
            <img src={LOGO_RHINO_WHITE} alt="Logo" className="w-32" />
         </div>
@@ -116,7 +129,7 @@ const ProtocolPreview: React.FC<Props> = ({ data }) => {
       </div>
 
       {/* PÁGINA 3: PLANO NUTRICIONAL */}
-      <div className={`${pageClass} p-[1.5cm] rounded-[2rem]`}>
+      <div className={`${pageClass} p-[1.5cm]`}>
         <div className="absolute top-10 right-10 opacity-10">
            <img src={LOGO_RHINO_WHITE} alt="Logo" className="w-32" />
         </div>
@@ -160,8 +173,8 @@ const ProtocolPreview: React.FC<Props> = ({ data }) => {
         </div>
       </div>
 
-      {/* PÁGINA 4: REFEIÇÕES - FLUIDA */}
-      <div className={`${pageClass} p-[1.5cm] rounded-[2rem] !h-auto`}>
+      {/* PÁGINA 4: REFEIÇÕES */}
+      <div className={`${pageClass} p-[1.5cm] !h-auto`}>
         <div className="flex justify-between items-end border-b-8 border-[#d4af37] pb-8 mb-12">
           <div>
             <span className="text-[12px] font-black text-[#d4af37] uppercase tracking-[0.5em]">Módulo 03</span>
@@ -192,8 +205,8 @@ const ProtocolPreview: React.FC<Props> = ({ data }) => {
         </div>
       </div>
 
-      {/* PÁGINA 5: TREINO - FLUIDA */}
-      <div className={`${pageClass} p-[1.5cm] rounded-[2rem] !h-auto`}>
+      {/* PÁGINA 5: TREINO */}
+      <div className={`${pageClass} p-[1.5cm] !h-auto`}>
         <div className="flex justify-between items-end border-b-8 border-[#d4af37] pb-8 mb-12">
           <div>
             <span className="text-[12px] font-black text-[#d4af37] uppercase tracking-[0.5em]">Módulo 04</span>
@@ -201,7 +214,7 @@ const ProtocolPreview: React.FC<Props> = ({ data }) => {
           </div>
         </div>
 
-        <div className="space-y-12">
+        <div className="space-y-12 pb-10">
           {data.trainingDays.map((day) => (
             <div key={day.id} className="rounded-[3rem] border border-gray-100 overflow-hidden shadow-lg avoid-break">
                <div className="bg-[#0a0a0a] text-white p-8 flex justify-between items-center border-b-8 border-[#d4af37]">
@@ -224,7 +237,7 @@ const ProtocolPreview: React.FC<Props> = ({ data }) => {
       </div>
 
       {/* PÁGINA 6: ENCERRAMENTO */}
-      <div className={`${pageClass} !bg-[#0a0a0a] !text-white justify-center p-[2cm] border-t-[20px] border-[#d4af37] overflow-hidden rounded-[2rem] h-[297mm]`}>
+      <div className={`${pageClass} !bg-[#0a0a0a] !text-white justify-center p-[2cm] border-t-[20px] border-[#d4af37] h-[297mm]`}>
         <div className="max-w-2xl text-center space-y-16 relative z-10 mx-auto">
            <div className="bg-white/5 border-2 border-[#d4af37]/30 p-16 rounded-[4rem] backdrop-blur-md shadow-2xl relative">
               <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-[#d4af37] text-black px-8 py-2 rounded-full font-black uppercase text-[12px] tracking-[0.5em]">COACH NOTES</div>

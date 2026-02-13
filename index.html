@@ -45,6 +45,7 @@
           width: 210mm !important;
           margin: 0 !important;
           padding: 0 !important;
+          display: block !important;
         }
         /* Força cores no PDF */
         * {
@@ -56,12 +57,12 @@
           display: block;
           page-break-after: always !important;
           break-after: page !important;
-          position: relative;
           width: 210mm !important;
           min-height: 297mm !important;
+          overflow: visible !important;
         }
         /* Evita quebras dentro de blocos importantes */
-        tr, .avoid-break {
+        .avoid-break {
           page-break-inside: avoid !important;
           break-inside: avoid !important;
         }
