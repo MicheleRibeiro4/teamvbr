@@ -106,18 +106,20 @@ const App: React.FC = () => {
     }
   };
 
-  const sqlRepairScript = `-- SCRIPT DE REPARO VBR (RESOLVE ERRO DE COLUNA E CACHE)
--- 1. Remove TODAS as tabelas do esquema antigo que causam conflito
-DROP TABLE IF EXISTS public.contracts CASCADE;
+  const sqlRepairScript = `-- SCRIPT DE REPARO DEFINITIVO VBR (RESOLVE ERRO DE ESQUEMA ANTIGO)
+-- Execute este script para limpar as tabelas relacionais e habilitar a tabela unificada.
+
+-- 1. Remover TODAS as tabelas do esquema normalizado anterior
 DROP TABLE IF EXISTS public.exercises CASCADE;
 DROP TABLE IF EXISTS public.meals CASCADE;
 DROP TABLE IF EXISTS public.supplements CASCADE;
 DROP TABLE IF EXISTS public.training_days CASCADE;
+DROP TABLE IF EXISTS public.contracts CASCADE;
 DROP TABLE IF EXISTS public.students CASCADE;
 DROP TABLE IF EXISTS public.consultants CASCADE;
 DROP TABLE IF EXISTS public.protocols CASCADE;
 
--- 2. Cria a tabela única otimizada com a coluna 'client_name'
+-- 2. Criar a nova tabela unificada otimizada para JSONB
 CREATE TABLE public.protocols (
   id text NOT NULL PRIMARY KEY,
   client_name text NOT NULL,
@@ -125,13 +127,13 @@ CREATE TABLE public.protocols (
   data jsonb NOT NULL
 );
 
--- 3. Libera permissões públicas
+-- 3. Configurar permissões de acesso
 ALTER TABLE public.protocols DISABLE ROW LEVEL SECURITY;
 GRANT ALL ON TABLE public.protocols TO anon;
 GRANT ALL ON TABLE public.protocols TO authenticated;
 GRANT ALL ON TABLE public.protocols TO service_role;
 
--- 4. Força a atualização do cache do Supabase
+-- 4. Forçar atualização do cache do PostgREST (Crítico)
 NOTIFY pgrst, 'reload schema';`;
 
   return (
@@ -191,10 +193,10 @@ NOTIFY pgrst, 'reload schema';`;
               <div className="flex items-center gap-4 text-left">
                 <AlertTriangle className="text-red-500 shrink-0" size={40} />
                 <div>
-                  <h4 className="font-black uppercase text-sm text-red-500">Mapeamento de Banco de Dados Incorreto</h4>
+                  <h4 className="font-black uppercase text-sm text-red-500">Erro de Mapeamento de Banco de Dados</h4>
                   <p className="text-xs text-white/60 max-w-xl">
-                    Seu Supabase está com tabelas que não possuem a coluna 'client_name'. 
-                    Clique no botão ao lado, cole o script no SQL Editor do Supabase e rode para consertar.
+                    Seu Supabase ainda possui as tabelas antigas. Para salvar seus protocolos, você precisa limpar o esquema. 
+                    Copie o script abaixo, cole no SQL Editor do Supabase e clique em RUN.
                   </p>
                 </div>
               </div>

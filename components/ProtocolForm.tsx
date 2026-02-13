@@ -29,42 +29,32 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
   };
 
   const handleAISuggestion = async () => {
-    // A chave de API deve vir exclusivamente de process.env.API_KEY
-    const apiKey = process.env.API_KEY;
-    
-    if (!apiKey) {
-      alert("❌ ERRO: Chave de API Gemini não encontrada. Verifique se a variável API_KEY está configurada.");
-      return;
-    }
-
     if (!data.clientName || !data.physicalData.weight) {
-      alert("⚠️ INFORMAÇÕES INSUFICIENTES: Preencha o Nome e o Peso para que a IA possa analisar.");
+      alert("⚠️ DADOS NECESSÁRIOS: Preencha o Nome e o Peso para que a IA possa analisar.");
       return;
     }
 
     setIsGenerating(true);
     try {
-      // Inicialização oficial do Google GenAI SDK
-      const ai = new GoogleGenAI({ apiKey });
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
       
-      const prompt = `Você é o Master Coach do Team VBR. Com base nos dados abaixo, gere um protocolo completo e de elite.
-      Nome: ${data.clientName} | Peso: ${data.physicalData.weight}kg | Altura: ${data.physicalData.height}m | BF: ${data.physicalData.bodyFat}%
-      Objetivo solicitado: ${data.protocolTitle || "Hipertrofia/Recomposição"}
+      const prompt = `Como Master Coach do Team VBR, crie um protocolo de ELITE (Nutrição + Treino) baseado nestes dados:
+      Aluno: ${data.clientName} | Peso: ${data.physicalData.weight}kg | Objetivo: ${data.protocolTitle || "Performance Máxima"}
       
       Retorne um JSON rigoroso:
       {
-        "nutritionalStrategy": "Explicação técnica da dieta",
-        "kcalGoal": "Valor numérico (ex: 2800)",
-        "kcalSubtext": "(TEXTO CURTO)",
+        "nutritionalStrategy": "Explicação técnica da estratégia",
+        "kcalGoal": "Valor (ex: 3200)",
+        "kcalSubtext": "(TEXTO EM CAIXA ALTA)",
         "macros": {
-          "protein": { "value": "180" },
-          "carbs": { "value": "350" },
-          "fats": { "value": "70" }
+          "protein": { "value": "200" },
+          "carbs": { "value": "450" },
+          "fats": { "value": "80" }
         },
-        "meals": [{"time": "08:00", "name": "Café", "details": "Detalhes"}],
-        "supplements": [{"name": "Creatina", "dosage": "5g", "timing": "Pós"}],
-        "trainingDays": [{"title": "DIA A", "focus": "Peito", "exercises": [{"name": "Supino", "sets": "4x10"}]}],
-        "generalObservations": "Finalização técnica"
+        "meals": [{"time": "08:00", "name": "Refeição 1", "details": "Alimentos e quantidades"}],
+        "supplements": [{"name": "Creatina", "dosage": "5g", "timing": "Qualquer horário"}],
+        "trainingDays": [{"title": "DIA A", "focus": "PEITO/OMBRO", "exercises": [{"name": "Supino Reto", "sets": "4x10"}]}],
+        "generalObservations": "Instruções finais do coach"
       }`;
 
       const response = await ai.models.generateContent({
@@ -127,8 +117,8 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
 
       onChange(updatedData);
     } catch (error: any) {
-      console.error("Erro Gemini:", error);
-      alert(`❌ FALHA NA GERAÇÃO: ${error.message}`);
+      console.error("Erro na Geração IA:", error);
+      alert(`❌ ERRO NA GERAÇÃO: ${error.message}`);
     } finally {
       setIsGenerating(false);
     }

@@ -19,7 +19,7 @@ const getSupabaseClient = (): SupabaseClient | null => {
 
 export const supabase = getSupabaseClient();
 
-const LOCAL_STORAGE_KEY = 'vbr_db_cache_v7';
+const LOCAL_STORAGE_KEY = 'vbr_db_cache_v9';
 
 export const db = {
   isCloudEnabled(): boolean {
@@ -37,8 +37,8 @@ export const db = {
 
       if (error) {
         console.error("Supabase Query Error:", error);
-        if (error.code === 'PGRST204' || error.message.includes('client_name')) {
-           throw new Error("Erro de Esquema: A coluna 'client_name' não foi encontrada. Use o SQL de reparo.");
+        if (error.code === 'PGRST204' || error.message.includes('client_name') || error.message.includes('column')) {
+           throw new Error("Erro de Esquema: O Supabase ainda possui as tabelas antigas. Execute o Script de Reparo.");
         }
         throw error;
       }
@@ -54,9 +54,9 @@ export const db = {
       }
       return [];
     } catch (err: any) {
-      console.warn("Erro no Supabase:", err.message);
+      console.warn("Status de Sincronização:", err.message);
       const cache = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (err.message.includes('client_name') || err.message.includes('PGRST204')) throw err;
+      if (err.message.includes('Esquema') || err.message.includes('client_name')) throw err;
       return cache ? JSON.parse(cache) : [];
     }
   },
@@ -79,7 +79,7 @@ export const db = {
     if (error) {
       console.error("Supabase Save Error:", error);
       if (error.code === 'PGRST204' || error.message.includes('client_name')) {
-        throw new Error("Coluna 'client_name' não encontrada no banco. Rode o SQL de reparo no App.");
+        throw new Error("Mismatch de Esquema: A coluna 'client_name' não foi encontrada. Rode o SQL de reparo.");
       }
       throw new Error(error.message);
     }
