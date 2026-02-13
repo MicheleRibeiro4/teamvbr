@@ -1,9 +1,9 @@
 
 import { ProtocolData } from './types';
 
-// Utilizando o logo local conforme solicitado pelo usuário
-export const LOGO_RHINO_BLACK = "logo.png"; 
-export const LOGO_RHINO_WHITE = "logo.png"; 
+// Garantindo caminho absoluto para o logo na raiz do projeto
+export const LOGO_RHINO_BLACK = "/logo.png"; 
+export const LOGO_RHINO_WHITE = "/logo.png"; 
 
 export const CONSULTANT_DEFAULT = {
   consultantName: "Vinicius Brasil dos Santos Otero",

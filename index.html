@@ -25,34 +25,37 @@
         font-family: 'Montserrat', sans-serif;
       }
       
-      /* Ajustes de Impressão e PDF */
+      /* Ajustes Críticos de Impressão */
       @media print {
         @page {
           margin: 0;
           size: A4;
         }
+        body {
+          background: white !important;
+          color: black !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
         .no-print {
           display: none !important;
-        }
-        body {
-          background-color: white !important;
-          color: black !important;
         }
         .page-break {
           page-break-after: always !important;
           break-after: page !important;
-          display: block;
-          clear: both;
+          margin: 0 !important;
+          padding: 0 !important;
+          height: 297mm !important; /* Altura exata A4 */
+          width: 210mm !important; /* Largura exata A4 */
+          overflow: hidden;
         }
-        /* Força fundos e cores no PDF */
         * {
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
-          color-adjust: exact !important;
         }
       }
 
-      /* Scrollbar Customizada */
+      /* Scrollbar */
       ::-webkit-scrollbar { width: 6px; }
       ::-webkit-scrollbar-track { background: #0a0a0a; }
       ::-webkit-scrollbar-thumb { background: #d4af37; border-radius: 10px; }
