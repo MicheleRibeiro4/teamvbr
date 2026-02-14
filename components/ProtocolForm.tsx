@@ -1,16 +1,17 @@
 
 import React, { useEffect, useState } from 'react';
 import { ProtocolData, Meal, Supplement, TrainingDay } from '../types';
-import { Plus, Trash2, Activity, Utensils, Dumbbell, Target, Sparkles, Loader2, User, Pill, ClipboardList } from 'lucide-react';
+import { Plus, Trash2, Activity, Utensils, Dumbbell, Target, Sparkles, Loader2, User, Pill, ClipboardList, ChevronLeft } from 'lucide-react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { CONSULTANT_DEFAULT } from '../constants';
 
 interface Props {
   data: ProtocolData;
   onChange: (data: ProtocolData) => void;
+  onBack?: () => void;
 }
 
-const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
+const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   
   useEffect(() => {
@@ -150,6 +151,15 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange }) => {
 
   return (
     <div className="space-y-10 no-print">
+      {onBack && (
+        <button 
+          onClick={onBack}
+          className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-[#d4af37] transition-colors"
+        >
+          <ChevronLeft size={16} /> Voltar ao Painel do Aluno
+        </button>
+      )}
+
       <section>
         <div className={sectionHeaderClass}>
           <User className="text-[#d4af37]" size={20} />

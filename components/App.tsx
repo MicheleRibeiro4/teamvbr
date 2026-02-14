@@ -1,15 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
-import { ProtocolData } from './types';
-import { EMPTY_DATA, LOGO_RHINO_BLACK } from './constants';
-import { db } from './services/db';
-import ProtocolForm from './components/ProtocolForm';
-import ProtocolPreview from './components/ProtocolPreview';
-import ContractWorkspace from './components/ContractWorkspace';
-import EvolutionTracker from './components/EvolutionTracker';
-import MainDashboard from './components/MainDashboard';
-import StudentSearch from './components/StudentSearch';
-import StudentDashboard from './components/StudentDashboard';
+import { ProtocolData } from '../types';
+import { EMPTY_DATA, LOGO_RHINO_BLACK } from '../constants';
+import { db } from '../services/db';
+import ProtocolForm from './ProtocolForm';
+import ProtocolPreview from './ProtocolPreview';
+import ContractWorkspace from './ContractWorkspace';
+import EvolutionTracker from './EvolutionTracker';
+import MainDashboard from './MainDashboard';
+import StudentSearch from './StudentSearch';
+import StudentDashboard from './StudentDashboard';
 import { 
   Plus, 
   FolderOpen,
@@ -31,7 +31,7 @@ const App: React.FC = () => {
   const [cloudStatus, setCloudStatus] = useState<'online' | 'error'>('online');
   const [showToast, setShowToast] = useState(false);
 
-  // Load all protocols on initialization
+  // Load saved data from backend
   const loadData = async () => {
     setIsSyncing(true);
     try {
@@ -50,7 +50,7 @@ const App: React.FC = () => {
     loadData();
   }, []);
 
-  // Save current student data to Supabase
+  // Save changes to Supabase
   const handleSave = async () => {
     if (!data.clientName) {
       alert("⚠️ Defina o nome do aluno antes de salvar.");
@@ -87,20 +87,18 @@ const App: React.FC = () => {
     }
   };
 
-  // Initialize a new student record
+  // Create new blank record
   const handleNew = () => {
     const newId = "vbr-" + Math.random().toString(36).substr(2, 9);
     setData({ ...EMPTY_DATA, id: newId, updatedAt: new Date().toISOString() });
     setActiveView('protocol');
   };
 
-  // Navigate to a specific student view
   const loadStudent = (student: ProtocolData, view: ViewMode = 'student-dashboard') => {
     setData(student);
     setActiveView(view);
   };
 
-  // Delete student from database
   const deleteStudent = async (id: string) => {
     if(confirm('Excluir este aluno permanentemente do Banco de Dados?')) {
       try {
