@@ -1,14 +1,14 @@
 
 export interface PhysicalData {
-  date: string; // Data das medidas
+  date: string;
   weight: string;
   height: string;
   age: string;
-  gender: string;
+  gender: 'Masculino' | 'Feminino';
   bodyFat: string;
   muscleMass: string;
   visceralFat: string;
-  waterPercentage?: string;
+  waterPercentage: string; // Novo campo
   imc: string;
   observations?: string;
 }
@@ -49,20 +49,28 @@ export interface TrainingDay {
 export interface ContractInfo {
   cpf: string;
   rg: string;
-  email: string;
   phone: string;
-  address: string;
+  email: string;
+  // Campos de endereço detalhados
+  street: string;
+  number: string;
+  neighborhood: string;
+  city: string;
+  state: string; // UF separado
+  // Vigência
+  planType: 'Trimestral' | 'Semestral'; // Novo campo
   startDate: string;
   endDate: string;
   durationDays: string;
+  // Financeiro
   planValue: string;
   planValueWords: string;
-  paymentMethod: string;
+  paymentMethod: 'Pix' | 'Cartão de Crédito';
   installments: string;
-  city: string;
   contractDate: string;
   status: 'Aguardando' | 'Ativo' | 'Vencido' | 'Cancelado';
   contractBody?: string;
+  address?: string; // Mantendo compatibilidade legada se necessário, mas usando campos separados preferencialmente
 }
 
 export interface ProtocolData {
@@ -70,7 +78,7 @@ export interface ProtocolData {
   updatedAt: string;
   privateNotes: string;
   clientName: string;
-  protocolTitle: string;
+  protocolTitle: string; // Objetivo do Protocolo
   totalPeriod: string;
   consultantName: string;
   consultantCpf: string;
