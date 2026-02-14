@@ -21,9 +21,7 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
     }
 
     // Formata o método de pagamento para exibição
-    const paymentMethodDisplay = data.contract.paymentMethod === 'Pix' 
-      ? 'Pix (à vista)' 
-      : data.contract.paymentMethod;
+    const paymentMethodDisplay = data.contract.paymentMethod === 'Pix'       ? 'Pix (à vista)'        : data.contract.paymentMethod;
 
     const map = {
       '[START_DATE]': data.contract.startDate,

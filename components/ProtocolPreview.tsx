@@ -16,9 +16,9 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
     if (!pdfRef.current) return;
     setIsGenerating(true);
     
-    // Configurações otimizadas para evitar páginas em branco
+    // Configurações otimizadas para evitar cortes
     const opt = {
-      margin: 0,
+      margin: [0, 0, 0, 0], // Margem controlada pelo CSS
       filename: `Protocolo_VBR_${data.clientName.replace(/\s+/g, '_')}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { 
@@ -26,11 +26,10 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
         useCORS: true, 
         letterRendering: true, 
         backgroundColor: '#ffffff',
-        scrollY: 0, // CRUCIAL: Garante que o render comece do topo
-        windowWidth: 794, 
-        height: 1119 * 7 
+        scrollY: 0,
       },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
     try {
@@ -44,27 +43,24 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
     }
   };
 
-  // CSS Estrito para A4 (210mm x 296mm)
+  // CSS Ajustado para permitir expansão de conteúdo
   const pageStyle: React.CSSProperties = { 
     width: '210mm', 
-    height: '296mm', 
+    minHeight: '296mm', // Permite crescer se o conteúdo for maior
     padding: '15mm', 
     backgroundColor: 'white', 
     color: 'black', 
     position: 'relative', 
     boxSizing: 'border-box', 
     display: 'block',
-    overflow: 'hidden', 
-    pageBreakAfter: 'always', 
-    breakAfter: 'page'
+    pageBreakAfter: 'always', // Garante que cada seção comece numa nova página
   };
 
   // Estilo específico para a última página
   const lastPageStyle: React.CSSProperties = {
     ...pageStyle,
-    padding: '0', // Remove padding para o quadrado pegar tudo se necessário
-    pageBreakAfter: 'auto',
-    breakAfter: 'auto'
+    padding: '0', 
+    pageBreakAfter: 'auto'
   };
   
   const sectionTitle = "text-xl font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-1 mb-6 uppercase";
@@ -185,7 +181,7 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
                   <td className="p-4 font-bold text-[#d4af37] align-top">{meal.time}</td>
                   <td className="p-4">
                     <p className="font-bold text-gray-900 mb-1">{meal.name}</p>
-                    <p className="text-gray-600 leading-relaxed">{meal.details}</p>
+                    <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">{meal.details}</p>
                   </td>
                 </tr>
               ))}

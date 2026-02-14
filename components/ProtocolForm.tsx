@@ -36,7 +36,8 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
 
     setIsGenerating(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      // API Key inserida manualmente conforme solicitação
+      const ai = new GoogleGenAI({ apiKey: 'AIzaSyCdc2gt-S321N9qjNU3ZK4vHxPuTeOrVbA' });
       
       const prompt = `
         Você é um treinador de elite e nutricionista esportivo (Estilo Team VBR).
