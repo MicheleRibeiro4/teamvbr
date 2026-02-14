@@ -2,7 +2,7 @@
 import React, { useRef, useState } from 'react';
 import { ProtocolData } from '../types';
 import { LOGO_RHINO_BLACK } from '../constants';
-import { Printer, ChevronLeft, Download, Loader2, AlertTriangle } from 'lucide-react';
+import { Printer, ChevronLeft, Download, Loader2 } from 'lucide-react';
 
 interface Props {
   data: ProtocolData;
@@ -19,7 +19,6 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
     setIsGenerating(true);
     const element = pdfContainerRef.current;
     
-    // Configurações profissionais para o PDF
     const opt = {
       margin: 0,
       filename: `Protocolo_VBR_${data.clientName.replace(/\s+/g, '_')}.pdf`,
@@ -83,31 +82,29 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
         </button>
       </div>
 
-      {/* CONTAINER ALVO PARA O PDF */}
       <div ref={pdfContainerRef} className="print:m-0">
         
-        {/* PÁGINA 1: CAPA */}
+        {/* PÁGINA 1: CAPA (LIMPA) */}
         <div className={`${fixedPageClass} !bg-[#0a0a0a] !text-white border-b-[20px] border-[#d4af37] justify-center items-center p-[2cm]`}>
           <div className="flex flex-col items-center w-full text-center">
             <img src={LOGO_RHINO_BLACK} alt="Logo" className="w-80 h-auto mb-20" />
+            
             <div className="space-y-4 mb-24">
               <h1 className="text-5xl font-montserrat font-black text-[#d4af37] uppercase tracking-tighter leading-none">
                 PROTOCOLO <br/>
                 COMPLETO DE <br/>
-                <span className="text-white">{data.protocolTitle || 'HIPERTROFIA'}</span>
+                <span className="text-white">{data.protocolTitle || 'OBJETIVO'}</span>
               </h1>
             </div>
+
             <div className="mb-20">
-              <h2 className="text-7xl font-montserrat font-black text-white uppercase tracking-tight mb-6">
+              <h2 className="text-7xl font-montserrat font-black text-white uppercase tracking-tight mb-6 leading-tight">
                 {data.clientName || 'NOME DO ALUNO'}
               </h2>
-              <p className="text-xl font-medium text-white/60">
-                Período Consultoria: {data.totalPeriod || '3 Meses'}
+              <div className="h-1 w-32 bg-[#d4af37] mx-auto mb-6"></div>
+              <p className="text-xl font-bold text-white/40 uppercase tracking-[0.3em]">
+                {data.contract.startDate} — {data.contract.endDate}
               </p>
-            </div>
-            <div className="mt-10">
-              <p className="text-white/80 font-bold text-lg">{data.consultantName}</p>
-              <p className="text-white/40 text-sm uppercase tracking-[0.3em]">Consultoria Personalizada</p>
             </div>
           </div>
         </div>
@@ -116,16 +113,16 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
         <div className={`${fixedPageClass} p-[1.5cm]`}>
           <div className="space-y-10">
             <section>
-              <h2 className="text-3xl font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-2 mb-6">1. Dados Físicos</h2>
+              <h2 className="text-3xl font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-2 mb-6 uppercase tracking-tighter">1. Dados Físicos</h2>
               <div className="grid grid-cols-3 gap-6 mb-8">
                 {[{ label: 'Peso Atual', val: data.physicalData.weight, unit: 'kg' }, { label: 'Altura', val: data.physicalData.height, unit: 'm' }, { label: 'Idade', val: data.physicalData.age, unit: 'anos' }].map((item, i) => (
                   <div key={i} className="bg-gray-50 p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <span className="text-sm text-gray-400 font-bold block mb-2">{item.label}</span>
+                    <span className="text-sm text-gray-400 font-bold block mb-2 uppercase tracking-widest">{item.label}</span>
                     <div className="text-3xl font-black">{item.val || '--'} <span className="text-lg font-bold">{item.unit}</span></div>
                   </div>
                 ))}
               </div>
-              <h3 className="text-xl font-bold mb-4">Bioimpedância</h3>
+              <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Bioimpedância Detalhada</h3>
               <div className="grid grid-cols-4 gap-4">
                 {[{ label: 'Massa Musc.', val: data.physicalData.muscleMass, unit: 'kg' }, { label: 'Gordura', val: data.physicalData.bodyFat, unit: '%' }, { label: 'G. Visceral', val: data.physicalData.visceralFat, unit: '' }, { label: 'IMC', val: data.physicalData.imc, unit: '' }].map((item, i) => (
                   <div key={i} className="bg-white p-4 rounded-xl border-l-4 border-[#d4af37] shadow-lg">
@@ -137,38 +134,38 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
             </section>
 
             <section>
-              <h2 className="text-3xl font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-2 mb-6">2. Estratégia Nutricional</h2>
+              <h2 className="text-3xl font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-2 mb-6 uppercase tracking-tighter">2. Estratégia Nutricional</h2>
               <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 italic font-medium leading-relaxed text-gray-700 mb-8">
-                <span className="font-black not-italic text-black mr-2">Observação:</span> {data.nutritionalStrategy}
+                <span className="font-black not-italic text-black mr-2">Observação do Coach:</span> {data.nutritionalStrategy}
               </div>
-              <div className="bg-[#1a1a1a] text-white p-8 rounded-3xl text-center shadow-xl mb-10">
-                 <span className="text-sm font-black uppercase tracking-[0.3em] mb-4 block">META DIÁRIA {data.kcalSubtext || '(SUPERÁVIT CONTROLADO)'}</span>
+              <div className="bg-[#1a1a1a] text-white p-8 rounded-3xl text-center shadow-xl mb-10 border-b-8 border-[#d4af37]">
+                 <span className="text-sm font-black uppercase tracking-[0.3em] mb-4 block">META CALÓRICA DIÁRIA {data.kcalSubtext}</span>
                  <div className="text-6xl font-black text-[#d4af37] font-montserrat">{data.kcalGoal || '0.000'} <span className="text-2xl">kcal</span></div>
               </div>
             </section>
           </div>
           <div className="mt-auto bg-amber-50 p-4 rounded-xl border-l-4 border-[#d4af37]">
-            <p className="text-xs text-gray-700 font-bold">
-              Documento gerado eletronicamente. Protegido por direitos autorais Team VBR.
+            <p className="text-[10px] text-gray-700 font-black uppercase tracking-widest">
+              Documento Confidencial — Protegido por Direitos Autorais Team VBR Rhino.
             </p>
           </div>
         </div>
 
         {/* PÁGINA 3: PLANO ALIMENTAR */}
         <div className={`${dynamicPageClass} p-[1.5cm]`}>
-          <h2 className="text-4xl font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-4 mb-8">3. Plano Alimentar Diário</h2>
+          <h2 className="text-4xl font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-4 mb-8 uppercase tracking-tighter">3. Plano Alimentar</h2>
           <div className="rounded-[2.5rem] border border-gray-100 overflow-hidden shadow-xl mb-10">
             <table className="w-full">
               <thead className="bg-[#d4af37] text-white">
                 <tr>
-                  <th className="p-6 text-left text-2xl font-black w-32">Horário</th>
-                  <th className="p-6 text-left text-2xl font-black">Refeição & Detalhes</th>
+                  <th className="p-6 text-left text-2xl font-black w-32 uppercase tracking-tighter">Hora</th>
+                  <th className="p-6 text-left text-2xl font-black uppercase tracking-tighter">Refeição & Detalhes</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {data.meals.map((meal) => (
-                  <tr key={meal.id} className="avoid-break">
-                    <td className="p-6 font-black text-[#d4af37] text-3xl align-top">{meal.time}</td>
+                  <tr key={meal.id} className="avoid-break hover:bg-gray-50 transition-colors">
+                    <td className="p-6 font-black text-[#d4af37] text-3xl align-top leading-none">{meal.time}</td>
                     <td className="p-6">
                       <div className="font-black text-xl text-black mb-2 uppercase tracking-tight">{meal.name}</div>
                       <div className="text-gray-600 leading-relaxed font-bold text-lg whitespace-pre-line">{meal.details}</div>
@@ -182,20 +179,20 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
 
         {/* PÁGINA 4: TREINO */}
         <div className={`${dynamicPageClass} p-[1.5cm]`}>
-          <h2 className="text-4xl font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-4 mb-4">4. Divisão de Treino</h2>
-          <div className="mb-8 font-black text-gray-400 uppercase tracking-widest text-xl">Frequência: {data.trainingFrequency}</div>
+          <h2 className="text-4xl font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-4 mb-4 uppercase tracking-tighter">4. Divisão de Treino</h2>
+          <div className="mb-8 font-black text-gray-400 uppercase tracking-widest text-xl">Frequência Semanal Sugerida: {data.trainingFrequency}</div>
           <div className="space-y-10">
             {data.trainingDays.map((day) => (
               <div key={day.id} className="rounded-[2rem] border border-gray-100 overflow-hidden shadow-xl avoid-break">
                  <div className="bg-[#1a1a1a] text-white p-6 flex justify-between items-center border-b-4 border-[#d4af37]">
-                    <h3 className="text-2xl font-black text-[#d4af37] uppercase font-montserrat">{day.title}</h3>
-                    <span className="bg-[#d4af37] text-black px-6 py-1.5 rounded-xl text-sm font-black uppercase">{day.focus}</span>
+                    <h3 className="text-2xl font-black text-[#d4af37] uppercase font-montserrat tracking-tighter">{day.title}</h3>
+                    <span className="bg-[#d4af37] text-black px-6 py-1.5 rounded-xl text-xs font-black uppercase tracking-widest">{day.focus}</span>
                  </div>
                  <table className="w-full">
                    <tbody className="divide-y divide-gray-100">
                       {day.exercises.map((ex) => (
                         <tr key={ex.id}>
-                           <td className="p-5 text-black font-black text-xl pl-10 uppercase">{ex.name}</td>
+                           <td className="p-5 text-black font-black text-xl pl-10 uppercase tracking-tight">{ex.name}</td>
                            <td className="p-5 text-[#d4af37] font-black text-2xl text-right pr-10">{ex.sets}</td>
                         </tr>
                       ))}

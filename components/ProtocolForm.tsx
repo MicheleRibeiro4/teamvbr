@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { ProtocolData, Meal, Supplement, TrainingDay } from '../types';
-import { Plus, Trash2, Activity, Utensils, Dumbbell, Target, Sparkles, Loader2, User, Pill, ClipboardList, ChevronLeft } from 'lucide-react';
+import { Plus, Trash2, Activity, Utensils, Dumbbell, Target, Sparkles, Loader2, User, Pill, ClipboardList, ChevronLeft, Calendar, DollarSign, MapPin, Phone, Mail, UserCheck } from 'lucide-react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { CONSULTANT_DEFAULT } from '../constants';
 
@@ -111,7 +111,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
 
   const labelClass = "block text-[9px] font-black text-white/40 mb-1.5 uppercase tracking-widest";
   const inputClass = "w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:ring-2 focus:ring-[#d4af37] outline-none font-bold text-white text-sm transition-all";
-  const sectionHeaderClass = "flex items-center gap-2 mb-8 border-b border-white/5 pb-4";
+  const sectionHeaderClass = "flex items-center gap-2 mb-8 border-b border-white/5 pb-4 mt-8 first:mt-0";
 
   return (
     <div className="space-y-10 no-print">
@@ -124,19 +124,72 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
         </button>
       )}
 
+      {/* IDENTIFICAÇÃO + DADOS JURÍDICOS INTEGRADOS */}
       <section>
         <div className={sectionHeaderClass}>
           <User className="text-[#d4af37]" size={20} />
-          <h2 className="text-xl font-black text-white uppercase tracking-tighter">Identificação do Aluno</h2>
+          <h2 className="text-xl font-black text-white uppercase tracking-tighter">Identificação & Dados do Contrato</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className={labelClass}>Nome Completo</label>
+          <div className="md:col-span-2">
+            <label className={labelClass}>Nome Completo do Aluno</label>
             <input className={inputClass + " !text-lg !font-black !text-[#d4af37]"} value={data.clientName} onChange={(e) => handleChange('clientName', e.target.value)} />
           </div>
           <div>
-            <label className={labelClass}>Título do Protocolo</label>
-            <input className={inputClass} value={data.protocolTitle} onChange={(e) => handleChange('protocolTitle', e.target.value)} />
+            <label className={labelClass}>CPF</label>
+            <input className={inputClass} value={data.contract.cpf} onChange={(e) => handleChange('contract.cpf', e.target.value)} placeholder="000.000.000-00" />
+          </div>
+          <div>
+            <label className={labelClass}>Telefone / WhatsApp</label>
+            <input className={inputClass} value={data.contract.phone} onChange={(e) => handleChange('contract.phone', e.target.value)} placeholder="(00) 00000-0000" />
+          </div>
+          <div className="md:col-span-2">
+            <label className={labelClass}>E-mail</label>
+            <input className={inputClass} value={data.contract.email} onChange={(e) => handleChange('contract.email', e.target.value)} placeholder="aluno@email.com" />
+          </div>
+          <div className="md:col-span-2">
+            <label className={labelClass}>Endereço Residencial</label>
+            <input className={inputClass} value={data.contract.address} onChange={(e) => handleChange('contract.address', e.target.value)} placeholder="Rua, Número, Bairro, Cidade - UF" />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+          <div className="bg-white/5 p-6 rounded-3xl border border-white/5">
+            <div className="flex items-center gap-2 mb-4">
+              <Calendar className="text-[#d4af37]" size={16} />
+              <h3 className="text-xs font-black text-white uppercase tracking-widest">Vigência</h3>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className={labelClass}>Data Início</label>
+                <input className={inputClass + " !p-3"} value={data.contract.startDate} onChange={(e) => handleChange('contract.startDate', e.target.value)} placeholder="DD/MM/AAAA" />
+              </div>
+              <div>
+                <label className={labelClass}>Data Término</label>
+                <input className={inputClass + " !p-3"} value={data.contract.endDate} onChange={(e) => handleChange('contract.endDate', e.target.value)} placeholder="DD/MM/AAAA" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white/5 p-6 rounded-3xl border border-white/5">
+            <div className="flex items-center gap-2 mb-4">
+              <DollarSign className="text-[#d4af37]" size={16} />
+              <h3 className="text-xs font-black text-white uppercase tracking-widest">Financeiro</h3>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className={labelClass}>Valor Total (R$)</label>
+                <input className={inputClass + " !p-3"} value={data.contract.planValue} onChange={(e) => handleChange('contract.planValue', e.target.value)} placeholder="0,00" />
+              </div>
+              <div>
+                <label className={labelClass}>Pagamento</label>
+                <select className={inputClass + " !p-3"} value={data.contract.paymentMethod} onChange={(e) => handleChange('contract.paymentMethod', e.target.value)}>
+                   <option value="Pix">Pix</option>
+                   <option value="Cartão">Cartão</option>
+                   <option value="Dinheiro">Dinheiro</option>
+                </select>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -147,6 +200,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
           <h2 className="text-xl font-black text-white uppercase tracking-tighter">Dados Físicos & Bioimpedância</h2>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div><label className={labelClass}>Título Protocolo</label><input className={inputClass} value={data.protocolTitle} onChange={(e) => handleChange('protocolTitle', e.target.value)} placeholder="Ex: Hipertrofia" /></div>
           <div><label className={labelClass}>Idade</label><input className={inputClass} value={data.physicalData.age} onChange={(e) => handleChange('physicalData.age', e.target.value)} /></div>
           <div><label className={labelClass}>Peso (kg)</label><input className={inputClass} value={data.physicalData.weight} onChange={(e) => handleChange('physicalData.weight', e.target.value)} /></div>
           <div><label className={labelClass}>Altura (m)</label><input className={inputClass} value={data.physicalData.height} onChange={(e) => handleChange('physicalData.height', e.target.value)} /></div>
@@ -157,6 +211,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
         </div>
       </section>
 
+      {/* IA GENERATOR */}
       <div className="bg-gradient-to-br from-[#d4af37]/20 via-black to-black p-8 rounded-[3rem] border border-[#d4af37]/40 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl relative overflow-hidden group">
         <div className="flex items-center gap-5 relative z-10">
           <div className="w-16 h-16 bg-[#d4af37] rounded-[1.5rem] flex items-center justify-center text-black shadow-[0_0_30px_rgba(212,175,55,0.4)] group-hover:scale-110 transition-transform">
@@ -165,7 +220,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
           <div>
             <h3 className="font-black text-2xl text-white uppercase tracking-tighter leading-none">Inteligência VBR Pro</h3>
             <p className="text-[10px] text-[#d4af37] font-black uppercase tracking-[0.2em] mt-2">
-              {isGenerating ? 'Analisando metabolismo do aluno...' : 'Clique para gerar um protocolo idêntico aos modelos'}
+              {isGenerating ? 'Analisando metabolismo do aluno...' : 'Clique para gerar um protocolo completo com IA'}
             </p>
           </div>
         </div>
@@ -201,6 +256,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
         </div>
       </section>
 
+      {/* REFEIÇÕES */}
       <section>
         <div className="flex justify-between items-center mb-8 border-b border-white/5 pb-4">
            <div className="flex items-center gap-2">
@@ -239,6 +295,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
         </div>
       </section>
 
+      {/* SUPLEMENTAÇÃO */}
       <section>
         <div className="flex justify-between items-center mb-8 border-b border-white/5 pb-4">
            <div className="flex items-center gap-2">
@@ -286,6 +343,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
         </div>
       </section>
 
+      {/* TREINAMENTO */}
       <section>
         <div className="flex justify-between items-center mb-8 border-b border-white/5 pb-4">
            <div className="flex items-center gap-2">

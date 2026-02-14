@@ -5,7 +5,7 @@ import { Search, Trash2, ChevronRight, Calendar, User, Target, FileText, Trendin
 
 interface Props {
   protocols: ProtocolData[];
-  onLoad: (protocol: ProtocolData, view: 'protocol' | 'contract' | 'evolution') => void;
+  onLoad: (protocol: ProtocolData, view: 'manage' | 'evolution' | 'student-dashboard') => void;
   onDelete: (id: string) => void;
 }
 
@@ -68,12 +68,12 @@ const StudentSearch: React.FC<Props> = ({ protocols, onLoad, onDelete }) => {
               <div className="flex items-center gap-3 border-t border-white/5 md:border-t-0 pt-4 md:pt-0">
                 <div className="flex items-center gap-2">
                   <button 
-                    onClick={() => onLoad(p, 'protocol')}
+                    onClick={() => onLoad(p, 'manage')}
                     className="p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all text-white/40 flex flex-col items-center gap-1 min-w-[65px]"
-                    title="Ver Protocolo"
+                    title="Gerenciar Aluno"
                   >
                     <FileText size={18} />
-                    <span className="text-[7px] font-black uppercase">Protocolo</span>
+                    <span className="text-[7px] font-black uppercase">Gerenciar</span>
                   </button>
                   <button 
                     onClick={() => onLoad(p, 'evolution')}
@@ -84,12 +84,12 @@ const StudentSearch: React.FC<Props> = ({ protocols, onLoad, onDelete }) => {
                     <span className="text-[7px] font-black uppercase">Evolução</span>
                   </button>
                   <button 
-                    onClick={() => onLoad(p, 'contract')}
+                    onClick={() => onLoad(p, 'student-dashboard')}
                     className="p-3 bg-[#d4af37]/10 hover:bg-[#d4af37] hover:text-black rounded-xl transition-all text-[#d4af37] flex flex-col items-center gap-1 min-w-[65px] border border-[#d4af37]/20"
-                    title="Ver Contrato"
+                    title="Painel do Aluno"
                   >
-                    <ScrollText size={18} />
-                    <span className="text-[7px] font-black uppercase">Contrato</span>
+                    <ChevronRight size={18} />
+                    <span className="text-[7px] font-black uppercase">Painel</span>
                   </button>
                 </div>
 

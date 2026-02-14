@@ -21,7 +21,7 @@ interface Props {
   protocols: ProtocolData[];
   onNew: () => void;
   onList: () => void;
-  onLoadStudent: (student: ProtocolData, view: 'protocol' | 'contract' | 'evolution') => void;
+  onLoadStudent: (student: ProtocolData, view: 'manage' | 'evolution' | 'student-dashboard') => void;
 }
 
 const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStudent }) => {
@@ -36,7 +36,6 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
 
   const expiringSoon = protocols.filter(p => {
     if (!p.contract.endDate) return false;
-    // Tenta converter o formato DD/MM/YYYY para data
     const parts = p.contract.endDate.split('/');
     if (parts.length !== 3) return false;
     const [day, month, year] = parts;
@@ -44,7 +43,6 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
     const today = new Date();
     const diffTime = endDate.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    // Protocolos que vencem nos próximos 15 dias
     return diffDays >= 0 && diffDays <= 15 && p.contract.status === 'Ativo';
   });
 
@@ -57,7 +55,6 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
   return (
     <div className="animate-in fade-in slide-in-from-bottom-6 duration-700 space-y-10">
       
-      {/* Banner Principal */}
       <div className="bg-[#0a0a0a] rounded-[3rem] p-10 border-b-[12px] border-[#d4af37] relative overflow-hidden shadow-2xl flex flex-col md:flex-row justify-between items-center gap-8">
         <div className="absolute top-0 right-0 p-10 opacity-[0.03] pointer-events-none">
           <img src={LOGO_RHINO_BLACK} alt="" className="w-96" />
@@ -86,7 +83,6 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
         </div>
       </div>
 
-      {/* Grid de Métricas Clicáveis */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {metrics.map((s, i) => (
           <button 
@@ -135,11 +131,11 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <button onClick={() => onLoadStudent(p, 'protocol')} className="p-3 bg-white/5 hover:bg-[#d4af37] hover:text-black rounded-xl transition-all text-white/40" title="Abrir Protocolo"><FileText size={18} /></button>
+                  <button onClick={() => onLoadStudent(p, 'manage')} className="p-3 bg-white/5 hover:bg-[#d4af37] hover:text-black rounded-xl transition-all text-white/40" title="Gerenciar Aluno"><FileText size={18} /></button>
                   <button onClick={() => onLoadStudent(p, 'evolution')} className="p-3 bg-white/5 hover:bg-[#d4af37] hover:text-black rounded-xl transition-all text-white/40" title="Ver Evolução"><TrendingUp size={18} /></button>
-                  <button onClick={() => onLoadStudent(p, 'contract')} className="p-3 bg-white/5 hover:bg-[#d4af37] hover:text-black rounded-xl transition-all text-white/40" title="Ver Contrato"><ScrollText size={18} /></button>
+                  <button onClick={() => onLoadStudent(p, 'manage')} className="p-3 bg-white/5 hover:bg-[#d4af37] hover:text-black rounded-xl transition-all text-white/40" title="Ver Contrato"><ScrollText size={18} /></button>
                   <div className="w-px h-10 bg-white/5 mx-2"></div>
-                  <button onClick={() => onLoadStudent(p, 'protocol')} className="w-12 h-12 bg-white/5 hover:bg-white/10 rounded-xl flex items-center justify-center text-[#d4af37]"><ChevronRight size={24} /></button>
+                  <button onClick={() => onLoadStudent(p, 'student-dashboard')} className="w-12 h-12 bg-white/5 hover:bg-white/10 rounded-xl flex items-center justify-center text-[#d4af37]"><ChevronRight size={24} /></button>
                 </div>
               </div>
             )) : (
@@ -158,7 +154,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
             <p className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-4">Protocolos Finalizando</p>
             <div className="space-y-3">
               {expiringSoon.length > 0 ? expiringSoon.map(p => (
-                <div key={p.id} className="flex items-center justify-between p-4 bg-red-500/5 border border-red-500/10 rounded-2xl group hover:bg-red-500/10 transition-all cursor-pointer" onClick={() => onLoadStudent(p, 'protocol')}>
+                <div key={p.id} className="flex items-center justify-between p-4 bg-red-500/5 border border-red-500/10 rounded-2xl group hover:bg-red-500/10 transition-all cursor-pointer" onClick={() => onLoadStudent(p, 'student-dashboard')}>
                   <div>
                     <p className="text-sm font-black text-white/80">{p.clientName}</p>
                     <p className="text-[9px] text-red-500 font-bold uppercase tracking-widest">Protocolo vence em: {p.contract.endDate}</p>
