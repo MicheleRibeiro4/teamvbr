@@ -36,11 +36,15 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
 
   const expiringSoon = protocols.filter(p => {
     if (!p.contract.endDate) return false;
-    const [day, month, year] = p.contract.endDate.split('/');
+    // Tenta converter o formato DD/MM/YYYY para data
+    const parts = p.contract.endDate.split('/');
+    if (parts.length !== 3) return false;
+    const [day, month, year] = parts;
     const endDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
     const today = new Date();
     const diffTime = endDate.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    // Protocolos que vencem nos próximos 15 dias
     return diffDays >= 0 && diffDays <= 15 && p.contract.status === 'Ativo';
   });
 
@@ -151,13 +155,13 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
             <AlertCircle size={20} className="text-[#d4af37]" /> Alertas & Status
           </h3>
           <div className="bg-[#111] p-8 rounded-[2.5rem] border border-white/10">
-            <p className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-4">Renovações Próximas</p>
+            <p className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-4">Protocolos Finalizando</p>
             <div className="space-y-3">
               {expiringSoon.length > 0 ? expiringSoon.map(p => (
-                <div key={p.id} className="flex items-center justify-between p-4 bg-red-500/5 border border-red-500/10 rounded-2xl group hover:bg-red-500/10 transition-all cursor-pointer" onClick={() => onLoadStudent(p, 'contract')}>
+                <div key={p.id} className="flex items-center justify-between p-4 bg-red-500/5 border border-red-500/10 rounded-2xl group hover:bg-red-500/10 transition-all cursor-pointer" onClick={() => onLoadStudent(p, 'protocol')}>
                   <div>
                     <p className="text-sm font-black text-white/80">{p.clientName}</p>
-                    <p className="text-[9px] text-red-500 font-bold uppercase tracking-widest">Expira em: {p.contract.endDate}</p>
+                    <p className="text-[9px] text-red-500 font-bold uppercase tracking-widest">Protocolo vence em: {p.contract.endDate}</p>
                   </div>
                   <ArrowRight size={14} className="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>

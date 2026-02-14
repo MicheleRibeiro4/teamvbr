@@ -156,10 +156,6 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
         </div>
 
         <div className="flex items-center gap-2 md:gap-4">
-          <button onClick={() => setActiveView('search')} className="p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all text-white/60 hover:text-white" title="Lista de Alunos">
-            <FolderOpen size={20} />
-          </button>
-          
           {(activeView === 'protocol' || activeView === 'contract') && (
             <button 
               onClick={handlePrint} 
@@ -168,10 +164,6 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
               <Printer size={20} /> <span className="hidden lg:inline">Imprimir PDF</span>
             </button>
           )}
-
-          <button onClick={handleNew} className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-white px-4 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all">
-            <Plus size={16} /> <span className="hidden md:inline">Novo Aluno</span>
-          </button>
 
           {data.id && activeView !== 'home' && activeView !== 'search' && (
             <button 

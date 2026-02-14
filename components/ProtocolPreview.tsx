@@ -10,11 +10,10 @@ interface Props {
 }
 
 const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
-  // Classe para páginas fixas (Capa, Dados, Suplementos, Final)
-  const fixedPageClass = "bg-white w-[210mm] h-[296mm] min-h-[296mm] mx-auto flex flex-col page-break text-black relative shadow-2xl print:shadow-none print:m-0 print:rounded-none mb-10 print:mb-0 overflow-hidden select-none";
+  // Ajustado para 297mm exatos (Tamanho A4)
+  const fixedPageClass = "bg-white w-[210mm] h-[297mm] min-h-[297mm] mx-auto flex flex-col page-break text-black relative shadow-2xl print:shadow-none print:m-0 print:rounded-none mb-10 print:mb-0 overflow-hidden select-none";
   
-  // Classe para páginas de conteúdo variável (Refeições, Treinos)
-  const dynamicPageClass = "bg-white w-[210mm] min-h-[296mm] mx-auto flex flex-col page-break-dynamic text-black relative shadow-2xl print:shadow-none print:m-0 print:rounded-none mb-10 print:mb-0 overflow-hidden";
+  const dynamicPageClass = "bg-white w-[210mm] min-h-[297mm] mx-auto flex flex-col page-break-dynamic text-black relative shadow-2xl print:shadow-none print:m-0 print:rounded-none mb-10 print:mb-0 overflow-hidden";
 
   const handlePrint = () => {
     window.print();
@@ -128,7 +127,6 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
       </div>
 
       {/* PÁGINA 3: PLANO ALIMENTAR */}
-      {/* Fix: use dynamicPageClass instead of non-existent pageClass */}
       <div className={`${dynamicPageClass} p-[1.5cm]`}>
         <h2 className="text-4xl font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-4 mb-8">3. Plano Alimentar Diário</h2>
         <div className="rounded-[2.5rem] border border-gray-100 overflow-hidden shadow-xl mb-10">
@@ -190,7 +188,6 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
       </div>
 
       {/* PÁGINA 5: TREINO PARTE 1 */}
-      {/* Fix: use dynamicPageClass instead of non-existent pageClass */}
       <div className={`${dynamicPageClass} p-[1.5cm]`}>
         <h2 className="text-4xl font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-4 mb-4">5. Divisão de Treino (Parte 1)</h2>
         <div className="mb-8 font-black text-gray-400 uppercase tracking-widest text-xl">Frequência: {data.trainingFrequency || '4 a 5x por semana'}</div>
@@ -219,7 +216,6 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
 
       {/* PÁGINA 6: TREINO PARTE 2 */}
       {data.trainingDays.length > 2 && (
-        /* Fix: use dynamicPageClass instead of non-existent pageClass */
         <div className={`${dynamicPageClass} p-[1.5cm]`}>
           <h2 className="text-4xl font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-4 mb-10">5. Divisão de Treino (Parte 2)</h2>
           <div className="space-y-10">

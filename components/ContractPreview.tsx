@@ -45,7 +45,7 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
         </button>
       </div>
 
-      <div className="flex flex-col items-center bg-white p-[1.5cm] shadow-2xl w-[210mm] min-h-[296mm] h-auto mx-auto text-black leading-[1.4] font-sans text-[11px] print:shadow-none print:m-0 print:w-[210mm] print:h-auto mb-10 print:mb-0 overflow-hidden">
+      <div className="flex flex-col items-center bg-white p-[1.5cm] shadow-2xl w-[210mm] min-h-[297mm] h-auto mx-auto text-black leading-[1.4] font-sans text-[11px] print:shadow-none print:m-0 print:w-[210mm] print:h-auto mb-10 print:mb-0 overflow-hidden">
         
         {/* TÍTULO */}
         <div className="w-full flex flex-col items-center mb-8">
