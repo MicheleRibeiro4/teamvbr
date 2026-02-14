@@ -52,8 +52,6 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
     download: handleDownloadPDF
   }));
 
-  // CSS Ajustado: Removido 'pageBreakAfter' para evitar páginas brancas extras.
-  // Usaremos <div className="html2pdf__page-break"></div> manualmente.
   const pageStyle: React.CSSProperties = { 
     width: '210mm', 
     minHeight: '296mm', 
@@ -63,12 +61,12 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
     position: 'relative', 
     boxSizing: 'border-box', 
     display: 'block',
-    // pageBreakAfter: 'always', <--- REMOVIDO PARA CORRIGIR PÁGINAS EM BRANCO
   };
 
   const lastPageStyle: React.CSSProperties = {
     ...pageStyle,
-    padding: '0', 
+    padding: '0',
+    pageBreakBefore: 'always' // Garante que comece em nova página sem criar folha branca extra
   };
   
   const sectionTitle = "text-xl font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-1 mb-6 uppercase";
@@ -294,9 +292,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
           </div>
         </div>
 
-        <div className="html2pdf__page-break"></div>
-
-        {/* PÁGINA 7: ENCERRAMENTO */}
+        {/* PÁGINA 7: ENCERRAMENTO - SEM PAGE BREAK ANTERIOR MANUAL */}
         <div style={lastPageStyle} className="h-[296mm]">
           <div className="w-full h-full bg-[#111] flex flex-col justify-between p-12 text-center border-[20px] border-white box-border">
              <div className="flex-none"></div>

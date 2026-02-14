@@ -31,7 +31,7 @@ CLÁUSULA 2 – DURAÇÃO E RENOVAÇÃO
 
 CLÁUSULA 3 – VALOR E FORMA DE PAGAMENTO
 3.1. O valor total da assessoria é de R$ [VALUE] ([VALUE_WORDS]). 
-3.2. Forma de pagamento:[PAYMENT_METHOD].
+3.2. Forma de pagamento: [PAYMENT_METHOD]
 
 CLÁUSULA 4 – RESPONSABILIDADES E DECLARAÇÕES DO CONTRATANTE
 4.1. O contratante declara, sob as penas da lei:

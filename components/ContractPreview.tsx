@@ -18,7 +18,7 @@ const ContractPreview = forwardRef<ContractPreviewHandle, Props>(({ data, onBack
   const [isGenerating, setIsGenerating] = useState(false);
   const contractRef = useRef<HTMLDivElement>(null);
 
-  const renderContractText = () => {
+  const getCleanContractText = () => {
     let text = data.contract.contractBody;
     
     if (!text || text.trim() === '') {
@@ -41,8 +41,18 @@ const ContractPreview = forwardRef<ContractPreviewHandle, Props>(({ data, onBack
       text = text.replace(new RegExp(key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), val || '__________');
     });
 
+    // Limpezas Gerais
     text = text.replace(/\(\s*\)\s*Boleto bancário/gi, "");
     text = text.replace(/\(\s*\)\s*Outro:[\s_]*/gi, "");
+    
+    // Fix: Remove quebras de linha excessivas e espaços no item 1.3 para aproximar
+    text = text.replace(/1\.3\. NÃO constitui objeto deste contrato:\s*[\r\n]+/g, "1.3. NÃO constitui objeto deste contrato:\n");
+    
+    // Fix: Garante que "3.2. Forma de pagamento:" fique na mesma linha do método
+    // Remove qualquer quebra de linha após o título da cláusula 3.2
+    text = text.replace(/3\.2\. Forma de pagamento:\s*[\r\n]+\s*/g, "3.2. Forma de pagamento: ");
+    
+    // Normaliza quebras triplas ou duplas para apenas duplas (parágrafos) ou simples
     text = text.replace(/\n\s*\n\s*\n/g, "\n\n");
 
     return text;
@@ -126,8 +136,17 @@ const ContractPreview = forwardRef<ContractPreviewHandle, Props>(({ data, onBack
           <p className="mb-6 text-justify">As partes acima identificadas celebram o presente contrato, mediante as seguintes cláusulas e condições:</p>
         </div>
 
-        <div className="whitespace-pre-wrap mb-10 text-justify">
-          {renderContractText()}
+        {/* Renderização em Parágrafos para Evitar Corte de Texto */}
+        <div className="mb-10 text-justify">
+          {getCleanContractText().split('\n').map((line, i) => {
+            // Renderiza linhas vazias como espaçamento, linhas com texto como p
+            if (line.trim() === '') return <div key={i} className="h-4"></div>;
+            return (
+              <p key={i} className="mb-1 break-inside-avoid">
+                {line}
+              </p>
+            );
+          })}
         </div>
 
         <div className="html2pdf__page-break"></div>
@@ -142,7 +161,7 @@ const ContractPreview = forwardRef<ContractPreviewHandle, Props>(({ data, onBack
         </div>
 
         <div className="mt-8 space-y-12">
-          <div>
+          <div className="break-inside-avoid">
             <p className="font-bold mb-4">CONTRATANTE:</p>
             <div className="border-b border-black w-2/3 mb-1"></div>
             <p>Assinatura</p>
@@ -150,7 +169,7 @@ const ContractPreview = forwardRef<ContractPreviewHandle, Props>(({ data, onBack
             <p>CPF: {data.contract.cpf}</p>
           </div>
           
-          <div>
+          <div className="break-inside-avoid">
             <p className="font-bold mb-4">CONTRATADO:</p>
             <div className="border-b border-black w-2/3 mb-1"></div>
             <p>Assinatura</p>
