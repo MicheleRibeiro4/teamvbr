@@ -84,10 +84,10 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
       <div ref={pdfRef} className="bg-gray-200 shadow-inner flex flex-col items-center print:bg-transparent print:m-0 print:p-0">
         
         {/* PÁGINA 1: CAPA */}
-        <div style={{ ...pageStyle, padding: 0, backgroundColor: '#111' }} className="flex flex-col justify-between text-white text-center relative bg-[#111]">
+        <div style={{ ...pageStyle, padding: 0, backgroundColor: '#111' }} className="relative h-[296mm] flex flex-col justify-between text-white text-center bg-[#111]">
           
           {/* Conteúdo Centralizado Verticalmente */}
-          <div className="flex-1 flex flex-col items-center justify-center w-full px-10">
+          <div className="flex-1 flex flex-col items-center justify-center w-full px-10 relative z-10 pb-10">
             <img src={LOGO_VBR_BLACK} alt="Team VBR" className="w-80 h-auto mb-12 relative z-10" />
             
             <h1 className="text-5xl font-black text-[#d4af37] uppercase tracking-wider leading-tight mb-16">
@@ -107,8 +107,8 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
             </div>
           </div>
 
-          {/* Rodapé Amarelo */}
-          <div className="w-full h-8 bg-[#d4af37]"></div>
+          {/* Rodapé Amarelo - Posicionado Absolutamente para garantir o fim da página */}
+          <div className="absolute bottom-0 left-0 w-full h-8 bg-[#d4af37]"></div>
         </div>
 
         {/* PÁGINA 2: DADOS & ESTRATÉGIA */}
@@ -283,29 +283,38 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
         </div>
 
         {/* PÁGINA 7: ENCERRAMENTO (ÚLTIMA PÁGINA - OCUPA TUDO) */}
-        <div style={lastPageStyle}>
-          <div className="w-full h-full bg-[#111] flex flex-col items-center justify-center p-12 text-center relative border-[20px] border-white">
+        <div style={lastPageStyle} className="h-[296mm]">
+          {/* Estrutura Flexbox para garantir separação entre conteúdo e rodapé */}
+          <div className="w-full h-full bg-[#111] flex flex-col justify-between p-12 text-center border-[20px] border-white box-border">
              
-             <AlertTriangle size={80} className="text-[#d4af37] mb-8" />
-             
-             <h2 className="text-5xl font-black text-white uppercase tracking-tighter mb-4">
-               Atenção
-             </h2>
-             
-             <div className="w-24 h-2 bg-[#d4af37] mb-12"></div>
+             {/* Espaçador Superior para centralizar o bloco do meio visualmente */}
+             <div className="flex-none"></div>
 
-             <div className="max-w-3xl space-y-6 text-xl text-white/80 font-medium leading-relaxed">
-               <p>
-                 Este protocolo foi desenhado especificamente para você, {data.clientName.split(' ')[0]}.
-               </p>
-               <p>
-                 Ajustes de carga, dieta e cardio serão feitos conforme sua evolução e feedbacks.</p>
-               <p className="text-[#d4af37]">
-                 A consistência vence a intensidade.
-               </p>
+             {/* Bloco Central de Conteúdo */}
+             <div className="flex flex-col items-center justify-center space-y-8">
+               <AlertTriangle size={80} className="text-[#d4af37]" />
+               
+               <h2 className="text-5xl font-black text-white uppercase tracking-tighter">
+                 Atenção
+               </h2>
+               
+               <div className="w-24 h-2 bg-[#d4af37]"></div>
+
+               <div className="max-w-3xl space-y-6 text-xl text-white/80 font-medium leading-relaxed">
+                 <p>
+                   Este protocolo foi desenhado especificamente para você, {data.clientName.split(' ')[0]}.
+                 </p>
+                 <p>
+                   Ajustes de carga, dieta e cardio serão feitos conforme sua evolução e feedbacks.
+                 </p>
+                 <p className="text-[#d4af37]">
+                   A consistência vence a intensidade.
+                 </p>
+               </div>
              </div>
 
-             <div className="absolute bottom-12 left-0 right-0 text-center">
+             {/* Rodapé fixo no fluxo do Flexbox */}
+             <div className="flex-none pt-12">
                <p className="text-xs font-bold text-gray-600 uppercase tracking-[0.3em]">TEAM VBR © 2026</p>
              </div>
 
