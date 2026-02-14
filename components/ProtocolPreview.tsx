@@ -64,7 +64,7 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
   };
   
   const sectionTitle = "text-xl font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-1 mb-6 uppercase";
-  const dataCardStyle = "bg-gray-50 border border-gray-100 p-4 rounded-lg";
+  const dataCardStyle = "bg-gray-50 border border-gray-100 p-4 rounded-lg break-inside-avoid";
   const labelStyle = "text-xs font-bold text-gray-500 uppercase block mb-1";
   const valueStyle = "text-xl font-bold text-gray-900";
 
@@ -131,36 +131,36 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
 
           <h3 className={sectionTitle}>2. Estratégia Nutricional</h3>
           
-          <div className="bg-gray-100 p-6 rounded-none border-l-4 border-gray-400 mb-8 text-sm text-gray-800 leading-relaxed">
+          <div className="bg-gray-100 p-6 rounded-none border-l-4 border-gray-400 mb-8 text-sm text-gray-800 leading-relaxed break-inside-avoid">
             <span className="font-bold block mb-1">Observação:</span>
             {data.nutritionalStrategy}
           </div>
 
-          <div className="bg-[#1a1a1a] text-center p-8 rounded-lg mb-8">
+          <div className="bg-[#1a1a1a] text-center p-8 rounded-lg mb-8 break-inside-avoid">
              <p className="text-xs font-bold text-white uppercase tracking-widest mb-2">META DIÁRIA ({data.kcalSubtext.toUpperCase()})</p>
              <p className="text-4xl font-bold text-[#d4af37]">{data.kcalGoal} kcal</p>
           </div>
 
           <h4 className="text-lg font-bold text-black mb-4">Distribuição de Macronutrientes</h4>
           <div className="grid grid-cols-3 gap-4">
-             <div className="bg-white border border-gray-200 p-6 text-center rounded-lg shadow-sm">
+             <div className="bg-white border border-gray-200 p-6 text-center rounded-lg shadow-sm break-inside-avoid">
                 <p className="text-[#d4af37] font-bold text-sm uppercase mb-2">Proteínas</p>
                 <p className="text-3xl font-bold text-gray-900 mb-1">{safeMacros.protein?.value || '0'}g</p>
                 <p className="text-xs text-gray-400">{safeMacros.protein?.ratio || ''}</p>
              </div>
-             <div className="bg-white border border-gray-200 p-6 text-center rounded-lg shadow-sm">
+             <div className="bg-white border border-gray-200 p-6 text-center rounded-lg shadow-sm break-inside-avoid">
                 <p className="text-[#d4af37] font-bold text-sm uppercase mb-2">Carboidratos</p>
                 <p className="text-3xl font-bold text-gray-900 mb-1">{safeMacros.carbs?.value || '0'}g</p>
                 <p className="text-xs text-gray-400">{safeMacros.carbs?.ratio || ''}</p>
              </div>
-             <div className="bg-white border border-gray-200 p-6 text-center rounded-lg shadow-sm">
+             <div className="bg-white border border-gray-200 p-6 text-center rounded-lg shadow-sm break-inside-avoid">
                 <p className="text-[#d4af37] font-bold text-sm uppercase mb-2">Gorduras</p>
                 <p className="text-3xl font-bold text-gray-900 mb-1">{safeMacros.fats?.value || '0'}g</p>
                 <p className="text-xs text-gray-400">{safeMacros.fats?.ratio || ''}</p>
              </div>
           </div>
 
-          <div className="mt-8 bg-[#fffbe6] p-4 rounded border border-[#ffe58f] text-sm text-[#876800]">
+          <div className="mt-8 bg-[#fffbe6] p-4 rounded border border-[#ffe58f] text-sm text-[#876800] break-inside-avoid">
             <strong>Nota Importante:</strong> Manter a consistência na pesagem dos alimentos.
           </div>
         </div>
@@ -177,7 +177,7 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {data.meals.map((meal, index) => (
-                <tr key={meal.id} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                <tr key={meal.id} className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"} break-inside-avoid`}>
                   <td className="p-4 font-bold text-[#d4af37] align-top">{meal.time}</td>
                   <td className="p-4">
                     <p className="font-bold text-gray-900 mb-1">{meal.name}</p>
@@ -188,7 +188,7 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
             </tbody>
           </table>
 
-          <div className="mt-10 border-2 border-dashed border-gray-300 p-6 text-center text-gray-500 italic text-sm rounded-xl">
+          <div className="mt-10 border-2 border-dashed border-gray-300 p-6 text-center text-gray-500 italic text-sm rounded-xl break-inside-avoid">
              Lembre-se de manter a hidratação ao longo do dia (mínimo 3.5L de água).
           </div>
         </div>
@@ -205,7 +205,7 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
               else if (nameLower.includes('cafeína') || nameLower.includes('cafeina') || nameLower.includes('café')) bgColor = "bg-[#5d4037]"; 
 
               return (
-                <div key={supp.id} className={`${bgColor} text-white p-6 rounded-xl flex justify-between items-center shadow-md`}>
+                <div key={supp.id} className={`${bgColor} text-white p-6 rounded-xl flex justify-between items-center shadow-md break-inside-avoid`}>
                   <div>
                     <h4 className="text-xl font-bold uppercase mb-1">{supp.name}</h4>
                     <p className="text-sm opacity-90">{supp.dosage}</p>
@@ -221,7 +221,7 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
           <h4 className="text-lg font-bold text-black mb-4">Dicas:</h4>
           <ul className="space-y-3">
             {data.tips.map((tip, idx) => (
-              <li key={idx} className="flex items-start gap-3 text-sm text-gray-700">
+              <li key={idx} className="flex items-start gap-3 text-sm text-gray-700 break-inside-avoid">
                 <div className="w-1.5 h-1.5 bg-black mt-1.5 shrink-0"></div>
                 {tip}
               </li>
@@ -236,7 +236,7 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
           
           <div className="space-y-8">
             {data.trainingDays.slice(0, 2).map((day) => (
-              <div key={day.id} className="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+              <div key={day.id} className="border border-gray-200 rounded-lg overflow-hidden shadow-sm break-inside-avoid">
                 <div className="bg-[#111] text-white p-3 flex justify-between items-center">
                   <span className="font-bold uppercase text-[#d4af37]">{day.title}</span>
                   <span className="text-xs font-bold text-[#d4af37] uppercase">Foco: {day.focus}</span>
@@ -262,7 +262,7 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
           
           <div className="space-y-8 mt-6">
             {data.trainingDays.slice(2).map((day) => (
-              <div key={day.id} className="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+              <div key={day.id} className="border border-gray-200 rounded-lg overflow-hidden shadow-sm break-inside-avoid">
                 <div className="bg-[#111] text-white p-3 flex justify-between items-center">
                   <span className="font-bold uppercase text-[#d4af37]">{day.title}</span>
                   <span className="text-xs font-bold text-[#d4af37] uppercase">Foco: {day.focus}</span>
