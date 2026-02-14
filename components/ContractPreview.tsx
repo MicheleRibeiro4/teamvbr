@@ -139,12 +139,19 @@ const ContractPreview = forwardRef<ContractPreviewHandle, Props>(({ data, onBack
         {/* Renderização em Parágrafos para Evitar Corte de Texto */}
         <div className="mb-10 text-justify">
           {getCleanContractText().split('\n').map((line, i) => {
-            // Renderiza linhas vazias como espaçamento, linhas com texto como p
             if (line.trim() === '') return <div key={i} className="h-4"></div>;
+            
+            // Verifica se a linha é o título da Cláusula 3 ou 7 para forçar quebra
+            const upperLine = line.toUpperCase();
+            const shouldBreak = upperLine.includes('CLÁUSULA 3') || upperLine.includes('CLÁUSULA 7');
+
             return (
-              <p key={i} className="mb-1 break-inside-avoid">
-                {line}
-              </p>
+              <React.Fragment key={i}>
+                {shouldBreak && <div className="html2pdf__page-break"></div>}
+                <p className="mb-1 break-inside-avoid">
+                  {line}
+                </p>
+              </React.Fragment>
             );
           })}
         </div>
@@ -154,7 +161,7 @@ const ContractPreview = forwardRef<ContractPreviewHandle, Props>(({ data, onBack
         </p>
 
         <div className="mb-12">
-           <p>Cidade: {data.contract.city || 'Vespasiano'} - {data.contract.state || 'MG'}</p>
+           <p>Vespasiano, Minas Gerais</p>
            <p>Data: {new Date().toLocaleDateString('pt-BR')}</p>
         </div>
 
