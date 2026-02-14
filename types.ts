@@ -61,7 +61,7 @@ export interface ContractInfo {
   city: string;
   contractDate: string;
   status: 'Aguardando' | 'Ativo' | 'Vencido' | 'Cancelado';
-  contractBody?: string; // Campo para o texto editável do contrato
+  contractBody?: string;
 }
 
 export interface ProtocolData {
@@ -82,7 +82,7 @@ export interface ProtocolData {
   macros: Macronutrients;
   meals: Meal[];
   supplements: Supplement[];
-  tips: string[];
+  tips: string[]; // Novo campo para dicas
   trainingFrequency: string;
   trainingDays: TrainingDay[];
   generalObservations: string;

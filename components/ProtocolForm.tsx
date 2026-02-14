@@ -39,68 +39,32 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       
-      const prompt = `Atue como o Master Coach Vinícius Brasil do Team VBR. Crie um protocolo profissional de elite baseado nos seguintes dados:
+      const prompt = `Você é o Master Coach Vinícius Brasil do Team VBR. Crie um protocolo profissional de elite para o aluno:
       Nome: ${data.clientName} | Peso: ${data.physicalData.weight}kg | Altura: ${data.physicalData.height}m | Idade: ${data.physicalData.age} | Objetivo: ${data.protocolTitle || "Performance Máxima"}.
       
-      Gere uma estratégia nutricional detalhada, meta de macros coerente e treinos.
-      
-      Retorne APENAS o JSON:
+      Retorne APENAS um objeto JSON com esta estrutura exata:
       {
-        "nutritionalStrategy": "Explicação técnica",
-        "kcalGoal": "Valor total",
-        "kcalSubtext": "(TEXTO EM CAIXA ALTA)",
+        "nutritionalStrategy": "Explicação técnica motivacional curta",
+        "kcalGoal": "Valor calórico",
+        "kcalSubtext": "(EX: SUPERÁVIT CONTROLADO)",
         "macros": {
-          "protein": { "value": "g", "ratio": "g/kg" },
-          "carbs": { "value": "g", "ratio": "g/kg" },
-          "fats": { "value": "g", "ratio": "g/kg" }
+          "protein": { "value": "160", "ratio": "≈ 2,2g/kg" },
+          "carbs": { "value": "330", "ratio": "Energia" },
+          "fats": { "value": "75", "ratio": "Regulação" }
         },
-        "meals": [{"time": "00:00", "name": "Nome", "details": "Detalhes"}],
-        "supplements": [{"name": "Suplemento", "dosage": "dose", "timing": "horário"}],
-        "trainingDays": [{"title": "DIA", "focus": "FOCO", "exercises": [{"name": "Exercício", "sets": "séries"}]}],
-        "generalObservations": "Instruções"
+        "meals": [{"time": "08:40", "name": "Nome", "details": "Alimentos"}],
+        "supplements": [{"name": "CREATINA", "dosage": "5g todos os dias", "timing": "Junto à Ceia"}],
+        "tips": ["Dica 1", "Dica 2", "Dica 3"],
+        "trainingFrequency": "4 a 5x por semana",
+        "trainingDays": [{"title": "DIA A: PEITO + OMBRO", "focus": "Superior", "exercises": [{"name": "Supino", "sets": "4x 8-10"}]}],
+        "generalObservations": "Sua frase de impacto"
       }`;
 
       const response = await ai.models.generateContent({
-        model: "gemini-3-pro-preview",
+        model: "gemini-3-flash-preview",
         contents: prompt,
         config: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              nutritionalStrategy: { type: Type.STRING },
-              kcalGoal: { type: Type.STRING },
-              kcalSubtext: { type: Type.STRING },
-              macros: {
-                type: Type.OBJECT,
-                properties: {
-                  protein: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } },
-                  carbs: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } },
-                  fats: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } },
-                }
-              },
-              meals: { 
-                type: Type.ARRAY, 
-                items: { type: Type.OBJECT, properties: { time: { type: Type.STRING }, name: { type: Type.STRING }, details: { type: Type.STRING } } } 
-              },
-              supplements: { 
-                type: Type.ARRAY, 
-                items: { type: Type.OBJECT, properties: { name: { type: Type.STRING }, dosage: { type: Type.STRING }, timing: { type: Type.STRING } } } 
-              },
-              trainingDays: { 
-                type: Type.ARRAY, 
-                items: { 
-                  type: Type.OBJECT, 
-                  properties: { 
-                    title: { type: Type.STRING }, 
-                    focus: { type: Type.STRING }, 
-                    exercises: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { name: { type: Type.STRING }, sets: { type: Type.STRING } } } } 
-                  } 
-                } 
-              },
-              generalObservations: { type: Type.STRING }
-            }
-          }
+          responseMimeType: "application/json"
         }
       });
 
@@ -121,7 +85,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
       onChange(updatedData);
     } catch (error: any) {
       console.error("Erro IA:", error);
-      alert("❌ Falha ao gerar com IA. Verifique sua conexão e tente novamente.");
+      alert("❌ Falha ao gerar com IA. Tente novamente.");
     } finally {
       setIsGenerating(false);
     }
@@ -180,26 +144,16 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
       <section>
         <div className={sectionHeaderClass}>
           <Activity className="text-[#d4af37]" size={20} />
-          <h2 className="text-xl font-black text-white uppercase tracking-tighter">Dados Físicos</h2>
+          <h2 className="text-xl font-black text-white uppercase tracking-tighter">Dados Físicos & Bioimpedância</h2>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div><label className={labelClass}>Idade</label><input className={inputClass} value={data.physicalData.age} onChange={(e) => handleChange('physicalData.age', e.target.value)} /></div>
-          <div><label className={labelClass}>Sexo</label>
-            <select className={inputClass} value={data.physicalData.gender} onChange={(e) => handleChange('physicalData.gender', e.target.value)}>
-              <option value="">Selecione...</option>
-              <option value="Masculino">Masculino</option>
-              <option value="Feminino">Feminino</option>
-            </select>
-          </div>
           <div><label className={labelClass}>Peso (kg)</label><input className={inputClass} value={data.physicalData.weight} onChange={(e) => handleChange('physicalData.weight', e.target.value)} /></div>
           <div><label className={labelClass}>Altura (m)</label><input className={inputClass} value={data.physicalData.height} onChange={(e) => handleChange('physicalData.height', e.target.value)} /></div>
           <div><label className={labelClass}>Gordura (%)</label><input className={inputClass} value={data.physicalData.bodyFat} onChange={(e) => handleChange('physicalData.bodyFat', e.target.value)} /></div>
-          <div><label className={labelClass}>Massa Muscular (kg)</label><input className={inputClass} value={data.physicalData.muscleMass} onChange={(e) => handleChange('physicalData.muscleMass', e.target.value)} /></div>
+          <div><label className={labelClass}>Massa Musc (kg)</label><input className={inputClass} value={data.physicalData.muscleMass} onChange={(e) => handleChange('physicalData.muscleMass', e.target.value)} /></div>
           <div><label className={labelClass}>G. Visceral</label><input className={inputClass} value={data.physicalData.visceralFat} onChange={(e) => handleChange('physicalData.visceralFat', e.target.value)} /></div>
-          <div className="bg-[#d4af37]/10 rounded-2xl flex flex-col items-center justify-center border border-[#d4af37]/30">
-             <label className={labelClass + " !mb-0"}>IMC</label>
-             <span className="text-xl font-black text-[#d4af37]">{data.physicalData.imc}</span>
-          </div>
+          <div><label className={labelClass}>IMC</label><input className={inputClass} value={data.physicalData.imc} onChange={(e) => handleChange('physicalData.imc', e.target.value)} /></div>
         </div>
       </section>
 
@@ -211,7 +165,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
           <div>
             <h3 className="font-black text-2xl text-white uppercase tracking-tighter leading-none">Inteligência VBR Pro</h3>
             <p className="text-[10px] text-[#d4af37] font-black uppercase tracking-[0.2em] mt-2">
-              {isGenerating ? 'Analisando metabolismo do aluno...' : 'Clique para gerar um protocolo profissional'}
+              {isGenerating ? 'Analisando metabolismo do aluno...' : 'Clique para gerar um protocolo idêntico aos modelos'}
             </p>
           </div>
         </div>
@@ -231,24 +185,18 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
            <div><label className={labelClass}>Meta Calórica</label><input className={inputClass} value={data.kcalGoal} onChange={(e) => handleChange('kcalGoal', e.target.value)} /></div>
-           <div><label className={labelClass}>Subtexto</label><input className={inputClass} value={data.kcalSubtext} onChange={(e) => handleChange('kcalSubtext', e.target.value)} /></div>
+           <div><label className={labelClass}>Subtexto (Ex: Superávit)</label><input className={inputClass} value={data.kcalSubtext} onChange={(e) => handleChange('kcalSubtext', e.target.value)} /></div>
         </div>
         <div className="grid grid-cols-3 gap-3">
-           <div className="bg-red-500/10 p-4 rounded-2xl border border-red-500/20">
-             <label className={labelClass}>Prot (g)</label>
-             <input className={inputClass + " !bg-transparent !border-red-500/10"} value={data.macros.protein.value} onChange={(e) => handleChange('macros.protein.value', e.target.value)} />
-           </div>
-           <div className="bg-blue-500/10 p-4 rounded-2xl border border-blue-500/20">
-             <label className={labelClass}>Carb (g)</label>
-             <input className={inputClass + " !bg-transparent !border-blue-500/10"} value={data.macros.carbs.value} onChange={(e) => handleChange('macros.carbs.value', e.target.value)} />
-           </div>
-           <div className="bg-yellow-500/10 p-4 rounded-2xl border border-yellow-500/20">
-             <label className={labelClass}>Gord (g)</label>
-             <input className={inputClass + " !bg-transparent !border-yellow-500/10"} value={data.macros.fats.value} onChange={(e) => handleChange('macros.fats.value', e.target.value)} />
-           </div>
+           {['protein', 'carbs', 'fats'].map(m => (
+             <div key={m} className="bg-white/5 p-4 rounded-2xl border border-white/10">
+               <label className={labelClass}>{m.toUpperCase()} (g)</label>
+               <input className={inputClass + " !bg-transparent !border-none !p-0 !text-xl"} value={(data.macros as any)[m].value} onChange={(e) => handleChange(`macros.${m}.value`, e.target.value)} />
+             </div>
+           ))}
         </div>
         <div className="mt-4">
-          <label className={labelClass}>Estratégia Nutricional</label>
+          <label className={labelClass}>Estratégia do Coach</label>
           <textarea className={inputClass + " h-24"} value={data.nutritionalStrategy} onChange={(e) => handleChange('nutritionalStrategy', e.target.value)} />
         </div>
       </section>
@@ -342,24 +290,36 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
         <div className="flex justify-between items-center mb-8 border-b border-white/5 pb-4">
            <div className="flex items-center gap-2">
              <Dumbbell className="text-[#d4af37]" size={20} />
-             <h2 className="text-xl font-black text-white uppercase tracking-tighter">Treino</h2>
+             <h2 className="text-xl font-black text-white uppercase tracking-tighter">Treinamento</h2>
            </div>
            <button onClick={addTrainingDay} className="text-[#d4af37] text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
               <Plus size={14}/> Novo Dia
            </button>
         </div>
+        <div>
+           <label className={labelClass}>Frequência Semanal</label>
+           <input className={inputClass + " mb-6"} value={data.trainingFrequency} onChange={(e) => handleChange('trainingFrequency', e.target.value)} />
+        </div>
         <div className="space-y-6">
           {data.trainingDays.map((day, dIdx) => (
             <div key={day.id} className="p-5 bg-white/5 rounded-2xl border border-white/10">
-               <div className="flex gap-3 mb-4">
-                  <input className={inputClass + " !text-[#d4af37] !font-black"} value={day.title} onChange={(e) => {
-                    const newDays = [...data.trainingDays];
-                    newDays[dIdx].title = e.target.value;
-                    handleChange('trainingDays', newDays);
-                  }} />
-                  <button onClick={() => handleChange('trainingDays', data.trainingDays.filter(d => d.id !== day.id))} className="text-white/20 hover:text-red-500">
-                    <Trash2 size={16}/>
-                  </button>
+               <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className={labelClass}>Título do Dia</label>
+                    <input className={inputClass + " !text-[#d4af37] !font-black"} value={day.title} onChange={(e) => {
+                      const newDays = [...data.trainingDays];
+                      newDays[dIdx].title = e.target.value;
+                      handleChange('trainingDays', newDays);
+                    }} />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Foco</label>
+                    <input className={inputClass} value={day.focus} onChange={(e) => {
+                      const newDays = [...data.trainingDays];
+                      newDays[dIdx].focus = e.target.value;
+                      handleChange('trainingDays', newDays);
+                    }} />
+                  </div>
                </div>
                <div className="space-y-2">
                  {day.exercises.map((ex, eIdx) => (
@@ -369,7 +329,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
                         newDays[dIdx].exercises[eIdx].name = e.target.value;
                         handleChange('trainingDays', newDays);
                       }} />
-                      <input className={inputClass + " w-20 text-center text-xs p-2"} value={ex.sets} onChange={(e) => {
+                      <input className={inputClass + " w-24 text-center text-xs p-2"} value={ex.sets} onChange={(e) => {
                         const newDays = [...data.trainingDays];
                         newDays[dIdx].exercises[eIdx].sets = e.target.value;
                         handleChange('trainingDays', newDays);
@@ -394,19 +354,6 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
             </div>
           ))}
         </div>
-      </section>
-
-      <section>
-        <div className={sectionHeaderClass}>
-          <ClipboardList className="text-[#d4af37]" size={20} />
-          <h2 className="text-xl font-black text-white uppercase tracking-tighter">Observações</h2>
-        </div>
-        <textarea 
-          className={inputClass + " h-32"} 
-          value={data.generalObservations} 
-          onChange={(e) => handleChange('generalObservations', e.target.value)} 
-          placeholder="Recomendações finais do coach..."
-        />
       </section>
     </div>
   );
