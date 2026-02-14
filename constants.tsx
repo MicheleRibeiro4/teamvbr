@@ -1,8 +1,8 @@
 
 import { ProtocolData } from './types';
 
-export const LOGO_RHINO_BLACK = "https://xqwzmvzfemjkvaquxedz.supabase.co/storage/v1/object/public/LOGO/logo.png"; 
-export const LOGO_RHINO_WHITE = "https://xqwzmvzfemjkvaquxedz.supabase.co/storage/v1/object/public/LOGO/logo.png"; 
+export const LOGO_VBR_BLACK = "https://xqwzmvzfemjkvaquxedz.supabase.co/storage/v1/object/public/LOGO/logo.png"; 
+export const LOGO_VBR_WHITE = "https://xqwzmvzfemjkvaquxedz.supabase.co/storage/v1/object/public/LOGO/logo.png"; 
 
 export const CONSULTANT_DEFAULT = {
   consultantName: "Vinicius Brasil dos Santos Otero",
@@ -10,8 +10,6 @@ export const CONSULTANT_DEFAULT = {
   consultantEmail: "viniicius.br2@gmail.com",
   consultantAddress: "Rua Serra da Boa Esperança, 540, Serra Dourada, Vespasiano - Minas Gerais",
 };
-
-export const DEFAULT_CONTRACT_TEMPLATE = `CLÁUSULA 1 – OBJETO...`; // (Truncated for space, keep original)
 
 export const EMPTY_DATA: ProtocolData = {
   id: "",
@@ -63,11 +61,6 @@ export const EMPTY_DATA: ProtocolData = {
     city: "Vespasiano",
     contractDate: new Date().toLocaleDateString('pt-BR'),
     status: 'Ativo',
-    contractBody: "" // Template will be injected if needed
+    contractBody: "" 
   }
-};
-
-export const INITIAL_DATA: ProtocolData = {
-  ...EMPTY_DATA,
-  // ... (Keep existing demo data if needed, but ensure physicalData.date is present)
 };

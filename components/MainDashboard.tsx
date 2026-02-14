@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { ProtocolData } from '../types';
-import { LOGO_RHINO_BLACK } from '../constants';
+import { LOGO_VBR_BLACK } from '../constants';
 import { 
   Users, 
   DollarSign, 
@@ -57,11 +57,11 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
       
       <div className="bg-[#0a0a0a] rounded-[3rem] p-10 border-b-[12px] border-[#d4af37] relative overflow-hidden shadow-2xl flex flex-col md:flex-row justify-between items-center gap-8">
         <div className="absolute top-0 right-0 p-10 opacity-[0.03] pointer-events-none">
-          <img src={LOGO_RHINO_BLACK} alt="" className="w-96" />
+          <img src={LOGO_VBR_BLACK} alt="" className="w-96" />
         </div>
         
         <div className="relative z-10 text-center md:text-left flex items-center gap-6">
-          <img src={LOGO_RHINO_BLACK} alt="Team VBR Rhino" className="w-48 h-auto hidden md:block" />
+          <img src={LOGO_VBR_BLACK} alt="Team VBR" className="w-48 h-auto hidden md:block" />
           <h1 className="text-4xl md:text-7xl font-black text-white uppercase tracking-tighter leading-none">
             Team VBR
           </h1>
@@ -133,7 +133,6 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                 <div className="flex items-center gap-2">
                   <button onClick={() => onLoadStudent(p, 'manage')} className="p-3 bg-white/5 hover:bg-[#d4af37] hover:text-black rounded-xl transition-all text-white/40" title="Gerenciar Aluno"><FileText size={18} /></button>
                   <button onClick={() => onLoadStudent(p, 'evolution')} className="p-3 bg-white/5 hover:bg-[#d4af37] hover:text-black rounded-xl transition-all text-white/40" title="Ver Evolução"><TrendingUp size={18} /></button>
-                  <button onClick={() => onLoadStudent(p, 'manage')} className="p-3 bg-white/5 hover:bg-[#d4af37] hover:text-black rounded-xl transition-all text-white/40" title="Ver Contrato"><ScrollText size={18} /></button>
                   <div className="w-px h-10 bg-white/5 mx-2"></div>
                   <button onClick={() => onLoadStudent(p, 'student-dashboard')} className="w-12 h-12 bg-white/5 hover:bg-white/10 rounded-xl flex items-center justify-center text-[#d4af37]"><ChevronRight size={24} /></button>
                 </div>
@@ -151,19 +150,19 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
             <AlertCircle size={20} className="text-[#d4af37]" /> Alertas & Status
           </h3>
           <div className="bg-[#111] p-8 rounded-[2.5rem] border border-white/10">
-            <p className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-4">Protocolos Finalizando</p>
+            <p className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-4">Finalizando em breve</p>
             <div className="space-y-3">
               {expiringSoon.length > 0 ? expiringSoon.map(p => (
                 <div key={p.id} className="flex items-center justify-between p-4 bg-red-500/5 border border-red-500/10 rounded-2xl group hover:bg-red-500/10 transition-all cursor-pointer" onClick={() => onLoadStudent(p, 'student-dashboard')}>
                   <div>
                     <p className="text-sm font-black text-white/80">{p.clientName}</p>
-                    <p className="text-[9px] text-red-500 font-bold uppercase tracking-widest">Protocolo vence em: {p.contract.endDate}</p>
+                    <p className="text-[9px] text-red-500 font-bold uppercase tracking-widest">Até: {p.contract.endDate}</p>
                   </div>
                   <ArrowRight size={14} className="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
               )) : (
-                <div className="p-4 bg-green-500/5 border border-green-500/10 rounded-2xl">
-                  <p className="text-xs font-bold text-green-500/60 uppercase tracking-widest text-center">Tudo em dia ✅</p>
+                <div className="p-4 bg-green-500/5 border border-green-500/10 rounded-2xl text-center">
+                  <p className="text-xs font-bold text-green-500/60 uppercase tracking-widest">Nenhuma pendência ✅</p>
                 </div>
               )}
             </div>

@@ -1,7 +1,7 @@
 
 import React, { useRef, useState } from 'react';
 import { ProtocolData } from '../types';
-import { LOGO_RHINO_BLACK } from '../constants';
+import { LOGO_VBR_BLACK } from '../constants';
 import { Printer, ChevronLeft, Download, Loader2 } from 'lucide-react';
 
 interface Props {
@@ -17,13 +17,12 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
     if (!pdfContainerRef.current) return;
     setIsGenerating(true);
     
-    // Configurações Industriais para PDF HD
     const opt = {
       margin: 10,
       filename: `Protocolo_VBR_${data.clientName.replace(/\s+/g, '_')}.pdf`,
       image: { type: 'jpeg', quality: 1.0 },
       html2canvas: { 
-        scale: 2.5, // Ultra-nitidez
+        scale: 2.5, 
         useCORS: true, 
         letterRendering: true,
         logging: false,
@@ -62,15 +61,15 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
         )}
         <button onClick={handleDownloadPDF} disabled={isGenerating} className="bg-[#d4af37] text-black px-8 py-5 rounded-full shadow-[0_0_50px_rgba(212,175,55,0.6)] hover:scale-105 transition-all font-black uppercase text-xs flex items-center gap-3 disabled:opacity-50">
           {isGenerating ? <Loader2 className="animate-spin" size={20} /> : <Download size={20} />}
-          {isGenerating ? 'Processando HD...' : 'Baixar PDF Premium'}
+          {isGenerating ? 'Processando...' : 'Baixar PDF Premium'}
         </button>
       </div>
 
       <div ref={pdfContainerRef} className="print:m-0 bg-white">
         
-        {/* CAPA - A4 FIXO */}
+        {/* CAPA */}
         <div className={`${pageBaseClass} min-h-[297mm] !bg-[#0a0a0a] !text-white flex flex-col justify-center items-center p-[2cm] border-b-[20px] border-[#d4af37]`}>
-          <img src={LOGO_RHINO_BLACK} alt="Logo" className="w-72 h-auto mb-20" />
+          <img src={LOGO_VBR_BLACK} alt="VBR Logo" className="w-72 h-auto mb-20" />
           <h1 className="text-4xl font-black text-[#d4af37] uppercase mb-16 italic tracking-tight text-center">PROTOCOLO DE PERFORMANCE <br/><span className="text-white text-5xl">{data.protocolTitle || 'ELITE'}</span></h1>
           <div className="w-full text-center">
             <h2 className="text-6xl font-black text-white uppercase tracking-tighter mb-4">{data.clientName || 'ALUNO'}</h2>
@@ -79,9 +78,9 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
           </div>
         </div>
 
-        {/* PÁGINA 2: METRIÇÃO E ESTRATÉGIA */}
+        {/* PÁGINA 2 */}
         <div className={`${pageBaseClass} min-h-[297mm] p-[1.5cm] page-break`}>
-          <h2 className={sectionTitleClass}>1. Análise Metabólica & Bioimpedância</h2>
+          <h2 className={sectionTitleClass}>1. Análise Corporal</h2>
           <div className="grid grid-cols-3 gap-6 mb-12">
             {[
               { label: 'Peso', val: data.physicalData.weight, unit: 'kg' },
@@ -105,15 +104,15 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
           </div>
         </div>
 
-        {/* PÁGINA 3: DIETA */}
+        {/* PÁGINA 3 */}
         <div className={`${pageBaseClass} min-h-[297mm] p-[1.5cm] page-break`}>
-          <h2 className={sectionTitleClass}>3. Plano Alimentar Estruturado</h2>
+          <h2 className={sectionTitleClass}>3. Plano Alimentar</h2>
           <div className="border border-gray-200 rounded-3xl overflow-hidden shadow-sm">
             <table className="w-full">
               <thead className="bg-[#d4af37] text-white">
                 <tr>
                   <th className="p-5 text-left text-xl font-black w-32">HORA</th>
-                  <th className="p-5 text-left text-xl font-black">REFEIÇÃO & DETALHES</th>
+                  <th className="p-5 text-left text-xl font-black">DETALHES</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -131,10 +130,10 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
           </div>
         </div>
 
-        {/* PÁGINA 4: TREINOS */}
+        {/* PÁGINA 4 */}
         <div className={`${pageBaseClass} min-h-[297mm] p-[1.5cm] page-break`}>
-          <h2 className={sectionTitleClass}>4. Divisão de Treinamento</h2>
-          <div className="mb-8 font-black text-gray-400 uppercase tracking-widest">Frequência Semanal: {data.trainingFrequency}</div>
+          <h2 className={sectionTitleClass}>4. Divisão de Treino</h2>
+          <div className="mb-8 font-black text-gray-400 uppercase tracking-widest">Frequência: {data.trainingFrequency}</div>
           <div className="space-y-8">
             {data.trainingDays.map((day) => (
               <div key={day.id} className="rounded-3xl border border-gray-200 overflow-hidden shadow-sm avoid-break">
@@ -157,7 +156,7 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
           </div>
           
           <div className="mt-20 border-t-2 border-gray-100 pt-10 text-center italic text-gray-400 text-sm">
-            "A constância é o que transforma o ordinário em extraordinário."
+            Excelência é um hábito. Team VBR.
           </div>
         </div>
       </div>

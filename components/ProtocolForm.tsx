@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { ProtocolData, Meal, Supplement, TrainingDay } from '../types';
-import { Plus, Trash2, Activity, Utensils, Dumbbell, Target, Sparkles, Loader2, User, Pill, ClipboardList, ChevronLeft, ShieldCheck, DollarSign, Calendar, Clock } from 'lucide-react';
+import { Plus, Trash2, Activity, Utensils, Dumbbell, Target, Sparkles, Loader2, User, ShieldCheck, ClipboardList, ChevronLeft } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 import { CONSULTANT_DEFAULT } from '../constants';
 
@@ -106,11 +106,10 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
 
     setIsGenerating(true);
     try {
-      // Inicialização correta seguindo as diretrizes do sistema
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
-        contents: `Como Master Coach Vinícius Brasil do Team VBR, gere um protocolo JSON para: ${data.clientName}, Peso: ${data.physicalData.weight}kg, Objetivo: ${data.protocolTitle}. Inclua nutritionalStrategy, kcalGoal, macros, meals (id, time, name, details), trainingFrequency, trainingDays (id, title, focus, exercises(id, name, sets)).`,
+        contents: `Como Master Coach Vinícius Brasil do Team VBR, gere um protocolo JSON completo de elite para: ${data.clientName}, Peso: ${data.physicalData.weight}kg, Objetivo: ${data.protocolTitle}. Retorne APENAS o JSON com nutritionalStrategy, kcalGoal, kcalSubtext, macros (protein, carbs, fats), meals (id, time, name, details), trainingFrequency, trainingDays (id, title, focus, exercises(id, name, sets)).`,
         config: { responseMimeType: "application/json" }
       });
       
@@ -138,6 +137,12 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
 
   return (
     <div className="space-y-10 no-print">
+      {onBack && (
+        <button onClick={onBack} className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-[#d4af37] transition-colors">
+          <ChevronLeft size={16} /> Voltar ao Painel
+        </button>
+      )}
+
       <section>
         <div className={sectionHeaderClass}>
           <User className="text-[#d4af37]" size={20} />
@@ -206,18 +211,19 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
         </div>
       </section>
 
-      <div className="bg-gradient-to-br from-[#d4af37]/20 via-black to-black p-8 rounded-[2.5rem] border border-[#d4af37]/40 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl relative overflow-hidden">
+      {/* IA GENERATOR CENTRALIZADO */}
+      <div className="bg-gradient-to-br from-[#d4af37]/20 via-black to-black p-8 rounded-[2.5rem] border border-[#d4af37]/40 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl relative overflow-hidden group">
         <div className="flex items-center gap-5 relative z-10">
-          <div className="w-16 h-16 bg-[#d4af37] rounded-xl flex items-center justify-center text-black">
+          <div className="w-16 h-16 bg-[#d4af37] rounded-xl flex items-center justify-center text-black shadow-[0_0_30px_rgba(212,175,55,0.4)]">
             {isGenerating ? <Loader2 size={32} className="animate-spin" /> : <Sparkles size={32} />}
           </div>
           <div>
-            <h3 className="font-black text-xl text-white uppercase tracking-tighter">Inteligência VBR Pro</h3>
+            <h3 className="font-black text-xl text-white uppercase tracking-tighter leading-none">Inteligência VBR Pro</h3>
             <p className="text-[10px] text-[#d4af37] font-black uppercase tracking-[0.2em] mt-1">Gere o protocolo via IA</p>
           </div>
         </div>
         <button onClick={handleAISuggestion} disabled={isGenerating} className="bg-white text-black px-10 py-5 rounded-xl font-black text-xs uppercase hover:scale-105 transition-all disabled:opacity-50">
-          {isGenerating ? 'Gerando...' : 'Gerar com IA'}
+          {isGenerating ? 'Trabalhando...' : 'Gerar com IA'}
         </button>
       </div>
 
@@ -270,7 +276,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
           {data.trainingDays.map((day, dIdx) => (
             <div key={day.id} className="bg-white/5 p-8 rounded-[2rem] border border-white/10 space-y-4">
               <div className="flex justify-between gap-4">
-                <input className={inputClass} value={day.title} onChange={(e) => { const nd = [...data.trainingDays]; nd[dIdx].title = e.target.value; handleChange('trainingDays', nd); }} placeholder="Treino A - Peitoral" />
+                <input className={inputClass} value={day.title} onChange={(e) => { const nd = [...data.trainingDays]; nd[dIdx].title = e.target.value; handleChange('trainingDays', nd); }} placeholder="Treino A" />
                 <button onClick={() => handleChange('trainingDays', data.trainingDays.filter(d => d.id !== day.id))} className="p-4 text-white/10 hover:text-red-500"><Trash2 size={20} /></button>
               </div>
               <div className="space-y-2">

@@ -1,25 +1,21 @@
 
 import React, { useState, useEffect } from 'react';
 import { ProtocolData } from './types';
-import { EMPTY_DATA, LOGO_RHINO_BLACK } from './constants';
+import { EMPTY_DATA, LOGO_VBR_BLACK } from './constants';
 import { db } from './services/db';
 import UnifiedEditor from './components/UnifiedEditor';
 import EvolutionTracker from './components/EvolutionTracker';
 import MainDashboard from './components/MainDashboard';
 import StudentSearch from './components/StudentSearch';
 import StudentDashboard from './components/StudentDashboard';
-import VBRChatbot from './components/VBRChatbot';
 import { 
-  Plus, 
   RefreshCw,
   CheckCircle2,
   AlertTriangle,
   Database,
   ChevronLeft,
   Lock,
-  User,
-  LogIn,
-  Loader2
+  LogIn
 } from 'lucide-react';
 
 type ViewMode = 'home' | 'search' | 'manage' | 'evolution' | 'settings' | 'student-dashboard';
@@ -35,7 +31,6 @@ const App: React.FC = () => {
   const [cloudStatus, setCloudStatus] = useState<'online' | 'error'>('online');
   const [showToast, setShowToast] = useState(false);
 
-  // Senha de acesso (Simulação de sistema seguro)
   const MASTER_PASSWORD = "vbr-master-2025";
 
   const handleLogin = (e: React.FormEvent) => {
@@ -91,7 +86,7 @@ const App: React.FC = () => {
       <div className="min-h-screen bg-black flex items-center justify-center p-6 selection:bg-[#d4af37] selection:text-black">
         <div className="w-full max-w-md animate-in fade-in zoom-in duration-700">
           <div className="flex justify-center mb-10">
-            <img src={LOGO_RHINO_BLACK} alt="VBR Logo" className="h-32 w-auto" />
+            <img src={LOGO_VBR_BLACK} alt="VBR Logo" className="h-32 w-auto" />
           </div>
           <div className="bg-white/5 backdrop-blur-3xl border border-white/10 p-10 rounded-[2.5rem] shadow-2xl relative overflow-hidden group">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#d4af37] to-transparent"></div>
@@ -102,7 +97,7 @@ const App: React.FC = () => {
               </div>
               <div>
                 <h1 className="text-xl font-black text-white uppercase tracking-tighter leading-none">Acesso Consultor</h1>
-                <p className="text-[10px] text-white/40 font-black uppercase tracking-widest mt-1">Portal Team VBR Rhino</p>
+                <p className="text-[10px] text-white/40 font-black uppercase tracking-widest mt-1">Portal Team VBR</p>
               </div>
             </div>
 
@@ -119,7 +114,7 @@ const App: React.FC = () => {
                   />
                   <LogIn className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20" size={20} />
                 </div>
-                {loginError && <p className="text-[9px] text-red-500 font-black uppercase tracking-widest mt-2 text-center">Senha incorreta. Tente novamente.</p>}
+                {loginError && <p className="text-[9px] text-red-500 font-black uppercase tracking-widest mt-2 text-center">Senha incorreta.</p>}
               </div>
 
               <button type="submit" className="w-full bg-[#d4af37] text-black py-4 rounded-2xl font-black uppercase text-xs tracking-[0.2em] hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_30px_rgba(212,175,55,0.2)]">
@@ -128,7 +123,7 @@ const App: React.FC = () => {
             </form>
           </div>
           <p className="text-center mt-8 text-[9px] font-black text-white/20 uppercase tracking-[0.3em]">
-            &copy; 2025 Team VBR - Todos os direitos reservados
+            &copy; 2025 Team VBR - Excelência em Performance
           </p>
         </div>
       </div>
@@ -145,12 +140,10 @@ const App: React.FC = () => {
         </div>
       )}
 
-      <VBRChatbot />
-
       <header className="h-24 border-b border-white/10 px-8 flex items-center justify-between sticky top-0 bg-[#0a0a0a]/90 backdrop-blur-xl z-50 no-print">
         <div className="flex items-center gap-6">
           <button onClick={() => setActiveView('home')} className="hover:scale-105 transition-transform">
-            <img src={LOGO_RHINO_BLACK} alt="VBR Logo" className="h-20 w-auto" />
+            <img src={LOGO_VBR_BLACK} alt="VBR Logo" className="h-20 w-auto" />
           </button>
           {activeView !== 'home' && (
             <button onClick={() => setActiveView(data.id && activeView !== 'student-dashboard' ? 'student-dashboard' : 'home')} className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-[#d4af37] transition-colors">

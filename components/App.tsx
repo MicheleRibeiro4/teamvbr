@@ -1,7 +1,9 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { ProtocolData } from '../types';
-import { EMPTY_DATA, LOGO_RHINO_BLACK } from '../constants';
+// Fix: Correct typo in logo constant name
+import { EMPTY_DATA, LOGO_VBR_BLACK } from '../constants';
 import { db } from '../services/db';
 import UnifiedEditor from './UnifiedEditor';
 import EvolutionTracker from './EvolutionTracker';
@@ -138,7 +140,8 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
       <header className="h-24 border-b border-white/10 px-8 flex items-center justify-between sticky top-0 bg-[#0a0a0a]/90 backdrop-blur-xl z-50 no-print">
         <div className="flex items-center gap-6">
           <button onClick={() => setActiveView('home')} className="hover:scale-105 transition-transform">
-            <img src={LOGO_RHINO_BLACK} alt="VBR Logo" className="h-20 w-auto" />
+            {/* Fix: Correct typo in logo constant name */}
+            <img src={LOGO_VBR_BLACK} alt="VBR Logo" className="h-20 w-auto" />
           </button>
           
           {activeView !== 'home' && (
