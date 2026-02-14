@@ -10,9 +10,9 @@ interface Props {
 }
 
 const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
-  // Classes para controle de página A4 rigoroso - Reduzido para garantir encaixe
-  const fixedPageClass = "bg-white w-[210mm] h-[297mm] min-h-[297mm] mx-auto flex flex-col page-break text-black relative shadow-2xl print:shadow-none print:m-0 print:rounded-none mb-10 overflow-hidden select-none";
-  const dynamicPageClass = "bg-white w-[210mm] min-h-[297mm] mx-auto flex flex-col page-break-dynamic text-black relative shadow-2xl print:shadow-none print:m-0 print:rounded-none mb-10 overflow-hidden";
+  // Classes para controle de página A4 rigoroso - Altura reduzida para 296mm para evitar transbordo por margem de erro
+  const fixedPageClass = "bg-white w-[210mm] h-[296mm] min-h-[296mm] mx-auto flex flex-col page-break text-black relative shadow-2xl print:shadow-none print:m-0 print:rounded-none mb-10 print:mb-0 overflow-hidden select-none";
+  const dynamicPageClass = "bg-white w-[210mm] min-h-[296mm] mx-auto flex flex-col page-break-dynamic text-black relative shadow-2xl print:shadow-none print:m-0 print:rounded-none mb-10 print:mb-0 overflow-hidden";
 
   const handlePrint = () => {
     window.print();

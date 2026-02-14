@@ -56,11 +56,10 @@
         }
         .page-break {
           display: block;
-          page-break-before: always !important;
-          break-before: page !important;
+          page-break-after: always !important;
+          break-after: page !important;
           width: 210mm !important;
-          min-height: 297mm !important;
-          height: 297mm !important;
+          height: 296mm !important; /* Altura de segurança para evitar 2ª página */
           position: relative;
           overflow: hidden !important;
           margin: 0 !important;
@@ -70,10 +69,9 @@
         }
         .page-break-dynamic {
           display: block;
-          page-break-before: always !important;
-          break-before: page !important;
+          page-break-after: auto !important;
           width: 210mm !important;
-          min-height: 297mm !important;
+          min-height: 296mm !important;
           position: relative;
           margin: 0 !important;
           padding: 0 !important;
