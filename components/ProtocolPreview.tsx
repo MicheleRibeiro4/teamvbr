@@ -299,8 +299,7 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
                  Este protocolo foi desenhado especificamente para você, {data.clientName.split(' ')[0]}.
                </p>
                <p>
-                 Ajustes de carga, dieta e cardio serão feitos conforme sua evolução e feedbacks semanais. Não altere nada por conta própria sem consultar o treinador.
-               </p>
+                 Ajustes de carga, dieta e cardio serão feitos conforme sua evolução e feedbacks.</p>
                <p className="text-[#d4af37]">
                  A consistência vence a intensidade.
                </p>
