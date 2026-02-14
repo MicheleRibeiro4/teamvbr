@@ -42,33 +42,69 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
       const prompt = `Atue como o Master Coach Vinícius Brasil do Team VBR. Crie um protocolo profissional de elite baseado nos seguintes dados:
       Nome: ${data.clientName} | Peso: ${data.physicalData.weight}kg | Altura: ${data.physicalData.height}m | Idade: ${data.physicalData.age} | Objetivo: ${data.protocolTitle || "Performance Máxima"}.
       
-      Retorne APENAS um objeto JSON puro, sem comentários, com esta estrutura exata:
+      Gere uma estratégia nutricional detalhada, meta de macros coerente e treinos.
+      
+      Retorne APENAS o JSON:
       {
-        "nutritionalStrategy": "Explicação técnica da dieta",
-        "kcalGoal": "Valor calórico",
+        "nutritionalStrategy": "Explicação técnica",
+        "kcalGoal": "Valor total",
         "kcalSubtext": "(TEXTO EM CAIXA ALTA)",
         "macros": {
-          "protein": { "value": "200", "ratio": "2.2g/kg" },
-          "carbs": { "value": "300", "ratio": "Energia" },
-          "fats": { "value": "70", "ratio": "Hormonal" }
+          "protein": { "value": "g", "ratio": "g/kg" },
+          "carbs": { "value": "g", "ratio": "g/kg" },
+          "fats": { "value": "g", "ratio": "g/kg" }
         },
-        "meals": [{"time": "08:00", "name": "Nome", "details": "Detalhes"}],
+        "meals": [{"time": "00:00", "name": "Nome", "details": "Detalhes"}],
         "supplements": [{"name": "Suplemento", "dosage": "dose", "timing": "horário"}],
-        "trainingDays": [{"title": "DIA A", "focus": "FOCO", "exercises": [{"name": "Exercicio", "sets": "4x12"}]}],
-        "generalObservations": "Instruções finais"
+        "trainingDays": [{"title": "DIA", "focus": "FOCO", "exercises": [{"name": "Exercício", "sets": "séries"}]}],
+        "generalObservations": "Instruções"
       }`;
 
       const response = await ai.models.generateContent({
         model: "gemini-3-pro-preview",
         contents: prompt,
         config: {
-          responseMimeType: "application/json"
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              nutritionalStrategy: { type: Type.STRING },
+              kcalGoal: { type: Type.STRING },
+              kcalSubtext: { type: Type.STRING },
+              macros: {
+                type: Type.OBJECT,
+                properties: {
+                  protein: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } },
+                  carbs: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } },
+                  fats: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } },
+                }
+              },
+              meals: { 
+                type: Type.ARRAY, 
+                items: { type: Type.OBJECT, properties: { time: { type: Type.STRING }, name: { type: Type.STRING }, details: { type: Type.STRING } } } 
+              },
+              supplements: { 
+                type: Type.ARRAY, 
+                items: { type: Type.OBJECT, properties: { name: { type: Type.STRING }, dosage: { type: Type.STRING }, timing: { type: Type.STRING } } } 
+              },
+              trainingDays: { 
+                type: Type.ARRAY, 
+                items: { 
+                  type: Type.OBJECT, 
+                  properties: { 
+                    title: { type: Type.STRING }, 
+                    focus: { type: Type.STRING }, 
+                    exercises: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { name: { type: Type.STRING }, sets: { type: Type.STRING } } } } 
+                  } 
+                } 
+              },
+              generalObservations: { type: Type.STRING }
+            }
+          }
         }
       });
 
-      if (!response.text) throw new Error("IA retornou resposta vazia");
-      
-      const suggestion = JSON.parse(response.text.trim());
+      const suggestion = JSON.parse(response.text || '{}');
       
       const updatedData = {
         ...data,
@@ -85,7 +121,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
       onChange(updatedData);
     } catch (error: any) {
       console.error("Erro IA:", error);
-      alert("❌ A IA não conseguiu processar agora. Tente novamente em instantes.");
+      alert("❌ Falha ao gerar com IA. Verifique sua conexão e tente novamente.");
     } finally {
       setIsGenerating(false);
     }
@@ -114,25 +150,25 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
   const sectionHeaderClass = "flex items-center gap-2 mb-8 border-b border-white/5 pb-4";
 
   return (
-    <div className="space-y-8 no-print">
+    <div className="space-y-10 no-print">
       {onBack && (
         <button 
           onClick={onBack}
           className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-[#d4af37] transition-colors"
         >
-          <ChevronLeft size={16} /> Voltar ao Painel
+          <ChevronLeft size={16} /> Voltar ao Painel do Aluno
         </button>
       )}
 
-      <section className="bg-white/5 p-6 rounded-3xl border border-white/10">
+      <section>
         <div className={sectionHeaderClass}>
-          <User className="text-[#d4af37]" size={18} />
-          <h2 className="text-lg font-black text-white uppercase tracking-tighter">Identificação</h2>
+          <User className="text-[#d4af37]" size={20} />
+          <h2 className="text-xl font-black text-white uppercase tracking-tighter">Identificação do Aluno</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className={labelClass}>Nome Completo</label>
-            <input className={inputClass + " !text-[#d4af37]"} value={data.clientName} onChange={(e) => handleChange('clientName', e.target.value)} />
+            <input className={inputClass + " !text-lg !font-black !text-[#d4af37]"} value={data.clientName} onChange={(e) => handleChange('clientName', e.target.value)} />
           </div>
           <div>
             <label className={labelClass}>Título do Protocolo</label>
@@ -141,76 +177,236 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
         </div>
       </section>
 
-      <section className="bg-white/5 p-6 rounded-3xl border border-white/10">
+      <section>
         <div className={sectionHeaderClass}>
-          <Activity className="text-[#d4af37]" size={18} />
-          <h2 className="text-lg font-black text-white uppercase tracking-tighter">Físico</h2>
+          <Activity className="text-[#d4af37]" size={20} />
+          <h2 className="text-xl font-black text-white uppercase tracking-tighter">Dados Físicos</h2>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div><label className={labelClass}>Idade</label><input className={inputClass} value={data.physicalData.age} onChange={(e) => handleChange('physicalData.age', e.target.value)} /></div>
+          <div><label className={labelClass}>Sexo</label>
+            <select className={inputClass} value={data.physicalData.gender} onChange={(e) => handleChange('physicalData.gender', e.target.value)}>
+              <option value="">Selecione...</option>
+              <option value="Masculino">Masculino</option>
+              <option value="Feminino">Feminino</option>
+            </select>
+          </div>
           <div><label className={labelClass}>Peso (kg)</label><input className={inputClass} value={data.physicalData.weight} onChange={(e) => handleChange('physicalData.weight', e.target.value)} /></div>
           <div><label className={labelClass}>Altura (m)</label><input className={inputClass} value={data.physicalData.height} onChange={(e) => handleChange('physicalData.height', e.target.value)} /></div>
-          <div><label className={labelClass}>BF (%)</label><input className={inputClass} value={data.physicalData.bodyFat} onChange={(e) => handleChange('physicalData.bodyFat', e.target.value)} /></div>
+          <div><label className={labelClass}>Gordura (%)</label><input className={inputClass} value={data.physicalData.bodyFat} onChange={(e) => handleChange('physicalData.bodyFat', e.target.value)} /></div>
+          <div><label className={labelClass}>Massa Muscular (kg)</label><input className={inputClass} value={data.physicalData.muscleMass} onChange={(e) => handleChange('physicalData.muscleMass', e.target.value)} /></div>
+          <div><label className={labelClass}>G. Visceral</label><input className={inputClass} value={data.physicalData.visceralFat} onChange={(e) => handleChange('physicalData.visceralFat', e.target.value)} /></div>
+          <div className="bg-[#d4af37]/10 rounded-2xl flex flex-col items-center justify-center border border-[#d4af37]/30">
+             <label className={labelClass + " !mb-0"}>IMC</label>
+             <span className="text-xl font-black text-[#d4af37]">{data.physicalData.imc}</span>
+          </div>
         </div>
       </section>
 
-      <div className="bg-[#d4af37] text-black p-6 rounded-[2.5rem] flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl">
-        <div className="flex items-center gap-4">
-          <div className="bg-black text-[#d4af37] p-3 rounded-2xl">
-            {isGenerating ? <Loader2 className="animate-spin" /> : <Sparkles />}
+      <div className="bg-gradient-to-br from-[#d4af37]/20 via-black to-black p-8 rounded-[3rem] border border-[#d4af37]/40 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl relative overflow-hidden group">
+        <div className="flex items-center gap-5 relative z-10">
+          <div className="w-16 h-16 bg-[#d4af37] rounded-[1.5rem] flex items-center justify-center text-black shadow-[0_0_30px_rgba(212,175,55,0.4)] group-hover:scale-110 transition-transform">
+            {isGenerating ? <Loader2 size={32} className="animate-spin" /> : <Sparkles size={32} />}
           </div>
           <div>
-            <h3 className="font-black text-lg uppercase leading-none">VBR Intelligence</h3>
-            <p className="text-[10px] font-black uppercase opacity-60">Gere dieta e treino em segundos</p>
+            <h3 className="font-black text-2xl text-white uppercase tracking-tighter leading-none">Inteligência VBR Pro</h3>
+            <p className="text-[10px] text-[#d4af37] font-black uppercase tracking-[0.2em] mt-2">
+              {isGenerating ? 'Analisando metabolismo do aluno...' : 'Clique para gerar um protocolo profissional'}
+            </p>
           </div>
         </div>
         <button 
           onClick={handleAISuggestion}
           disabled={isGenerating}
-          className="bg-black text-white px-8 py-4 rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all disabled:opacity-50"
+          className="bg-white text-black px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] flex items-center gap-3 hover:scale-105 transition-all disabled:opacity-50 shadow-2xl relative z-10"
         >
-          {isGenerating ? 'Trabalhando...' : 'Ativar IA'}
+          {isGenerating ? 'Trabalhando...' : 'Gerar com IA'}
         </button>
       </div>
 
-      <section className="bg-white/5 p-6 rounded-3xl border border-white/10">
+      <section>
         <div className={sectionHeaderClass}>
-          <Target className="text-[#d4af37]" size={18} />
-          <h2 className="text-lg font-black text-white uppercase tracking-tighter">Dieta</h2>
+          <Target className="text-[#d4af37]" size={20} />
+          <h2 className="text-xl font-black text-white uppercase tracking-tighter">Plano Nutricional</h2>
         </div>
-        <div className="grid grid-cols-2 gap-4 mb-4">
-           <div><label className={labelClass}>Kcal Diárias</label><input className={inputClass} value={data.kcalGoal} onChange={(e) => handleChange('kcalGoal', e.target.value)} /></div>
-           <div><label className={labelClass}>Status</label><input className={inputClass} value={data.kcalSubtext} onChange={(e) => handleChange('kcalSubtext', e.target.value)} /></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+           <div><label className={labelClass}>Meta Calórica</label><input className={inputClass} value={data.kcalGoal} onChange={(e) => handleChange('kcalGoal', e.target.value)} /></div>
+           <div><label className={labelClass}>Subtexto</label><input className={inputClass} value={data.kcalSubtext} onChange={(e) => handleChange('kcalSubtext', e.target.value)} /></div>
         </div>
-        <div className="grid grid-cols-3 gap-2">
-           {['protein', 'carbs', 'fats'].map(m => (
-             <div key={m} className="bg-white/5 p-3 rounded-2xl">
-               <label className={labelClass}>{m === 'protein' ? 'Prot' : m === 'carbs' ? 'Carb' : 'Gord'}</label>
-               <input className="w-full bg-transparent border-none p-0 font-black text-xl outline-none" value={(data.macros as any)[m].value} onChange={(e) => handleChange(`macros.${m}.value`, e.target.value)} />
-             </div>
-           ))}
+        <div className="grid grid-cols-3 gap-3">
+           <div className="bg-red-500/10 p-4 rounded-2xl border border-red-500/20">
+             <label className={labelClass}>Prot (g)</label>
+             <input className={inputClass + " !bg-transparent !border-red-500/10"} value={data.macros.protein.value} onChange={(e) => handleChange('macros.protein.value', e.target.value)} />
+           </div>
+           <div className="bg-blue-500/10 p-4 rounded-2xl border border-blue-500/20">
+             <label className={labelClass}>Carb (g)</label>
+             <input className={inputClass + " !bg-transparent !border-blue-500/10"} value={data.macros.carbs.value} onChange={(e) => handleChange('macros.carbs.value', e.target.value)} />
+           </div>
+           <div className="bg-yellow-500/10 p-4 rounded-2xl border border-yellow-500/20">
+             <label className={labelClass}>Gord (g)</label>
+             <input className={inputClass + " !bg-transparent !border-yellow-500/10"} value={data.macros.fats.value} onChange={(e) => handleChange('macros.fats.value', e.target.value)} />
+           </div>
+        </div>
+        <div className="mt-4">
+          <label className={labelClass}>Estratégia Nutricional</label>
+          <textarea className={inputClass + " h-24"} value={data.nutritionalStrategy} onChange={(e) => handleChange('nutritionalStrategy', e.target.value)} />
         </div>
       </section>
 
-      {/* Seções de Refeições e Treinos simplificadas para visualização compacta */}
-      <section className="bg-white/5 p-6 rounded-3xl border border-white/10">
-         <div className="flex justify-between items-center mb-6">
-            <h2 className="text-lg font-black text-white uppercase tracking-tighter">Refeições</h2>
-            <button onClick={addMeal} className="text-[#d4af37] text-[10px] font-black uppercase tracking-widest">+ Add</button>
-         </div>
-         <div className="space-y-3">
-           {data.meals.map((meal, idx) => (
-             <div key={meal.id} className="flex gap-2">
-                <input className={inputClass + " w-20 !p-2"} value={meal.time} onChange={(e) => {
-                   const m = [...data.meals]; m[idx].time = e.target.value; handleChange('meals', m);
-                }} />
-                <input className={inputClass + " !p-2"} value={meal.name} onChange={(e) => {
-                   const m = [...data.meals]; m[idx].name = e.target.value; handleChange('meals', m);
-                }} />
-                <button onClick={() => handleChange('meals', data.meals.filter(it => it.id !== meal.id))} className="text-red-500 opacity-30 hover:opacity-100 px-2"><Trash2 size={16}/></button>
-             </div>
-           ))}
-         </div>
+      <section>
+        <div className="flex justify-between items-center mb-8 border-b border-white/5 pb-4">
+           <div className="flex items-center gap-2">
+             <Utensils className="text-[#d4af37]" size={20} />
+             <h2 className="text-xl font-black text-white uppercase tracking-tighter">Refeições</h2>
+           </div>
+           <button onClick={addMeal} className="text-[#d4af37] text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
+              <Plus size={14}/> Add Refeição
+           </button>
+        </div>
+        <div className="space-y-4">
+          {data.meals.map((meal, idx) => (
+            <div key={meal.id} className="p-4 bg-white/5 rounded-2xl border border-white/5">
+               <div className="flex gap-3 mb-3">
+                  <input className={inputClass + " w-20 p-2"} value={meal.time} onChange={(e) => {
+                    const newMeals = [...data.meals];
+                    newMeals[idx].time = e.target.value;
+                    handleChange('meals', newMeals);
+                  }} />
+                  <input className={inputClass + " flex-1 p-2"} value={meal.name} onChange={(e) => {
+                    const newMeals = [...data.meals];
+                    newMeals[idx].name = e.target.value;
+                    handleChange('meals', newMeals);
+                  }} />
+                  <button onClick={() => handleChange('meals', data.meals.filter(m => m.id !== meal.id))} className="text-white/20 hover:text-red-500">
+                    <Trash2 size={16}/>
+                  </button>
+               </div>
+               <textarea className={inputClass + " h-20 text-xs"} value={meal.details} onChange={(e) => {
+                  const newMeals = [...data.meals];
+                  newMeals[idx].details = e.target.value;
+                  handleChange('meals', newMeals);
+               }} />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <div className="flex justify-between items-center mb-8 border-b border-white/5 pb-4">
+           <div className="flex items-center gap-2">
+             <Pill className="text-[#d4af37]" size={20} />
+             <h2 className="text-xl font-black text-white uppercase tracking-tighter">Suplementação</h2>
+           </div>
+           <button onClick={addSupplement} className="text-[#d4af37] text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
+              <Plus size={14}/> Add Suplemento
+           </button>
+        </div>
+        <div className="space-y-4">
+          {data.supplements.map((supp, idx) => (
+            <div key={supp.id} className="p-5 bg-white/5 rounded-2xl border border-white/5 grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+               <div className="md:col-span-4">
+                  <label className={labelClass}>Suplemento</label>
+                  <input className={inputClass + " p-2 text-xs"} value={supp.name} onChange={(e) => {
+                    const newSupps = [...data.supplements];
+                    newSupps[idx].name = e.target.value;
+                    handleChange('supplements', newSupps);
+                  }} />
+               </div>
+               <div className="md:col-span-3">
+                  <label className={labelClass}>Dose</label>
+                  <input className={inputClass + " p-2 text-xs"} value={supp.dosage} onChange={(e) => {
+                    const newSupps = [...data.supplements];
+                    newSupps[idx].dosage = e.target.value;
+                    handleChange('supplements', newSupps);
+                  }} />
+               </div>
+               <div className="md:col-span-4">
+                  <label className={labelClass}>Timing</label>
+                  <input className={inputClass + " p-2 text-xs"} value={supp.timing} onChange={(e) => {
+                    const newSupps = [...data.supplements];
+                    newSupps[idx].timing = e.target.value;
+                    handleChange('supplements', newSupps);
+                  }} />
+               </div>
+               <div className="md:col-span-1 flex justify-end">
+                  <button onClick={() => handleChange('supplements', data.supplements.filter(s => s.id !== supp.id))} className="text-white/20 hover:text-red-500">
+                    <Trash2 size={16}/>
+                  </button>
+               </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <div className="flex justify-between items-center mb-8 border-b border-white/5 pb-4">
+           <div className="flex items-center gap-2">
+             <Dumbbell className="text-[#d4af37]" size={20} />
+             <h2 className="text-xl font-black text-white uppercase tracking-tighter">Treino</h2>
+           </div>
+           <button onClick={addTrainingDay} className="text-[#d4af37] text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
+              <Plus size={14}/> Novo Dia
+           </button>
+        </div>
+        <div className="space-y-6">
+          {data.trainingDays.map((day, dIdx) => (
+            <div key={day.id} className="p-5 bg-white/5 rounded-2xl border border-white/10">
+               <div className="flex gap-3 mb-4">
+                  <input className={inputClass + " !text-[#d4af37] !font-black"} value={day.title} onChange={(e) => {
+                    const newDays = [...data.trainingDays];
+                    newDays[dIdx].title = e.target.value;
+                    handleChange('trainingDays', newDays);
+                  }} />
+                  <button onClick={() => handleChange('trainingDays', data.trainingDays.filter(d => d.id !== day.id))} className="text-white/20 hover:text-red-500">
+                    <Trash2 size={16}/>
+                  </button>
+               </div>
+               <div className="space-y-2">
+                 {day.exercises.map((ex, eIdx) => (
+                   <div key={ex.id} className="flex gap-2">
+                      <input className={inputClass + " flex-1 text-xs p-2"} value={ex.name} onChange={(e) => {
+                        const newDays = [...data.trainingDays];
+                        newDays[dIdx].exercises[eIdx].name = e.target.value;
+                        handleChange('trainingDays', newDays);
+                      }} />
+                      <input className={inputClass + " w-20 text-center text-xs p-2"} value={ex.sets} onChange={(e) => {
+                        const newDays = [...data.trainingDays];
+                        newDays[dIdx].exercises[eIdx].sets = e.target.value;
+                        handleChange('trainingDays', newDays);
+                      }} />
+                      <button onClick={() => {
+                        const newDays = [...data.trainingDays];
+                        newDays[dIdx].exercises = newDays[dIdx].exercises.filter(x => x.id !== ex.id);
+                        handleChange('trainingDays', newDays);
+                      }} className="text-white/10 hover:text-red-500">
+                        <Trash2 size={14}/>
+                      </button>
+                   </div>
+                 ))}
+                 <button onClick={() => {
+                   const newDays = [...data.trainingDays];
+                   newDays[dIdx].exercises.push({ id: Date.now().toString(), name: '', sets: '' });
+                   handleChange('trainingDays', newDays);
+                 }} className="text-[8px] font-black text-white/20 uppercase tracking-widest mt-2">
+                    + Add Exercício
+                 </button>
+               </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <div className={sectionHeaderClass}>
+          <ClipboardList className="text-[#d4af37]" size={20} />
+          <h2 className="text-xl font-black text-white uppercase tracking-tighter">Observações</h2>
+        </div>
+        <textarea 
+          className={inputClass + " h-32"} 
+          value={data.generalObservations} 
+          onChange={(e) => handleChange('generalObservations', e.target.value)} 
+          placeholder="Recomendações finais do coach..."
+        />
       </section>
     </div>
   );

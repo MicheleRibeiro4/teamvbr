@@ -20,7 +20,6 @@
         color: white;
         margin: 0;
         -webkit-font-smoothing: antialiased;
-        font-size: 14px; /* Reduzido globalmente */
       }
       .font-montserrat {
         font-family: 'Montserrat', sans-serif;
@@ -38,30 +37,29 @@
           color: black !important;
           margin: 0 !important;
           padding: 0 !important;
-          overflow: visible !important;
         }
         .no-print {
           display: none !important;
         }
         .print-container {
           width: 210mm !important;
-          margin: 0 !important;
+          margin: 0 auto !important;
           padding: 0 !important;
           display: block !important;
+          background: white !important;
         }
+        /* Força cores e fundos no PDF */
         * {
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
           color-adjust: exact !important;
         }
         .page-break {
-          display: flex !important;
-          flex-direction: column;
+          display: block;
           page-break-after: always !important;
           break-after: page !important;
           width: 210mm !important;
-          height: 295.5mm !important; /* Altura de segurança ultra-rigorosa */
-          max-height: 295.5mm !important;
+          height: 296mm !important; /* Altura de segurança para evitar 2ª página */
           position: relative;
           overflow: hidden !important;
           margin: 0 !important;
@@ -70,13 +68,14 @@
           border: none !important;
         }
         .page-break-dynamic {
-          display: block !important;
+          display: block;
           page-break-after: auto !important;
           width: 210mm !important;
-          min-height: 295.5mm !important;
+          min-height: 296mm !important;
           position: relative;
           margin: 0 !important;
           padding: 0 !important;
+          box-sizing: border-box;
         }
         .avoid-break {
           page-break-inside: avoid !important;
@@ -84,7 +83,7 @@
         }
       }
 
-      ::-webkit-scrollbar { width: 5px; }
+      ::-webkit-scrollbar { width: 6px; }
       ::-webkit-scrollbar-track { background: #0a0a0a; }
       ::-webkit-scrollbar-thumb { background: #d4af37; border-radius: 10px; }
     </style>

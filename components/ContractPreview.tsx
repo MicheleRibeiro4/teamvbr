@@ -45,20 +45,20 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
         </button>
       </div>
 
-      <div className="flex flex-col items-center bg-white p-[1.5cm] shadow-2xl w-[210mm] min-h-[296mm] h-auto mx-auto text-black leading-[1.3] font-sans text-[10.5px] print:shadow-none print:m-0 print:w-[210mm] print:h-auto mb-0 print:mb-0 overflow-hidden">
+      <div className="flex flex-col items-center bg-white p-[1.5cm] shadow-2xl w-[210mm] min-h-[296mm] h-auto mx-auto text-black leading-[1.4] font-sans text-[11px] print:shadow-none print:m-0 print:w-[210mm] print:h-auto mb-10 print:mb-0 overflow-hidden">
         
         {/* TÍTULO */}
-        <div className="w-full flex flex-col items-center mb-6">
-          <h1 className="text-center font-bold text-[14px] uppercase tracking-tight mb-4">
+        <div className="w-full flex flex-col items-center mb-8">
+          <h1 className="text-center font-bold text-[14px] uppercase tracking-tight mb-6">
             CONTRATO DE ASSESSORIA EM ESTILO DE VIDA SAUDÁVEL
           </h1>
         </div>
 
-        <div className="w-full space-y-5">
+        <div className="w-full space-y-6">
           {/* QUALIFICAÇÕES */}
-          <div className="grid grid-cols-1 gap-3">
-            <section className="avoid-break bg-gray-50 p-4 rounded-xl border border-gray-100">
-              <h2 className="font-bold uppercase border-b border-gray-200 pb-1.5 mb-2 text-[#d4af37] text-[9.5px]">CONTRATANTE (ALUNO):</h2>
+          <div className="grid grid-cols-1 gap-4">
+            <section className="avoid-break bg-gray-50 p-5 rounded-xl border border-gray-100">
+              <h2 className="font-bold uppercase border-b border-gray-200 pb-2 mb-3 text-[#d4af37] text-[10px]">CONTRATANTE (ALUNO):</h2>
               <div className="grid grid-cols-2 gap-y-1 gap-x-4">
                 <p><span className="font-bold">Nome:</span> {data.clientName || "_________________________"}</p>
                 <p><span className="font-bold">CPF:</span> {data.contract.cpf || "_________________________"}</p>
@@ -68,8 +68,8 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
               </div>
             </section>
 
-            <section className="avoid-break bg-gray-50 p-4 rounded-xl border border-gray-100">
-              <h2 className="font-bold uppercase border-b border-gray-200 pb-1.5 mb-2 text-[#d4af37] text-[9.5px]">CONTRATADO (CONSULTOR):</h2>
+            <section className="avoid-break bg-gray-50 p-5 rounded-xl border border-gray-100">
+              <h2 className="font-bold uppercase border-b border-gray-200 pb-2 mb-3 text-[#d4af37] text-[10px]">CONTRATADO (CONSULTOR):</h2>
               <div className="grid grid-cols-2 gap-y-1 gap-x-4">
                 <p><span className="font-bold">Nome:</span> {data.consultantName}</p>
                 <p><span className="font-bold">CPF:</span> {data.consultantCpf}</p>
@@ -79,34 +79,34 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
             </section>
           </div>
 
-          <p className="mt-1 text-justify avoid-break italic font-medium">
+          <p className="mt-2 text-justify avoid-break italic font-medium">
             As partes celebram o presente contrato, mediante as seguintes cláusulas:
           </p>
 
-          {/* CORPO DAS CLÁUSULAS */}
-          <div className="whitespace-pre-line text-justify space-y-3 text-[9.5px] leading-relaxed">
+          {/* CORPO DAS CLÁUSULAS - TEXTO REDUZIDO PARA ENCAIXE */}
+          <div className="whitespace-pre-line text-justify space-y-4 text-[10px] leading-snug">
             {renderContractText()}
           </div>
 
           {/* ASSINATURAS */}
-          <div className="pt-8 space-y-8 avoid-break">
+          <div className="pt-10 space-y-8 avoid-break">
             <div className="flex justify-between items-center border-t border-b border-gray-100 py-3">
               <p><span className="font-bold">Local:</span> {data.contract.city}</p>
               <p><span className="font-bold">Data:</span> {data.contract.contractDate}</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-20 pt-6">
+            <div className="grid grid-cols-2 gap-20 pt-8">
               <div className="text-center">
                 <div className="border-t border-black pt-2">
-                  <p className="font-bold uppercase text-[8.5px]">CONTRATANTE</p>
-                  <p className="text-[10px] mt-1 font-black">{data.clientName}</p>
+                  <p className="font-bold uppercase text-[9px]">CONTRATANTE</p>
+                  <p className="text-[11px] mt-1 font-black">{data.clientName}</p>
                 </div>
               </div>
               
               <div className="text-center">
                 <div className="border-t border-black pt-2">
-                  <p className="font-bold uppercase text-[8.5px]">CONTRATADO</p>
-                  <p className="text-[10px] mt-1 font-black">{data.consultantName}</p>
+                  <p className="font-bold uppercase text-[9px]">CONTRATADO</p>
+                  <p className="text-[11px] mt-1 font-black">{data.consultantName}</p>
                 </div>
               </div>
             </div>
