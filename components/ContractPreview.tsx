@@ -13,14 +13,6 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const contractRef = useRef<HTMLDivElement>(null);
 
-  const renderPaymentOptions = () => {
-    const method = data.contract.paymentMethod;
-    
-    return `
-(${method === 'Pix' ? 'x' : ' '}) Pix (à vista)
-(${method === 'Cartão de Crédito' ? 'x' : ' '}) Cartão de crédito`;
-  };
-
   const renderContractText = () => {
     let text = data.contract.contractBody;
     
@@ -28,18 +20,33 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
        text = EMPTY_DATA.contract.contractBody || '';
     }
 
+    // Formata o método de pagamento para exibição
+    const paymentMethodDisplay = data.contract.paymentMethod === 'Pix' 
+      ? 'Pix (à vista)' 
+      : data.contract.paymentMethod;
+
     const map = {
       '[START_DATE]': data.contract.startDate,
       '[END_DATE]': data.contract.endDate,
       '[VALUE]': data.contract.planValue,
       '[VALUE_WORDS]': data.contract.planValueWords,
       '[DURATION]': data.contract.durationDays,
-      '[PAYMENT_OPTIONS_PLACEHOLDER]': renderPaymentOptions()
+      '[PAYMENT_METHOD]': paymentMethodDisplay, // Substitui diretamente pelo valor
+      '[PAYMENT_OPTIONS_PLACEHOLDER]': paymentMethodDisplay // Mantém compatibilidade com templates antigos
     };
 
     Object.entries(map).forEach(([key, val]) => {
       text = text.replace(new RegExp(key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), val || '__________');
     });
+
+    // --- LIMPEZA DE ARTEFATOS ANTIGOS (Boleto/Outro) ---
+    // Remove linhas específicas que podem ter ficado salvas em contratos antigos
+    text = text.replace(/\(\s*\)\s*Boleto bancário/gi, "");
+    text = text.replace(/\(\s*\)\s*Outro:[\s_]*/gi, "");
+    
+    // Remove quebras de linha excessivas geradas pela remoção acima
+    text = text.replace(/\n\s*\n\s*\n/g, "\n\n");
+
     return text;
   };
 
@@ -48,17 +55,19 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
     setIsGenerating(true);
     
     const opt = {
-      margin: 10, // Margem de segurança para evitar cortes
+      margin: [15, 15, 15, 15], // Margens [Topo, Esq, Inf, Dir] para evitar corte
       filename: `Contrato_VBR_${data.clientName.replace(/\s+/g, '_')}.pdf`,
-      image: { type: 'jpeg', quality: 1.0 },
+      image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { 
         scale: 2, 
         useCORS: true, 
         backgroundColor: '#ffffff',
-        scrollY: 0, // CRUCIAL: Corrige página em branco ao garantir que renderize do topo
-        windowWidth: 794 // Largura A4 em px (aprox) para consistência
+        scrollY: 0, 
+        // windowWidth removido para deixar o html2canvas calcular a largura baseada no elemento
       },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      // Configuração inteligente de quebra de página para evitar cortes no meio do texto
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     };
     
     try {
@@ -90,12 +99,12 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
         </button>
       </div>
 
-      {/* Container com fundo branco explícito e cor de texto preta para garantir renderização correta */}
-      <div ref={contractRef} className="bg-white text-black p-[15mm] w-[210mm] min-h-[297mm] mx-auto font-sans leading-[1.5] text-[10pt] shadow-2xl print:shadow-none overflow-visible text-justify">
+      {/* Container com largura fixa para preview, mas altura automática para não cortar */}
+      <div ref={contractRef} className="bg-white text-black p-[15mm] w-[210mm] mx-auto font-sans leading-[1.6] text-[10pt] shadow-2xl print:shadow-none print:w-full h-auto min-h-[297mm]">
         <div className="mb-8">
           <h1 className="font-bold text-center text-sm mb-6 uppercase">CONTRATO DE ASSESSORIA EM ESTILO DE VIDA SAUDÁVEL</h1>
           
-          <div className="mb-4">
+          <div className="mb-4 text-justify">
             <p className="font-bold mb-1">CONTRATANTE:</p>
             <p>Nome: {data.clientName || '____________________'}</p>
             <p>CPF: {data.contract.cpf || '____________________'}</p>
@@ -103,7 +112,7 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
             <p>Endereço: {fullAddress}</p>
           </div>
 
-          <div className="mb-6">
+          <div className="mb-6 text-justify">
             <p className="font-bold mb-1">CONTRATADO:</p>
             <p>Nome: {CONSULTANT_DEFAULT.consultantName}</p>
             <p>CPF: {CONSULTANT_DEFAULT.consultantCpf}</p>
@@ -111,14 +120,17 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
             <p>Endereço: {CONSULTANT_DEFAULT.consultantAddress}</p>
           </div>
 
-          <p className="mb-6">As partes acima identificadas celebram o presente contrato, mediante as seguintes cláusulas e condições:</p>
+          <p className="mb-6 text-justify">As partes acima identificadas celebram o presente contrato, mediante as seguintes cláusulas e condições:</p>
         </div>
 
-        <div className="whitespace-pre-wrap mb-10">
+        {/* whitespace-pre-wrap mantém a formatação, mas permite quebra de linha */}
+        <div className="whitespace-pre-wrap mb-10 text-justify">
           {renderContractText()}
         </div>
 
-        <p className="mb-12">
+        <div className="html2pdf__page-break"></div>
+
+        <p className="mb-12 text-justify">
           E, por estarem justas e contratadas, as partes assinam o presente instrumento em 2 (duas) vias de igual teor e forma, para que produza seus jurídicos e legais efeitos.
         </p>
 

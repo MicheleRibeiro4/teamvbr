@@ -7,7 +7,7 @@ export const CONSULTANT_DEFAULT = {
   consultantName: "Vinicius Brasil dos Santos Otero",
   consultantCpf: "143.436.487-96",
   consultantEmail: "viniicius.br2@gmail.com",
-  consultantAddress: "Rua Serra da boa esperança, 540, Serra Dourada, Vespasiano - Minas Gerais",
+  consultantAddress: "Rua Serra da Boa Esperança, 540, Serra Dourada, Vespasiano - Minas Gerais",
 };
 
 const CONTRACT_TEMPLATE = `CLÁUSULA 1 – OBJETO
@@ -32,10 +32,7 @@ CLÁUSULA 2 – DURAÇÃO E RENOVAÇÃO
 
 CLÁUSULA 3 – VALOR E FORMA DE PAGAMENTO
 3.1. O valor total da assessoria é de R$ [VALUE] ([VALUE_WORDS]).
-3.2. Forma de pagamento:
-[PAYMENT_OPTIONS_PLACEHOLDER]
-( ) Boleto bancário
-( ) Outro: _________
+3.2. Forma de pagamento: [PAYMENT_METHOD]
 
 CLÁUSULA 4 – RESPONSABILIDADES E DECLARAÇÕES DO CONTRATANTE
 4.1. O contratante declara, sob as penas da lei:
