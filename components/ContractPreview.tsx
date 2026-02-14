@@ -11,13 +11,13 @@ interface Props {
 const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
   const renderContractText = () => {
     let text = data.contract.contractBody || '';
-    text = text.replace('[DURATION]', data.contract.durationDays);
-    text = text.replace('[START_DATE]', data.contract.startDate);
-    text = text.replace('[END_DATE]', data.contract.endDate);
-    text = text.replace('[VALUE]', data.contract.planValue);
-    text = text.replace('[VALUE_WORDS]', data.contract.planValueWords);
-    text = text.replace('[PAYMENT_METHOD]', data.contract.paymentMethod);
-    text = text.replace('[INSTALLMENTS]', data.contract.installments);
+    text = text.replace('[DURATION]', data.contract.durationDays || '______');
+    text = text.replace('[START_DATE]', data.contract.startDate || '___/___/______');
+    text = text.replace('[END_DATE]', data.contract.endDate || '___/___/______');
+    text = text.replace('[VALUE]', data.contract.planValue || '________');
+    text = text.replace('[VALUE_WORDS]', data.contract.planValueWords || '________________');
+    text = text.replace('[PAYMENT_METHOD]', data.contract.paymentMethod || '________________');
+    text = text.replace('[INSTALLMENTS]', data.contract.installments || '___');
     return text;
   };
 
@@ -25,8 +25,11 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
     window.print();
   };
 
+  const lineValue = (val: string, placeholder = "___________________________________________________________________") => 
+    val ? <span className="font-bold underline decoration-gray-300 underline-offset-4">{val}</span> : placeholder;
+
   return (
-    <div className="flex flex-col items-center w-full bg-transparent print:p-0">
+    <div className="flex flex-col items-center w-full bg-transparent print:p-0 pb-20 print:pb-0">
       
       <div className="no-print fixed bottom-8 right-8 z-[100] flex flex-col gap-3">
         {onBack && (
@@ -39,78 +42,83 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
         )}
         <button 
           onClick={handlePrint}
-          className="bg-[#d4af37] text-black px-8 py-5 rounded-full shadow-[0_0_50px_rgba(212,175,55,0.4)] hover:scale-105 active:scale-95 transition-all font-black uppercase text-xs flex items-center gap-3"
+          className="bg-[#d4af37] text-black px-8 py-5 rounded-full shadow-[0_0_50px_rgba(212,175,55,0.4)] hover:scale-105 active:scale-95 transition-all font-black uppercase text-xs flex items-center gap-3 border-2 border-black/10"
         >
           <Printer size={20} /> Imprimir Contrato
         </button>
       </div>
 
-      <div className="flex flex-col items-center bg-white p-[1.5cm] shadow-2xl w-[210mm] min-h-[297mm] h-auto mx-auto text-black leading-[1.4] font-sans text-[11px] print:shadow-none print:m-0 print:w-[210mm] print:h-auto mb-10 print:mb-0 overflow-hidden">
+      <div className="bg-white p-[2cm] shadow-2xl w-[210mm] min-h-[297mm] mx-auto text-black font-sans leading-relaxed text-[10.5pt] print:shadow-none print:m-0 print:w-[210mm] print:h-auto overflow-hidden">
         
         {/* TÍTULO */}
-        <div className="w-full flex flex-col items-center mb-8">
-          <h1 className="text-center font-bold text-[14px] uppercase tracking-tight mb-6">
+        <div className="w-full text-center mb-10">
+          <h1 className="font-bold text-[12pt] uppercase tracking-wide">
             CONTRATO DE ASSESSORIA EM ESTILO DE VIDA SAUDÁVEL
           </h1>
         </div>
 
-        <div className="w-full space-y-6">
-          {/* QUALIFICAÇÕES */}
-          <div className="grid grid-cols-1 gap-4">
-            <section className="avoid-break bg-gray-50 p-5 rounded-xl border border-gray-100">
-              <h2 className="font-bold uppercase border-b border-gray-200 pb-2 mb-3 text-[#d4af37] text-[10px]">CONTRATANTE (ALUNO):</h2>
-              <div className="grid grid-cols-2 gap-y-1 gap-x-4">
-                <p><span className="font-bold">Nome:</span> {data.clientName || "_________________________"}</p>
-                <p><span className="font-bold">CPF:</span> {data.contract.cpf || "_________________________"}</p>
-                <p><span className="font-bold">Fone:</span> {data.contract.phone || "_________________________"}</p>
-                <p><span className="font-bold">Email:</span> {data.contract.email || "_________________________"}</p>
-                <p className="col-span-2"><span className="font-bold">Endereço:</span> {data.contract.address || "_________________________"}</p>
-              </div>
-            </section>
-
-            <section className="avoid-break bg-gray-50 p-5 rounded-xl border border-gray-100">
-              <h2 className="font-bold uppercase border-b border-gray-200 pb-2 mb-3 text-[#d4af37] text-[10px]">CONTRATADO (CONSULTOR):</h2>
-              <div className="grid grid-cols-2 gap-y-1 gap-x-4">
-                <p><span className="font-bold">Nome:</span> {data.consultantName}</p>
-                <p><span className="font-bold">CPF:</span> {data.consultantCpf}</p>
-                <p><span className="font-bold">Email:</span> {data.consultantEmail}</p>
-                <p className="col-span-2"><span className="font-bold">Endereço:</span> {data.consultantAddress}</p>
-              </div>
-            </section>
+        {/* CONTRATANTE */}
+        <div className="mb-6 space-y-2">
+          <h2 className="font-bold uppercase mb-4">CONTRATANTE:</h2>
+          <div className="space-y-1">
+            <p>Nome: {lineValue(data.clientName)}</p>
+            <p>CPF: {lineValue(data.contract.cpf)}</p>
+            <p>Telefone: {lineValue(data.contract.phone)}</p>
+            <p>E-mail: {lineValue(data.contract.email)}</p>
+            <p>Endereço: {lineValue(data.contract.address)}</p>
           </div>
+        </div>
 
-          <p className="mt-2 text-justify avoid-break italic font-medium">
-            As partes celebram o presente contrato, mediante as seguintes cláusulas:
-          </p>
-
-          {/* CORPO DAS CLÁUSULAS - TEXTO REDUZIDO PARA ENCAIXE */}
-          <div className="whitespace-pre-line text-justify space-y-4 text-[10px] leading-snug">
-            {renderContractText()}
+        {/* CONTRATADO */}
+        <div className="mb-8 space-y-2">
+          <h2 className="font-bold uppercase mb-4">CONTRATADO:</h2>
+          <div className="space-y-1">
+            <p>Nome: <span className="font-bold">{data.consultantName}</span></p>
+            <p>CPF: <span className="font-bold">{data.consultantCpf}</span></p>
+            <p>E-mail: <span className="font-bold">{data.consultantEmail}</span></p>
+            <p>Endereço: <span className="font-bold">{data.consultantAddress}</span></p>
           </div>
+        </div>
 
-          {/* ASSINATURAS */}
-          <div className="pt-10 space-y-8 avoid-break">
-            <div className="flex justify-between items-center border-t border-b border-gray-100 py-3">
-              <p><span className="font-bold">Local:</span> {data.contract.city}</p>
-              <p><span className="font-bold">Data:</span> {data.contract.contractDate}</p>
-            </div>
+        <p className="mb-8">
+          As partes acima identificadas celebram o presente contrato, mediante as seguintes cláusulas e condições:
+        </p>
 
-            <div className="grid grid-cols-2 gap-20 pt-8">
-              <div className="text-center">
-                <div className="border-t border-black pt-2">
-                  <p className="font-bold uppercase text-[9px]">CONTRATANTE</p>
-                  <p className="text-[11px] mt-1 font-black">{data.clientName}</p>
-                </div>
+        {/* CLÁUSULAS */}
+        <div className="whitespace-pre-line text-justify mb-10 leading-[1.6]">
+          {renderContractText()}
+        </div>
+
+        {/* ASSINATURAS */}
+        <div className="mt-20 space-y-12 avoid-break">
+           <div className="flex flex-col gap-4">
+              <p><span className="font-bold">Cidade:</span> {lineValue(data.contract.city || "Vespasiano - Minas Gerais", "_______________________________")}</p>
+              <p><span className="font-bold">Data:</span> {lineValue(data.contract.contractDate, "//______")}</p>
+           </div>
+
+           <div className="grid grid-cols-1 gap-16 mt-16">
+              <div className="space-y-4">
+                 <h2 className="font-bold uppercase">CONTRATANTE:</h2>
+                 <div className="flex flex-col gap-1">
+                    <p>Assinatura: _________________________________________________________</p>
+                    <p>Nome completo: {lineValue(data.clientName)}</p>
+                    <p>CPF: {lineValue(data.contract.cpf)}</p>
+                 </div>
               </div>
-              
-              <div className="text-center">
-                <div className="border-t border-black pt-2">
-                  <p className="font-bold uppercase text-[9px]">CONTRATADO</p>
-                  <p className="text-[11px] mt-1 font-black">{data.consultantName}</p>
-                </div>
+
+              <div className="space-y-4">
+                 <h2 className="font-bold uppercase">CONTRATADO:</h2>
+                 <div className="flex flex-col gap-1">
+                    <p>Assinatura: _________________________________________________________</p>
+                    <p className="font-bold uppercase text-[11pt] mt-2">{data.consultantName}</p>
+                 </div>
               </div>
-            </div>
-          </div>
+           </div>
+        </div>
+        
+        {/* FOOTER DE PÁGINA */}
+        <div className="mt-20 text-center border-t border-gray-100 pt-4 opacity-20 no-print">
+           <p className="text-[8pt] uppercase tracking-widest font-black">Team VBR Rhino - Consultoria de Elite</p>
         </div>
       </div>
     </div>

@@ -1,8 +1,8 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ProtocolData } from '../types';
 import ContractPreview from './ContractPreview';
-import { ScrollText, DollarSign, Calendar, MapPin, UserCheck, Briefcase, UserCircle, CreditCard, ChevronLeft } from 'lucide-react';
+import { DollarSign, Calendar, UserCheck, ChevronLeft, Clock, FileText } from 'lucide-react';
 
 interface Props {
   data: ProtocolData;
@@ -11,6 +11,7 @@ interface Props {
 }
 
 const ContractWorkspace: React.FC<Props> = ({ data, onChange, onBack }) => {
+  
   const handleChange = (path: string, value: any) => {
     const newData = { ...data };
     const keys = path.split('.');
@@ -22,12 +23,90 @@ const ContractWorkspace: React.FC<Props> = ({ data, onChange, onBack }) => {
     onChange(newData);
   };
 
-  const sectionClass = "bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-6";
-  const labelClass = "block text-[9px] font-black text-gray-400 mb-1.5 uppercase tracking-widest";
-  const inputClass = "w-full p-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-[#d4af37] outline-none font-bold text-gray-800 text-sm transition-all";
+  // Lógica de Valor por Extenso (Português)
+  const converterParaExtenso = (num: number): string => {
+    const unidades = ["", "um", "dois", "três", "quatro", "cinco", "seis", "sete", "oito", "nove"];
+    const dezenas10 = ["dez", "onze", "doze", "treze", "quatorze", "quinze", "dezesseis", "dezessete", "dezoito", "dezenove"];
+    const dezenas = ["", "", "vinte", "trinta", "quarenta", "cinquenta", "sessenta", "setenta", "oitenta", "noventa"];
+    const centenas = ["", "cento", "duzentos", "trezentos", "quatrocentos", "quinhentos", "seiscentos", "setecentos", "oitocentos", "novecentos"];
+
+    const conv = (n: number): string => {
+      if (n === 0) return "";
+      if (n === 100) return "cem";
+      let s = "";
+      if (n >= 100) {
+        s += centenas[Math.floor(n / 100)];
+        n %= 100;
+        if (n > 0) s += " e ";
+      }
+      if (n >= 20) {
+        s += dezenas[Math.floor(n / 10)];
+        n %= 10;
+        if (n > 0) s += " e ";
+      } else if (n >= 10) {
+        s += dezenas10[n - 10];
+        n = 0;
+      }
+      if (n > 0) s += unidades[n];
+      return s;
+    };
+
+    if (num === 0) return "zero";
+    
+    let res = "";
+    let n = Math.floor(num);
+    let c = Math.round((num - n) * 100);
+
+    if (n >= 1000) {
+      const mil = Math.floor(n / 1000);
+      res += (mil === 1 ? "" : conv(mil)) + " mil";
+      n %= 1000;
+      if (n > 0) res += (n < 100 || n % 100 === 0 ? " e " : ", ");
+    }
+    res += conv(n);
+
+    if (c > 0) {
+      res += (res ? " e " : "") + conv(c) + (c === 1 ? " centavo" : " centavos");
+    }
+
+    return res;
+  };
+
+  // Efeito para calcular dias e extenso automaticamente
+  useEffect(() => {
+    // Cálculo de Dias
+    if (data.contract.startDate && data.contract.endDate) {
+      const partsStart = data.contract.startDate.split('/');
+      const partsEnd = data.contract.endDate.split('/');
+      if (partsStart.length === 3 && partsEnd.length === 3) {
+        const d1 = new Date(Number(partsStart[2]), Number(partsStart[1]) - 1, Number(partsStart[0]));
+        const d2 = new Date(Number(partsEnd[2]), Number(partsEnd[1]) - 1, Number(partsEnd[0]));
+        const diffTime = d2.getTime() - d1.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (!isNaN(diffDays) && diffDays > 0 && data.contract.durationDays !== diffDays.toString()) {
+          handleChange('contract.durationDays', diffDays.toString());
+        }
+      }
+    }
+
+    // Cálculo de Extenso
+    if (data.contract.planValue) {
+      const val = parseFloat(data.contract.planValue.replace('.', '').replace(',', '.'));
+      if (!isNaN(val)) {
+        const text = converterParaExtenso(val);
+        if (data.contract.planValueWords !== text) {
+          handleChange('contract.planValueWords', text);
+        }
+      }
+    }
+  }, [data.contract.startDate, data.contract.endDate, data.contract.planValue]);
+
+  const sectionClass = "bg-white p-8 rounded-[2rem] shadow-xl border border-gray-100 mb-8";
+  const labelClass = "block text-[10px] font-black text-gray-400 mb-2 uppercase tracking-widest";
+  const inputClass = "w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-[#d4af37] outline-none font-bold text-gray-800 text-sm transition-all";
 
   return (
-    <div className="flex flex-col gap-8 w-full">
+    <div className="flex flex-col gap-10 w-full max-w-[1600px] mx-auto">
       {onBack && (
         <button 
           onClick={onBack}
@@ -37,40 +116,17 @@ const ContractWorkspace: React.FC<Props> = ({ data, onChange, onBack }) => {
         </button>
       )}
       
-      <div className="flex flex-col lg:flex-row gap-8 items-start max-w-7xl mx-auto w-full">
-        <div className="w-full lg:w-1/2 no-print">
-          {/* ... campos de input iguais ao anterior ... */}
+      <div className="flex flex-col xl:flex-row gap-12 items-start w-full">
+        <div className="w-full xl:w-2/5 no-print space-y-6">
           <div className={sectionClass}>
-            <div className="flex items-center gap-2 mb-6 border-b border-gray-50 pb-3">
-              <UserCircle className="text-[#d4af37]" size={18} />
-              <h2 className="text-lg font-black text-gray-900 uppercase tracking-tighter">Dados do Consultor</h2>
+            <div className="flex items-center gap-3 mb-8 border-b border-gray-50 pb-4">
+              <UserCheck className="text-[#d4af37]" size={24} />
+              <h2 className="text-xl font-black text-gray-900 uppercase tracking-tighter">Dados do Aluno</h2>
             </div>
-            {/* Mantendo os campos mas de forma compacta */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="md:col-span-2">
-                <label className={labelClass}>Nome</label>
-                <input className={inputClass} value={data.consultantName} onChange={(e) => handleChange('consultantName', e.target.value)} />
-              </div>
-              <div>
-                <label className={labelClass}>CPF</label>
-                <input className={inputClass} value={data.consultantCpf} onChange={(e) => handleChange('consultantCpf', e.target.value)} />
-              </div>
-              <div>
-                <label className={labelClass}>Email</label>
-                <input className={inputClass} value={data.consultantEmail} onChange={(e) => handleChange('consultantEmail', e.target.value)} />
-              </div>
-            </div>
-          </div>
-
-          <div className={sectionClass}>
-            <div className="flex items-center gap-2 mb-6 border-b border-gray-50 pb-3">
-              <UserCheck className="text-[#d4af37]" size={18} />
-              <h2 className="text-lg font-black text-gray-900 uppercase tracking-tighter">Dados do Contratante</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
-                <label className={labelClass}>Nome Aluno</label>
-                <input className={inputClass + " bg-[#d4af37]/5"} value={data.clientName} onChange={(e) => handleChange('clientName', e.target.value)} />
+                <label className={labelClass}>Nome Completo</label>
+                <input className={inputClass} value={data.clientName} onChange={(e) => handleChange('clientName', e.target.value)} />
               </div>
               <div>
                 <label className={labelClass}>CPF</label>
@@ -80,30 +136,83 @@ const ContractWorkspace: React.FC<Props> = ({ data, onChange, onBack }) => {
                 <label className={labelClass}>Telefone</label>
                 <input className={inputClass} value={data.contract.phone} onChange={(e) => handleChange('contract.phone', e.target.value)} />
               </div>
+              <div>
+                <label className={labelClass}>E-mail</label>
+                <input className={inputClass} value={data.contract.email} onChange={(e) => handleChange('contract.email', e.target.value)} />
+              </div>
+              <div className="md:col-span-2">
+                <label className={labelClass}>Endereço Completo</label>
+                <input className={inputClass} value={data.contract.address} onChange={(e) => handleChange('contract.address', e.target.value)} />
+              </div>
             </div>
           </div>
 
           <div className={sectionClass}>
-            <div className="flex items-center gap-2 mb-6 border-b border-gray-50 pb-3">
-              <DollarSign className="text-[#d4af37]" size={18} />
-              <h2 className="text-lg font-black text-gray-900 uppercase tracking-tighter">Financeiro</h2>
+            <div className="flex items-center gap-3 mb-8 border-b border-gray-50 pb-4">
+              <Clock className="text-[#d4af37]" size={24} />
+              <h2 className="text-xl font-black text-gray-900 uppercase tracking-tighter">Período (Calculo Automático)</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className={labelClass}>Valor (R$)</label>
-                <input className={inputClass} value={data.contract.planValue} onChange={(e) => handleChange('contract.planValue', e.target.value)} />
+                <label className={labelClass}>Data de Início (DD/MM/AAAA)</label>
+                <input className={inputClass} value={data.contract.startDate} onChange={(e) => handleChange('contract.startDate', e.target.value)} placeholder="11/02/2026" />
               </div>
               <div>
-                <label className={labelClass}>Método</label>
-                <input className={inputClass} value={data.contract.paymentMethod} onChange={(e) => handleChange('contract.paymentMethod', e.target.value)} />
+                <label className={labelClass}>Data de Término (DD/MM/AAAA)</label>
+                <input className={inputClass} value={data.contract.endDate} onChange={(e) => handleChange('contract.endDate', e.target.value)} placeholder="11/05/2026" />
+              </div>
+              <div className="md:col-span-2 bg-[#d4af37]/5 p-4 rounded-xl border border-[#d4af37]/20">
+                 <p className="text-[10px] font-black uppercase text-[#d4af37] mb-1">Duração Estimada</p>
+                 <p className="text-2xl font-black text-[#d4af37]">{data.contract.durationDays} dias</p>
               </div>
             </div>
           </div>
+
+          <div className={sectionClass}>
+            <div className="flex items-center gap-3 mb-8 border-b border-gray-50 pb-4">
+              <DollarSign className="text-[#d4af37]" size={24} />
+              <h2 className="text-xl font-black text-gray-900 uppercase tracking-tighter">Financeiro</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className={labelClass}>Valor Total (R$)</label>
+                <input className={inputClass} value={data.contract.planValue} onChange={(e) => handleChange('contract.planValue', e.target.value)} placeholder="289,00" />
+              </div>
+              <div>
+                <label className={labelClass}>Extenso (Gerado)</label>
+                <input className={inputClass + " bg-gray-100 italic"} value={data.contract.planValueWords} readOnly />
+              </div>
+              <div>
+                <label className={labelClass}>Método</label>
+                <select className={inputClass} value={data.contract.paymentMethod} onChange={(e) => handleChange('contract.paymentMethod', e.target.value)}>
+                   <option value="Pix">Pix</option>
+                   <option value="Cartão de Crédito">Cartão de Crédito</option>
+                   <option value="Boleto Bancário">Boleto Bancário</option>
+                   <option value="Dinheiro">Dinheiro</option>
+                </select>
+              </div>
+              <div>
+                <label className={labelClass}>Parcelas</label>
+                <input className={inputClass} value={data.contract.installments} onChange={(e) => handleChange('contract.installments', e.target.value)} />
+              </div>
+            </div>
+          </div>
+
+          <div className={sectionClass}>
+            <div className="flex items-center gap-3 mb-8 border-b border-gray-50 pb-4">
+              <FileText className="text-[#d4af37]" size={24} />
+              <h2 className="text-xl font-black text-gray-900 uppercase tracking-tighter">Texto das Cláusulas</h2>
+            </div>
+            <textarea
+              className="w-full h-80 p-6 bg-gray-50 border border-gray-100 rounded-3xl font-mono text-[10px] focus:ring-2 focus:ring-[#d4af37] outline-none"
+              value={data.contract.contractBody}
+              onChange={(e) => handleChange('contract.contractBody', e.target.value)}
+            />
+          </div>
         </div>
 
-        {/* PREVIEW */}
-        <div className="w-full lg:w-1/2 flex justify-center bg-gray-200/20 p-4 md:p-10 rounded-3xl border-2 border-dashed border-gray-200">
-           <div className="relative">
+        <div className="w-full xl:w-3/5 flex justify-center bg-white/5 p-4 md:p-16 rounded-[4rem] border-2 border-dashed border-white/10">
+           <div className="relative transform scale-90 origin-top xl:scale-100">
               <ContractPreview data={data} onBack={onBack} />
            </div>
         </div>
