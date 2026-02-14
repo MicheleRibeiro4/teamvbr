@@ -2,7 +2,7 @@
 import React, { useRef, useState } from 'react';
 import { ProtocolData } from '../types';
 import { CONSULTANT_DEFAULT } from '../constants';
-import { ChevronLeft, Printer, Download, Loader2 } from 'lucide-react';
+import { ChevronLeft, Download, Loader2 } from 'lucide-react';
 
 interface Props {
   data: ProtocolData;
@@ -33,8 +33,9 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
     if (!contractRef.current) return;
     setIsGenerating(true);
     const opt = {
-      margin: 15,
+      margin: 10,
       filename: `Contrato_VBR_${data.clientName.replace(/\s+/g, '_')}.pdf`,
+      image: { type: 'jpeg', quality: 1.0 },
       html2canvas: { scale: 2.5, useCORS: true, backgroundColor: '#ffffff' },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
@@ -42,7 +43,7 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
       // @ts-ignore
       await html2pdf().set(opt).from(contractRef.current).save();
     } catch (err) {
-      alert("Erro ao gerar PDF.");
+      alert("Erro ao gerar PDF do contrato.");
     } finally { setIsGenerating(false); }
   };
 
@@ -51,19 +52,20 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
   return (
     <div className="flex flex-col items-center w-full bg-transparent pb-20 print:pb-0">
       <div className="no-print fixed bottom-8 right-8 z-[100] flex flex-col gap-3">
-        <button onClick={handleDownloadPDF} disabled={isGenerating} className="bg-[#d4af37] text-black px-8 py-5 rounded-full shadow-2xl font-black uppercase text-xs flex items-center gap-3">
-          {isGenerating ? <Loader2 className="animate-spin" size={20} /> : <Download size={20} />} Baixar Contrato HD
+        <button onClick={handleDownloadPDF} disabled={isGenerating} className="bg-[#d4af37] text-black px-8 py-5 rounded-full shadow-2xl font-black uppercase text-xs flex items-center gap-3 active:scale-95 transition-all">
+          {isGenerating ? <Loader2 className="animate-spin" size={20} /> : <Download size={20} />} 
+          {isGenerating ? 'Processando HD...' : 'Baixar Contrato HD'}
         </button>
       </div>
 
-      <div ref={contractRef} className="bg-white p-[2cm] w-[210mm] min-h-[297mm] mx-auto text-black font-serif leading-[1.6] text-[10.5pt] shadow-2xl print:shadow-none overflow-hidden">
+      <div ref={contractRef} className="bg-white p-[15mm] w-[210mm] min-h-[297mm] mx-auto text-black font-serif leading-[1.6] text-[11pt] shadow-2xl print:shadow-none overflow-hidden">
         <div className="text-center mb-12 border-b-2 border-black pb-4">
-          <h1 className="font-black text-xl uppercase tracking-tighter">Instrumento Particular de Contratação de Assessoria</h1>
+          <h1 className="font-black text-xl uppercase tracking-tighter">Instrumento Particular de Prestação de Serviços de Assessoria</h1>
         </div>
 
         <div className="space-y-6 mb-12">
           <div className="p-4 bg-gray-50 rounded-xl">
-            <h2 className="font-black uppercase mb-3 text-xs tracking-widest text-[#d4af37]">I. Contratante (Aluno)</h2>
+            <h2 className="font-black uppercase mb-3 text-xs tracking-widest text-[#d4af37]">I. Contratante</h2>
             <div className="grid grid-cols-1 gap-1">
               <p>Nome: {lineValue(data.clientName)}</p>
               <p>CPF: {lineValue(data.contract.cpf)}</p>
@@ -72,7 +74,7 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
           </div>
 
           <div className="p-4 bg-gray-50 rounded-xl">
-            <h2 className="font-black uppercase mb-3 text-xs tracking-widest text-[#d4af37]">II. Contratado (Consultor)</h2>
+            <h2 className="font-black uppercase mb-3 text-xs tracking-widest text-[#d4af37]">II. Contratado</h2>
             <div className="grid grid-cols-1 gap-1">
               <p>Nome: {lineValue(CONSULTANT_DEFAULT.consultantName)}</p>
               <p>CPF: {lineValue(CONSULTANT_DEFAULT.consultantCpf)}</p>
@@ -81,15 +83,15 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
           </div>
         </div>
 
-        <div className="text-justify whitespace-pre-line mb-20 italic">
+        <div className="text-justify whitespace-pre-line mb-20 italic break-inside-avoid">
           {renderContractText()}
         </div>
 
         <div className="mt-20 space-y-20 avoid-break">
            <div className="flex justify-between items-end">
               <div className="text-left">
-                <p className="font-black">Local e Data:</p>
-                <p>Vespasiano, {data.contract.contractDate || new Date().toLocaleDateString('pt-BR')}</p>
+                <p className="font-black text-sm">Local e Data:</p>
+                <p className="text-sm">Vespasiano, {data.contract.contractDate || new Date().toLocaleDateString('pt-BR')}</p>
               </div>
            </div>
 
@@ -97,12 +99,11 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
               <div className="text-center">
                  <div className="border-t border-black mb-2"></div>
                  <p className="font-black text-[9pt] uppercase tracking-widest">Contratante</p>
-                 <p className="text-[7pt] text-gray-500">{data.clientName || 'Assinatura Digital'}</p>
               </div>
               <div className="text-center">
                  <div className="border-t border-black mb-2"></div>
                  <p className="font-black text-[9pt] uppercase tracking-widest">Contratado</p>
-                 <p className="text-[7pt] text-gray-500">{CONSULTANT_DEFAULT.consultantName}</p>
+                 <p className="text-[7pt] text-gray-400 mt-1">{CONSULTANT_DEFAULT.consultantName}</p>
               </div>
            </div>
         </div>

@@ -106,14 +106,19 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
 
     setIsGenerating(true);
     try {
+      // Correção da inicialização conforme diretrizes: process.env.API_KEY
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
-        contents: `Como Master Coach Vinícius Brasil do Team VBR, gere um protocolo JSON completo de elite para: ${data.clientName}, Peso: ${data.physicalData.weight}kg, Objetivo: ${data.protocolTitle}. Retorne APENAS o JSON com nutritionalStrategy, kcalGoal, kcalSubtext, macros (protein, carbs, fats), meals (id, time, name, details), trainingFrequency, trainingDays (id, title, focus, exercises(id, name, sets)).`,
-        config: { responseMimeType: "application/json" }
+        contents: `Como Master Coach do Team VBR, gere um protocolo JSON completo (dieta e treino) para: Aluno ${data.clientName}, Peso ${data.physicalData.weight}kg, Objetivo ${data.protocolTitle}. Retorne APENAS o JSON estruturado com nutritionalStrategy, kcalGoal, kcalSubtext, macros, meals (com id, time, name, details), trainingFrequency, trainingDays (com id, title, focus, exercises).`,
+        config: { 
+          responseMimeType: "application/json" 
+        }
       });
       
-      const suggestion = JSON.parse(response.text || '{}');
+      const jsonStr = response.text.trim();
+      const suggestion = JSON.parse(jsonStr);
+      
       const prepareId = (list: any[]) => (list || []).map(i => ({ ...i, id: i.id || Math.random().toString(36).substr(2, 9) }));
       
       onChange({ 
@@ -127,7 +132,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
       });
     } catch (error) {
       console.error("Erro IA:", error);
-      alert("Falha na Inteligência VBR. Tente novamente.");
+      alert("A Inteligência VBR encontrou um problema. Verifique sua conexão ou dados informados.");
     } finally { setIsGenerating(false); }
   };
 
@@ -158,44 +163,21 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
         </div>
       </section>
 
-      <section>
-        <div className={sectionHeaderClass}>
-          <ShieldCheck className="text-[#d4af37]" size={20} />
-          <h2 className="text-xl font-black text-white uppercase tracking-tighter">Financeiro & Vigência</h2>
+      {/* IA GENERATOR CENTRALIZADO */}
+      <div className="bg-gradient-to-br from-[#d4af37]/20 via-black to-black p-8 rounded-[2.5rem] border border-[#d4af37]/40 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl relative overflow-hidden group">
+        <div className="flex items-center gap-5 relative z-10">
+          <div className="w-16 h-16 bg-[#d4af37] rounded-xl flex items-center justify-center text-black shadow-[0_0_30px_rgba(212,175,55,0.4)]">
+            {isGenerating ? <Loader2 size={32} className="animate-spin" /> : <Sparkles size={32} />}
+          </div>
+          <div>
+            <h3 className="font-black text-xl text-white uppercase tracking-tighter leading-none">Inteligência VBR Pro</h3>
+            <p className="text-[10px] text-[#d4af37] font-black uppercase tracking-[0.2em] mt-1">Gere o protocolo via IA</p>
+          </div>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="col-span-2">
-            <label className={labelClass}>Início</label>
-            <input className={inputClass} value={data.contract.startDate} onChange={(e) => { const v = formatDateInput(e.target.value); handleChange('contract.startDate', v); if(periodType !== 'custom') calculateEndDate(v, periodType as any); }} placeholder="00/00/0000" />
-          </div>
-          <div className="col-span-2">
-            <label className={labelClass}>Período</label>
-            <select className={inputClass} value={periodType} onChange={(e) => { const t = e.target.value as any; setPeriodType(t); if(t !== 'custom') calculateEndDate(data.contract.startDate, t); }}>
-              <option value="custom">Personalizado</option>
-              <option value="trimestral">Trimestral</option>
-              <option value="semestral">Semestral</option>
-            </select>
-          </div>
-          <div className="col-span-2"><label className={labelClass}>Término</label><input className={inputClass + (periodType !== 'custom' ? " opacity-60" : "")} value={data.contract.endDate} readOnly={periodType !== 'custom'} onChange={(e) => handleChange('contract.endDate', formatDateInput(e.target.value))} /></div>
-          <div className="col-span-2"><label className={labelClass}>Valor (R$)</label><input className={inputClass} value={data.contract.planValue} onChange={(e) => handleChange('contract.planValue', e.target.value)} /></div>
-          <div className="col-span-4"><label className={labelClass}>Extenso</label><input className={inputClass + " italic opacity-80"} value={data.contract.planValueWords} readOnly /></div>
-          <div className="col-span-2">
-            <label className={labelClass}>Pagamento</label>
-            <select className={inputClass} value={data.contract.paymentMethod} onChange={(e) => handleChange('contract.paymentMethod', e.target.value)}>
-              <option value="Pix">Pix</option>
-              <option value="Cartão de Crédito">Cartão de Crédito</option>
-            </select>
-          </div>
-          {data.contract.paymentMethod === 'Cartão de Crédito' && (
-            <div className="col-span-2">
-              <label className={labelClass}>Parcelas</label>
-              <select className={inputClass} value={data.contract.installments} onChange={(e) => handleChange('contract.installments', e.target.value)}>
-                {[...Array(12)].map((_, i) => <option key={i+1} value={`${i+1}x`}>{i+1}x</option>)}
-              </select>
-            </div>
-          )}
-        </div>
-      </section>
+        <button onClick={handleAISuggestion} disabled={isGenerating} className="bg-white text-black px-10 py-5 rounded-xl font-black text-xs uppercase hover:scale-105 transition-all disabled:opacity-50 active:scale-95 shadow-lg">
+          {isGenerating ? 'Processando...' : 'GERE O PROTOCOLO COMPLETO COM IA'}
+        </button>
+      </div>
 
       <section>
         <div className={sectionHeaderClass}>
@@ -210,22 +192,6 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
           <div><label className={labelClass}>Gordura (%)</label><input className={inputClass} value={data.physicalData.bodyFat} onChange={(e) => handleChange('physicalData.bodyFat', e.target.value)} /></div>
         </div>
       </section>
-
-      {/* IA GENERATOR CENTRALIZADO */}
-      <div className="bg-gradient-to-br from-[#d4af37]/20 via-black to-black p-8 rounded-[2.5rem] border border-[#d4af37]/40 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl relative overflow-hidden group">
-        <div className="flex items-center gap-5 relative z-10">
-          <div className="w-16 h-16 bg-[#d4af37] rounded-xl flex items-center justify-center text-black shadow-[0_0_30px_rgba(212,175,55,0.4)]">
-            {isGenerating ? <Loader2 size={32} className="animate-spin" /> : <Sparkles size={32} />}
-          </div>
-          <div>
-            <h3 className="font-black text-xl text-white uppercase tracking-tighter leading-none">Inteligência VBR Pro</h3>
-            <p className="text-[10px] text-[#d4af37] font-black uppercase tracking-[0.2em] mt-1">Gere o protocolo via IA</p>
-          </div>
-        </div>
-        <button onClick={handleAISuggestion} disabled={isGenerating} className="bg-white text-black px-10 py-5 rounded-xl font-black text-xs uppercase hover:scale-105 transition-all disabled:opacity-50">
-          {isGenerating ? 'Trabalhando...' : 'Gerar com IA'}
-        </button>
-      </div>
 
       <section>
         <div className={sectionHeaderClass}>
