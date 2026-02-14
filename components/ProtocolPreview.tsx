@@ -2,7 +2,7 @@
 import React, { useRef, useState } from 'react';
 import { ProtocolData } from '../types';
 import { LOGO_VBR_BLACK } from '../constants';
-import { ChevronLeft, Download, Loader2 } from 'lucide-react';
+import { ChevronLeft, Download, Loader2, AlertTriangle } from 'lucide-react';
 
 interface Props {
   data: ProtocolData;
@@ -27,9 +27,9 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
         useCORS: true, 
         letterRendering: true, 
         backgroundColor: '#ffffff',
-        scrollY: 0,
-        windowWidth: 794, // Largura exata A4 em px a 96dpi (aprox)
-        height: 1119 * 7 // Altura levemente reduzida * numero de paginas
+        scrollY: 0, // CRUCIAL: Garante que o render comece do topo
+        windowWidth: 794, 
+        height: 1119 * 7 
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
@@ -45,7 +45,7 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
     }
   };
 
-  // CSS Estrito para A4 (210mm x 296mm) - Reduzido 1mm para evitar overflow
+  // CSS Estrito para A4 (210mm x 296mm)
   const pageStyle = { 
     width: '210mm', 
     height: '296mm', 
@@ -55,14 +55,15 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
     position: 'relative' as const, 
     boxSizing: 'border-box' as const, 
     display: 'block',
-    overflow: 'hidden', // Corta qualquer pixel excedente
-    pageBreakAfter: 'always', // Força nova página
+    overflow: 'hidden', 
+    pageBreakAfter: 'always', 
     breakAfter: 'page'
   };
 
-  // Estilo específico para a última página para não gerar folha extra
+  // Estilo específico para a última página
   const lastPageStyle = {
     ...pageStyle,
+    padding: '0', // Remove padding para o quadrado pegar tudo se necessário
     pageBreakAfter: 'auto',
     breakAfter: 'auto'
   };
@@ -88,23 +89,31 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
       <div ref={pdfRef} className="bg-gray-200 shadow-inner flex flex-col items-center print:bg-transparent print:m-0 print:p-0">
         
         {/* PÁGINA 1: CAPA */}
-        <div style={{ ...pageStyle, padding: 0, backgroundColor: '#111' }} className="flex flex-col items-center justify-center text-white text-center relative bg-[#111]">
-          <div className="flex-1 flex flex-col items-center justify-center w-full">
-            <img src={LOGO_VBR_BLACK} alt="Team VBR" className="w-64 h-auto mb-16 relative z-10" />
+        <div style={{ ...pageStyle, padding: 0, backgroundColor: '#111' }} className="flex flex-col justify-between text-white text-center relative bg-[#111]">
+          
+          {/* Conteúdo Centralizado Verticalmente */}
+          <div className="flex-1 flex flex-col items-center justify-center w-full px-10">
+            <img src={LOGO_VBR_BLACK} alt="Team VBR" className="w-80 h-auto mb-12 relative z-10" />
             
-            <h1 className="text-4xl font-black text-[#d4af37] uppercase tracking-wider leading-tight mb-20">
+            <h1 className="text-5xl font-black text-[#d4af37] uppercase tracking-wider leading-tight mb-16">
               PROTOCOLO<br/>
               COMPLETO DE<br/>
               {data.protocolTitle || 'HIPERTROFIA'}
             </h1>
 
-            <h2 className="text-5xl font-black uppercase tracking-tight mb-4 text-white">{data.clientName || 'NOME DO ALUNO'}</h2>
+            <div className="border-t border-b border-white/20 py-8 w-full max-w-2xl">
+              <h2 className="text-6xl font-black uppercase tracking-tight text-white">{data.clientName || 'NOME DO ALUNO'}</h2>
+            </div>
             
-            <p className="text-sm font-medium text-white/80 mt-8">
-              Período Consultoria: {data.contract.startDate} a {data.contract.endDate}
-            </p>
+            <div className="mt-16 bg-[#d4af37]/10 px-8 py-4 rounded-full border border-[#d4af37]/30">
+              <p className="text-2xl font-bold text-white uppercase tracking-widest">
+                Período: {data.contract.startDate} — {data.contract.endDate}
+              </p>
+            </div>
           </div>
-          <div className="w-full h-3 bg-[#d4af37]"></div>
+
+          {/* Rodapé Amarelo */}
+          <div className="w-full h-8 bg-[#d4af37]"></div>
         </div>
 
         {/* PÁGINA 2: DADOS & ESTRATÉGIA */}
@@ -278,22 +287,35 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
           </div>
         </div>
 
-        {/* PÁGINA 7: ENCERRAMENTO (ÚLTIMA PÁGINA - SEM QUEBRA APÓS) */}
-        <div style={lastPageStyle} className="flex flex-col items-center justify-center text-center">
-           <div className="bg-[#111] text-white p-6 rounded w-full max-w-lg mb-12 shadow-lg">
-             <div className="flex items-center justify-center gap-2 text-[#d4af37] font-bold uppercase mb-2">
-               <span>⚠</span> <span>ATENÇÃO:</span>
-             </div>
-             <p className="text-sm">
-               Ajustes de carga, dieta e cardio serão feitos conforme sua evolução e feedback.
-             </p>
-           </div>
-           
-           <p className="text-gray-500 text-sm mb-20">
-             Documento gerado para uso exclusivo de {data.clientName}.
-           </p>
+        {/* PÁGINA 7: ENCERRAMENTO (ÚLTIMA PÁGINA - OCUPA TUDO) */}
+        <div style={lastPageStyle}>
+          <div className="w-full h-full bg-[#111] flex flex-col items-center justify-center p-12 text-center relative border-[20px] border-white">
+             
+             <AlertTriangle size={80} className="text-[#d4af37] mb-8" />
+             
+             <h2 className="text-5xl font-black text-white uppercase tracking-tighter mb-4">
+               Atenção
+             </h2>
+             
+             <div className="w-24 h-2 bg-[#d4af37] mb-12"></div>
 
-           <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">TEAM VBR © 2026</p>
+             <div className="max-w-3xl space-y-6 text-xl text-white/80 font-medium leading-relaxed">
+               <p>
+                 Este protocolo foi desenhado especificamente para você, {data.clientName.split(' ')[0]}.
+               </p>
+               <p>
+                 Ajustes de carga, dieta e cardio serão feitos conforme sua evolução e feedbacks semanais. Não altere nada por conta própria sem consultar o treinador.
+               </p>
+               <p className="text-[#d4af37]">
+                 A consistência vence a intensidade.
+               </p>
+             </div>
+
+             <div className="absolute bottom-12 left-0 right-0 text-center">
+               <p className="text-xs font-bold text-gray-600 uppercase tracking-[0.3em]">TEAM VBR © 2026</p>
+             </div>
+
+          </div>
         </div>
 
       </div>

@@ -243,10 +243,6 @@ const ContractWorkspace: React.FC<Props> = ({ data, onChange, onBack }) => {
                    <option value="Cartão de Crédito">Cartão de Crédito</option>
                 </select>
               </div>
-              <div>
-                <label className={labelClass}>Parcelas</label>
-                <input className={inputClass} value={data.contract.installments} onChange={(e) => handleChange('contract.installments', e.target.value)} />
-              </div>
             </div>
           </div>
 

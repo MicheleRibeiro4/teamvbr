@@ -36,7 +36,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
 
     setIsGenerating(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: "AIzaSyCdc2gt-S321N9qjNU3ZK4vHxPuTeOrVbA" });
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       
       const prompt = `
         Você é um treinador de elite e nutricionista esportivo (Estilo Team VBR).
@@ -186,13 +186,6 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
       }
     }
   }, [data.physicalData.weight, data.physicalData.height]);
-
-  // --- LÓGICA DE PARCELAS NO PIX ---
-  useEffect(() => {
-    if (data.contract.paymentMethod === 'Pix' && data.contract.installments !== '1') {
-      handleChange('contract.installments', '1');
-    }
-  }, [data.contract.paymentMethod]);
 
   // --- LÓGICA DE VALOR POR EXTENSO ---
   const converterParaExtenso = (num: number): string => {
@@ -363,9 +356,9 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
           <div className="col-span-2">
             <label className={labelClass}>Tipo de Plano</label>
             <select className={selectClass} value={data.contract.planType} onChange={(e) => handleChange('contract.planType', e.target.value)}>
+              <option value="Avulso">Avulso (1 Dia)</option>
               <option value="Trimestral">Trimestral (3 Meses)</option>
               <option value="Semestral">Semestral (6 Meses)</option>
-              <option value="Avulso">Avulso (1 Dia)</option>
             </select>
           </div>
           <div className="col-span-2 hidden md:block"></div>
@@ -389,10 +382,6 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
               <option value="Cartão de Crédito">Cartão de Crédito</option>
             </select>
           </div>
-          
-          {data.contract.paymentMethod === 'Cartão de Crédito' && (
-            <div className="col-span-2 animate-in fade-in"><label className={labelClass}>Parcelas</label><input className={inputClass} type="number" value={data.contract.installments} onChange={(e) => handleChange('contract.installments', e.target.value)} /></div>
-          )}
         </div>
       </section>
 

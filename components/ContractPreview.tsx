@@ -15,19 +15,16 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
 
   const renderPaymentOptions = () => {
     const method = data.contract.paymentMethod;
-    const installments = data.contract.installments;
     
     return `
 (${method === 'Pix' ? 'x' : ' '}) Pix (à vista)
-(${method === 'Cartão de Crédito' ? 'x' : ' '}) Cartão de crédito – parcelado em ${method === 'Cartão de Crédito' ? installments : '__'}x`;
+(${method === 'Cartão de Crédito' ? 'x' : ' '}) Cartão de crédito`;
   };
 
   const renderContractText = () => {
-    // IMPORTANTE: Fallback para o template padrão caso contractBody esteja vazio (ex: dados antigos)
     let text = data.contract.contractBody;
     
     if (!text || text.trim() === '') {
-       // Pega o template do objeto vazio padrão para usar como base se não houver texto salvo
        text = EMPTY_DATA.contract.contractBody || '';
     }
 
@@ -49,19 +46,30 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
   const handleDownloadPDF = async () => {
     if (!contractRef.current) return;
     setIsGenerating(true);
+    
     const opt = {
-      margin: 15,
+      margin: 10, // Margem de segurança para evitar cortes
       filename: `Contrato_VBR_${data.clientName.replace(/\s+/g, '_')}.pdf`,
       image: { type: 'jpeg', quality: 1.0 },
-      html2canvas: { scale: 2.5, useCORS: true, backgroundColor: '#ffffff' },
+      html2canvas: { 
+        scale: 2, 
+        useCORS: true, 
+        backgroundColor: '#ffffff',
+        scrollY: 0, // CRUCIAL: Corrige página em branco ao garantir que renderize do topo
+        windowWidth: 794 // Largura A4 em px (aprox) para consistência
+      },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
+    
     try {
       // @ts-ignore
       await html2pdf().set(opt).from(contractRef.current).save();
     } catch (err) {
       alert("Erro ao gerar PDF.");
-    } finally { setIsGenerating(false); }
+      console.error(err);
+    } finally { 
+      setIsGenerating(false); 
+    }
   };
 
   const street = data.contract.street || '';
@@ -82,7 +90,8 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
         </button>
       </div>
 
-      <div ref={contractRef} className="bg-white p-[20mm] w-[210mm] min-h-[297mm] mx-auto text-black font-sans leading-[1.5] text-[10pt] shadow-2xl print:shadow-none overflow-hidden text-justify">
+      {/* Container com fundo branco explícito e cor de texto preta para garantir renderização correta */}
+      <div ref={contractRef} className="bg-white text-black p-[15mm] w-[210mm] min-h-[297mm] mx-auto font-sans leading-[1.5] text-[10pt] shadow-2xl print:shadow-none overflow-visible text-justify">
         <div className="mb-8">
           <h1 className="font-bold text-center text-sm mb-6 uppercase">CONTRATO DE ASSESSORIA EM ESTILO DE VIDA SAUDÁVEL</h1>
           
