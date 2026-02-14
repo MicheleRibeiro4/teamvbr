@@ -20,9 +20,9 @@ a) O contratado NÃO É PROFISSIONAL DE EDUCAÇÃO FÍSICA, NUTRIÇÃO OU MEDICI
 b) O contratado NÃO POSSUI REGISTRO nos respectivos conselhos profissionais (CREF, CRN, CRM);
 c) Os materiais fornecidos NÃO CONSTITUEM PRESCRIÇÃO INDIVIDUALIZADA, PERIODIZAÇÃO CIENTÍFICA, AVALIAÇÃO FUNCIONAL OU DIAGNÓSTICO.
 1.3. NÃO constitui objeto deste contrato:
-• Elaboração de programas de treinamento com base em avaliação física;
-• Diagnóstico, tratamento, prevenção ou reabilitação de lesões, doenças ou condições de saúde;
-• Qualquer atividade privativa de profissionais registrados no CREF, CRN ou CRM.
+a) Elaboração de programas de treinamento com base em avaliação física;
+b) Diagnóstico, tratamento, prevenção ou reabilitação de lesões, doenças ou condições de saúde;
+c) Qualquer atividade privativa de profissionais registrados no CREF, CRN ou CRM.
 
 CLÁUSULA 2 – DURAÇÃO E RENOVAÇÃO
 2.1. O presente contrato vigorará por [DURATION] dias, com início em [START_DATE] e término em [END_DATE].
@@ -30,8 +30,8 @@ CLÁUSULA 2 – DURAÇÃO E RENOVAÇÃO
 2.3. O início da prestação dos serviços está condicionado à confirmação do pagamento.
 
 CLÁUSULA 3 – VALOR E FORMA DE PAGAMENTO
-3.1. O valor total da assessoria é de R$ [VALUE] ([VALUE_WORDS]).
-3.2. Forma de pagamento: [PAYMENT_METHOD]
+3.1. O valor total da assessoria é de R$ [VALUE] ([VALUE_WORDS]). 
+3.2. Forma de pagamento:[PAYMENT_METHOD].
 
 CLÁUSULA 4 – RESPONSABILIDADES E DECLARAÇÕES DO CONTRATANTE
 4.1. O contratante declara, sob as penas da lei:

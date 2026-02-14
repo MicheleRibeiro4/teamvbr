@@ -94,15 +94,18 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
       `;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3-flash-preview',
         contents: prompt,
         config: {
           responseMimeType: 'application/json'
         }
       });
 
-      const textResponse = response.text;
+      let textResponse = response.text;
       if (textResponse) {
+        // Remove markdown formatting if present
+        textResponse = textResponse.replace(/^```json\s*/, '').replace(/^```\s*/, '').replace(/\s*```$/, '');
+        
         const generatedData = JSON.parse(textResponse);
 
         // Mesclar dados gerados com os dados atuais
@@ -128,9 +131,9 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
         onChange(newData);
         alert("Protocolo gerado com sucesso considerando sua estratégia!");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro na IA:", error);
-      alert("Erro ao gerar protocolo. Verifique a conexão ou tente novamente.");
+      alert(`Erro ao gerar protocolo: ${error.message || "Verifique a conexão ou tente novamente."}`);
     } finally {
       setIsGenerating(false);
     }

@@ -1,4 +1,3 @@
-
 import React, { useRef, useState } from 'react';
 import { ProtocolData } from '../types';
 import { LOGO_VBR_BLACK } from '../constants';
@@ -46,14 +45,14 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
   };
 
   // CSS Estrito para A4 (210mm x 296mm)
-  const pageStyle = { 
+  const pageStyle: React.CSSProperties = { 
     width: '210mm', 
     height: '296mm', 
     padding: '15mm', 
     backgroundColor: 'white', 
     color: 'black', 
-    position: 'relative' as const, 
-    boxSizing: 'border-box' as const, 
+    position: 'relative', 
+    boxSizing: 'border-box', 
     display: 'block',
     overflow: 'hidden', 
     pageBreakAfter: 'always', 
@@ -61,7 +60,7 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
   };
 
   // Estilo específico para a última página
-  const lastPageStyle = {
+  const lastPageStyle: React.CSSProperties = {
     ...pageStyle,
     padding: '0', // Remove padding para o quadrado pegar tudo se necessário
     pageBreakAfter: 'auto',
