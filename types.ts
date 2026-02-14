@@ -1,5 +1,6 @@
 
 export interface PhysicalData {
+  date: string; // Data das medidas
   weight: string;
   height: string;
   age: string;
@@ -82,7 +83,7 @@ export interface ProtocolData {
   macros: Macronutrients;
   meals: Meal[];
   supplements: Supplement[];
-  tips: string[]; // Novo campo para dicas
+  tips: string[];
   trainingFrequency: string;
   trainingDays: TrainingDay[];
   generalObservations: string;

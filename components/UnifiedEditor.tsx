@@ -39,7 +39,7 @@ const UnifiedEditor: React.FC<Props> = ({ data, onChange, onBack }) => {
           </div>
         </div>
 
-        {/* LADO DO PREVIEW (DUPLO) */}
+        {/* LADO DO PREVIEW (DUPLO) - ESCALA REDUZIDA */}
         <div className="w-full xl:w-3/5 flex flex-col items-center gap-6">
            <div className="no-print flex gap-4 bg-black p-2 rounded-[1.5rem] border border-white/10 shadow-2xl">
               <button 
@@ -56,8 +56,8 @@ const UnifiedEditor: React.FC<Props> = ({ data, onChange, onBack }) => {
               </button>
            </div>
            
-           <div className="w-full flex justify-center bg-white/5 p-4 md:p-10 rounded-[4rem] border-2 border-dashed border-white/10 relative overflow-hidden min-h-[1000px]">
-              <div className="transform scale-90 md:scale-95 xl:scale-100 origin-top">
+           <div className="w-full flex justify-center bg-white/5 p-4 md:p-10 rounded-[4rem] border-2 border-dashed border-white/10 relative overflow-hidden min-h-[900px]">
+              <div className="transform scale-[0.65] md:scale-[0.7] xl:scale-[0.75] origin-top">
                 {previewMode === 'protocol' ? (
                   <ProtocolPreview data={data} />
                 ) : (

@@ -1,8 +1,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { ProtocolData, Meal, Supplement, TrainingDay } from '../types';
-import { Plus, Trash2, Activity, Utensils, Dumbbell, Target, Sparkles, Loader2, User, Pill, ClipboardList, ChevronLeft, Calendar, DollarSign, MapPin, Phone, Mail, UserCheck } from 'lucide-react';
-import { GoogleGenAI, Type } from "@google/genai";
+import { Plus, Trash2, Activity, Utensils, Dumbbell, Target, Sparkles, Loader2, User, Pill, ClipboardList, ChevronLeft } from 'lucide-react';
+import { GoogleGenAI } from "@google/genai";
 import { CONSULTANT_DEFAULT } from '../constants';
 
 interface Props {
@@ -27,6 +27,14 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
     for (let i = 0; i < keys.length - 1; i++) current = current[keys[i]];
     current[keys[keys.length - 1]] = value;
     onChange(newData);
+  };
+
+  const addItem = (list: 'meals' | 'supplements' | 'trainingDays', item: any) => {
+    handleChange(list, [...(data[list] as any[]), { ...item, id: Math.random().toString(36).substr(2, 9) }]);
+  };
+
+  const removeItem = (list: 'meals' | 'supplements' | 'trainingDays', id: string) => {
+    handleChange(list, (data[list] as any[]).filter(i => i.id !== id));
   };
 
   const handleAISuggestion = async () => {
@@ -91,24 +99,6 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
     }
   };
 
-  const addMeal = () => {
-    const newMeal: Meal = { id: Date.now().toString(), time: '00:00', name: 'Nova Refeição', details: '' };
-    handleChange('meals', [...data.meals, newMeal]);
-  };
-
-  const addSupplement = () => {
-    const newSupplement: Supplement = { id: Date.now().toString(), name: '', dosage: '', timing: '' };
-    handleChange('supplements', [...data.supplements, newSupplement]);
-  };
-
-  const addTrainingDay = () => {
-    const newDay: TrainingDay = { 
-      id: Date.now().toString(), title: 'DIA NOVO', focus: 'Foco do Treino', 
-      exercises: [{ id: 'ex-' + Date.now(), name: 'Exercício 1', sets: '3x 12' }] 
-    };
-    handleChange('trainingDays', [...data.trainingDays, newDay]);
-  };
-
   const labelClass = "block text-[9px] font-black text-white/40 mb-1.5 uppercase tracking-widest";
   const inputClass = "w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:ring-2 focus:ring-[#d4af37] outline-none font-bold text-white text-sm transition-all";
   const sectionHeaderClass = "flex items-center gap-2 mb-8 border-b border-white/5 pb-4 mt-8 first:mt-0";
@@ -124,90 +114,25 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
         </button>
       )}
 
-      {/* IDENTIFICAÇÃO + DADOS JURÍDICOS INTEGRADOS */}
-      <section>
-        <div className={sectionHeaderClass}>
-          <User className="text-[#d4af37]" size={20} />
-          <h2 className="text-xl font-black text-white uppercase tracking-tighter">Identificação & Dados do Contrato</h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="md:col-span-2">
-            <label className={labelClass}>Nome Completo do Aluno</label>
-            <input className={inputClass + " !text-lg !font-black !text-[#d4af37]"} value={data.clientName} onChange={(e) => handleChange('clientName', e.target.value)} />
-          </div>
-          <div>
-            <label className={labelClass}>CPF</label>
-            <input className={inputClass} value={data.contract.cpf} onChange={(e) => handleChange('contract.cpf', e.target.value)} placeholder="000.000.000-00" />
-          </div>
-          <div>
-            <label className={labelClass}>Telefone / WhatsApp</label>
-            <input className={inputClass} value={data.contract.phone} onChange={(e) => handleChange('contract.phone', e.target.value)} placeholder="(00) 00000-0000" />
-          </div>
-          <div className="md:col-span-2">
-            <label className={labelClass}>E-mail</label>
-            <input className={inputClass} value={data.contract.email} onChange={(e) => handleChange('contract.email', e.target.value)} placeholder="aluno@email.com" />
-          </div>
-          <div className="md:col-span-2">
-            <label className={labelClass}>Endereço Residencial</label>
-            <input className={inputClass} value={data.contract.address} onChange={(e) => handleChange('contract.address', e.target.value)} placeholder="Rua, Número, Bairro, Cidade - UF" />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-          <div className="bg-white/5 p-6 rounded-3xl border border-white/5">
-            <div className="flex items-center gap-2 mb-4">
-              <Calendar className="text-[#d4af37]" size={16} />
-              <h3 className="text-xs font-black text-white uppercase tracking-widest">Vigência</h3>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className={labelClass}>Data Início</label>
-                <input className={inputClass + " !p-3"} value={data.contract.startDate} onChange={(e) => handleChange('contract.startDate', e.target.value)} placeholder="DD/MM/AAAA" />
-              </div>
-              <div>
-                <label className={labelClass}>Data Término</label>
-                <input className={inputClass + " !p-3"} value={data.contract.endDate} onChange={(e) => handleChange('contract.endDate', e.target.value)} placeholder="DD/MM/AAAA" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white/5 p-6 rounded-3xl border border-white/5">
-            <div className="flex items-center gap-2 mb-4">
-              <DollarSign className="text-[#d4af37]" size={16} />
-              <h3 className="text-xs font-black text-white uppercase tracking-widest">Financeiro</h3>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className={labelClass}>Valor Total (R$)</label>
-                <input className={inputClass + " !p-3"} value={data.contract.planValue} onChange={(e) => handleChange('contract.planValue', e.target.value)} placeholder="0,00" />
-              </div>
-              <div>
-                <label className={labelClass}>Pagamento</label>
-                <select className={inputClass + " !p-3"} value={data.contract.paymentMethod} onChange={(e) => handleChange('contract.paymentMethod', e.target.value)}>
-                   <option value="Pix">Pix</option>
-                   <option value="Cartão">Cartão</option>
-                   <option value="Dinheiro">Dinheiro</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
+      {/* DADOS FÍSICOS */}
       <section>
         <div className={sectionHeaderClass}>
           <Activity className="text-[#d4af37]" size={20} />
           <h2 className="text-xl font-black text-white uppercase tracking-tighter">Dados Físicos & Bioimpedância</h2>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div><label className={labelClass}>Título Protocolo</label><input className={inputClass} value={data.protocolTitle} onChange={(e) => handleChange('protocolTitle', e.target.value)} placeholder="Ex: Hipertrofia" /></div>
+          <div className="col-span-2">
+            <label className={labelClass}>Data da Avaliação</label>
+            <input type="text" className={inputClass} value={data.physicalData.date} onChange={(e) => handleChange('physicalData.date', e.target.value)} placeholder="DD/MM/AAAA" />
+          </div>
+          <div className="col-span-2">
+            <label className={labelClass}>Título Protocolo</label>
+            <input className={inputClass} value={data.protocolTitle} onChange={(e) => handleChange('protocolTitle', e.target.value)} placeholder="Ex: Hipertrofia" />
+          </div>
           <div><label className={labelClass}>Idade</label><input className={inputClass} value={data.physicalData.age} onChange={(e) => handleChange('physicalData.age', e.target.value)} /></div>
           <div><label className={labelClass}>Peso (kg)</label><input className={inputClass} value={data.physicalData.weight} onChange={(e) => handleChange('physicalData.weight', e.target.value)} /></div>
           <div><label className={labelClass}>Altura (m)</label><input className={inputClass} value={data.physicalData.height} onChange={(e) => handleChange('physicalData.height', e.target.value)} /></div>
           <div><label className={labelClass}>Gordura (%)</label><input className={inputClass} value={data.physicalData.bodyFat} onChange={(e) => handleChange('physicalData.bodyFat', e.target.value)} /></div>
-          <div><label className={labelClass}>Massa Musc (kg)</label><input className={inputClass} value={data.physicalData.muscleMass} onChange={(e) => handleChange('physicalData.muscleMass', e.target.value)} /></div>
-          <div><label className={labelClass}>G. Visceral</label><input className={inputClass} value={data.physicalData.visceralFat} onChange={(e) => handleChange('physicalData.visceralFat', e.target.value)} /></div>
-          <div><label className={labelClass}>IMC</label><input className={inputClass} value={data.physicalData.imc} onChange={(e) => handleChange('physicalData.imc', e.target.value)} /></div>
         </div>
       </section>
 
@@ -233,185 +158,217 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
         </button>
       </div>
 
+      {/* NUTRIÇÃO */}
       <section>
         <div className={sectionHeaderClass}>
-          <Target className="text-[#d4af37]" size={20} />
-          <h2 className="text-xl font-black text-white uppercase tracking-tighter">Plano Nutricional</h2>
+          <Utensils className="text-[#d4af37]" size={20} />
+          <h2 className="text-xl font-black text-white uppercase tracking-tighter">Nutrição & Macros</h2>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-           <div><label className={labelClass}>Meta Calórica</label><input className={inputClass} value={data.kcalGoal} onChange={(e) => handleChange('kcalGoal', e.target.value)} /></div>
-           <div><label className={labelClass}>Subtexto (Ex: Superávit)</label><input className={inputClass} value={data.kcalSubtext} onChange={(e) => handleChange('kcalSubtext', e.target.value)} /></div>
-        </div>
-        <div className="grid grid-cols-3 gap-3">
-           {['protein', 'carbs', 'fats'].map(m => (
-             <div key={m} className="bg-white/5 p-4 rounded-2xl border border-white/10">
-               <label className={labelClass}>{m.toUpperCase()} (g)</label>
-               <input className={inputClass + " !bg-transparent !border-none !p-0 !text-xl"} value={(data.macros as any)[m].value} onChange={(e) => handleChange(`macros.${m}.value`, e.target.value)} />
-             </div>
-           ))}
-        </div>
-        <div className="mt-4">
-          <label className={labelClass}>Estratégia do Coach</label>
-          <textarea className={inputClass + " h-24"} value={data.nutritionalStrategy} onChange={(e) => handleChange('nutritionalStrategy', e.target.value)} />
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className={labelClass}>Estratégia</label>
+              <textarea className={inputClass + " h-32"} value={data.nutritionalStrategy} onChange={(e) => handleChange('nutritionalStrategy', e.target.value)} />
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className={labelClass}>Meta Calórica</label>
+                <input className={inputClass} value={data.kcalGoal} onChange={(e) => handleChange('kcalGoal', e.target.value)} placeholder="3.200 kcal" />
+              </div>
+              <div>
+                <label className={labelClass}>Subtítulo Meta</label>
+                <input className={inputClass} value={data.kcalSubtext} onChange={(e) => handleChange('kcalSubtext', e.target.value)} placeholder="(Foco Ganhos Limpos)" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-3 gap-4">
+            {['protein', 'carbs', 'fats'].map((macro) => (
+              <div key={macro} className="bg-white/5 p-4 rounded-2xl border border-white/5">
+                <label className={labelClass}>{macro === 'protein' ? 'Proteína' : macro === 'carbs' ? 'Carbo' : 'Gordura'}</label>
+                <input className={inputClass + " mb-2"} value={data.macros[macro as keyof typeof data.macros].value} onChange={(e) => handleChange(`macros.${macro}.value`, e.target.value)} placeholder="g" />
+                <input className={inputClass + " p-2 text-[10px]"} value={data.macros[macro as keyof typeof data.macros].ratio} onChange={(e) => handleChange(`macros.${macro}.ratio`, e.target.value)} placeholder="ratio" />
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* REFEIÇÕES */}
       <section>
-        <div className="flex justify-between items-center mb-8 border-b border-white/5 pb-4">
-           <div className="flex items-center gap-2">
-             <Utensils className="text-[#d4af37]" size={20} />
-             <h2 className="text-xl font-black text-white uppercase tracking-tighter">Refeições</h2>
-           </div>
-           <button onClick={addMeal} className="text-[#d4af37] text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
-              <Plus size={14}/> Add Refeição
-           </button>
+        <div className={sectionHeaderClass}>
+          <Target className="text-[#d4af37]" size={20} />
+          <h2 className="text-xl font-black text-white uppercase tracking-tighter">Plano Alimentar</h2>
         </div>
         <div className="space-y-4">
           {data.meals.map((meal, idx) => (
-            <div key={meal.id} className="p-4 bg-white/5 rounded-2xl border border-white/5">
-               <div className="flex gap-3 mb-3">
-                  <input className={inputClass + " w-20 p-2"} value={meal.time} onChange={(e) => {
-                    const newMeals = [...data.meals];
-                    newMeals[idx].time = e.target.value;
-                    handleChange('meals', newMeals);
+            <div key={meal.id} className="bg-white/5 p-6 rounded-3xl border border-white/5 relative group">
+              <button onClick={() => removeItem('meals', meal.id)} className="absolute top-4 right-4 text-white/10 hover:text-red-500 transition-colors"><Trash2 size={16} /></button>
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                <div className="md:col-span-2">
+                  <label className={labelClass}>Hora</label>
+                  <input className={inputClass} value={meal.time} onChange={(e) => {
+                    const meals = [...data.meals];
+                    meals[idx].time = e.target.value;
+                    handleChange('meals', meals);
                   }} />
-                  <input className={inputClass + " flex-1 p-2"} value={meal.name} onChange={(e) => {
-                    const newMeals = [...data.meals];
-                    newMeals[idx].name = e.target.value;
-                    handleChange('meals', newMeals);
+                </div>
+                <div className="md:col-span-10">
+                  <label className={labelClass}>Nome da Refeição</label>
+                  <input className={inputClass} value={meal.name} onChange={(e) => {
+                    const meals = [...data.meals];
+                    meals[idx].name = e.target.value;
+                    handleChange('meals', meals);
                   }} />
-                  <button onClick={() => handleChange('meals', data.meals.filter(m => m.id !== meal.id))} className="text-white/20 hover:text-red-500">
-                    <Trash2 size={16}/>
-                  </button>
-               </div>
-               <textarea className={inputClass + " h-20 text-xs"} value={meal.details} onChange={(e) => {
-                  const newMeals = [...data.meals];
-                  newMeals[idx].details = e.target.value;
-                  handleChange('meals', newMeals);
-               }} />
+                </div>
+                <div className="md:col-span-12">
+                  <label className={labelClass}>Detalhes / Alimentos</label>
+                  <textarea className={inputClass + " h-24"} value={meal.details} onChange={(e) => {
+                    const meals = [...data.meals];
+                    meals[idx].details = e.target.value;
+                    handleChange('meals', meals);
+                  }} />
+                </div>
+              </div>
             </div>
           ))}
+          <button onClick={() => addItem('meals', { time: '00:00', name: '', details: '' })} className="w-full p-4 border-2 border-dashed border-white/10 rounded-2xl flex items-center justify-center gap-2 text-white/40 hover:text-[#d4af37] hover:border-[#d4af37]/30 transition-all font-black text-[10px] uppercase tracking-widest">
+            <Plus size={16} /> Adicionar Refeição
+          </button>
         </div>
       </section>
 
-      {/* SUPLEMENTAÇÃO */}
+      {/* SUPLEMENTOS */}
       <section>
-        <div className="flex justify-between items-center mb-8 border-b border-white/5 pb-4">
-           <div className="flex items-center gap-2">
-             <Pill className="text-[#d4af37]" size={20} />
-             <h2 className="text-xl font-black text-white uppercase tracking-tighter">Suplementação</h2>
-           </div>
-           <button onClick={addSupplement} className="text-[#d4af37] text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
-              <Plus size={14}/> Add Suplemento
-           </button>
+        <div className={sectionHeaderClass}>
+          <Pill className="text-[#d4af37]" size={20} />
+          <h2 className="text-xl font-black text-white uppercase tracking-tighter">Suplementação</h2>
         </div>
         <div className="space-y-4">
           {data.supplements.map((supp, idx) => (
-            <div key={supp.id} className="p-5 bg-white/5 rounded-2xl border border-white/5 grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-               <div className="md:col-span-4">
+            <div key={supp.id} className="bg-white/5 p-6 rounded-3xl border border-white/5 relative">
+              <button onClick={() => removeItem('supplements', supp.id)} className="absolute top-4 right-4 text-white/10 hover:text-red-500 transition-colors"><Trash2 size={16} /></button>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
                   <label className={labelClass}>Suplemento</label>
-                  <input className={inputClass + " p-2 text-xs"} value={supp.name} onChange={(e) => {
-                    const newSupps = [...data.supplements];
-                    newSupps[idx].name = e.target.value;
-                    handleChange('supplements', newSupps);
+                  <input className={inputClass} value={supp.name} onChange={(e) => {
+                    const supps = [...data.supplements];
+                    supps[idx].name = e.target.value;
+                    handleChange('supplements', supps);
                   }} />
-               </div>
-               <div className="md:col-span-3">
-                  <label className={labelClass}>Dose</label>
-                  <input className={inputClass + " p-2 text-xs"} value={supp.dosage} onChange={(e) => {
-                    const newSupps = [...data.supplements];
-                    newSupps[idx].dosage = e.target.value;
-                    handleChange('supplements', newSupps);
+                </div>
+                <div>
+                  <label className={labelClass}>Dosagem</label>
+                  <input className={inputClass} value={supp.dosage} onChange={(e) => {
+                    const supps = [...data.supplements];
+                    supps[idx].dosage = e.target.value;
+                    handleChange('supplements', supps);
                   }} />
-               </div>
-               <div className="md:col-span-4">
-                  <label className={labelClass}>Timing</label>
-                  <input className={inputClass + " p-2 text-xs"} value={supp.timing} onChange={(e) => {
-                    const newSupps = [...data.supplements];
-                    newSupps[idx].timing = e.target.value;
-                    handleChange('supplements', newSupps);
+                </div>
+                <div>
+                  <label className={labelClass}>Horário/Momento</label>
+                  <input className={inputClass} value={supp.timing} onChange={(e) => {
+                    const supps = [...data.supplements];
+                    supps[idx].timing = e.target.value;
+                    handleChange('supplements', supps);
                   }} />
-               </div>
-               <div className="md:col-span-1 flex justify-end">
-                  <button onClick={() => handleChange('supplements', data.supplements.filter(s => s.id !== supp.id))} className="text-white/20 hover:text-red-500">
-                    <Trash2 size={16}/>
-                  </button>
-               </div>
+                </div>
+              </div>
             </div>
           ))}
+          <button onClick={() => addItem('supplements', { name: '', dosage: '', timing: '' })} className="w-full p-4 border-2 border-dashed border-white/10 rounded-2xl flex items-center justify-center gap-2 text-white/40 hover:text-[#d4af37] hover:border-[#d4af37]/30 transition-all font-black text-[10px] uppercase tracking-widest">
+            <Plus size={16} /> Adicionar Suplemento
+          </button>
         </div>
       </section>
 
-      {/* TREINAMENTO */}
+      {/* TREINOS */}
       <section>
-        <div className="flex justify-between items-center mb-8 border-b border-white/5 pb-4">
-           <div className="flex items-center gap-2">
-             <Dumbbell className="text-[#d4af37]" size={20} />
-             <h2 className="text-xl font-black text-white uppercase tracking-tighter">Treinamento</h2>
-           </div>
-           <button onClick={addTrainingDay} className="text-[#d4af37] text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
-              <Plus size={14}/> Novo Dia
-           </button>
-        </div>
-        <div>
-           <label className={labelClass}>Frequência Semanal</label>
-           <input className={inputClass + " mb-6"} value={data.trainingFrequency} onChange={(e) => handleChange('trainingFrequency', e.target.value)} />
+        <div className={sectionHeaderClass}>
+          <Dumbbell className="text-[#d4af37]" size={20} />
+          <h2 className="text-xl font-black text-white uppercase tracking-tighter">Divisão de Treino</h2>
         </div>
         <div className="space-y-6">
+          <div className="grid grid-cols-1 gap-4">
+            <label className={labelClass}>Frequência Semanal</label>
+            <input className={inputClass} value={data.trainingFrequency} onChange={(e) => handleChange('trainingFrequency', e.target.value)} placeholder="Ex: 5 dias por semana" />
+          </div>
+
           {data.trainingDays.map((day, dIdx) => (
-            <div key={day.id} className="p-5 bg-white/5 rounded-2xl border border-white/10">
-               <div className="grid grid-cols-2 gap-4 mb-4">
+            <div key={day.id} className="bg-white/5 p-8 rounded-[2.5rem] border border-white/10 space-y-6">
+              <div className="flex justify-between items-center">
+                <div className="flex-1 grid grid-cols-2 gap-4">
                   <div>
-                    <label className={labelClass}>Título do Dia</label>
-                    <input className={inputClass + " !text-[#d4af37] !font-black"} value={day.title} onChange={(e) => {
-                      const newDays = [...data.trainingDays];
-                      newDays[dIdx].title = e.target.value;
-                      handleChange('trainingDays', newDays);
+                    <label className={labelClass}>Título do Treino</label>
+                    <input className={inputClass} value={day.title} onChange={(e) => {
+                      const days = [...data.trainingDays];
+                      days[dIdx].title = e.target.value;
+                      handleChange('trainingDays', days);
                     }} />
                   </div>
                   <div>
-                    <label className={labelClass}>Foco</label>
+                    <label className={labelClass}>Foco Muscular</label>
                     <input className={inputClass} value={day.focus} onChange={(e) => {
-                      const newDays = [...data.trainingDays];
-                      newDays[dIdx].focus = e.target.value;
-                      handleChange('trainingDays', newDays);
+                      const days = [...data.trainingDays];
+                      days[dIdx].focus = e.target.value;
+                      handleChange('trainingDays', days);
                     }} />
                   </div>
-               </div>
-               <div className="space-y-2">
-                 {day.exercises.map((ex, eIdx) => (
-                   <div key={ex.id} className="flex gap-2">
-                      <input className={inputClass + " flex-1 text-xs p-2"} value={ex.name} onChange={(e) => {
-                        const newDays = [...data.trainingDays];
-                        newDays[dIdx].exercises[eIdx].name = e.target.value;
-                        handleChange('trainingDays', newDays);
-                      }} />
-                      <input className={inputClass + " w-24 text-center text-xs p-2"} value={ex.sets} onChange={(e) => {
-                        const newDays = [...data.trainingDays];
-                        newDays[dIdx].exercises[eIdx].sets = e.target.value;
-                        handleChange('trainingDays', newDays);
-                      }} />
+                </div>
+                <button onClick={() => removeItem('trainingDays', day.id)} className="ml-4 p-4 text-white/10 hover:text-red-500 transition-colors"><Trash2 size={20} /></button>
+              </div>
+
+              <div className="space-y-3">
+                <label className={labelClass}>Exercícios</label>
+                {day.exercises.map((ex, eIdx) => (
+                  <div key={ex.id} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+                    <div className="md:col-span-8">
+                      <input className={inputClass + " p-3"} value={ex.name} onChange={(e) => {
+                        const days = [...data.trainingDays];
+                        days[dIdx].exercises[eIdx].name = e.target.value;
+                        handleChange('trainingDays', days);
+                      }} placeholder="Nome do Exercício" />
+                    </div>
+                    <div className="md:col-span-3">
+                      <input className={inputClass + " p-3"} value={ex.sets} onChange={(e) => {
+                        const days = [...data.trainingDays];
+                        days[dIdx].exercises[eIdx].sets = e.target.value;
+                        handleChange('trainingDays', days);
+                      }} placeholder="Séries x Reps" />
+                    </div>
+                    <div className="md:col-span-1">
                       <button onClick={() => {
-                        const newDays = [...data.trainingDays];
-                        newDays[dIdx].exercises = newDays[dIdx].exercises.filter(x => x.id !== ex.id);
-                        handleChange('trainingDays', newDays);
-                      }} className="text-white/10 hover:text-red-500">
-                        <Trash2 size={14}/>
-                      </button>
-                   </div>
-                 ))}
-                 <button onClick={() => {
-                   const newDays = [...data.trainingDays];
-                   newDays[dIdx].exercises.push({ id: Date.now().toString(), name: '', sets: '' });
-                   handleChange('trainingDays', newDays);
-                 }} className="text-[8px] font-black text-white/20 uppercase tracking-widest mt-2">
-                    + Add Exercício
-                 </button>
-               </div>
+                        const days = [...data.trainingDays];
+                        days[dIdx].exercises = days[dIdx].exercises.filter(i => i.id !== ex.id);
+                        handleChange('trainingDays', days);
+                      }} className="text-white/10 hover:text-red-500 p-2"><Trash2 size={16} /></button>
+                    </div>
+                  </div>
+                ))}
+                <button onClick={() => {
+                  const days = [...data.trainingDays];
+                  days[dIdx].exercises.push({ id: Math.random().toString(36).substr(2, 9), name: '', sets: '' });
+                  handleChange('trainingDays', days);
+                }} className="flex items-center gap-2 text-[9px] font-black uppercase text-[#d4af37]/60 hover:text-[#d4af37] transition-colors">
+                  <Plus size={14} /> Adicionar Exercício
+                </button>
+              </div>
             </div>
           ))}
+
+          <button onClick={() => addItem('trainingDays', { title: '', focus: '', exercises: [] })} className="w-full p-6 border-2 border-dashed border-white/10 rounded-[2.5rem] flex items-center justify-center gap-2 text-white/40 hover:text-[#d4af37] hover:border-[#d4af37]/30 transition-all font-black text-[10px] uppercase tracking-widest">
+            <Plus size={20} /> Adicionar Novo Dia de Treino
+          </button>
         </div>
+      </section>
+
+      {/* OBSERVAÇÕES */}
+      <section>
+        <div className={sectionHeaderClass}>
+          <ClipboardList className="text-[#d4af37]" size={20} />
+          <h2 className="text-xl font-black text-white uppercase tracking-tighter">Observação</h2>
+        </div>
+        <textarea className={inputClass + " h-40"} value={data.generalObservations} onChange={(e) => handleChange('generalObservations', e.target.value)} placeholder="Frase final ou avisos importantes..." />
       </section>
     </div>
   );
