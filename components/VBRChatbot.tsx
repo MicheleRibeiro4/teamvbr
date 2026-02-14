@@ -14,10 +14,12 @@ const VBRChatbot: React.FC = () => {
   const chatInstance = useRef<Chat | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Inicializa o chat quando o componente monta ou quando o chat é aberto pela primeira vez
   const initChat = () => {
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) return;
+
     if (!chatInstance.current) {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey });
       chatInstance.current = ai.chats.create({
         model: 'gemini-3-flash-preview',
         config: {
@@ -49,8 +51,9 @@ const VBRChatbot: React.FC = () => {
 
     try {
       if (!chatInstance.current) initChat();
+      if (!chatInstance.current) throw new Error("IA não inicializada");
       
-      const responseStream = await chatInstance.current!.sendMessageStream({ message: userMessage });
+      const responseStream = await chatInstance.current.sendMessageStream({ message: userMessage });
       
       let fullText = '';
       setMessages(prev => [...prev, { role: 'model', text: '' }]);
@@ -90,8 +93,6 @@ const VBRChatbot: React.FC = () => {
 
   return (
     <div className={`fixed bottom-8 left-8 z-[100] bg-black/80 backdrop-blur-2xl border border-white/10 rounded-[2rem] shadow-2xl flex flex-col transition-all duration-300 overflow-hidden ${isMinimized ? 'h-16 w-64' : 'h-[600px] w-[380px]'}`}>
-      
-      {/* Header */}
       <div className="p-4 bg-[#d4af37] flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center text-[#d4af37]">
@@ -114,7 +115,6 @@ const VBRChatbot: React.FC = () => {
 
       {!isMinimized && (
         <>
-          {/* Chat Body */}
           <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
             {messages.map((msg, idx) => (
               <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2`}>
@@ -130,7 +130,6 @@ const VBRChatbot: React.FC = () => {
             ))}
           </div>
 
-          {/* Input Area */}
           <div className="p-4 border-t border-white/5 bg-black/40">
             <div className="relative">
               <input
@@ -149,7 +148,6 @@ const VBRChatbot: React.FC = () => {
                 {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
               </button>
             </div>
-            <p className="text-[8px] text-white/20 text-center mt-3 uppercase font-black tracking-widest">Powered by VBR IA Technology</p>
           </div>
         </>
       )}

@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { ProtocolData, Meal, Supplement, TrainingDay } from '../types';
-import { Plus, Trash2, Activity, Utensils, Dumbbell, Target, Sparkles, Loader2, User, Pill, ClipboardList, ChevronLeft, ShieldCheck, DollarSign, Calendar } from 'lucide-react';
+import { Plus, Trash2, Activity, Utensils, Dumbbell, Target, Sparkles, Loader2, User, Pill, ClipboardList, ChevronLeft, ShieldCheck, DollarSign, Calendar, Clock } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 import { CONSULTANT_DEFAULT } from '../constants';
 
@@ -13,12 +13,113 @@ interface Props {
 
 const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [periodType, setPeriodType] = useState<'custom' | 'trimestral' | 'semestral'>('custom');
   
   useEffect(() => {
     if (!data.consultantName) {
       onChange({ ...data, ...CONSULTANT_DEFAULT });
     }
   }, [data.consultantName]);
+
+  // Máscara para Data (DD/MM/AAAA) rigorosa
+  const formatDateInput = (value: string) => {
+    const v = value.replace(/\D/g, '');
+    if (v.length <= 2) return v;
+    if (v.length <= 4) return v.replace(/(\d{2})(\d)/, '$1/$2');
+    return v.replace(/(\d{2})(\d{2})(\d)/, '$1/$2/$3').substring(0, 10);
+  };
+
+  // Cálculo automático do IMC
+  useEffect(() => {
+    const weight = parseFloat(data.physicalData.weight.replace(',', '.'));
+    const height = parseFloat(data.physicalData.height.replace(',', '.'));
+    if (weight > 0 && height > 0) {
+      const hMeters = height > 3 ? height / 100 : height;
+      const imcValue = (weight / (hMeters * hMeters)).toFixed(1);
+      if (data.physicalData.imc !== imcValue) {
+        handleChange('physicalData.imc', imcValue);
+      }
+    }
+  }, [data.physicalData.weight, data.physicalData.height]);
+
+  // Lógica de Extenso Financeiro (Reais e Centavos)
+  const converterParaExtenso = (num: number): string => {
+    if (num === 0) return "Zero reais";
+    
+    const unidades = ["", "um", "dois", "três", "quatro", "cinco", "seis", "sete", "oito", "nove"];
+    const dezenas10 = ["dez", "onze", "doze", "treze", "quatorze", "quinze", "dezesseis", "dezessete", "dezoito", "dezenove"];
+    const dezenas = ["", "", "vinte", "trinta", "quarenta", "cinquenta", "sessenta", "setenta", "oitenta", "noventa"];
+    const centenas = ["", "cento", "duzentos", "trezentos", "quatrocentos", "quinhentos", "seiscentos", "setecentos", "oitocentos", "novecentos"];
+
+    const conv = (n: number): string => {
+      if (n === 0) return "";
+      if (n === 100) return "cem";
+      let s = "";
+      if (n >= 100) {
+        s += centenas[Math.floor(n / 100)];
+        n %= 100;
+        if (n > 0) s += " e ";
+      }
+      if (n >= 20) {
+        s += dezenas[Math.floor(n / 10)];
+        n %= 10;
+        if (n > 0) s += " e ";
+      } else if (n >= 10) {
+        s += dezenas10[n - 10];
+        n = 0;
+      }
+      if (n > 0) s += unidades[n];
+      return s;
+    };
+
+    let n = Math.floor(num);
+    let c = Math.round((num - n) * 100);
+    let res = "";
+
+    if (n >= 1000) {
+      const mil = Math.floor(n / 1000);
+      res += (mil === 1 ? "" : conv(mil)) + " mil";
+      n %= 1000;
+      if (n > 0) res += (n < 100 || n % 100 === 0 ? " e " : ", ");
+    }
+    
+    if (n > 0 || res === "") res += conv(n);
+    res += (n === 1 && res.trim() === "um") ? " real" : " reais";
+    
+    if (c > 0) {
+      res += " e " + conv(c) + (c === 1 ? " centavo" : " centavos");
+    }
+
+    return res.charAt(0).toUpperCase() + res.slice(1);
+  };
+
+  useEffect(() => {
+    if (data.contract.planValue) {
+      const val = parseFloat(data.contract.planValue.replace(/[^\d,.-]/g, '').replace(',', '.'));
+      if (!isNaN(val)) {
+        const text = converterParaExtenso(val);
+        if (data.contract.planValueWords !== text) {
+          handleChange('contract.planValueWords', text);
+        }
+      }
+    }
+  }, [data.contract.planValue]);
+
+  // Cálculo de Data de Término por Período
+  const calculateEndDate = (startDate: string, type: 'trimestral' | 'semestral') => {
+    const parts = startDate.split('/');
+    if (parts.length !== 3) return;
+    const date = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+    if (isNaN(date.getTime())) return;
+
+    if (type === 'trimestral') date.setMonth(date.getMonth() + 3);
+    else if (type === 'semestral') date.setMonth(date.getMonth() + 6);
+
+    const d = String(date.getDate()).padStart(2, '0');
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const y = date.getFullYear();
+    handleChange('contract.endDate', `${d}/${m}/${y}`);
+  };
 
   const handleChange = (path: string, value: any) => {
     const newData = { ...data };
@@ -29,74 +130,44 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
     onChange(newData);
   };
 
-  const addItem = (list: 'meals' | 'supplements' | 'trainingDays', item: any) => {
-    handleChange(list, [...(data[list] as any[]), { ...item, id: Math.random().toString(36).substr(2, 9) }]);
-  };
-
-  const removeItem = (list: 'meals' | 'supplements' | 'trainingDays', id: string) => {
-    handleChange(list, (data[list] as any[]).filter(i => i.id !== id));
-  };
-
   const handleAISuggestion = async () => {
     if (!data.clientName || !data.physicalData.weight) {
-      alert("⚠️ DADOS NECESSÁRIOS: Preencha o Nome e o Peso para que a IA possa analisar o metabolismo do aluno.");
+      alert("⚠️ DADOS NECESSÁRIOS: Preencha o Nome e o Peso para que a IA possa analisar.");
+      return;
+    }
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) {
+      alert("Erro: Chave de API não encontrada.");
       return;
     }
 
     setIsGenerating(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      
-      const prompt = `Você é o Master Coach Vinícius Brasil do Team VBR. Crie um protocolo profissional de elite para o aluno:
-      Nome: ${data.clientName} | Peso: ${data.physicalData.weight}kg | Altura: ${data.physicalData.height}m | Idade: ${data.physicalData.age} | Objetivo: ${data.protocolTitle || "Performance Máxima"}.
-      
-      Retorne APENAS um objeto JSON com esta estrutura exata:
-      {
-        "nutritionalStrategy": "Explicação técnica motivacional curta",
-        "kcalGoal": "Valor calórico",
-        "kcalSubtext": "(EX: SUPERÁVIT CONTROLADO)",
-        "macros": {
-          "protein": { "value": "160", "ratio": "≈ 2,2g/kg" },
-          "carbs": { "value": "330", "ratio": "Energia" },
-          "fats": { "value": "75", "ratio": "Regulação" }
-        },
-        "meals": [{"time": "08:40", "name": "Nome", "details": "Alimentos"}],
-        "supplements": [{"name": "CREATINA", "dosage": "5g todos os dias", "timing": "Junto à Ceia"}],
-        "tips": ["Dica 1", "Dica 2", "Dica 3"],
-        "trainingFrequency": "4 a 5x por semana",
-        "trainingDays": [{"title": "DIA A: PEITO + OMBRO", "focus": "Superior", "exercises": [{"name": "Supino", "sets": "4x 8-10"}]}],
-        "generalObservations": "Sua frase de impacto"
-      }`;
-
+      const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
-        contents: prompt,
-        config: {
-          responseMimeType: "application/json"
-        }
+        contents: `Você é o Master Coach Vinícius Brasil do Team VBR. Crie um protocolo de elite para: ${data.clientName}, Peso: ${data.physicalData.weight}kg, Objetivo: ${data.protocolTitle}. Retorne APENAS um JSON estruturado.`,
+        config: { responseMimeType: "application/json" }
       });
-
       const suggestion = JSON.parse(response.text || '{}');
       
-      const updatedData = {
-        ...data,
+      const prepareId = (list: any[]) => (list || []).map(i => ({ ...i, id: Math.random().toString(36).substr(2, 9) }));
+      
+      onChange({ 
+        ...data, 
         ...suggestion,
-        meals: (suggestion.meals || []).map((m: any) => ({ ...m, id: Math.random().toString(36).substr(2, 9) })),
-        supplements: (suggestion.supplements || []).map((s: any) => ({ ...s, id: Math.random().toString(36).substr(2, 9) })),
+        meals: prepareId(suggestion.meals),
+        supplements: prepareId(suggestion.supplements),
         trainingDays: (suggestion.trainingDays || []).map((d: any) => ({
           ...d,
           id: Math.random().toString(36).substr(2, 9),
-          exercises: (d.exercises || []).map((e: any) => ({ ...e, id: Math.random().toString(36).substr(2, 9) }))
+          exercises: prepareId(d.exercises)
         }))
-      };
-
-      onChange(updatedData);
-    } catch (error: any) {
+      });
+    } catch (error) {
       console.error("Erro IA:", error);
-      alert("❌ Falha ao gerar com IA. Tente novamente.");
-    } finally {
-      setIsGenerating(false);
-    }
+      alert("Erro ao conectar com IA.");
+    } finally { setIsGenerating(false); }
   };
 
   const labelClass = "block text-[9px] font-black text-white/40 mb-1.5 uppercase tracking-widest";
@@ -106,10 +177,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
   return (
     <div className="space-y-10 no-print">
       {onBack && (
-        <button 
-          onClick={onBack}
-          className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-[#d4af37] transition-colors"
-        >
+        <button onClick={onBack} className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-[#d4af37] transition-colors">
           <ChevronLeft size={16} /> Voltar ao Painel do Aluno
         </button>
       )}
@@ -144,7 +212,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
         </div>
       </section>
 
-      {/* DADOS DO CONTRATO */}
+      {/* VIGÊNCIA E FINANCEIRO */}
       <section>
         <div className={sectionHeaderClass}>
           <ShieldCheck className="text-[#d4af37]" size={20} />
@@ -153,23 +221,75 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="col-span-2">
             <label className={labelClass}>Data de Início</label>
-            <input className={inputClass} value={data.contract.startDate} onChange={(e) => handleChange('contract.startDate', e.target.value)} placeholder="DD/MM/AAAA" />
+            <input 
+              className={inputClass} 
+              value={data.contract.startDate} 
+              onChange={(e) => {
+                const val = formatDateInput(e.target.value);
+                handleChange('contract.startDate', val);
+                if (periodType !== 'custom') calculateEndDate(val, periodType as any);
+              }} 
+              placeholder="00/00/0000" 
+            />
+          </div>
+          <div className="col-span-2">
+            <label className={labelClass}>Escolha o Período</label>
+            <select 
+              className={inputClass} 
+              value={periodType} 
+              onChange={(e) => {
+                const type = e.target.value as any;
+                setPeriodType(type);
+                if (type !== 'custom') calculateEndDate(data.contract.startDate, type);
+              }}
+            >
+              <option value="custom">Personalizado</option>
+              <option value="trimestral">Trimestral (3 Meses)</option>
+              <option value="semestral">Semestral (6 Meses)</option>
+            </select>
           </div>
           <div className="col-span-2">
             <label className={labelClass}>Data de Término</label>
-            <input className={inputClass} value={data.contract.endDate} onChange={(e) => handleChange('contract.endDate', e.target.value)} placeholder="DD/MM/AAAA" />
+            <input 
+              className={inputClass + (periodType !== 'custom' ? " bg-white/10 opacity-60" : "")} 
+              value={data.contract.endDate} 
+              readOnly={periodType !== 'custom'}
+              onChange={(e) => handleChange('contract.endDate', formatDateInput(e.target.value))} 
+              placeholder="00/00/0000" 
+            />
           </div>
           <div className="col-span-2">
             <label className={labelClass}>Valor do Plano (R$)</label>
             <input className={inputClass} value={data.contract.planValue} onChange={(e) => handleChange('contract.planValue', e.target.value)} placeholder="0,00" />
           </div>
-          <div className="col-span-2">
+          <div className="col-span-4">
+            <label className={labelClass}>Valor por Extenso</label>
+            <input className={inputClass + " bg-white/10 opacity-80 italic"} value={data.contract.planValueWords} readOnly />
+          </div>
+          
+          {/* Ajuste no layout do pagamento para diminuir quando for Pix */}
+          <div className={data.contract.paymentMethod === 'Cartão de Crédito' ? "col-span-2" : "col-span-2"}>
             <label className={labelClass}>Método de Pagamento</label>
             <select className={inputClass} value={data.contract.paymentMethod} onChange={(e) => handleChange('contract.paymentMethod', e.target.value)}>
               <option value="Pix">Pix</option>
               <option value="Cartão de Crédito">Cartão de Crédito</option>
             </select>
           </div>
+
+          {data.contract.paymentMethod === 'Cartão de Crédito' && (
+            <div className="col-span-2">
+              <label className={labelClass}>Quantidade de Parcelas</label>
+              <select 
+                className={inputClass} 
+                value={data.contract.installments} 
+                onChange={(e) => handleChange('contract.installments', e.target.value)}
+              >
+                {[...Array(12)].map((_, i) => (
+                  <option key={i+1} value={`${i+1}x`}>{i+1}x</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
       </section>
 
@@ -182,7 +302,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="col-span-2">
             <label className={labelClass}>Data da Avaliação</label>
-            <input type="text" className={inputClass} value={data.physicalData.date} onChange={(e) => handleChange('physicalData.date', e.target.value)} placeholder="DD/MM/AAAA" />
+            <input type="text" className={inputClass} value={data.physicalData.date} onChange={(e) => handleChange('physicalData.date', formatDateInput(e.target.value))} placeholder="00/00/0000" />
           </div>
           <div className="col-span-2">
             <label className={labelClass}>Título Protocolo</label>
@@ -191,28 +311,28 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
           <div><label className={labelClass}>Idade</label><input className={inputClass} value={data.physicalData.age} onChange={(e) => handleChange('physicalData.age', e.target.value)} /></div>
           <div><label className={labelClass}>Peso (kg)</label><input className={inputClass} value={data.physicalData.weight} onChange={(e) => handleChange('physicalData.weight', e.target.value)} /></div>
           <div><label className={labelClass}>Altura (m)</label><input className={inputClass} value={data.physicalData.height} onChange={(e) => handleChange('physicalData.height', e.target.value)} /></div>
+          <div>
+            <label className={labelClass}>IMC (Calculado)</label>
+            <input className={inputClass + " bg-[#d4af37]/10 text-[#d4af37]"} value={data.physicalData.imc} readOnly />
+          </div>
           <div><label className={labelClass}>Gordura (%)</label><input className={inputClass} value={data.physicalData.bodyFat} onChange={(e) => handleChange('physicalData.bodyFat', e.target.value)} /></div>
+          <div><label className={labelClass}>Massa Musc. (kg)</label><input className={inputClass} value={data.physicalData.muscleMass} onChange={(e) => handleChange('physicalData.muscleMass', e.target.value)} /></div>
+          <div><label className={labelClass}>G. Visceral</label><input className={inputClass} value={data.physicalData.visceralFat} onChange={(e) => handleChange('physicalData.visceralFat', e.target.value)} /></div>
         </div>
       </section>
 
       {/* IA GENERATOR */}
       <div className="bg-gradient-to-br from-[#d4af37]/20 via-black to-black p-8 rounded-[3rem] border border-[#d4af37]/40 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl relative overflow-hidden group">
         <div className="flex items-center gap-5 relative z-10">
-          <div className="w-16 h-16 bg-[#d4af37] rounded-[1.5rem] flex items-center justify-center text-black shadow-[0_0_30px_rgba(212,175,55,0.4)] group-hover:scale-110 transition-transform">
+          <div className="w-16 h-16 bg-[#d4af37] rounded-[1.5rem] flex items-center justify-center text-black shadow-[0_0_30px_rgba(212,175,55,0.4)]">
             {isGenerating ? <Loader2 size={32} className="animate-spin" /> : <Sparkles size={32} />}
           </div>
           <div>
             <h3 className="font-black text-2xl text-white uppercase tracking-tighter leading-none">Inteligência VBR Pro</h3>
-            <p className="text-[10px] text-[#d4af37] font-black uppercase tracking-[0.2em] mt-2">
-              {isGenerating ? 'Analisando metabolismo do aluno...' : 'Clique para gerar um protocolo completo com IA'}
-            </p>
+            <p className="text-[10px] text-[#d4af37] font-black uppercase tracking-[0.2em] mt-2">Gere o protocolo completo com IA</p>
           </div>
         </div>
-        <button 
-          onClick={handleAISuggestion}
-          disabled={isGenerating}
-          className="bg-white text-black px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] flex items-center gap-3 hover:scale-105 transition-all disabled:opacity-50 shadow-2xl relative z-10"
-        >
+        <button onClick={handleAISuggestion} disabled={isGenerating} className="bg-white text-black px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:scale-105 transition-all disabled:opacity-50">
           {isGenerating ? 'Trabalhando...' : 'Gerar com IA'}
         </button>
       </div>
@@ -240,7 +360,6 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
               </div>
             </div>
           </div>
-          
           <div className="grid grid-cols-3 gap-4">
             {['protein', 'carbs', 'fats'].map((macro) => (
               <div key={macro} className="bg-white/5 p-4 rounded-2xl border border-white/5">
@@ -262,7 +381,10 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
         <div className="space-y-4">
           {data.meals.map((meal, idx) => (
             <div key={meal.id} className="bg-white/5 p-6 rounded-3xl border border-white/5 relative group">
-              <button onClick={() => removeItem('meals', meal.id)} className="absolute top-4 right-4 text-white/10 hover:text-red-500 transition-colors"><Trash2 size={16} /></button>
+              <button onClick={() => {
+                const meals = data.meals.filter(m => m.id !== meal.id);
+                handleChange('meals', meals);
+              }} className="absolute top-4 right-4 text-white/10 hover:text-red-500 transition-colors"><Trash2 size={16} /></button>
               <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                 <div className="md:col-span-2">
                   <label className={labelClass}>Hora</label>
@@ -291,52 +413,11 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
               </div>
             </div>
           ))}
-          <button onClick={() => addItem('meals', { time: '00:00', name: '', details: '' })} className="w-full p-4 border-2 border-dashed border-white/10 rounded-2xl flex items-center justify-center gap-2 text-white/40 hover:text-[#d4af37] hover:border-[#d4af37]/30 transition-all font-black text-[10px] uppercase tracking-widest">
+          <button onClick={() => {
+            const newItem = { id: Math.random().toString(36).substr(2, 9), time: '00:00', name: '', details: '' };
+            handleChange('meals', [...data.meals, newItem]);
+          }} className="w-full p-4 border-2 border-dashed border-white/10 rounded-2xl flex items-center justify-center gap-2 text-white/40 hover:text-[#d4af37] transition-all font-black text-[10px] uppercase tracking-widest">
             <Plus size={16} /> Adicionar Refeição
-          </button>
-        </div>
-      </section>
-
-      {/* SUPLEMENTOS */}
-      <section>
-        <div className={sectionHeaderClass}>
-          <Pill className="text-[#d4af37]" size={20} />
-          <h2 className="text-xl font-black text-white uppercase tracking-tighter">Suplementação</h2>
-        </div>
-        <div className="space-y-4">
-          {data.supplements.map((supp, idx) => (
-            <div key={supp.id} className="bg-white/5 p-6 rounded-3xl border border-white/5 relative">
-              <button onClick={() => removeItem('supplements', supp.id)} className="absolute top-4 right-4 text-white/10 hover:text-red-500 transition-colors"><Trash2 size={16} /></button>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className={labelClass}>Suplemento</label>
-                  <input className={inputClass} value={supp.name} onChange={(e) => {
-                    const supps = [...data.supplements];
-                    supps[idx].name = e.target.value;
-                    handleChange('supplements', supps);
-                  }} />
-                </div>
-                <div>
-                  <label className={labelClass}>Dosagem</label>
-                  <input className={inputClass} value={supp.dosage} onChange={(e) => {
-                    const supps = [...data.supplements];
-                    supps[idx].dosage = e.target.value;
-                    handleChange('supplements', supps);
-                  }} />
-                </div>
-                <div>
-                  <label className={labelClass}>Horário/Momento</label>
-                  <input className={inputClass} value={supp.timing} onChange={(e) => {
-                    const supps = [...data.supplements];
-                    supps[idx].timing = e.target.value;
-                    handleChange('supplements', supps);
-                  }} />
-                </div>
-              </div>
-            </div>
-          ))}
-          <button onClick={() => addItem('supplements', { name: '', dosage: '', timing: '' })} className="w-full p-4 border-2 border-dashed border-white/10 rounded-2xl flex items-center justify-center gap-2 text-white/40 hover:text-[#d4af37] hover:border-[#d4af37]/30 transition-all font-black text-[10px] uppercase tracking-widest">
-            <Plus size={16} /> Adicionar Suplemento
           </button>
         </div>
       </section>
@@ -352,7 +433,6 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
             <label className={labelClass}>Frequência Semanal</label>
             <input className={inputClass} value={data.trainingFrequency} onChange={(e) => handleChange('trainingFrequency', e.target.value)} placeholder="Ex: 5 dias por semana" />
           </div>
-
           {data.trainingDays.map((day, dIdx) => (
             <div key={day.id} className="bg-white/5 p-8 rounded-[2.5rem] border border-white/10 space-y-6">
               <div className="flex justify-between items-center">
@@ -374,9 +454,11 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
                     }} />
                   </div>
                 </div>
-                <button onClick={() => removeItem('trainingDays', day.id)} className="ml-4 p-4 text-white/10 hover:text-red-500 transition-colors"><Trash2 size={20} /></button>
+                <button onClick={() => {
+                  const days = data.trainingDays.filter(d => d.id !== day.id);
+                  handleChange('trainingDays', days);
+                }} className="ml-4 p-4 text-white/10 hover:text-red-500 transition-colors"><Trash2 size={20} /></button>
               </div>
-
               <div className="space-y-3">
                 <label className={labelClass}>Exercícios</label>
                 {day.exercises.map((ex, eIdx) => (
@@ -414,8 +496,10 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
               </div>
             </div>
           ))}
-
-          <button onClick={() => addItem('trainingDays', { title: '', focus: '', exercises: [] })} className="w-full p-6 border-2 border-dashed border-white/10 rounded-[2.5rem] flex items-center justify-center gap-2 text-white/40 hover:text-[#d4af37] hover:border-[#d4af37]/30 transition-all font-black text-[10px] uppercase tracking-widest">
+          <button onClick={() => {
+            const newDay = { id: Math.random().toString(36).substr(2, 9), title: '', focus: '', exercises: [] };
+            handleChange('trainingDays', [...data.trainingDays, newDay]);
+          }} className="w-full p-6 border-2 border-dashed border-white/10 rounded-[2.5rem] flex items-center justify-center gap-2 text-white/40 hover:text-[#d4af37] transition-all font-black text-[10px] uppercase tracking-widest">
             <Plus size={20} /> Adicionar Novo Dia de Treino
           </button>
         </div>

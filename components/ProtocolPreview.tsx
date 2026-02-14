@@ -16,20 +16,34 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
   const handleDownloadPDF = async () => {
     if (!pdfContainerRef.current) return;
     setIsGenerating(true);
+    
     const element = pdfContainerRef.current;
+    
+    // Configurações otimizadas para evitar páginas em branco
     const opt = {
       margin: 0,
       filename: `Protocolo_VBR_${data.clientName.replace(/\s+/g, '_')}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+      html2canvas: { 
+        scale: 2, 
+        useCORS: true, 
+        letterRendering: true,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: 1000,
+        logging: false,
+        backgroundColor: '#ffffff'
+      },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'], before: '.page-break' }
     };
+
     try {
       // @ts-ignore
       await html2pdf().set(opt).from(element).save();
     } catch (err) {
       console.error("Erro ao gerar PDF:", err);
+      alert("Erro ao gerar PDF. Tente preencher todos os campos primeiro.");
     } finally {
       setIsGenerating(false);
     }
@@ -56,7 +70,7 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
         </button>
       </div>
 
-      <div ref={pdfContainerRef} className="print:m-0">
+      <div ref={pdfContainerRef} className="print:m-0 bg-white">
         
         {/* PÁGINA 1: CAPA */}
         <div className={`${fixedPageClass} !bg-[#0a0a0a] !text-white border-b-[20px] border-[#d4af37] justify-center items-center p-[2cm]`}>
@@ -134,7 +148,6 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
             </table>
           </div>
 
-          {/* SUPLEMENTAÇÃO */}
           {data.supplements.length > 0 && (
             <div className="mt-4 avoid-break">
               <h2 className="text-2xl font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-2 mb-4 uppercase tracking-tighter">4. Suplementação</h2>
@@ -155,7 +168,7 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
           )}
         </div>
 
-        {/* PÁGINA 4: TREINO + RODAPÉ FINAL */}
+        {/* PÁGINA 4: TREINO */}
         <div className={`${dynamicPageClass} p-[1.5cm]`}>
           <h2 className="text-2xl font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-3 mb-3 uppercase tracking-tighter">5. Divisão de Treino</h2>
           <div className="mb-6 font-black text-gray-400 uppercase tracking-widest text-lg">Frequência: {data.trainingFrequency}</div>
