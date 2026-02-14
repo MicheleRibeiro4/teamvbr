@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { ProtocolData } from '../types';
 import ContractPreview from './ContractPreview';
-import { DollarSign, Calendar, UserCheck, ChevronLeft, Clock, FileText } from 'lucide-react';
+import { DollarSign, UserCheck, Clock, FileText, ChevronLeft } from 'lucide-react';
 
 interface Props {
   data: ProtocolData;
@@ -23,7 +23,7 @@ const ContractWorkspace: React.FC<Props> = ({ data, onChange, onBack }) => {
     onChange(newData);
   };
 
-  // Lógica de Valor por Extenso (Português) - Ajustada para incluir "reais"
+  // Lógica de Valor por Extenso (Português)
   const converterParaExtenso = (num: number): string => {
     const unidades = ["", "um", "dois", "três", "quatro", "cinco", "seis", "sete", "oito", "nove"];
     const dezenas10 = ["dez", "onze", "doze", "treze", "quatorze", "quinze", "dezesseis", "dezessete", "dezoito", "dezenove"];
@@ -146,9 +146,32 @@ const ContractWorkspace: React.FC<Props> = ({ data, onChange, onBack }) => {
                 <label className={labelClass}>E-mail</label>
                 <input className={inputClass} value={data.contract.email} onChange={(e) => handleChange('contract.email', e.target.value)} />
               </div>
-              <div className="md:col-span-2">
-                <label className={labelClass}>Endereço Completo</label>
-                <input className={inputClass} value={data.contract.address} onChange={(e) => handleChange('contract.address', e.target.value)} />
+              
+              {/* Campos de endereço detalhados para corresponder ao ProtocolForm */}
+              <div className="md:col-span-2 border-t border-gray-100 pt-4 mt-2">
+                 <p className="text-[10px] font-black uppercase text-[#d4af37] mb-4">Endereço</p>
+                 <div className="grid grid-cols-2 gap-4">
+                    <div className="col-span-2">
+                      <label className={labelClass}>Rua / Logradouro</label>
+                      <input className={inputClass} value={data.contract.street} onChange={(e) => handleChange('contract.street', e.target.value)} />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Número</label>
+                      <input className={inputClass} value={data.contract.number} onChange={(e) => handleChange('contract.number', e.target.value)} />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Bairro</label>
+                      <input className={inputClass} value={data.contract.neighborhood} onChange={(e) => handleChange('contract.neighborhood', e.target.value)} />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Cidade</label>
+                      <input className={inputClass} value={data.contract.city} onChange={(e) => handleChange('contract.city', e.target.value)} />
+                    </div>
+                    <div>
+                      <label className={labelClass}>UF</label>
+                      <input className={inputClass} value={data.contract.state} onChange={(e) => handleChange('contract.state', e.target.value)} maxLength={2} />
+                    </div>
+                 </div>
               </div>
             </div>
           </div>

@@ -17,9 +17,10 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
     const method = data.contract.paymentMethod;
     const installments = data.contract.installments;
     
+    // Formatação exata conforme solicitado
     return `
-( ${method === 'Pix' ? 'x' : ' '} ) Pix (à vista)
-( ${method === 'Cartão de Crédito' ? 'x' : ' '} ) Cartão de crédito – parcelado em ${method === 'Cartão de Crédito' ? installments : '__'}x`;
+(${method === 'Pix' ? 'x' : ' '}) Pix (à vista)
+(${method === 'Cartão de Crédito' ? 'x' : ' '}) Cartão de crédito – parcelado em ${method === 'Cartão de Crédito' ? installments : '__'}x`;
   };
 
   const renderContractText = () => {
@@ -34,6 +35,7 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
     };
 
     Object.entries(map).forEach(([key, val]) => {
+      // Escape special characters in key for RegExp and replace globally
       text = text.replace(new RegExp(key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), val || '__________');
     });
     return text;
@@ -57,8 +59,17 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
     } finally { setIsGenerating(false); }
   };
 
-  // Montagem do endereço completo a partir dos campos individuais
-  const fullAddress = `${data.contract.street || '______'}, ${data.contract.number || 'SN'} - ${data.contract.neighborhood || '______'}, ${data.contract.city || '______/UF'}`;
+  // Montagem do endereço completo: Prioriza os campos detalhados, fallback para o campo legado
+  const street = data.contract.street || '';
+  const number = data.contract.number || 'SN';
+  const neighbor = data.contract.neighborhood || '';
+  const city = data.contract.city || '';
+  const state = data.contract.state || '';
+  
+  const detailedAddress = `${street}, ${number} - ${neighbor}, ${city}/${state}`;
+  
+  // Se os campos detalhados estiverem vazios (ex: street vazio), tenta usar o campo 'address' antigo, senão mostra placeholders
+  const fullAddress = street ? detailedAddress : (data.contract.address || '__________________________________________________');
 
   return (
     <div className="flex flex-col items-center w-full bg-transparent pb-20 print:pb-0">
@@ -101,7 +112,7 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
         </p>
 
         <div className="mb-12">
-           <p>Cidade: {data.contract.city || 'Vespasiano'} - {data.contract.state || 'Minas Gerais'}</p>
+           <p>Cidade: {data.contract.city || 'Vespasiano'} - {data.contract.state || 'MG'}</p>
            <p>Data: {new Date().toLocaleDateString('pt-BR')}</p>
         </div>
 

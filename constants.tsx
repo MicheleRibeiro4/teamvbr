@@ -10,9 +10,7 @@ export const CONSULTANT_DEFAULT = {
   consultantAddress: "Rua Serra da boa esperança, 540, Serra Dourada, Vespasiano - Minas Gerais",
 };
 
-const CONTRACT_TEMPLATE = `CONTRATO DE ASSESSORIA EM ESTILO DE VIDA SAUDÁVEL
-
-CLÁUSULA 1 – OBJETO
+const CONTRACT_TEMPLATE = `CLÁUSULA 1 – OBJETO
 1.1. O contratado fornecerá ao contratante conteúdos informativos sobre hábitos saudáveis, incluindo:
 a) Sugestões de rotinas de exercícios físicos já prontas e amplamente difundidas (ex.: treino ABC, treino full body, planilhas informativas);
 b) Dicas de bem-estar, motivação e organização de rotina;

@@ -1,7 +1,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { ProtocolData, Meal, Supplement, TrainingDay, Exercise } from '../types';
-import { Activity, User, ShieldCheck, ChevronLeft, MapPin, Dumbbell, Utensils, Pill, Plus, Trash2, FileText, AlertCircle } from 'lucide-react';
+import { Activity, User, ShieldCheck, ChevronLeft, MapPin, Dumbbell, Utensils, Pill, Plus, Trash2, FileText, AlertCircle, Sparkles, Loader2 } from 'lucide-react';
+import { GoogleGenAI } from "@google/genai";
 
 interface Props {
   data: ProtocolData;
@@ -10,7 +11,105 @@ interface Props {
 }
 
 const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
-  
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  // --- LÓGICA DO GERADOR IA ---
+  const handleGenerateAI = async () => {
+    if (!data.protocolTitle || !data.physicalData.weight) {
+      alert("Por favor, preencha pelo menos o 'Objetivo do Protocolo' e 'Peso' na seção acima para gerar.");
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const ai = new GoogleGenAI({ apiKey: "AIzaSyCdc2gt-S321N9qjNU3ZK4vHxPuTeOrVbA" });
+      
+      const prompt = `
+        Você é um treinador de elite e nutricionista esportivo (Estilo Team VBR).
+        Com base nos dados do aluno abaixo, gere um protocolo completo em formato JSON.
+
+        DADOS DO ALUNO:
+        - Nome: ${data.clientName}
+        - Objetivo: ${data.protocolTitle}
+        - Gênero: ${data.physicalData.gender}
+        - Idade: ${data.physicalData.age}
+        - Peso: ${data.physicalData.weight}kg
+        - Altura: ${data.physicalData.height}m
+        - Gordura Corporal: ${data.physicalData.bodyFat}%
+        - Massa Muscular: ${data.physicalData.muscleMass}kg
+
+        Gere um JSON com a seguinte estrutura estrita (não inclua markdown, apenas o JSON):
+        {
+          "nutritionalStrategy": "Texto explicando a estratégia da dieta (ex: Ciclo de carboidratos...)",
+          "kcalGoal": "Ex: 2500",
+          "kcalSubtext": "Ex: Déficit Calórico Moderado",
+          "macros": {
+            "protein": { "value": "Ex: 180", "ratio": "2g/kg" },
+            "carbs": { "value": "Ex: 250", "ratio": "3g/kg" },
+            "fats": { "value": "Ex: 60", "ratio": "0.8g/kg" }
+          },
+          "meals": [
+            { "id": "1", "time": "08:00", "name": "Café da Manhã", "details": "Detalhes dos alimentos..." }
+          ],
+          "supplements": [
+             { "id": "1", "name": "Creatina", "dosage": "5g", "timing": "Pós-treino" }
+          ],
+          "trainingFrequency": "Ex: 5x na semana",
+          "trainingDays": [
+            {
+              "id": "1",
+              "title": "Treino A",
+              "focus": "Peito e Tríceps",
+              "exercises": [
+                 { "id": "1", "name": "Supino Reto", "sets": "4x 12-10-8-6" }
+              ]
+            }
+          ],
+          "generalObservations": "Recomendações finais de cardio, hidratação, etc."
+        }
+      `;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: {
+          responseMimeType: 'application/json'
+        }
+      });
+
+      const textResponse = response.text;
+      if (textResponse) {
+        const generatedData = JSON.parse(textResponse);
+
+        // Mesclar dados gerados com os dados atuais
+        const newData = {
+          ...data,
+          nutritionalStrategy: generatedData.nutritionalStrategy || data.nutritionalStrategy,
+          kcalGoal: generatedData.kcalGoal || data.kcalGoal,
+          kcalSubtext: generatedData.kcalSubtext || data.kcalSubtext,
+          macros: generatedData.macros || data.macros,
+          meals: generatedData.meals ? generatedData.meals.map((m: any, i: number) => ({ ...m, id: Date.now().toString() + i })) : [],
+          supplements: generatedData.supplements ? generatedData.supplements.map((s: any, i: number) => ({ ...s, id: Date.now().toString() + i })) : [],
+          trainingFrequency: generatedData.trainingFrequency || data.trainingFrequency,
+          trainingDays: generatedData.trainingDays ? generatedData.trainingDays.map((d: any, i: number) => ({
+             ...d, 
+             id: Date.now().toString() + i,
+             exercises: d.exercises ? d.exercises.map((e: any, j: number) => ({ ...e, id: Date.now().toString() + i + j })) : []
+          })) : [],
+          generalObservations: generatedData.generalObservations || data.generalObservations
+        };
+        
+        onChange(newData);
+        alert("Protocolo gerado com sucesso pela IA!");
+      }
+    } catch (error) {
+      console.error("Erro na IA:", error);
+      alert("Erro ao gerar protocolo. Verifique a conexão ou tente novamente.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   // --- LÓGICA DE CÁLCULO DE DATA DE TÉRMINO ---
   useEffect(() => {
     if (data.contract.startDate && data.contract.planType) {
@@ -329,6 +428,34 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
              <input className={inputClass} value={data.physicalData.waterPercentage || ''} onChange={(e) => handleChange('physicalData.waterPercentage', e.target.value)} />
            </div>
         </div>
+      </section>
+
+      {/* BLOCO IA: GERADOR AUTOMÁTICO */}
+      <section className="bg-gradient-to-r from-[#d4af37]/10 to-transparent p-6 rounded-2xl border border-[#d4af37]/20 relative overflow-hidden group">
+         <div className="absolute top-0 right-0 w-32 h-32 bg-[#d4af37] blur-[80px] opacity-10"></div>
+         
+         <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
+            <div className="flex items-start gap-4">
+               <div className="p-3 bg-[#d4af37] text-black rounded-xl">
+                 <Sparkles size={24} />
+               </div>
+               <div>
+                  <h3 className="text-xl font-black text-white uppercase tracking-tighter">Gerador de Protocolo IA</h3>
+                  <p className="text-sm text-white/60 max-w-lg">
+                    Preencha os dados de bioimpedância acima e clique para gerar automaticamente a dieta, treino e suplementação personalizados.
+                  </p>
+               </div>
+            </div>
+            
+            <button 
+              onClick={handleGenerateAI} 
+              disabled={isGenerating}
+              className="px-8 py-4 bg-[#d4af37] text-black rounded-xl font-black uppercase text-xs tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isGenerating ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
+              {isGenerating ? 'Gerando Inteligência...' : 'Gerar Protocolo Agora'}
+            </button>
+         </div>
       </section>
 
       {/* BLOCO 4: ESTRATÉGIA NUTRICIONAL */}
