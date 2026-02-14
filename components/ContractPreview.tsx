@@ -149,8 +149,6 @@ const ContractPreview = forwardRef<ContractPreviewHandle, Props>(({ data, onBack
           })}
         </div>
 
-        <div className="html2pdf__page-break"></div>
-
         <p className="mb-12 text-justify">
           E, por estarem justas e contratadas, as partes assinam o presente instrumento em 2 (duas) vias de igual teor e forma, para que produza seus jurídicos e legais efeitos.
         </p>

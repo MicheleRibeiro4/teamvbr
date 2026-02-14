@@ -90,7 +90,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
         </div>
       )}
 
-      <div ref={pdfRef} className="bg-gray-200 shadow-inner flex flex-col items-center print:bg-transparent print:m-0 print:p-0">
+      <div ref={pdfRef} className="bg-white shadow-inner flex flex-col items-center print:bg-transparent print:m-0 print:p-0">
         
         {/* PÁGINA 1: CAPA */}
         <div style={{ ...pageStyle, padding: 0, backgroundColor: '#111' }} className="relative h-[296mm] flex flex-col justify-between text-white text-center bg-[#111]">
