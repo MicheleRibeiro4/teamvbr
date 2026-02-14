@@ -39,12 +39,12 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
       text = text.replace(new RegExp(key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), val || '__________');
     });
 
-    // --- LIMPEZA DE ARTEFATOS ANTIGOS (Boleto/Outro) ---
-    // Remove linhas específicas que podem ter ficado salvas em contratos antigos
+    // --- LIMPEZA DE ARTEFATOS ANTIGOS E ESPAÇOS ---
+    // Remove linhas específicas que podem ter ficado salvas em contratos antigos (Boleto/Outro)
     text = text.replace(/\(\s*\)\s*Boleto bancário/gi, "");
     text = text.replace(/\(\s*\)\s*Outro:[\s_]*/gi, "");
     
-    // Remove quebras de linha excessivas geradas pela remoção acima
+    // Remove quebras de linha excessivas (mais de 2 vira 2)
     text = text.replace(/\n\s*\n\s*\n/g, "\n\n");
 
     return text;
@@ -55,7 +55,8 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
     setIsGenerating(true);
     
     const opt = {
-      margin: [15, 15, 15, 15], // Margens [Topo, Esq, Inf, Dir] para evitar corte
+      // Aumentei as margens verticais para 20mm para evitar corte no cabeçalho/rodapé
+      margin: [20, 15, 20, 15], 
       filename: `Contrato_VBR_${data.clientName.replace(/\s+/g, '_')}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { 
@@ -63,10 +64,8 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
         useCORS: true, 
         backgroundColor: '#ffffff',
         scrollY: 0, 
-        // windowWidth removido para deixar o html2canvas calcular a largura baseada no elemento
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      // Configuração inteligente de quebra de página para evitar cortes no meio do texto
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     };
     
@@ -99,7 +98,7 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
         </button>
       </div>
 
-      {/* Container com largura fixa para preview, mas altura automática para não cortar */}
+      {/* Container principal */}
       <div ref={contractRef} className="bg-white text-black p-[15mm] w-[210mm] mx-auto font-sans leading-[1.6] text-[10pt] shadow-2xl print:shadow-none print:w-full h-auto min-h-[297mm]">
         <div className="mb-8">
           <h1 className="font-bold text-center text-sm mb-6 uppercase">CONTRATO DE ASSESSORIA EM ESTILO DE VIDA SAUDÁVEL</h1>

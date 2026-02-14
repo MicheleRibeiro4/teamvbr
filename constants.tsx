@@ -20,7 +20,6 @@ a) O contratado NÃO É PROFISSIONAL DE EDUCAÇÃO FÍSICA, NUTRIÇÃO OU MEDICI
 b) O contratado NÃO POSSUI REGISTRO nos respectivos conselhos profissionais (CREF, CRN, CRM);
 c) Os materiais fornecidos NÃO CONSTITUEM PRESCRIÇÃO INDIVIDUALIZADA, PERIODIZAÇÃO CIENTÍFICA, AVALIAÇÃO FUNCIONAL OU DIAGNÓSTICO.
 1.3. NÃO constitui objeto deste contrato:
-
 • Elaboração de programas de treinamento com base em avaliação física;
 • Diagnóstico, tratamento, prevenção ou reabilitação de lesões, doenças ou condições de saúde;
 • Qualquer atividade privativa de profissionais registrados no CREF, CRN ou CRM.
