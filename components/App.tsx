@@ -64,30 +64,34 @@ const App: React.FC = () => {
   }, []);
 
   // Save changes to Supabase
-  const handleSave = async (silent = false) => {
-    if (!data.clientName) {
+  // Alterado para aceitar dados específicos para evitar problemas de estado assíncrono
+  const handleSave = async (silent = false, specificData?: ProtocolData) => {
+    const dataToSave = specificData || data;
+
+    if (!dataToSave.clientName) {
       if (!silent) alert("⚠️ Defina o nome do aluno antes de salvar.");
       return;
     }
     
     setIsSyncing(true);
     try {
-      const currentId = data.id || "vbr-" + Math.random().toString(36).substr(2, 9);
+      const currentId = dataToSave.id || "vbr-" + Math.random().toString(36).substr(2, 9);
       
       // Garante que o contrato tenha corpo antes de salvar
       const protocolToSave = { 
-        ...data, 
+        ...dataToSave, 
         id: currentId, 
         updatedAt: new Date().toISOString(),
         contract: {
-          ...data.contract,
-          contractBody: data.contract.contractBody || EMPTY_DATA.contract.contractBody
+          ...dataToSave.contract,
+          contractBody: dataToSave.contract.contractBody || EMPTY_DATA.contract.contractBody
         }
       };
       
       await db.saveProtocol(protocolToSave);
       
       setSavedProtocols(prev => {
+        // Se o ID já existe, atualiza. Se é novo, adiciona no topo.
         const index = prev.findIndex(p => p.id === currentId);
         if (index >= 0) {
           const newList = [...prev];
@@ -97,7 +101,11 @@ const App: React.FC = () => {
         return [protocolToSave, ...prev];
       });
       
-      setData(protocolToSave);
+      // Se estamos salvando os dados atualmente visíveis, atualiza o estado principal
+      if (!specificData || specificData.id === data.id) {
+        setData(protocolToSave);
+      }
+      
       setCloudStatus('online');
       if (!silent) {
         setShowToast(true);
@@ -120,7 +128,6 @@ const App: React.FC = () => {
   };
 
   const loadStudent = (student: ProtocolData, view: ViewMode = 'student-dashboard') => {
-    // Garante que ao carregar, se estiver faltando o contrato, injeta
     const safeStudent = {
       ...student,
       contract: {
@@ -253,10 +260,24 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
               currentProtocol={data} 
               history={savedProtocols.filter(p => p.clientName === data.clientName)} 
               onNotesChange={(n) => setData({...data, privateNotes: n})} 
-              onUpdateData={(newData) => {
-                setData(newData);
-                // Salvar silenciosamente após atualização rápida
-                setTimeout(() => handleSave(true), 100);
+              onUpdateData={(newData, createHistory = false) => {
+                // Se for para criar histórico, geramos um NOVO ID
+                if (createHistory) {
+                  const historyId = "vbr-" + Math.random().toString(36).substr(2, 9);
+                  const dataToSave = { 
+                    ...newData, 
+                    id: historyId, 
+                    updatedAt: new Date().toISOString() 
+                  };
+                  // Atualiza a tela com os novos dados
+                  setData(dataToSave);
+                  // Salva no banco como um novo registro
+                  handleSave(true, dataToSave);
+                } else {
+                  // Apenas atualiza o registro atual
+                  setData(newData);
+                  handleSave(true, newData);
+                }
               }}
             />
           </div>

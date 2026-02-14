@@ -1,17 +1,18 @@
 
 import React, { useState } from 'react';
 import { ProtocolData } from '../types';
-import { TrendingUp, ClipboardList, ArrowUpRight, ArrowDownRight, Minus, Calendar, Clock, Activity, Edit3, Save } from 'lucide-react';
+import { TrendingUp, ClipboardList, ArrowUpRight, ArrowDownRight, Minus, Calendar, Clock, Activity, Edit3, Save, Loader2 } from 'lucide-react';
 
 interface Props {
   currentProtocol: ProtocolData;
   history: ProtocolData[];
   onNotesChange: (notes: string) => void;
-  onUpdateData?: (newData: ProtocolData) => void;
+  onUpdateData?: (newData: ProtocolData, createHistory?: boolean) => void;
 }
 
 const EvolutionTracker: React.FC<Props> = ({ currentProtocol, history, onNotesChange, onUpdateData }) => {
   const [isEditing, setIsEditing] = useState(false);
+  const [isSavingNotes, setIsSavingNotes] = useState(false);
   const [tempData, setTempData] = useState(currentProtocol.physicalData);
 
   // Ordenar histórico por data (mais recente primeiro)
@@ -43,13 +44,23 @@ const EvolutionTracker: React.FC<Props> = ({ currentProtocol, history, onNotesCh
 
   const handleQuickSave = () => {
     if (onUpdateData) {
+      // Ao salvar medidas, passamos true para createHistory, forçando um novo registro no histórico
       onUpdateData({
         ...currentProtocol,
         physicalData: tempData,
         updatedAt: new Date().toISOString()
-      });
+      }, true);
     }
     setIsEditing(false);
+  };
+
+  const handleSaveNotes = () => {
+    if (onUpdateData) {
+      setIsSavingNotes(true);
+      // Ao salvar notas, passamos false para não criar duplicata, apenas atualizar o registro atual
+      onUpdateData(currentProtocol, false);
+      setTimeout(() => setIsSavingNotes(false), 1000);
+    }
   };
 
   const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString('pt-BR');
@@ -116,13 +127,18 @@ const EvolutionTracker: React.FC<Props> = ({ currentProtocol, history, onNotesCh
                 </div>
               ))}
             </div>
+            {isEditing && (
+              <p className="text-[10px] text-white/40 mt-4 text-center font-bold uppercase tracking-widest">
+                * Ao salvar, um novo ponto no histórico será criado.
+              </p>
+            )}
           </div>
 
           <div className="bg-white/5 p-10 rounded-[2.5rem] border border-white/10">
             <h3 className="text-xs font-black text-white/40 uppercase tracking-widest mb-6 flex items-center gap-2">
               <Calendar size={14} className="text-[#d4af37]" /> Histórico de Sessões
             </h3>
-            <div className="space-y-3">
+            <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
               {sortedHistory.map((p, idx) => (
                 <div key={p.id} className="flex items-center justify-between p-5 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/10 transition-all cursor-default group">
                   <div className="flex items-center gap-4">
@@ -151,17 +167,29 @@ const EvolutionTracker: React.FC<Props> = ({ currentProtocol, history, onNotesCh
           </div>
         </div>
 
-        <div className="bg-[#111] p-10 rounded-[2.5rem] border border-white/10 shadow-2xl">
-          <div className="flex items-center gap-3 mb-6">
-            <ClipboardList className="text-[#d4af37]" />
-            <h3 className="text-lg font-black text-[#d4af37] uppercase tracking-tighter">Observações da Evolução</h3>
+        <div className="bg-[#111] p-10 rounded-[2.5rem] border border-white/10 shadow-2xl flex flex-col h-full">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <ClipboardList className="text-[#d4af37]" />
+              <h3 className="text-lg font-black text-[#d4af37] uppercase tracking-tighter">Observações</h3>
+            </div>
+            <button 
+              onClick={handleSaveNotes}
+              className="px-4 py-2 bg-white/5 hover:bg-[#d4af37] hover:text-black rounded-lg text-[10px] font-black uppercase tracking-widest text-white/40 transition-all flex items-center gap-2"
+            >
+              {isSavingNotes ? <Loader2 className="animate-spin" size={12} /> : <Save size={12} />}
+              Salvar Notas
+            </button>
           </div>
           <textarea
-            className="w-full bg-black border border-white/10 rounded-2xl p-6 text-sm focus:ring-1 focus:ring-[#d4af37] outline-none text-white/60 min-h-[400px] resize-none leading-relaxed font-medium"
+            className="w-full bg-black border border-white/10 rounded-2xl p-6 text-sm focus:ring-1 focus:ring-[#d4af37] outline-none text-white/60 resize-none leading-relaxed font-medium flex-1"
             placeholder="Anotações privadas sobre o progresso do aluno, feedback de treinos e ajustes futuros..."
             value={currentProtocol.privateNotes}
             onChange={(e) => onNotesChange(e.target.value)}
           />
+          <p className="text-[9px] text-white/20 mt-4 text-center">
+            Essas observações são privadas e não aparecem no PDF do aluno.
+          </p>
         </div>
 
       </div>
