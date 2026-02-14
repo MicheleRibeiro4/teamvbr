@@ -1,14 +1,19 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useImperativeHandle, forwardRef } from 'react';
 import { ProtocolData } from '../types';
 import { LOGO_VBR_BLACK } from '../constants';
 import { ChevronLeft, Download, Loader2, AlertTriangle } from 'lucide-react';
 
+export interface ProtocolPreviewHandle {
+  download: () => Promise<void>;
+}
+
 interface Props {
   data: ProtocolData;
   onBack?: () => void;
+  hideFloatingButton?: boolean;
 }
 
-const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
+const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack, hideFloatingButton }, ref) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const pdfRef = useRef<HTMLDivElement>(null);
 
@@ -16,9 +21,9 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
     if (!pdfRef.current) return;
     setIsGenerating(true);
     
-    // Configurações otimizadas para evitar cortes
+    // Configurações otimizadas
     const opt = {
-      margin: [0, 0, 0, 0], // Margem controlada pelo CSS
+      margin: [0, 0, 0, 0],
       filename: `Protocolo_VBR_${data.clientName.replace(/\s+/g, '_')}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { 
@@ -43,24 +48,27 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
     }
   };
 
-  // CSS Ajustado para permitir expansão de conteúdo
+  useImperativeHandle(ref, () => ({
+    download: handleDownloadPDF
+  }));
+
+  // CSS Ajustado: Removido 'pageBreakAfter' para evitar páginas brancas extras.
+  // Usaremos <div className="html2pdf__page-break"></div> manualmente.
   const pageStyle: React.CSSProperties = { 
     width: '210mm', 
-    minHeight: '296mm', // Permite crescer se o conteúdo for maior
+    minHeight: '296mm', 
     padding: '15mm', 
     backgroundColor: 'white', 
     color: 'black', 
     position: 'relative', 
     boxSizing: 'border-box', 
     display: 'block',
-    pageBreakAfter: 'always', // Garante que cada seção comece numa nova página
+    // pageBreakAfter: 'always', <--- REMOVIDO PARA CORRIGIR PÁGINAS EM BRANCO
   };
 
-  // Estilo específico para a última página
   const lastPageStyle: React.CSSProperties = {
     ...pageStyle,
     padding: '0', 
-    pageBreakAfter: 'auto'
   };
   
   const sectionTitle = "text-xl font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-1 mb-6 uppercase";
@@ -76,40 +84,36 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
 
   return (
     <div className="flex flex-col items-center w-full pb-20 print:pb-0">
-      <div className="no-print fixed bottom-8 right-8 z-[100] flex gap-3">
-        {onBack && <button onClick={onBack} className="bg-white/10 backdrop-blur-md text-white px-6 py-4 rounded-full border border-white/20 hover:bg-white/20 transition-all font-black uppercase text-[10px] flex items-center gap-2"><ChevronLeft size={16} /> Voltar</button>}
-        <button onClick={handleDownloadPDF} disabled={isGenerating} className="bg-[#d4af37] text-black px-8 py-5 rounded-full shadow-2xl font-black uppercase text-xs flex items-center gap-3 transition-all active:scale-95">{isGenerating ? <Loader2 className="animate-spin" size={20} /> : <Download size={20} />}{isGenerating ? 'Processando...' : 'Exportar Protocolo PDF'}</button>
-      </div>
+      
+      {!hideFloatingButton && (
+        <div className="no-print fixed bottom-8 right-8 z-[100] flex gap-3">
+          {onBack && <button onClick={onBack} className="bg-white/10 backdrop-blur-md text-white px-6 py-4 rounded-full border border-white/20 hover:bg-white/20 transition-all font-black uppercase text-[10px] flex items-center gap-2"><ChevronLeft size={16} /> Voltar</button>}
+          <button onClick={handleDownloadPDF} disabled={isGenerating} className="bg-[#d4af37] text-black px-8 py-5 rounded-full shadow-2xl font-black uppercase text-xs flex items-center gap-3 transition-all active:scale-95">{isGenerating ? <Loader2 className="animate-spin" size={20} /> : <Download size={20} />}{isGenerating ? 'Processando...' : 'Exportar Protocolo PDF'}</button>
+        </div>
+      )}
 
       <div ref={pdfRef} className="bg-gray-200 shadow-inner flex flex-col items-center print:bg-transparent print:m-0 print:p-0">
         
         {/* PÁGINA 1: CAPA */}
         <div style={{ ...pageStyle, padding: 0, backgroundColor: '#111' }} className="relative h-[296mm] flex flex-col justify-between text-white text-center bg-[#111]">
-          
-          {/* Conteúdo Centralizado Verticalmente */}
           <div className="flex-1 flex flex-col items-center justify-center w-full px-10 relative z-10 pb-10">
             <img src={LOGO_VBR_BLACK} alt="Team VBR" className="w-80 h-auto mb-12 relative z-10" />
-            
             <h1 className="text-5xl font-black text-[#d4af37] uppercase tracking-wider leading-tight mb-16">
-              PROTOCOLO<br/>
-              COMPLETO DE<br/>
-              {data.protocolTitle || 'HIPERTROFIA'}
+              PROTOCOLO<br/>COMPLETO DE<br/>{data.protocolTitle || 'HIPERTROFIA'}
             </h1>
-
             <div className="border-t border-b border-white/20 py-8 w-full max-w-2xl">
               <h2 className="text-6xl font-black uppercase tracking-tight text-white">{data.clientName || 'NOME DO ALUNO'}</h2>
             </div>
-            
             <div className="mt-16 bg-[#d4af37]/10 px-8 py-4 rounded-full border border-[#d4af37]/30">
               <p className="text-2xl font-bold text-white uppercase tracking-widest">
                 Período: {data.contract.startDate} — {data.contract.endDate}
               </p>
             </div>
           </div>
-
-          {/* Rodapé Amarelo - Posicionado Absolutamente para garantir o fim da página */}
           <div className="absolute bottom-0 left-0 w-full h-8 bg-[#d4af37]"></div>
         </div>
+
+        <div className="html2pdf__page-break"></div>
 
         {/* PÁGINA 2: DADOS & ESTRATÉGIA */}
         <div style={pageStyle}>
@@ -165,6 +169,8 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
           </div>
         </div>
 
+        <div className="html2pdf__page-break"></div>
+
         {/* PÁGINA 3: PLANO ALIMENTAR */}
         <div style={pageStyle}>
           <h3 className={sectionTitle}>3. Plano Alimentar Diário</h3>
@@ -192,6 +198,8 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
              Lembre-se de manter a hidratação ao longo do dia (mínimo 3.5L de água).
           </div>
         </div>
+
+        <div className="html2pdf__page-break"></div>
 
         {/* PÁGINA 4: SUPLEMENTAÇÃO */}
         <div style={pageStyle}>
@@ -229,6 +237,8 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
           </ul>
         </div>
 
+        <div className="html2pdf__page-break"></div>
+
         {/* PÁGINA 5: TREINO PARTE 1 */}
         <div style={pageStyle}>
           <h3 className={sectionTitle}>5. Divisão de Treino (Parte 1)</h3>
@@ -256,6 +266,8 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
           </div>
         </div>
 
+        <div className="html2pdf__page-break"></div>
+
         {/* PÁGINA 6: TREINO PARTE 2 */}
         <div style={pageStyle}>
           <h3 className={sectionTitle}>5. Divisão de Treino (Parte 2)</h3>
@@ -282,48 +294,31 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
           </div>
         </div>
 
-        {/* PÁGINA 7: ENCERRAMENTO (ÚLTIMA PÁGINA - OCUPA TUDO) */}
-        <div style={lastPageStyle} className="h-[296mm]">
-          {/* Estrutura Flexbox para garantir separação entre conteúdo e rodapé */}
-          <div className="w-full h-full bg-[#111] flex flex-col justify-between p-12 text-center border-[20px] border-white box-border">
-             
-             {/* Espaçador Superior para centralizar o bloco do meio visualmente */}
-             <div className="flex-none"></div>
+        <div className="html2pdf__page-break"></div>
 
-             {/* Bloco Central de Conteúdo */}
+        {/* PÁGINA 7: ENCERRAMENTO */}
+        <div style={lastPageStyle} className="h-[296mm]">
+          <div className="w-full h-full bg-[#111] flex flex-col justify-between p-12 text-center border-[20px] border-white box-border">
+             <div className="flex-none"></div>
              <div className="flex flex-col items-center justify-center space-y-8">
                <AlertTriangle size={80} className="text-[#d4af37]" />
-               
-               <h2 className="text-5xl font-black text-white uppercase tracking-tighter">
-                 Atenção
-               </h2>
-               
+               <h2 className="text-5xl font-black text-white uppercase tracking-tighter">Atenção</h2>
                <div className="w-24 h-2 bg-[#d4af37]"></div>
-
                <div className="max-w-3xl space-y-6 text-xl text-white/80 font-medium leading-relaxed">
-                 <p>
-                   Este protocolo foi desenhado especificamente para você, {data.clientName.split(' ')[0]}.
-                 </p>
-                 <p>
-                   Ajustes de carga, dieta e cardio serão feitos conforme sua evolução e feedbacks.
-                 </p>
-                 <p className="text-[#d4af37]">
-                   A consistência vence a intensidade.
-                 </p>
+                 <p>Este protocolo foi desenhado especificamente para você, {data.clientName.split(' ')[0]}.</p>
+                 <p>Ajustes de carga, dieta e cardio serão feitos conforme sua evolução e feedbacks.</p>
+                 <p className="text-[#d4af37]">A consistência vence a intensidade.</p>
                </div>
              </div>
-
-             {/* Rodapé fixo no fluxo do Flexbox */}
              <div className="flex-none pt-12">
                <p className="text-xs font-bold text-gray-600 uppercase tracking-[0.3em]">TEAM VBR © 2026</p>
              </div>
-
           </div>
         </div>
 
       </div>
     </div>
   );
-};
+});
 
 export default ProtocolPreview;

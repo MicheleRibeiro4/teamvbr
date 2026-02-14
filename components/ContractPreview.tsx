@@ -1,15 +1,20 @@
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useImperativeHandle, forwardRef } from 'react';
 import { ProtocolData } from '../types';
 import { CONSULTANT_DEFAULT, EMPTY_DATA } from '../constants';
 import { Download, Loader2 } from 'lucide-react';
 
+export interface ContractPreviewHandle {
+  download: () => Promise<void>;
+}
+
 interface Props {
   data: ProtocolData;
   onBack?: () => void;
+  hideFloatingButton?: boolean;
 }
 
-const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
+const ContractPreview = forwardRef<ContractPreviewHandle, Props>(({ data, onBack, hideFloatingButton }, ref) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const contractRef = useRef<HTMLDivElement>(null);
 
@@ -20,8 +25,7 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
        text = EMPTY_DATA.contract.contractBody || '';
     }
 
-    // Formata o método de pagamento para exibição
-    const paymentMethodDisplay = data.contract.paymentMethod === 'Pix'       ? 'Pix (à vista)'        : data.contract.paymentMethod;
+    const paymentMethodDisplay = data.contract.paymentMethod === 'Pix' ? 'Pix (à vista)' : data.contract.paymentMethod;
 
     const map = {
       '[START_DATE]': data.contract.startDate,
@@ -29,20 +33,16 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
       '[VALUE]': data.contract.planValue,
       '[VALUE_WORDS]': data.contract.planValueWords,
       '[DURATION]': data.contract.durationDays,
-      '[PAYMENT_METHOD]': paymentMethodDisplay, // Substitui diretamente pelo valor
-      '[PAYMENT_OPTIONS_PLACEHOLDER]': paymentMethodDisplay // Mantém compatibilidade com templates antigos
+      '[PAYMENT_METHOD]': paymentMethodDisplay,
+      '[PAYMENT_OPTIONS_PLACEHOLDER]': paymentMethodDisplay
     };
 
     Object.entries(map).forEach(([key, val]) => {
       text = text.replace(new RegExp(key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), val || '__________');
     });
 
-    // --- LIMPEZA DE ARTEFATOS ANTIGOS E ESPAÇOS ---
-    // Remove linhas específicas que podem ter ficado salvas em contratos antigos (Boleto/Outro)
     text = text.replace(/\(\s*\)\s*Boleto bancário/gi, "");
     text = text.replace(/\(\s*\)\s*Outro:[\s_]*/gi, "");
-    
-    // Remove quebras de linha excessivas (mais de 2 vira 2)
     text = text.replace(/\n\s*\n\s*\n/g, "\n\n");
 
     return text;
@@ -53,7 +53,6 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
     setIsGenerating(true);
     
     const opt = {
-      // Aumentei as margens verticais para 20mm para evitar corte no cabeçalho/rodapé
       margin: [20, 15, 20, 15], 
       filename: `Contrato_VBR_${data.clientName.replace(/\s+/g, '_')}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
@@ -78,6 +77,10 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
     }
   };
 
+  useImperativeHandle(ref, () => ({
+    download: handleDownloadPDF
+  }));
+
   const street = data.contract.street || '';
   const number = data.contract.number || 'SN';
   const neighbor = data.contract.neighborhood || '';
@@ -89,12 +92,15 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
 
   return (
     <div className="flex flex-col items-center w-full bg-transparent pb-20 print:pb-0">
-      <div className="no-print fixed bottom-8 right-8 z-[100]">
-        <button onClick={handleDownloadPDF} disabled={isGenerating} className="bg-[#d4af37] text-black px-8 py-5 rounded-full shadow-2xl font-black uppercase text-xs flex items-center gap-3 transition-all active:scale-95">
-          {isGenerating ? <Loader2 className="animate-spin" size={20} /> : <Download size={20} />} 
-          {isGenerating ? 'Processando...' : 'Baixar Contrato'}
-        </button>
-      </div>
+      
+      {!hideFloatingButton && (
+        <div className="no-print fixed bottom-8 right-8 z-[100]">
+          <button onClick={handleDownloadPDF} disabled={isGenerating} className="bg-[#d4af37] text-black px-8 py-5 rounded-full shadow-2xl font-black uppercase text-xs flex items-center gap-3 transition-all active:scale-95">
+            {isGenerating ? <Loader2 className="animate-spin" size={20} /> : <Download size={20} />} 
+            {isGenerating ? 'Processando...' : 'Baixar Contrato'}
+          </button>
+        </div>
+      )}
 
       {/* Container principal */}
       <div ref={contractRef} className="bg-white text-black p-[15mm] w-[210mm] mx-auto font-sans leading-[1.6] text-[10pt] shadow-2xl print:shadow-none print:w-full h-auto min-h-[297mm]">
@@ -120,7 +126,6 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
           <p className="mb-6 text-justify">As partes acima identificadas celebram o presente contrato, mediante as seguintes cláusulas e condições:</p>
         </div>
 
-        {/* whitespace-pre-wrap mantém a formatação, mas permite quebra de linha */}
         <div className="whitespace-pre-wrap mb-10 text-justify">
           {renderContractText()}
         </div>
@@ -155,6 +160,6 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
       </div>
     </div>
   );
-};
+});
 
 export default ContractPreview;
