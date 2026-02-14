@@ -15,13 +15,12 @@ const CONTRACT_TEMPLATE = `CLÁUSULA 1 – OBJETO
 a) Sugestões de rotinas de exercícios físicos já prontas e amplamente difundidas (ex.: treino ABC, treino full body, planilhas informativas);
 b) Dicas de bem-estar, motivação e organização de rotina;
 c) Suporte motivacional e acompanhamento de adesão.
-
 1.2. FICA EXPRESSAMENTE DECLARADO QUE:
 a) O contratado NÃO É PROFISSIONAL DE EDUCAÇÃO FÍSICA, NUTRIÇÃO OU MEDICINA;
 b) O contratado NÃO POSSUI REGISTRO nos respectivos conselhos profissionais (CREF, CRN, CRM);
 c) Os materiais fornecidos NÃO CONSTITUEM PRESCRIÇÃO INDIVIDUALIZADA, PERIODIZAÇÃO CIENTÍFICA, AVALIAÇÃO FUNCIONAL OU DIAGNÓSTICO.
-
 1.3. NÃO constitui objeto deste contrato:
+
 • Elaboração de programas de treinamento com base em avaliação física;
 • Diagnóstico, tratamento, prevenção ou reabilitação de lesões, doenças ou condições de saúde;
 • Qualquer atividade privativa de profissionais registrados no CREF, CRN ou CRM.
@@ -35,6 +34,8 @@ CLÁUSULA 3 – VALOR E FORMA DE PAGAMENTO
 3.1. O valor total da assessoria é de R$ [VALUE] ([VALUE_WORDS]).
 3.2. Forma de pagamento:
 [PAYMENT_OPTIONS_PLACEHOLDER]
+( ) Boleto bancário
+( ) Outro: _________
 
 CLÁUSULA 4 – RESPONSABILIDADES E DECLARAÇÕES DO CONTRATANTE
 4.1. O contratante declara, sob as penas da lei:
@@ -43,7 +44,6 @@ b) Ser o único responsável pela execução das atividades sugeridas, bem como 
 c) Estar apto fisicamente para a prática de exercícios, assumindo integralmente os riscos inerentes à atividade física;
 d) Informar, de forma completa e verídica, quaisquer condições de saúde, lesões, limitações ou uso de medicamentos, sem que isso implique obrigação do contratado em prescrever ou adaptar treinos;
 e) Responsabilizar-se civil e criminalmente por informações falsas ou omitidas.
-
 4.2. O contratante assume todos os riscos inerentes à prática esportiva, isentando expressamente o contratado por quaisquer danos, lesões ou prejuízos decorrentes:
 a) Da execução inadequada das atividades;
 b) De condições de saúde preexistentes não informadas;

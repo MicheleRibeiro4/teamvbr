@@ -20,9 +20,15 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
       margin: 0,
       filename: `Protocolo_VBR_${data.clientName.replace(/\s+/g, '_')}.pdf`,
       image: { type: 'jpeg', quality: 1.0 },
-      html2canvas: { scale: 3, useCORS: true, letterRendering: true, backgroundColor: '#ffffff' },
+      html2canvas: { 
+        scale: 2, 
+        useCORS: true, 
+        letterRendering: true, 
+        backgroundColor: '#ffffff',
+        scrollY: 0
+      },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: ['css', 'legacy'] }
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     };
     try {
       // @ts-ignore
@@ -30,7 +36,20 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
     } catch (err) { alert("Erro ao gerar PDF."); } finally { setIsGenerating(false); }
   };
 
-  const pageStyle = { width: '210mm', minHeight: '297mm', padding: '15mm', backgroundColor: 'white', color: 'black', position: 'relative' as const, boxSizing: 'border-box' as const, display: 'block' };
+  // Fixed dimensions for A4 to prevent overflow/extra pages
+  const pageStyle = { 
+    width: '210mm', 
+    height: '297mm', // Fixed height instead of minHeight prevents slight overflow
+    padding: '15mm', 
+    backgroundColor: 'white', 
+    color: 'black', 
+    position: 'relative' as const, 
+    boxSizing: 'border-box' as const, 
+    display: 'block',
+    overflow: 'hidden', // Crucial to stop spillover
+    pageBreakAfter: 'always'
+  };
+  
   const sectionTitle = "text-xl font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-1 mb-6 uppercase";
 
   // Card style for Page 2
@@ -52,7 +71,7 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
         <button onClick={handleDownloadPDF} disabled={isGenerating} className="bg-[#d4af37] text-black px-8 py-5 rounded-full shadow-2xl font-black uppercase text-xs flex items-center gap-3 transition-all active:scale-95">{isGenerating ? <Loader2 className="animate-spin" size={20} /> : <Download size={20} />}{isGenerating ? 'Processando...' : 'Exportar Protocolo PDF'}</button>
       </div>
 
-      <div ref={pdfRef} className="bg-gray-200 shadow-inner flex flex-col items-center gap-4 print:bg-transparent">
+      <div ref={pdfRef} className="bg-gray-200 shadow-inner flex flex-col items-center print:bg-transparent">
         
         {/* PÁGINA 1: CAPA */}
         <div style={{ ...pageStyle, padding: 0, backgroundColor: '#111' }} className="flex flex-col items-center justify-center text-white text-center relative overflow-hidden bg-[#111]">
@@ -65,16 +84,11 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
               {data.protocolTitle || 'HIPERTROFIA'}
             </h1>
 
-            <h2 className="text-5xl font-bold uppercase tracking-tight mb-4">{data.clientName || 'NOME DO ALUNO'}</h2>
+            <h2 className="text-5xl font-black uppercase tracking-tight mb-4 text-white">{data.clientName || 'NOME DO ALUNO'}</h2>
             
             <p className="text-sm font-medium text-white/80 mt-8">
               Período Consultoria: {data.contract.startDate} a {data.contract.endDate}
             </p>
-
-            <div className="mt-20">
-               <p className="text-white text-sm">Vinicius Brasil</p>
-               <p className="text-white text-sm">Consultoria Personalizada</p>
-            </div>
           </div>
           <div className="w-full h-3 bg-[#d4af37]"></div>
         </div>
@@ -135,7 +149,7 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
         </div>
 
         {/* PÁGINA 3: PLANO ALIMENTAR */}
-        <div style={pageStyle} className="html2pdf__page-break">
+        <div style={pageStyle}>
           <h3 className={sectionTitle}>3. Plano Alimentar Diário</h3>
           <table className="w-full text-left text-sm border-collapse">
             <thead>
@@ -163,16 +177,15 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
         </div>
 
         {/* PÁGINA 4: SUPLEMENTAÇÃO */}
-        <div style={pageStyle} className="html2pdf__page-break">
+        <div style={pageStyle}>
           <h3 className={sectionTitle}>4. Suplementação e Recomendações</h3>
           <div className="space-y-4 mb-12">
             {data.supplements.map((supp) => {
-              // Specific colors based on screenshots
               let bgColor = "bg-gray-800";
               const nameLower = supp.name.toLowerCase();
-              if (nameLower.includes('creatina')) bgColor = "bg-[#d4af37]"; // Gold
-              else if (nameLower.includes('whey')) bgColor = "bg-[#2563eb]"; // Blue
-              else if (nameLower.includes('cafeína') || nameLower.includes('cafeina') || nameLower.includes('café')) bgColor = "bg-[#5d4037]"; // Brown/Coffee
+              if (nameLower.includes('creatina')) bgColor = "bg-[#d4af37]"; 
+              else if (nameLower.includes('whey')) bgColor = "bg-[#2563eb]"; 
+              else if (nameLower.includes('cafeína') || nameLower.includes('cafeina') || nameLower.includes('café')) bgColor = "bg-[#5d4037]"; 
 
               return (
                 <div key={supp.id} className={`${bgColor} text-white p-6 rounded-xl flex justify-between items-center shadow-md break-inside-avoid`}>
@@ -200,7 +213,7 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
         </div>
 
         {/* PÁGINA 5: TREINO PARTE 1 */}
-        <div style={pageStyle} className="html2pdf__page-break">
+        <div style={pageStyle}>
           <h3 className={sectionTitle}>5. Divisão de Treino (Parte 1)</h3>
           <p className="text-sm text-gray-600 mb-6">Frequência: {data.trainingFrequency}</p>
           
@@ -227,7 +240,7 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
         </div>
 
         {/* PÁGINA 6: TREINO PARTE 2 */}
-        <div style={pageStyle} className="html2pdf__page-break">
+        <div style={pageStyle}>
           <h3 className={sectionTitle}>5. Divisão de Treino (Parte 2)</h3>
           
           <div className="space-y-8 mt-6">
@@ -253,7 +266,7 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
         </div>
 
         {/* PÁGINA 7: ENCERRAMENTO */}
-        <div style={pageStyle} className="html2pdf__page-break flex flex-col items-center justify-center text-center">
+        <div style={{...pageStyle, pageBreakAfter: 'auto'}} className="flex flex-col items-center justify-center text-center">
            <div className="bg-[#111] text-white p-6 rounded w-full max-w-lg mb-12 shadow-lg">
              <div className="flex items-center justify-center gap-2 text-[#d4af37] font-bold uppercase mb-2">
                <span>⚠</span> <span>ATENÇÃO:</span>
