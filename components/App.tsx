@@ -168,10 +168,10 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
         </div>
       )}
 
-      <header className="h-24 border-b border-white/10 px-8 flex items-center justify-between sticky top-0 bg-[#0a0a0a]/90 backdrop-blur-xl z-50 no-print">
-        <div className="flex items-center gap-6">
+      <header className="h-auto py-4 md:py-0 md:h-24 border-b border-white/10 px-4 md:px-8 flex flex-col md:flex-row items-center justify-between sticky top-0 bg-[#0a0a0a]/90 backdrop-blur-xl z-50 no-print gap-4 md:gap-0">
+        <div className="flex items-center gap-6 w-full md:w-auto justify-between md:justify-start">
           <button onClick={() => setActiveView('home')} className="hover:scale-105 transition-transform">
-            <img src={LOGO_VBR_BLACK} alt="VBR Logo" className="h-20 w-auto" />
+            <img src={LOGO_VBR_BLACK} alt="VBR Logo" className="h-12 md:h-20 w-auto" />
           </button>
           
           {activeView !== 'home' && (
@@ -184,15 +184,16 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
           )}
         </div>
 
-        <div className="flex items-center gap-2 md:gap-4">
+        <div className="flex items-center gap-2 md:gap-4 w-full md:w-auto justify-end">
           {data.id && activeView !== 'home' && activeView !== 'search' && (
             <button 
               onClick={() => handleSave()} 
               disabled={isSyncing}
-              className="flex items-center gap-2 bg-[#d4af37] text-black px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all shadow-lg disabled:opacity-50"
+              className="flex items-center gap-2 bg-[#d4af37] text-black px-4 md:px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all shadow-lg disabled:opacity-50 w-full md:w-auto justify-center"
             >
               {isSyncing ? <RefreshCw size={16} className="animate-spin" /> : <Database size={16} />}
-              Salvar Alterações
+              <span className="hidden md:inline">Salvar Alterações</span>
+              <span className="md:hidden">Salvar</span>
             </button>
           )}
         </div>
@@ -201,7 +202,7 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
       <main className="max-w-[1600px] mx-auto p-4 md:p-10">
         
         {cloudStatus === 'error' && (
-          <div className="bg-red-600/10 border border-red-600/30 p-8 rounded-[2.5rem] mb-10">
+          <div className="bg-red-600/10 border border-red-600/30 p-6 md:p-8 rounded-[2.5rem] mb-10">
             <div className="flex flex-col md:flex-row items-center gap-6 justify-between">
               <div className="flex items-center gap-4 text-left">
                 <AlertTriangle className="text-red-500 shrink-0" size={40} />
@@ -212,7 +213,7 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
               </div>
               <button 
                 onClick={() => { navigator.clipboard.writeText(sqlRepairScript); alert('Copiado!'); }}
-                className="px-8 py-4 rounded-2xl font-black text-[11px] uppercase border border-white/10"
+                className="px-8 py-4 rounded-2xl font-black text-[11px] uppercase border border-white/10 w-full md:w-auto"
               >
                 Copiar SQL
               </button>

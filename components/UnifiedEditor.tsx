@@ -25,7 +25,7 @@ const UnifiedEditor: React.FC<Props> = ({ data, onChange, onBack }) => {
           <ChevronLeft size={16} /> Voltar ao Painel
         </button>
 
-        <div className="flex items-center gap-3 bg-white/5 px-6 py-3 rounded-2xl border border-white/10">
+        <div className="flex items-center gap-3 bg-white/5 px-6 py-3 rounded-2xl border border-white/10 self-start md:self-auto">
           <Settings2 size={16} className="text-[#d4af37]" />
           <span className="text-[10px] font-black uppercase tracking-widest text-white/60">Editor de Protocolo & Contrato</span>
         </div>
@@ -34,30 +34,30 @@ const UnifiedEditor: React.FC<Props> = ({ data, onChange, onBack }) => {
       <div className="flex flex-col xl:flex-row gap-12 items-start w-full">
         {/* LADO DO FORMULÁRIO ÚNICO (INTEGRADO) */}
         <div className="w-full xl:w-2/5 no-print">
-          <div className="bg-white/5 p-10 rounded-[3rem] border border-white/10 shadow-2xl">
+          <div className="bg-white/5 p-4 md:p-10 rounded-[3rem] border border-white/10 shadow-2xl">
             <ProtocolForm data={data} onChange={onChange} />
           </div>
         </div>
 
         {/* LADO DO PREVIEW (DUPLO) - ESCALA REDUZIDA */}
         <div className="w-full xl:w-3/5 flex flex-col items-center gap-6">
-           <div className="no-print flex gap-4 bg-black p-2 rounded-[1.5rem] border border-white/10 shadow-2xl">
+           <div className="no-print flex gap-4 bg-black p-2 rounded-[1.5rem] border border-white/10 shadow-2xl overflow-x-auto max-w-full">
               <button 
                 onClick={() => setPreviewMode('protocol')}
-                className={`flex items-center gap-2 px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${previewMode === 'protocol' ? 'bg-[#d4af37] text-black shadow-[0_0_20px_rgba(212,175,55,0.3)]' : 'text-white/40 hover:text-white'}`}
+                className={`flex items-center gap-2 px-6 md:px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${previewMode === 'protocol' ? 'bg-[#d4af37] text-black shadow-[0_0_20px_rgba(212,175,55,0.3)]' : 'text-white/40 hover:text-white'}`}
               >
                 <FileText size={16} /> Ver Protocolo
               </button>
               <button 
                 onClick={() => setPreviewMode('contract')}
-                className={`flex items-center gap-2 px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${previewMode === 'contract' ? 'bg-[#d4af37] text-black shadow-[0_0_20px_rgba(212,175,55,0.3)]' : 'text-white/40 hover:text-white'}`}
+                className={`flex items-center gap-2 px-6 md:px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${previewMode === 'contract' ? 'bg-[#d4af37] text-black shadow-[0_0_20px_rgba(212,175,55,0.3)]' : 'text-white/40 hover:text-white'}`}
               >
                 <ScrollText size={16} /> Ver Contrato
               </button>
            </div>
            
-           <div className="w-full flex justify-center bg-white/5 p-4 md:p-10 rounded-[4rem] border-2 border-dashed border-white/10 relative overflow-hidden min-h-[900px]">
-              <div className="transform scale-[0.65] md:scale-[0.7] xl:scale-[0.75] origin-top">
+           <div className="w-full flex justify-center bg-white/5 p-4 md:p-10 rounded-[2rem] md:rounded-[4rem] border-2 border-dashed border-white/10 relative overflow-hidden min-h-[500px] md:min-h-[900px]">
+              <div className="transform scale-[0.45] md:scale-[0.7] xl:scale-[0.75] origin-top">
                 {previewMode === 'protocol' ? (
                   <ProtocolPreview data={data} />
                 ) : (

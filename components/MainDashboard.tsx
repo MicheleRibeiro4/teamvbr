@@ -40,13 +40,13 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
   return (
     <div className="animate-in fade-in slide-in-from-bottom-6 duration-700 space-y-10">
       
-      <div className="bg-[#0a0a0a] rounded-[3rem] p-10 border-b-[12px] border-[#d4af37] relative overflow-hidden shadow-2xl flex flex-col md:flex-row justify-between items-center gap-8">
+      <div className="bg-[#0a0a0a] rounded-[3rem] p-6 md:p-10 border-b-[12px] border-[#d4af37] relative overflow-hidden shadow-2xl flex flex-col md:flex-row justify-between items-center gap-8">
         <div className="absolute top-0 right-0 p-10 opacity-[0.03] pointer-events-none">
           <img src={LOGO_VBR_BLACK} alt="" className="w-96" />
         </div>
         
-        <div className="relative z-10 text-center md:text-left flex items-center gap-6">
-          <img src={LOGO_VBR_BLACK} alt="Team VBR" className="w-48 h-auto hidden md:block" />
+        <div className="relative z-10 text-center md:text-left flex flex-col md:flex-row items-center gap-6">
+          <img src={LOGO_VBR_BLACK} alt="Team VBR" className="w-32 md:w-48 h-auto" />
           <h1 className="text-4xl md:text-7xl font-black text-white uppercase tracking-tighter leading-none">
             Team VBR
           </h1>
@@ -102,12 +102,12 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
             {recentStudents.length > 0 ? recentStudents.map((p) => (
               <div key={p.id} className="bg-white/5 p-6 rounded-3xl border border-white/5 flex flex-col md:flex-row items-center justify-between gap-6 hover:border-white/20 transition-all group">
                 <div className="flex items-center gap-6">
-                   <div className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center text-[#d4af37] border border-white/10 group-hover:bg-[#d4af37] group-hover:text-black transition-all">
+                   <div className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center text-[#d4af37] border border-white/10 group-hover:bg-[#d4af37] group-hover:text-black transition-all shrink-0">
                       <Users size={28} />
                    </div>
-                   <div>
-                      <h4 className="font-black text-2xl uppercase tracking-tighter text-white group-hover:text-[#d4af37] transition-colors leading-none">{p.clientName}</h4>
-                      <div className="flex items-center gap-2 mt-2">
+                   <div className="flex flex-col">
+                      <h4 className="font-black text-xl md:text-2xl uppercase tracking-tighter text-white group-hover:text-[#d4af37] transition-colors leading-none break-words">{p.clientName}</h4>
+                      <div className="flex items-center gap-2 mt-2 flex-wrap">
                         <span className="text-[10px] text-white/30 font-bold uppercase tracking-widest">{p.protocolTitle}</span>
                         <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
                         <span className="text-[10px] text-green-500/80 font-black uppercase tracking-widest">Ativo</span>
@@ -115,11 +115,13 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                    </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <button onClick={() => onLoadStudent(p, 'manage')} className="p-3 bg-white/5 hover:bg-[#d4af37] hover:text-black rounded-xl transition-all text-white/40" title="Gerenciar Aluno"><FileText size={18} /></button>
-                  <button onClick={() => onLoadStudent(p, 'evolution')} className="p-3 bg-white/5 hover:bg-[#d4af37] hover:text-black rounded-xl transition-all text-white/40" title="Ver Evolução"><TrendingUp size={18} /></button>
-                  <div className="w-px h-10 bg-white/5 mx-2"></div>
-                  <button onClick={() => onLoadStudent(p, 'student-dashboard')} className="w-12 h-12 bg-white/5 hover:bg-white/10 rounded-xl flex items-center justify-center text-[#d4af37]"><ChevronRight size={24} /></button>
+                <div className="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end border-t border-white/5 md:border-0 pt-4 md:pt-0 mt-2 md:mt-0">
+                  <div className="flex gap-2">
+                    <button onClick={() => onLoadStudent(p, 'manage')} className="p-3 bg-white/5 hover:bg-[#d4af37] hover:text-black rounded-xl transition-all text-white/40" title="Gerenciar Aluno"><FileText size={18} /></button>
+                    <button onClick={() => onLoadStudent(p, 'evolution')} className="p-3 bg-white/5 hover:bg-[#d4af37] hover:text-black rounded-xl transition-all text-white/40" title="Ver Evolução"><TrendingUp size={18} /></button>
+                  </div>
+                  <div className="w-px h-10 bg-white/5 mx-2 hidden md:block"></div>
+                  <button onClick={() => onLoadStudent(p, 'student-dashboard')} className="w-12 h-12 bg-white/5 hover:bg-white/10 rounded-xl flex items-center justify-center text-[#d4af37] ml-auto md:ml-0"><ChevronRight size={24} /></button>
                 </div>
               </div>
             )) : (

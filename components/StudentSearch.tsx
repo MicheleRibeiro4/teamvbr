@@ -19,7 +19,7 @@ const StudentSearch: React.FC<Props> = ({ protocols, onLoad, onDelete }) => {
 
   return (
     <div className="max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="bg-white/5 p-8 rounded-[2rem] border border-white/10 mb-8 flex flex-col md:flex-row items-center gap-6">
+      <div className="bg-white/5 p-6 md:p-8 rounded-[2rem] border border-white/10 mb-8 flex flex-col md:flex-row items-center gap-6">
         <div className="relative flex-1 w-full">
           <input
             type="text"
@@ -45,18 +45,18 @@ const StudentSearch: React.FC<Props> = ({ protocols, onLoad, onDelete }) => {
               className="bg-white/5 p-6 rounded-[1.5rem] border border-white/5 shadow-sm hover:shadow-2xl hover:border-[#d4af37]/40 transition-all flex flex-col md:flex-row md:items-center justify-between group gap-6"
             >
               <div className="flex items-center gap-6">
-                <div className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center text-[#d4af37] border-b-4 border-[#d4af37] shadow-xl group-hover:scale-105 transition-transform">
+                <div className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center text-[#d4af37] border-b-4 border-[#d4af37] shadow-xl group-hover:scale-105 transition-transform shrink-0">
                   <User size={30} />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-2xl font-black text-white uppercase tracking-tighter leading-none mb-1 group-hover:text-[#d4af37] transition-colors">
+                  <span className="text-2xl font-black text-white uppercase tracking-tighter leading-none mb-1 group-hover:text-[#d4af37] transition-colors break-words">
                     {p.clientName || 'Novo Aluno'}
                   </span>
-                  <div className="flex items-center gap-3 text-[10px] font-black text-white/40 uppercase tracking-widest">
-                    <span className="flex items-center gap-1 text-[#d4af37] px-2 py-0.5 bg-[#d4af37]/10 rounded-md">
+                  <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3 text-[10px] font-black text-white/40 uppercase tracking-widest">
+                    <span className="flex items-center gap-1 text-[#d4af37] px-2 py-0.5 bg-[#d4af37]/10 rounded-md w-fit">
                       <Target size={12}/> {p.protocolTitle || 'Sem Objetivo'}
                     </span>
-                    <span className="w-1 h-1 bg-white/10 rounded-full"></span>
+                    <span className="hidden md:block w-1 h-1 bg-white/10 rounded-full"></span>
                     <span className="flex items-center gap-1">
                       <Calendar size={12} />
                       {new Date(p.updatedAt).toLocaleDateString('pt-BR')}
@@ -65,42 +65,44 @@ const StudentSearch: React.FC<Props> = ({ protocols, onLoad, onDelete }) => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 border-t border-white/5 md:border-t-0 pt-4 md:pt-0">
-                <div className="flex items-center gap-2">
+              <div className="flex flex-wrap md:flex-nowrap items-center gap-3 border-t border-white/5 md:border-t-0 pt-4 md:pt-0">
+                <div className="flex items-center gap-2 w-full md:w-auto justify-between md:justify-start">
+                  <div className="flex gap-2">
+                    <button 
+                        onClick={() => onLoad(p, 'manage')}
+                        className="p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all text-white/40 flex flex-col items-center gap-1 min-w-[65px]"
+                        title="Gerenciar Aluno"
+                    >
+                        <FileText size={18} />
+                        <span className="text-[7px] font-black uppercase">Gerenciar</span>
+                    </button>
+                    <button 
+                        onClick={() => onLoad(p, 'evolution')}
+                        className="p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all text-white/40 flex flex-col items-center gap-1 min-w-[65px]"
+                        title="Ver Evolução"
+                    >
+                        <TrendingUp size={18} />
+                        <span className="text-[7px] font-black uppercase">Evolução</span>
+                    </button>
+                    <button 
+                        onClick={() => onLoad(p, 'student-dashboard')}
+                        className="p-3 bg-[#d4af37]/10 hover:bg-[#d4af37] hover:text-black rounded-xl transition-all text-[#d4af37] flex flex-col items-center gap-1 min-w-[65px] border border-[#d4af37]/20"
+                        title="Painel do Aluno"
+                    >
+                        <ChevronRight size={18} />
+                        <span className="text-[7px] font-black uppercase">Painel</span>
+                    </button>
+                  </div>
+
+                  <div className="h-10 w-px bg-white/5 mx-2 hidden md:block"></div>
+
                   <button 
-                    onClick={() => onLoad(p, 'manage')}
-                    className="p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all text-white/40 flex flex-col items-center gap-1 min-w-[65px]"
-                    title="Gerenciar Aluno"
+                    onClick={() => onDelete(p.id)}
+                    className="p-4 text-white/10 hover:text-red-500 hover:bg-red-500/10 rounded-2xl transition-all ml-auto md:ml-0"
                   >
-                    <FileText size={18} />
-                    <span className="text-[7px] font-black uppercase">Gerenciar</span>
-                  </button>
-                  <button 
-                    onClick={() => onLoad(p, 'evolution')}
-                    className="p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all text-white/40 flex flex-col items-center gap-1 min-w-[65px]"
-                    title="Ver Evolução"
-                  >
-                    <TrendingUp size={18} />
-                    <span className="text-[7px] font-black uppercase">Evolução</span>
-                  </button>
-                  <button 
-                    onClick={() => onLoad(p, 'student-dashboard')}
-                    className="p-3 bg-[#d4af37]/10 hover:bg-[#d4af37] hover:text-black rounded-xl transition-all text-[#d4af37] flex flex-col items-center gap-1 min-w-[65px] border border-[#d4af37]/20"
-                    title="Painel do Aluno"
-                  >
-                    <ChevronRight size={18} />
-                    <span className="text-[7px] font-black uppercase">Painel</span>
+                    <Trash2 size={20} />
                   </button>
                 </div>
-
-                <div className="h-10 w-px bg-white/5 mx-2 hidden md:block"></div>
-
-                <button 
-                  onClick={() => onDelete(p.id)}
-                  className="p-4 text-white/10 hover:text-red-500 hover:bg-red-500/10 rounded-2xl transition-all"
-                >
-                  <Trash2 size={20} />
-                </button>
               </div>
             </div>
           ))

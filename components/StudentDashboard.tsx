@@ -12,8 +12,8 @@ const StudentDashboard: React.FC<Props> = ({ data, setView }) => {
   return (
     <div className="max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-6 duration-500">
       {/* Header do Dashboard */}
-      <div className="bg-white/5 p-8 rounded-[2rem] shadow-sm border border-white/10 mb-8 flex flex-col md:flex-row justify-between items-center gap-6">
-        <div className="flex items-center gap-6">
+      <div className="bg-white/5 p-6 md:p-8 rounded-[2rem] shadow-sm border border-white/10 mb-8 flex flex-col md:flex-row justify-between items-center gap-6">
+        <div className="flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
           <div className="w-20 h-20 bg-black rounded-2xl flex items-center justify-center border-b-4 border-[#d4af37] shadow-xl">
             <User size={40} className="text-[#d4af37]" />
           </div>
@@ -21,7 +21,7 @@ const StudentDashboard: React.FC<Props> = ({ data, setView }) => {
             <h2 className="text-3xl font-black text-white uppercase tracking-tighter leading-none mb-2">
               {data.clientName}
             </h2>
-            <div className="flex items-center gap-3 text-[10px] font-black text-white/40 uppercase tracking-widest">
+            <div className="flex flex-col md:flex-row items-center gap-3 text-[10px] font-black text-white/40 uppercase tracking-widest justify-center md:justify-start">
               <span className="text-[#d4af37] px-2 py-0.5 bg-[#d4af37]/10 rounded-md">Perfil Ativo</span>
               <span className="flex items-center gap-1">
                 <Calendar size={12} />
@@ -30,7 +30,7 @@ const StudentDashboard: React.FC<Props> = ({ data, setView }) => {
             </div>
           </div>
         </div>
-        <div className="text-center md:text-right">
+        <div className="text-center md:text-right border-t border-white/5 pt-4 md:border-0 md:pt-0 w-full md:w-auto">
           <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] mb-1">Estratégia Atual</p>
           <span className="text-xl font-black text-[#d4af37] uppercase">{data.protocolTitle || "Sem Objetivo"}</span>
         </div>

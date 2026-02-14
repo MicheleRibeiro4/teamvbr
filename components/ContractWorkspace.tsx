@@ -132,7 +132,7 @@ const ContractWorkspace: React.FC<Props> = ({ data, onChange, onBack }) => {
     }
   }, [data.contract.startDate, data.contract.endDate, data.contract.planValue, data.contract.planType]);
 
-  const sectionClass = "bg-white p-8 rounded-[2rem] shadow-xl border border-gray-100 mb-8";
+  const sectionClass = "bg-white p-6 md:p-8 rounded-[2rem] shadow-xl border border-gray-100 mb-8";
   const labelClass = "block text-[10px] font-black text-gray-400 mb-2 uppercase tracking-widest";
   const inputClass = "w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-[#d4af37] outline-none font-bold text-gray-800 text-sm transition-all";
 
@@ -259,8 +259,8 @@ const ContractWorkspace: React.FC<Props> = ({ data, onChange, onBack }) => {
           </div>
         </div>
 
-        <div className="w-full xl:w-3/5 flex justify-center bg-white/5 p-4 md:p-16 rounded-[4rem] border-2 border-dashed border-white/10">
-           <div className="relative transform scale-90 origin-top xl:scale-100">
+        <div className="w-full xl:w-3/5 flex justify-center bg-white/5 p-4 md:p-16 rounded-[4rem] border-2 border-dashed border-white/10 overflow-hidden">
+           <div className="relative transform scale-[0.5] md:scale-[0.8] xl:scale-100 origin-top">
               <ContractPreview data={data} onBack={onBack} />
            </div>
         </div>

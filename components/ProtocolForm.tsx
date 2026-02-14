@@ -515,10 +515,10 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
             <button 
               onClick={handleGenerateAI} 
               disabled={isGenerating}
-              className="px-8 py-4 bg-[#d4af37] text-black rounded-xl font-black uppercase text-xs tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-8 py-4 bg-[#d4af37] text-black rounded-xl font-black uppercase text-xs tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto justify-center"
             >
               {isGenerating ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
-              {isGenerating ? 'Gerando Inteligência...' : 'Gerar Protocolo Agora'}
+              {isGenerating ? 'Gerando...' : 'Gerar Protocolo Agora'}
             </button>
          </div>
       </section>
@@ -531,17 +531,17 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
         </div>
         <div className="space-y-4">
            {data.meals.map((meal, index) => (
-             <div key={meal.id} className="bg-white/5 p-4 rounded-xl border border-white/5 flex gap-4 items-start group">
-                <div className="w-1/4">
+             <div key={meal.id} className="bg-white/5 p-4 rounded-xl border border-white/5 flex flex-col md:flex-row gap-4 items-start group">
+                <div className="w-full md:w-1/4">
                    <label className={labelClass}>Horário</label>
                    <input className={inputClass} value={meal.time} onChange={(e) => updateMeal(index, 'time', e.target.value)} placeholder="08:00" />
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 w-full">
                    <label className={labelClass}>Nome da Refeição</label>
                    <input className={inputClass + " mb-2"} value={meal.name} onChange={(e) => updateMeal(index, 'name', e.target.value)} placeholder="Café da Manhã" />
                    <textarea className={inputClass + " min-h-[60px]"} value={meal.details} onChange={(e) => updateMeal(index, 'details', e.target.value)} placeholder="Detalhes dos alimentos..." />
                 </div>
-                <button onClick={() => removeMeal(index)} className="mt-6 text-white/20 hover:text-red-500 transition-colors"><Trash2 size={18} /></button>
+                <button onClick={() => removeMeal(index)} className="mt-0 md:mt-6 w-full md:w-auto p-2 bg-red-500/10 text-red-500 rounded-lg md:bg-transparent md:text-white/20 hover:text-red-500 transition-colors flex justify-center items-center"><Trash2 size={18} /></button>
              </div>
            ))}
            <button onClick={addMeal} className={addButtonClass}>
@@ -571,7 +571,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
                    <label className={labelClass}>Horário</label>
                    <input className={inputClass} value={supp.timing} onChange={(e) => updateSupplement(index, 'timing', e.target.value)} placeholder="Pós-treino" />
                 </div>
-                <button onClick={() => removeSupplement(index)} className="p-3 text-white/20 hover:text-red-500 transition-colors"><Trash2 size={18} /></button>
+                <button onClick={() => removeSupplement(index)} className="w-full md:w-auto p-3 bg-red-500/10 rounded-lg md:bg-transparent md:p-3 text-red-500 md:text-white/20 hover:text-red-500 transition-colors flex justify-center"><Trash2 size={18} /></button>
              </div>
            ))}
            <button onClick={addSupplement} className={addButtonClass}>
@@ -593,26 +593,26 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
         <div className="space-y-8">
            {data.trainingDays.map((day, dIndex) => (
              <div key={day.id} className="bg-white/5 p-6 rounded-2xl border border-white/10">
-                <div className="flex justify-between items-center mb-4 border-b border-white/5 pb-4">
-                   <div className="flex gap-4 flex-1">
-                      <div className="w-1/3">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 border-b border-white/5 pb-4 gap-4 md:gap-0">
+                   <div className="flex flex-col md:flex-row gap-4 flex-1 w-full">
+                      <div className="w-full md:w-1/3">
                         <label className={labelClass}>Título do Treino</label>
                         <input className={inputClass} value={day.title} onChange={(e) => updateTrainingDay(dIndex, 'title', e.target.value)} placeholder="Treino A" />
                       </div>
-                      <div className="flex-1">
+                      <div className="flex-1 w-full">
                         <label className={labelClass}>Foco Muscular</label>
                         <input className={inputClass} value={day.focus} onChange={(e) => updateTrainingDay(dIndex, 'focus', e.target.value)} placeholder="Peito e Tríceps" />
                       </div>
                    </div>
-                   <button onClick={() => removeTrainingDay(dIndex)} className="ml-4 text-white/20 hover:text-red-500"><Trash2 size={20} /></button>
+                   <button onClick={() => removeTrainingDay(dIndex)} className="ml-0 md:ml-4 p-2 bg-red-500/10 rounded-lg md:bg-transparent text-red-500 md:text-white/20 hover:text-red-500 w-full md:w-auto flex justify-center"><Trash2 size={20} /></button>
                 </div>
 
-                <div className="space-y-2 pl-4 border-l-2 border-white/5">
+                <div className="space-y-2 pl-0 md:pl-4 border-l-0 md:border-l-2 border-white/5">
                    {day.exercises.map((ex, exIndex) => (
-                     <div key={ex.id} className="flex gap-4 items-center">
+                     <div key={ex.id} className="flex gap-2 md:gap-4 items-center">
                         <input className={inputClass + " py-2 text-xs"} value={ex.name} onChange={(e) => updateExercise(dIndex, exIndex, 'name', e.target.value)} placeholder="Nome do Exercício" />
-                        <input className={inputClass + " py-2 text-xs w-32"} value={ex.sets} onChange={(e) => updateExercise(dIndex, exIndex, 'sets', e.target.value)} placeholder="Séries/Reps" />
-                        <button onClick={() => removeExercise(dIndex, exIndex)} className="text-white/20 hover:text-red-500"><Trash2 size={14} /></button>
+                        <input className={inputClass + " py-2 text-xs w-20 md:w-32"} value={ex.sets} onChange={(e) => updateExercise(dIndex, exIndex, 'sets', e.target.value)} placeholder="Séries" />
+                        <button onClick={() => removeExercise(dIndex, exIndex)} className="text-white/20 hover:text-red-500 p-2"><Trash2 size={14} /></button>
                      </div>
                    ))}
                    <button onClick={() => addExercise(dIndex)} className="mt-2 text-[10px] font-bold text-[#d4af37] uppercase tracking-widest hover:underline flex items-center gap-1">
