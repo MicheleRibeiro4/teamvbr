@@ -2,7 +2,7 @@
 import React from 'react';
 import { ProtocolData } from '../types';
 import ContractPreview from './ContractPreview';
-import { DollarSign, UserCheck, UserCircle, ChevronLeft } from 'lucide-react';
+import { ScrollText, DollarSign, UserCheck, UserCircle, ChevronLeft } from 'lucide-react';
 
 interface Props {
   data: ProtocolData;
@@ -22,34 +22,34 @@ const ContractWorkspace: React.FC<Props> = ({ data, onChange, onBack }) => {
     onChange(newData);
   };
 
-  const sectionClass = "bg-white/5 p-4 rounded-2xl border border-white/10";
-  const labelClass = "block text-[8px] font-black text-white/30 mb-1 uppercase tracking-widest";
-  const inputClass = "w-full p-2 bg-white/5 border border-white/10 rounded-lg focus:ring-1 focus:ring-[#d4af37] outline-none font-bold text-white text-xs transition-all";
+  const sectionClass = "bg-white/5 p-6 rounded-3xl border border-white/10 mb-0 h-full";
+  const labelClass = "block text-[9px] font-black text-white/30 mb-1.5 uppercase tracking-widest";
+  const inputClass = "w-full p-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-[#d4af37] outline-none font-bold text-white text-sm transition-all";
 
   return (
-    <div className="w-full flex flex-col gap-6 max-w-5xl mx-auto">
+    <div className="w-full flex flex-col gap-8">
       {onBack && (
         <button 
           onClick={onBack}
-          className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-white/40 hover:text-[#d4af37] transition-colors no-print"
+          className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-[#d4af37] transition-colors no-print"
         >
-          <ChevronLeft size={14} /> Voltar ao Painel
+          <ChevronLeft size={16} /> Voltar ao Painel
         </button>
       )}
       
-      {/* FORMULÁRIOS NO TOPO - GRID COMPACTO */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 no-print">
+      {/* FORMULÁRIOS NO TOPO */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 no-print">
         <div className={sectionClass}>
-          <div className="flex items-center gap-2 mb-3">
-            <UserCircle className="text-[#d4af37]" size={16} />
-            <h2 className="text-xs font-black text-white uppercase tracking-tighter">Consultor</h2>
+          <div className="flex items-center gap-2 mb-4">
+            <UserCircle className="text-[#d4af37]" size={18} />
+            <h2 className="text-sm font-black text-white uppercase tracking-tighter">Consultor</h2>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-3">
             <div>
               <label className={labelClass}>Nome</label>
               <input className={inputClass} value={data.consultantName} onChange={(e) => handleChange('consultantName', e.target.value)} />
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className={labelClass}>CPF</label>
                 <input className={inputClass} value={data.consultantCpf} onChange={(e) => handleChange('consultantCpf', e.target.value)} />
@@ -63,16 +63,16 @@ const ContractWorkspace: React.FC<Props> = ({ data, onChange, onBack }) => {
         </div>
 
         <div className={sectionClass}>
-          <div className="flex items-center gap-2 mb-3">
-            <UserCheck className="text-[#d4af37]" size={16} />
-            <h2 className="text-xs font-black text-white uppercase tracking-tighter">Aluno</h2>
+          <div className="flex items-center gap-2 mb-4">
+            <UserCheck className="text-[#d4af37]" size={18} />
+            <h2 className="text-sm font-black text-white uppercase tracking-tighter">Aluno</h2>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-3">
             <div>
               <label className={labelClass}>Nome do Aluno</label>
               <input className={inputClass} value={data.clientName} onChange={(e) => handleChange('clientName', e.target.value)} />
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className={labelClass}>CPF</label>
                 <input className={inputClass} value={data.contract.cpf} onChange={(e) => handleChange('contract.cpf', e.target.value)} />
@@ -86,12 +86,12 @@ const ContractWorkspace: React.FC<Props> = ({ data, onChange, onBack }) => {
         </div>
 
         <div className={sectionClass}>
-          <div className="flex items-center gap-2 mb-3">
-            <DollarSign className="text-[#d4af37]" size={16} />
-            <h2 className="text-xs font-black text-white uppercase tracking-tighter">Financeiro</h2>
+          <div className="flex items-center gap-2 mb-4">
+            <DollarSign className="text-[#d4af37]" size={18} />
+            <h2 className="text-sm font-black text-white uppercase tracking-tighter">Financeiro</h2>
           </div>
-          <div className="space-y-2">
-            <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className={labelClass}>Valor (R$)</label>
                 <input className={inputClass} value={data.contract.planValue} onChange={(e) => handleChange('contract.planValue', e.target.value)} />
@@ -109,9 +109,9 @@ const ContractWorkspace: React.FC<Props> = ({ data, onChange, onBack }) => {
         </div>
       </div>
 
-      {/* VISUALIZAÇÃO EMBAIXO - AJUSTADA PARA ESCALA */}
-      <div className="w-full flex justify-center bg-white/5 p-4 rounded-[2rem] border-2 border-dashed border-white/5 overflow-x-auto">
-        <div className="origin-top scale-[0.55] sm:scale-[0.7] md:scale-[0.8] lg:scale-[0.9] xl:scale-[1.0] transition-transform">
+      {/* VISUALIZAÇÃO EMBAIXO */}
+      <div className="w-full flex justify-center bg-white/5 p-4 md:p-10 rounded-[3rem] border-2 border-dashed border-white/5">
+        <div className="origin-top scale-[0.6] sm:scale-[0.75] md:scale-[0.85] lg:scale-[0.95] xl:scale-[1.0] transition-transform">
           <ContractPreview data={data} onBack={onBack} />
         </div>
       </div>

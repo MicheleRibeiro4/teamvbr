@@ -1,8 +1,8 @@
 
 import React, { useEffect, useState } from 'react';
-import { ProtocolData, Meal, TrainingDay } from '../types';
-import { Plus, Trash2, Activity, Target, Sparkles, Loader2, User, ChevronLeft, Dumbbell, Utensils } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
+import { ProtocolData, Meal, Supplement, TrainingDay } from '../types';
+import { Plus, Trash2, Activity, Utensils, Dumbbell, Target, Sparkles, Loader2, User, Pill, ClipboardList, ChevronLeft } from 'lucide-react';
+import { GoogleGenAI, Type } from "@google/genai";
 import { CONSULTANT_DEFAULT } from '../constants';
 
 interface Props {
@@ -31,7 +31,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
 
   const handleAISuggestion = async () => {
     if (!data.clientName || !data.physicalData.weight) {
-      alert("⚠️ DADOS NECESSÁRIOS: Preencha o Nome e o Peso para que a IA possa analisar o metabolismo.");
+      alert("⚠️ DADOS NECESSÁRIOS: Preencha o Nome e o Peso para que a IA possa analisar o metabolismo do aluno.");
       return;
     }
 
@@ -39,36 +39,36 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       
-      const prompt = `Você é o Master Coach Vinícius Brasil (VBR). Crie um protocolo de elite para:
-      Aluno: ${data.clientName} | Peso: ${data.physicalData.weight}kg | Altura: ${data.physicalData.height}m | Idade: ${data.physicalData.age} | Objetivo: ${data.protocolTitle || "Performance"}.
-
-      Retorne APENAS um JSON válido seguindo este formato:
+      const prompt = `Atue como o Master Coach Vinícius Brasil do Team VBR. Crie um protocolo profissional de elite baseado nos seguintes dados:
+      Nome: ${data.clientName} | Peso: ${data.physicalData.weight}kg | Altura: ${data.physicalData.height}m | Idade: ${data.physicalData.age} | Objetivo: ${data.protocolTitle || "Performance Máxima"}.
+      
+      Retorne APENAS um objeto JSON puro, sem comentários, com esta estrutura exata:
       {
-        "nutritionalStrategy": "Explicação técnica detalhada",
-        "kcalGoal": "2650",
-        "kcalSubtext": "(SUPERÁVIT CONTROLADO)",
+        "nutritionalStrategy": "Explicação técnica da dieta",
+        "kcalGoal": "Valor calórico",
+        "kcalSubtext": "(TEXTO EM CAIXA ALTA)",
         "macros": {
-          "protein": { "value": "160", "ratio": "2.2g/kg" },
-          "carbs": { "value": "330", "ratio": "Energia" },
-          "fats": { "value": "75", "ratio": "Regulação" }
+          "protein": { "value": "200", "ratio": "2.2g/kg" },
+          "carbs": { "value": "300", "ratio": "Energia" },
+          "fats": { "value": "70", "ratio": "Hormonal" }
         },
-        "meals": [{"time": "08:40", "name": "Café da Manhã", "details": "Detalhes da refeição"}],
-        "supplements": [{"name": "CREATINA", "dosage": "5g todos os dias (sem falhar)", "timing": "Junto à Ceia / Pós-Treino"}],
-        "tips": ["Organize suas marmitas", "A Creatina tem efeito crônico", "Cardio antes do almoço"],
-        "trainingFrequency": "4 a 5x por semana",
-        "trainingDays": [{"title": "DIA A: PEITO + OMBRO", "focus": "Superior", "exercises": [{"name": "Supino Reto", "sets": "4x 6-8"}]}]
+        "meals": [{"time": "08:00", "name": "Nome", "details": "Detalhes"}],
+        "supplements": [{"name": "Suplemento", "dosage": "dose", "timing": "horário"}],
+        "trainingDays": [{"title": "DIA A", "focus": "FOCO", "exercises": [{"name": "Exercicio", "sets": "4x12"}]}],
+        "generalObservations": "Instruções finais"
       }`;
 
-      const result = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+      const response = await ai.models.generateContent({
+        model: "gemini-3-pro-preview",
         contents: prompt,
-        config: { responseMimeType: "application/json" }
+        config: {
+          responseMimeType: "application/json"
+        }
       });
 
-      const responseText = result.text;
-      if (!responseText) throw new Error("Resposta vazia da IA");
+      if (!response.text) throw new Error("IA retornou resposta vazia");
       
-      const suggestion = JSON.parse(responseText.trim());
+      const suggestion = JSON.parse(response.text.trim());
       
       const updatedData = {
         ...data,
@@ -85,97 +85,133 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
       onChange(updatedData);
     } catch (error: any) {
       console.error("Erro IA:", error);
-      alert("❌ FALHA NA IA: Verifique sua conexão e tente novamente.");
+      alert("❌ A IA não conseguiu processar agora. Tente novamente em instantes.");
     } finally {
       setIsGenerating(false);
     }
   };
 
-  const labelClass = "block text-[8px] font-black text-white/30 mb-1 uppercase tracking-widest";
-  const inputClass = "w-full p-2.5 bg-white/5 border border-white/10 rounded-xl focus:ring-1 focus:ring-[#d4af37] outline-none font-bold text-white text-xs transition-all";
+  const addMeal = () => {
+    const newMeal: Meal = { id: Date.now().toString(), time: '00:00', name: 'Nova Refeição', details: '' };
+    handleChange('meals', [...data.meals, newMeal]);
+  };
+
+  const addSupplement = () => {
+    const newSupplement: Supplement = { id: Date.now().toString(), name: '', dosage: '', timing: '' };
+    handleChange('supplements', [...data.supplements, newSupplement]);
+  };
+
+  const addTrainingDay = () => {
+    const newDay: TrainingDay = { 
+      id: Date.now().toString(), title: 'DIA NOVO', focus: 'Foco do Treino', 
+      exercises: [{ id: 'ex-' + Date.now(), name: 'Exercício 1', sets: '3x 12' }] 
+    };
+    handleChange('trainingDays', [...data.trainingDays, newDay]);
+  };
+
+  const labelClass = "block text-[9px] font-black text-white/40 mb-1.5 uppercase tracking-widest";
+  const inputClass = "w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:ring-2 focus:ring-[#d4af37] outline-none font-bold text-white text-sm transition-all";
+  const sectionHeaderClass = "flex items-center gap-2 mb-8 border-b border-white/5 pb-4";
 
   return (
-    <div className="space-y-5 no-print">
-      <div className="flex items-center justify-between">
-        <button onClick={onBack} className="flex items-center gap-2 text-[10px] font-black uppercase text-white/40 hover:text-[#d4af37] transition-colors">
-          <ChevronLeft size={14} /> Voltar ao Painel
+    <div className="space-y-8 no-print">
+      {onBack && (
+        <button 
+          onClick={onBack}
+          className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-[#d4af37] transition-colors"
+        >
+          <ChevronLeft size={16} /> Voltar ao Painel
         </button>
-        <span className="text-[10px] font-black text-[#d4af37] uppercase tracking-[0.2em]">Editor de Protocolo</span>
-      </div>
+      )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <section className="bg-white/5 p-4 rounded-2xl border border-white/10">
-          <label className={labelClass}>Nome do Aluno</label>
-          <input className={inputClass} value={data.clientName} onChange={(e) => handleChange('clientName', e.target.value)} />
-        </section>
-        <section className="bg-white/5 p-4 rounded-2xl border border-white/10">
-          <label className={labelClass}>Objetivo</label>
-          <input className={inputClass} value={data.protocolTitle} onChange={(e) => handleChange('protocolTitle', e.target.value)} />
-        </section>
-      </div>
-
-      <section className="bg-white/5 p-4 rounded-2xl border border-white/10 grid grid-cols-4 gap-2">
-        {['weight', 'height', 'age', 'bodyFat'].map(field => (
-          <div key={field}>
-            <label className={labelClass}>{field === 'bodyFat' ? 'BF %' : field}</label>
-            <input className={inputClass} value={(data.physicalData as any)[field]} onChange={(e) => handleChange(`physicalData.${field}`, e.target.value)} />
+      <section className="bg-white/5 p-6 rounded-3xl border border-white/10">
+        <div className={sectionHeaderClass}>
+          <User className="text-[#d4af37]" size={18} />
+          <h2 className="text-lg font-black text-white uppercase tracking-tighter">Identificação</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className={labelClass}>Nome Completo</label>
+            <input className={inputClass + " !text-[#d4af37]"} value={data.clientName} onChange={(e) => handleChange('clientName', e.target.value)} />
           </div>
-        ))}
+          <div>
+            <label className={labelClass}>Título do Protocolo</label>
+            <input className={inputClass} value={data.protocolTitle} onChange={(e) => handleChange('protocolTitle', e.target.value)} />
+          </div>
+        </div>
       </section>
 
-      {/* IA BANNER */}
-      <div className="bg-[#d4af37] text-black p-4 rounded-2xl flex items-center justify-between gap-4 shadow-xl">
-        <div className="flex items-center gap-3">
-          <Sparkles className={isGenerating ? 'animate-pulse' : ''} size={20} />
-          <div className="leading-tight">
-            <h3 className="font-black text-xs uppercase">IA VBR PRO</h3>
-            <p className="text-[8px] font-bold opacity-70 italic">Gerar Dieta e Treino igual aos Prints</p>
+      <section className="bg-white/5 p-6 rounded-3xl border border-white/10">
+        <div className={sectionHeaderClass}>
+          <Activity className="text-[#d4af37]" size={18} />
+          <h2 className="text-lg font-black text-white uppercase tracking-tighter">Físico</h2>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div><label className={labelClass}>Idade</label><input className={inputClass} value={data.physicalData.age} onChange={(e) => handleChange('physicalData.age', e.target.value)} /></div>
+          <div><label className={labelClass}>Peso (kg)</label><input className={inputClass} value={data.physicalData.weight} onChange={(e) => handleChange('physicalData.weight', e.target.value)} /></div>
+          <div><label className={labelClass}>Altura (m)</label><input className={inputClass} value={data.physicalData.height} onChange={(e) => handleChange('physicalData.height', e.target.value)} /></div>
+          <div><label className={labelClass}>BF (%)</label><input className={inputClass} value={data.physicalData.bodyFat} onChange={(e) => handleChange('physicalData.bodyFat', e.target.value)} /></div>
+        </div>
+      </section>
+
+      <div className="bg-[#d4af37] text-black p-6 rounded-[2.5rem] flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl">
+        <div className="flex items-center gap-4">
+          <div className="bg-black text-[#d4af37] p-3 rounded-2xl">
+            {isGenerating ? <Loader2 className="animate-spin" /> : <Sparkles />}
+          </div>
+          <div>
+            <h3 className="font-black text-lg uppercase leading-none">VBR Intelligence</h3>
+            <p className="text-[10px] font-black uppercase opacity-60">Gere dieta e treino em segundos</p>
           </div>
         </div>
         <button 
           onClick={handleAISuggestion}
           disabled={isGenerating}
-          className="bg-black text-white px-5 py-2 rounded-lg font-black text-[9px] uppercase hover:scale-105 transition-all disabled:opacity-50 flex items-center gap-2"
+          className="bg-black text-white px-8 py-4 rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all disabled:opacity-50"
         >
-          {isGenerating ? <Loader2 className="animate-spin" size={14}/> : 'GERAR AGORA'}
+          {isGenerating ? 'Trabalhando...' : 'Ativar IA'}
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <section className="bg-white/5 p-4 rounded-2xl border border-white/10">
-          <div className="flex items-center gap-2 mb-3">
-             <Utensils size={14} className="text-[#d4af37]" />
-             <h2 className="text-[10px] font-black text-white uppercase tracking-tighter">Config. Dieta</h2>
-          </div>
-          <div className="space-y-3">
-            <div>
-              <label className={labelClass}>Kcal Diária</label>
-              <input className={inputClass} value={data.kcalGoal} onChange={(e) => handleChange('kcalGoal', e.target.value)} />
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              {['protein', 'carbs', 'fats'].map(m => (
-                <div key={m}>
-                  <label className={labelClass}>{m.slice(0, 3)}</label>
-                  <input className={inputClass} value={(data.macros as any)[m].value} onChange={(e) => handleChange(`macros.${m}.value`, e.target.value)} />
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+      <section className="bg-white/5 p-6 rounded-3xl border border-white/10">
+        <div className={sectionHeaderClass}>
+          <Target className="text-[#d4af37]" size={18} />
+          <h2 className="text-lg font-black text-white uppercase tracking-tighter">Dieta</h2>
+        </div>
+        <div className="grid grid-cols-2 gap-4 mb-4">
+           <div><label className={labelClass}>Kcal Diárias</label><input className={inputClass} value={data.kcalGoal} onChange={(e) => handleChange('kcalGoal', e.target.value)} /></div>
+           <div><label className={labelClass}>Status</label><input className={inputClass} value={data.kcalSubtext} onChange={(e) => handleChange('kcalSubtext', e.target.value)} /></div>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+           {['protein', 'carbs', 'fats'].map(m => (
+             <div key={m} className="bg-white/5 p-3 rounded-2xl">
+               <label className={labelClass}>{m === 'protein' ? 'Prot' : m === 'carbs' ? 'Carb' : 'Gord'}</label>
+               <input className="w-full bg-transparent border-none p-0 font-black text-xl outline-none" value={(data.macros as any)[m].value} onChange={(e) => handleChange(`macros.${m}.value`, e.target.value)} />
+             </div>
+           ))}
+        </div>
+      </section>
 
-        <section className="bg-white/5 p-4 rounded-2xl border border-white/10">
-          <div className="flex items-center gap-2 mb-3">
-             <Dumbbell size={14} className="text-[#d4af37]" />
-             <h2 className="text-[10px] font-black text-white uppercase tracking-tighter">Treino</h2>
-          </div>
-          <div>
-            <label className={labelClass}>Frequência Semanal</label>
-            <input className={inputClass} value={data.trainingFrequency} onChange={(e) => handleChange('trainingFrequency', e.target.value)} />
-          </div>
-        </section>
-      </div>
-      
-      <p className="text-[8px] text-white/20 text-center uppercase tracking-widest">Preencha os dados e a visualização embaixo será atualizada automaticamente.</p>
+      {/* Seções de Refeições e Treinos simplificadas para visualização compacta */}
+      <section className="bg-white/5 p-6 rounded-3xl border border-white/10">
+         <div className="flex justify-between items-center mb-6">
+            <h2 className="text-lg font-black text-white uppercase tracking-tighter">Refeições</h2>
+            <button onClick={addMeal} className="text-[#d4af37] text-[10px] font-black uppercase tracking-widest">+ Add</button>
+         </div>
+         <div className="space-y-3">
+           {data.meals.map((meal, idx) => (
+             <div key={meal.id} className="flex gap-2">
+                <input className={inputClass + " w-20 !p-2"} value={meal.time} onChange={(e) => {
+                   const m = [...data.meals]; m[idx].time = e.target.value; handleChange('meals', m);
+                }} />
+                <input className={inputClass + " !p-2"} value={meal.name} onChange={(e) => {
+                   const m = [...data.meals]; m[idx].name = e.target.value; handleChange('meals', m);
+                }} />
+                <button onClick={() => handleChange('meals', data.meals.filter(it => it.id !== meal.id))} className="text-red-500 opacity-30 hover:opacity-100 px-2"><Trash2 size={16}/></button>
+             </div>
+           ))}
+         </div>
+      </section>
     </div>
   );
 };
