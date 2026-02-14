@@ -40,7 +40,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
       
       const prompt = `
         Você é um treinador de elite e nutricionista esportivo (Estilo Team VBR).
-        Com base nos dados do aluno abaixo, gere um protocolo completo em formato JSON.
+        Com base nos dados do aluno e na ESTRATÉGIA DEFINIDA PELO TREINADOR abaixo, gere o restante do protocolo (refeições, treino, suplementos) em formato JSON.
 
         DADOS DO ALUNO:
         - Nome: ${data.clientName}
@@ -52,18 +52,28 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
         - Gordura Corporal: ${data.physicalData.bodyFat}%
         - Massa Muscular: ${data.physicalData.muscleMass}kg
 
+        DIRETRIZES DO TREINADOR (Obrigatório Seguir):
+        - Estratégia Nutricional: ${data.nutritionalStrategy || "Definir automaticamente baseada no objetivo"}
+        - Meta Calórica: ${data.kcalGoal || "Calcular automaticamente"}
+        - Contexto da Meta: ${data.kcalSubtext || "Calcular automaticamente"}
+
+        INSTRUÇÕES:
+        1. Se o treinador já definiu a estratégia ou calorias acima, USE esses valores para calcular os macros e montar as refeições.
+        2. Se estiver vazio, crie a melhor estratégia possível.
+        3. Gere treinos intensos e periodizados.
+
         Gere um JSON com a seguinte estrutura estrita (não inclua markdown, apenas o JSON):
         {
-          "nutritionalStrategy": "Texto explicando a estratégia da dieta (ex: Ciclo de carboidratos...)",
-          "kcalGoal": "Ex: 2500",
-          "kcalSubtext": "Ex: Déficit Calórico Moderado",
+          "nutritionalStrategy": "Texto explicando a estratégia (se já informado, mantenha ou refine)",
+          "kcalGoal": "Valor numérico (se já informado, mantenha)",
+          "kcalSubtext": "Contexto (se já informado, mantenha)",
           "macros": {
             "protein": { "value": "Ex: 180", "ratio": "2g/kg" },
             "carbs": { "value": "Ex: 250", "ratio": "3g/kg" },
             "fats": { "value": "Ex: 60", "ratio": "0.8g/kg" }
           },
           "meals": [
-            { "id": "1", "time": "08:00", "name": "Café da Manhã", "details": "Detalhes dos alimentos..." }
+            { "id": "1", "time": "08:00", "name": "Café da Manhã", "details": "Detalhes dos alimentos e quantidades exatas..." }
           ],
           "supplements": [
              { "id": "1", "name": "Creatina", "dosage": "5g", "timing": "Pós-treino" }
@@ -98,9 +108,11 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
         // Mesclar dados gerados com os dados atuais
         const newData = {
           ...data,
+          // Prioriza o que a IA gerou/refinou, mas mantém o input do usuário se a IA falhar
           nutritionalStrategy: generatedData.nutritionalStrategy || data.nutritionalStrategy,
           kcalGoal: generatedData.kcalGoal || data.kcalGoal,
           kcalSubtext: generatedData.kcalSubtext || data.kcalSubtext,
+          
           macros: generatedData.macros || data.macros,
           meals: generatedData.meals ? generatedData.meals.map((m: any, i: number) => ({ ...m, id: Date.now().toString() + i })) : [],
           supplements: generatedData.supplements ? generatedData.supplements.map((s: any, i: number) => ({ ...s, id: Date.now().toString() + i })) : [],
@@ -114,7 +126,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
         };
         
         onChange(newData);
-        alert("Protocolo gerado com sucesso pela IA!");
+        alert("Protocolo gerado com sucesso considerando sua estratégia!");
       }
     } catch (error) {
       console.error("Erro na IA:", error);
@@ -452,6 +464,33 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
         </div>
       </section>
 
+      {/* BLOCO 4: ESTRATÉGIA NUTRICIONAL (AGORA ANTES DA IA) */}
+      <section>
+        <div className={sectionHeaderClass}>
+           <Utensils className="text-[#d4af37]" size={20} />
+           <h2 className="text-xl font-black text-white uppercase tracking-tighter">Estratégia Nutricional</h2>
+        </div>
+        <div>
+           <label className={labelClass}>Descreva a linha de raciocínio da dieta (Use isso para guiar a IA)...</label>
+           <textarea 
+             className={textAreaClass}
+             value={data.nutritionalStrategy}
+             onChange={(e) => handleChange('nutritionalStrategy', e.target.value)}
+             placeholder="Ex: Dieta Cetogênica, Ciclo de Carboidratos, Jejum Intermitente..."
+           />
+        </div>
+        <div className="grid grid-cols-2 gap-4 mt-4">
+           <div>
+              <label className={labelClass}>Meta Calórica (Kcal)</label>
+              <input className={inputClass} value={data.kcalGoal} onChange={(e) => handleChange('kcalGoal', e.target.value)} placeholder="Ex: 2500 (Deixe vazio para IA calcular)" />
+           </div>
+           <div>
+              <label className={labelClass}>Subtexto da Meta</label>
+              <input className={inputClass} value={data.kcalSubtext} onChange={(e) => handleChange('kcalSubtext', e.target.value)} placeholder="Ex: Déficit Moderado" />
+           </div>
+        </div>
+      </section>
+
       {/* BLOCO IA: GERADOR AUTOMÁTICO */}
       <section className="bg-gradient-to-r from-[#d4af37]/10 to-transparent p-6 rounded-2xl border border-[#d4af37]/20 relative overflow-hidden group">
          <div className="absolute top-0 right-0 w-32 h-32 bg-[#d4af37] blur-[80px] opacity-10"></div>
@@ -464,7 +503,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
                <div>
                   <h3 className="text-xl font-black text-white uppercase tracking-tighter">Gerador de Protocolo IA</h3>
                   <p className="text-sm text-white/60 max-w-lg">
-                    Preencha os dados de bioimpedância acima e clique para gerar automaticamente a dieta, treino e suplementação personalizados.
+                    A IA usará seus dados de bioimpedância e a estratégia nutricional definida acima para criar um plano completo.
                   </p>
                </div>
             </div>
@@ -478,33 +517,6 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
               {isGenerating ? 'Gerando Inteligência...' : 'Gerar Protocolo Agora'}
             </button>
          </div>
-      </section>
-
-      {/* BLOCO 4: ESTRATÉGIA NUTRICIONAL */}
-      <section>
-        <div className={sectionHeaderClass}>
-           <Utensils className="text-[#d4af37]" size={20} />
-           <h2 className="text-xl font-black text-white uppercase tracking-tighter">Estratégia Nutricional</h2>
-        </div>
-        <div>
-           <label className={labelClass}>Descreva a linha de raciocínio da dieta...</label>
-           <textarea 
-             className={textAreaClass}
-             value={data.nutritionalStrategy}
-             onChange={(e) => handleChange('nutritionalStrategy', e.target.value)}
-             placeholder="Ex: Ciclo de carboidratos com foco em refeed nos dias de perna..."
-           />
-        </div>
-        <div className="grid grid-cols-2 gap-4 mt-4">
-           <div>
-              <label className={labelClass}>Meta Calórica (Kcal)</label>
-              <input className={inputClass} value={data.kcalGoal} onChange={(e) => handleChange('kcalGoal', e.target.value)} />
-           </div>
-           <div>
-              <label className={labelClass}>Subtexto da Meta</label>
-              <input className={inputClass} value={data.kcalSubtext} onChange={(e) => handleChange('kcalSubtext', e.target.value)} />
-           </div>
-        </div>
       </section>
 
       {/* BLOCO 5: DISTRIBUIÇÃO DE REFEIÇÕES */}
