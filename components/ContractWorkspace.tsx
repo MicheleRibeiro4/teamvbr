@@ -2,6 +2,7 @@
 import React, { useEffect } from 'react';
 import { ProtocolData } from '../types';
 import ContractPreview from './ContractPreview';
+import { EMPTY_DATA } from '../constants';
 import { DollarSign, UserCheck, Clock, FileText, ChevronLeft } from 'lucide-react';
 
 interface Props {
@@ -22,6 +23,26 @@ const ContractWorkspace: React.FC<Props> = ({ data, onChange, onBack }) => {
     current[keys[keys.length - 1]] = value;
     onChange(newData);
   };
+
+  const handleDateInput = (path: string, value: string) => {
+    let v = value.replace(/\D/g, ''); 
+    if (v.length > 8) v = v.substr(0, 8); 
+
+    if (v.length > 4) {
+      v = `${v.slice(0, 2)}/${v.slice(2, 4)}/${v.slice(4)}`;
+    } else if (v.length > 2) {
+      v = `${v.slice(0, 2)}/${v.slice(2)}`;
+    }
+    
+    handleChange(path, v);
+  };
+
+  // Inicializa o corpo do contrato se estiver vazio
+  useEffect(() => {
+    if (!data.contract.contractBody || data.contract.contractBody.trim() === '') {
+      handleChange('contract.contractBody', EMPTY_DATA.contract.contractBody);
+    }
+  }, []);
 
   // Lógica de Valor por Extenso (Português)
   const converterParaExtenso = (num: number): string => {
@@ -88,8 +109,12 @@ const ContractWorkspace: React.FC<Props> = ({ data, onChange, onBack }) => {
         const d2 = new Date(Number(partsEnd[2]), Number(partsEnd[1]) - 1, Number(partsEnd[0]));
         const diffTime = d2.getTime() - d1.getTime();
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        if (!isNaN(diffDays) && diffDays > 0 && data.contract.durationDays !== diffDays.toString()) {
-          handleChange('contract.durationDays', diffDays.toString());
+        
+        // Ajuste para Avulso (1 dia)
+        const displayDays = data.contract.planType === 'Avulso' ? "1" : (isNaN(diffDays) ? "" : diffDays.toString());
+        
+        if (data.contract.durationDays !== displayDays) {
+          handleChange('contract.durationDays', displayDays);
         }
       }
     }
@@ -105,7 +130,7 @@ const ContractWorkspace: React.FC<Props> = ({ data, onChange, onBack }) => {
         }
       }
     }
-  }, [data.contract.startDate, data.contract.endDate, data.contract.planValue]);
+  }, [data.contract.startDate, data.contract.endDate, data.contract.planValue, data.contract.planType]);
 
   const sectionClass = "bg-white p-8 rounded-[2rem] shadow-xl border border-gray-100 mb-8";
   const labelClass = "block text-[10px] font-black text-gray-400 mb-2 uppercase tracking-widest";
@@ -184,11 +209,11 @@ const ContractWorkspace: React.FC<Props> = ({ data, onChange, onBack }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className={labelClass}>Data de Início (DD/MM/AAAA)</label>
-                <input className={inputClass} value={data.contract.startDate} onChange={(e) => handleChange('contract.startDate', e.target.value)} placeholder="11/02/2026" />
+                <input className={inputClass} value={data.contract.startDate} onChange={(e) => handleDateInput('contract.startDate', e.target.value)} placeholder="11/02/2026" maxLength={10} />
               </div>
               <div>
                 <label className={labelClass}>Data de Término (DD/MM/AAAA)</label>
-                <input className={inputClass} value={data.contract.endDate} onChange={(e) => handleChange('contract.endDate', e.target.value)} placeholder="11/05/2026" />
+                <input className={inputClass} value={data.contract.endDate} onChange={(e) => handleDateInput('contract.endDate', e.target.value)} placeholder="11/05/2026" maxLength={10} />
               </div>
               <div className="md:col-span-2 bg-[#d4af37]/5 p-4 rounded-xl border border-[#d4af37]/20">
                  <p className="text-[10px] font-black uppercase text-[#d4af37] mb-1">Duração Estimada</p>

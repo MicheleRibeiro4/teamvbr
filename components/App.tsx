@@ -1,8 +1,6 @@
 
-
 import React, { useState, useEffect } from 'react';
 import { ProtocolData } from '../types';
-// Fix: Correct typo in logo constant name
 import { EMPTY_DATA, LOGO_VBR_BLACK } from '../constants';
 import { db } from '../services/db';
 import UnifiedEditor from './UnifiedEditor';
@@ -36,7 +34,22 @@ const App: React.FC = () => {
     setIsSyncing(true);
     try {
       const protocols = await db.getAll();
-      setSavedProtocols(protocols);
+      
+      // Patch para contratos antigos sem corpo de texto
+      const patchedProtocols = protocols.map(p => {
+        if (!p.contract.contractBody) {
+          return {
+            ...p,
+            contract: {
+              ...p.contract,
+              contractBody: EMPTY_DATA.contract.contractBody
+            }
+          };
+        }
+        return p;
+      });
+
+      setSavedProtocols(patchedProtocols);
       setCloudStatus('online');
     } catch (e: any) {
       setCloudStatus('error');
@@ -60,21 +73,31 @@ const App: React.FC = () => {
     setIsSyncing(true);
     try {
       const currentId = data.id || "vbr-" + Math.random().toString(36).substr(2, 9);
-      const updatedProtocol = { ...data, id: currentId, updatedAt: new Date().toISOString() };
       
-      await db.saveProtocol(updatedProtocol);
+      // Garante que o contrato tenha corpo antes de salvar
+      const protocolToSave = { 
+        ...data, 
+        id: currentId, 
+        updatedAt: new Date().toISOString(),
+        contract: {
+          ...data.contract,
+          contractBody: data.contract.contractBody || EMPTY_DATA.contract.contractBody
+        }
+      };
+      
+      await db.saveProtocol(protocolToSave);
       
       setSavedProtocols(prev => {
         const index = prev.findIndex(p => p.id === currentId);
         if (index >= 0) {
           const newList = [...prev];
-          newList[index] = updatedProtocol;
+          newList[index] = protocolToSave;
           return newList;
         }
-        return [updatedProtocol, ...prev];
+        return [protocolToSave, ...prev];
       });
       
-      setData(updatedProtocol);
+      setData(protocolToSave);
       setCloudStatus('online');
       if (!silent) {
         setShowToast(true);
@@ -97,7 +120,15 @@ const App: React.FC = () => {
   };
 
   const loadStudent = (student: ProtocolData, view: ViewMode = 'student-dashboard') => {
-    setData(student);
+    // Garante que ao carregar, se estiver faltando o contrato, injeta
+    const safeStudent = {
+      ...student,
+      contract: {
+        ...student.contract,
+        contractBody: student.contract.contractBody || EMPTY_DATA.contract.contractBody
+      }
+    };
+    setData(safeStudent);
     setActiveView(view);
   };
 
@@ -140,7 +171,6 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
       <header className="h-24 border-b border-white/10 px-8 flex items-center justify-between sticky top-0 bg-[#0a0a0a]/90 backdrop-blur-xl z-50 no-print">
         <div className="flex items-center gap-6">
           <button onClick={() => setActiveView('home')} className="hover:scale-105 transition-transform">
-            {/* Fix: Correct typo in logo constant name */}
             <img src={LOGO_VBR_BLACK} alt="VBR Logo" className="h-20 w-auto" />
           </button>
           

@@ -58,7 +58,7 @@ export interface ContractInfo {
   city: string;
   state: string; // UF separado
   // Vigência
-  planType: 'Trimestral' | 'Semestral'; // Novo campo
+  planType: 'Trimestral' | 'Semestral' | 'Avulso'; // Adicionado Avulso
   startDate: string;
   endDate: string;
   durationDays: string;
@@ -70,7 +70,7 @@ export interface ContractInfo {
   contractDate: string;
   status: 'Aguardando' | 'Ativo' | 'Vencido' | 'Cancelado';
   contractBody?: string;
-  address?: string; // Mantendo compatibilidade legada se necessário, mas usando campos separados preferencialmente
+  address?: string; // Mantendo compatibilidade legada se necessário
 }
 
 export interface ProtocolData {

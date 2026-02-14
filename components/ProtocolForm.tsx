@@ -13,6 +13,20 @@ interface Props {
 const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
   const [isGenerating, setIsGenerating] = useState(false);
 
+  // --- MÁSCARA DE DATA ---
+  const handleDateInput = (path: string, value: string) => {
+    let v = value.replace(/\D/g, ''); // Remove tudo que não é dígito
+    if (v.length > 8) v = v.substr(0, 8); // Limita a 8 caracteres
+
+    if (v.length > 4) {
+      v = `${v.slice(0, 2)}/${v.slice(2, 4)}/${v.slice(4)}`;
+    } else if (v.length > 2) {
+      v = `${v.slice(0, 2)}/${v.slice(2)}`;
+    }
+    
+    handleChange(path, v);
+  };
+
   // --- LÓGICA DO GERADOR IA ---
   const handleGenerateAI = async () => {
     if (!data.protocolTitle || !data.physicalData.weight) {
@@ -114,6 +128,18 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
   useEffect(() => {
     if (data.contract.startDate && data.contract.planType) {
       const parts = data.contract.startDate.split('/');
+      
+      // Lógica para Plano Avulso
+      if (data.contract.planType === 'Avulso') {
+        const newData = { ...data };
+        if (newData.contract.endDate !== newData.contract.startDate) {
+          newData.contract.endDate = newData.contract.startDate;
+          newData.contract.durationDays = "1";
+          onChange(newData);
+        }
+        return;
+      }
+
       if (parts.length === 3) {
         const day = parseInt(parts[0]);
         const month = parseInt(parts[1]) - 1; // JS meses são 0-indexado
@@ -339,12 +365,19 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
             <select className={selectClass} value={data.contract.planType} onChange={(e) => handleChange('contract.planType', e.target.value)}>
               <option value="Trimestral">Trimestral (3 Meses)</option>
               <option value="Semestral">Semestral (6 Meses)</option>
+              <option value="Avulso">Avulso (1 Dia)</option>
             </select>
           </div>
           <div className="col-span-2 hidden md:block"></div>
 
-          <div><label className={labelClass}>Início</label><input className={inputClass} value={data.contract.startDate} onChange={(e) => handleChange('contract.startDate', e.target.value)} placeholder="DD/MM/AAAA" /></div>
-          <div><label className={labelClass}>Término (Automático)</label><input className={inputClass + " opacity-60"} value={data.contract.endDate} readOnly /></div>
+          <div>
+             <label className={labelClass}>Início</label>
+             <input className={inputClass} value={data.contract.startDate} onChange={(e) => handleDateInput('contract.startDate', e.target.value)} placeholder="DD/MM/AAAA" maxLength={10} />
+          </div>
+          <div>
+             <label className={labelClass}>Término (Automático)</label>
+             <input className={inputClass + " opacity-60"} value={data.contract.endDate} readOnly />
+          </div>
           
           <div className="col-span-2"><label className={labelClass}>Valor do Plano (R$)</label><input className={inputClass} value={data.contract.planValue} onChange={(e) => handleChange('contract.planValue', e.target.value)} placeholder="0,00" /></div>
           <div className="md:col-span-4"><label className={labelClass}>Valor por Extenso (Automático)</label><input className={inputClass + " opacity-60 italic bg-transparent border-none"} value={data.contract.planValueWords} readOnly /></div>
@@ -378,7 +411,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
            </div>
            <div>
              <label className={labelClass}>Data Avaliação</label>
-             <input className={inputClass} value={data.physicalData.date} onChange={(e) => handleChange('physicalData.date', e.target.value)} placeholder="DD/MM/AAAA" />
+             <input className={inputClass} value={data.physicalData.date} onChange={(e) => handleDateInput('physicalData.date', e.target.value)} placeholder="DD/MM/AAAA" maxLength={10} />
            </div>
            <div>
              <label className={labelClass}>Idade</label>

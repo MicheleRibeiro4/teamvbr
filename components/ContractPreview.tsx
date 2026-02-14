@@ -1,7 +1,7 @@
 
 import React, { useRef, useState } from 'react';
 import { ProtocolData } from '../types';
-import { CONSULTANT_DEFAULT } from '../constants';
+import { CONSULTANT_DEFAULT, EMPTY_DATA } from '../constants';
 import { Download, Loader2 } from 'lucide-react';
 
 interface Props {
@@ -17,14 +17,20 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
     const method = data.contract.paymentMethod;
     const installments = data.contract.installments;
     
-    // Formatação exata conforme solicitado
     return `
 (${method === 'Pix' ? 'x' : ' '}) Pix (à vista)
 (${method === 'Cartão de Crédito' ? 'x' : ' '}) Cartão de crédito – parcelado em ${method === 'Cartão de Crédito' ? installments : '__'}x`;
   };
 
   const renderContractText = () => {
-    let text = data.contract.contractBody || '';
+    // IMPORTANTE: Fallback para o template padrão caso contractBody esteja vazio (ex: dados antigos)
+    let text = data.contract.contractBody;
+    
+    if (!text || text.trim() === '') {
+       // Pega o template do objeto vazio padrão para usar como base se não houver texto salvo
+       text = EMPTY_DATA.contract.contractBody || '';
+    }
+
     const map = {
       '[START_DATE]': data.contract.startDate,
       '[END_DATE]': data.contract.endDate,
@@ -35,7 +41,6 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
     };
 
     Object.entries(map).forEach(([key, val]) => {
-      // Escape special characters in key for RegExp and replace globally
       text = text.replace(new RegExp(key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), val || '__________');
     });
     return text;
@@ -59,7 +64,6 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
     } finally { setIsGenerating(false); }
   };
 
-  // Montagem do endereço completo: Prioriza os campos detalhados, fallback para o campo legado
   const street = data.contract.street || '';
   const number = data.contract.number || 'SN';
   const neighbor = data.contract.neighborhood || '';
@@ -67,8 +71,6 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
   const state = data.contract.state || '';
   
   const detailedAddress = `${street}, ${number} - ${neighbor}, ${city}/${state}`;
-  
-  // Se os campos detalhados estiverem vazios (ex: street vazio), tenta usar o campo 'address' antigo, senão mostra placeholders
   const fullAddress = street ? detailedAddress : (data.contract.address || '__________________________________________________');
 
   return (

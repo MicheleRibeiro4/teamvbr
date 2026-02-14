@@ -16,48 +16,62 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
   const handleDownloadPDF = async () => {
     if (!pdfRef.current) return;
     setIsGenerating(true);
+    
+    // Configurações otimizadas para evitar páginas em branco
     const opt = {
       margin: 0,
       filename: `Protocolo_VBR_${data.clientName.replace(/\s+/g, '_')}.pdf`,
-      image: { type: 'jpeg', quality: 1.0 },
+      image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { 
         scale: 2, 
         useCORS: true, 
         letterRendering: true, 
         backgroundColor: '#ffffff',
-        scrollY: 0
+        scrollY: 0,
+        windowWidth: 794, // Largura exata A4 em px a 96dpi (aprox)
+        height: 1119 * 7 // Altura levemente reduzida * numero de paginas
       },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
+
     try {
       // @ts-ignore
       await html2pdf().set(opt).from(pdfRef.current).save();
-    } catch (err) { alert("Erro ao gerar PDF."); } finally { setIsGenerating(false); }
+    } catch (err) { 
+      alert("Erro ao gerar PDF."); 
+      console.error(err);
+    } finally { 
+      setIsGenerating(false); 
+    }
   };
 
-  // Fixed dimensions for A4 to prevent overflow/extra pages
+  // CSS Estrito para A4 (210mm x 296mm) - Reduzido 1mm para evitar overflow
   const pageStyle = { 
     width: '210mm', 
-    height: '297mm', // Fixed height instead of minHeight prevents slight overflow
+    height: '296mm', 
     padding: '15mm', 
     backgroundColor: 'white', 
     color: 'black', 
     position: 'relative' as const, 
     boxSizing: 'border-box' as const, 
     display: 'block',
-    overflow: 'hidden', // Crucial to stop spillover
-    pageBreakAfter: 'always'
+    overflow: 'hidden', // Corta qualquer pixel excedente
+    pageBreakAfter: 'always', // Força nova página
+    breakAfter: 'page'
+  };
+
+  // Estilo específico para a última página para não gerar folha extra
+  const lastPageStyle = {
+    ...pageStyle,
+    pageBreakAfter: 'auto',
+    breakAfter: 'auto'
   };
   
   const sectionTitle = "text-xl font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-1 mb-6 uppercase";
-
-  // Card style for Page 2
   const dataCardStyle = "bg-gray-50 border border-gray-100 p-4 rounded-lg";
   const labelStyle = "text-xs font-bold text-gray-500 uppercase block mb-1";
   const valueStyle = "text-xl font-bold text-gray-900";
 
-  // Safely access macros to prevent crashes
   const safeMacros = data.macros || { 
     protein: { value: '0', ratio: '' }, 
     carbs: { value: '0', ratio: '' }, 
@@ -71,10 +85,10 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
         <button onClick={handleDownloadPDF} disabled={isGenerating} className="bg-[#d4af37] text-black px-8 py-5 rounded-full shadow-2xl font-black uppercase text-xs flex items-center gap-3 transition-all active:scale-95">{isGenerating ? <Loader2 className="animate-spin" size={20} /> : <Download size={20} />}{isGenerating ? 'Processando...' : 'Exportar Protocolo PDF'}</button>
       </div>
 
-      <div ref={pdfRef} className="bg-gray-200 shadow-inner flex flex-col items-center print:bg-transparent">
+      <div ref={pdfRef} className="bg-gray-200 shadow-inner flex flex-col items-center print:bg-transparent print:m-0 print:p-0">
         
         {/* PÁGINA 1: CAPA */}
-        <div style={{ ...pageStyle, padding: 0, backgroundColor: '#111' }} className="flex flex-col items-center justify-center text-white text-center relative overflow-hidden bg-[#111]">
+        <div style={{ ...pageStyle, padding: 0, backgroundColor: '#111' }} className="flex flex-col items-center justify-center text-white text-center relative bg-[#111]">
           <div className="flex-1 flex flex-col items-center justify-center w-full">
             <img src={LOGO_VBR_BLACK} alt="Team VBR" className="w-64 h-auto mb-16 relative z-10" />
             
@@ -97,7 +111,6 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
         <div style={pageStyle}>
           <h3 className={sectionTitle}>1. Dados Físicos - {data.physicalData.date}</h3>
           
-          {/* Dados Gerais */}
           <div className="grid grid-cols-3 gap-4 mb-8">
             <div className={dataCardStyle}><span className={labelStyle}>Peso Atual</span><span className={valueStyle}>{data.physicalData.weight} kg</span></div>
             <div className={dataCardStyle}><span className={labelStyle}>Altura</span><span className={valueStyle}>{data.physicalData.height} m</span></div>
@@ -188,7 +201,7 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
               else if (nameLower.includes('cafeína') || nameLower.includes('cafeina') || nameLower.includes('café')) bgColor = "bg-[#5d4037]"; 
 
               return (
-                <div key={supp.id} className={`${bgColor} text-white p-6 rounded-xl flex justify-between items-center shadow-md break-inside-avoid`}>
+                <div key={supp.id} className={`${bgColor} text-white p-6 rounded-xl flex justify-between items-center shadow-md`}>
                   <div>
                     <h4 className="text-xl font-bold uppercase mb-1">{supp.name}</h4>
                     <p className="text-sm opacity-90">{supp.dosage}</p>
@@ -219,7 +232,7 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
           
           <div className="space-y-8">
             {data.trainingDays.slice(0, 2).map((day) => (
-              <div key={day.id} className="border border-gray-200 rounded-lg overflow-hidden break-inside-avoid shadow-sm">
+              <div key={day.id} className="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
                 <div className="bg-[#111] text-white p-3 flex justify-between items-center">
                   <span className="font-bold uppercase text-[#d4af37]">{day.title}</span>
                   <span className="text-xs font-bold text-[#d4af37] uppercase">Foco: {day.focus}</span>
@@ -245,7 +258,7 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
           
           <div className="space-y-8 mt-6">
             {data.trainingDays.slice(2).map((day) => (
-              <div key={day.id} className="border border-gray-200 rounded-lg overflow-hidden break-inside-avoid shadow-sm">
+              <div key={day.id} className="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
                 <div className="bg-[#111] text-white p-3 flex justify-between items-center">
                   <span className="font-bold uppercase text-[#d4af37]">{day.title}</span>
                   <span className="text-xs font-bold text-[#d4af37] uppercase">Foco: {day.focus}</span>
@@ -265,8 +278,8 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
           </div>
         </div>
 
-        {/* PÁGINA 7: ENCERRAMENTO */}
-        <div style={{...pageStyle, pageBreakAfter: 'auto'}} className="flex flex-col items-center justify-center text-center">
+        {/* PÁGINA 7: ENCERRAMENTO (ÚLTIMA PÁGINA - SEM QUEBRA APÓS) */}
+        <div style={lastPageStyle} className="flex flex-col items-center justify-center text-center">
            <div className="bg-[#111] text-white p-6 rounded w-full max-w-lg mb-12 shadow-lg">
              <div className="flex items-center justify-center gap-2 text-[#d4af37] font-bold uppercase mb-2">
                <span>⚠</span> <span>ATENÇÃO:</span>
