@@ -23,7 +23,7 @@ const ContractWorkspace: React.FC<Props> = ({ data, onChange, onBack }) => {
     onChange(newData);
   };
 
-  // Lógica de Valor por Extenso (Português)
+  // Lógica de Valor por Extenso (Português) - Ajustada para incluir "reais"
   const converterParaExtenso = (num: number): string => {
     const unidades = ["", "um", "dois", "três", "quatro", "cinco", "seis", "sete", "oito", "nove"];
     const dezenas10 = ["dez", "onze", "doze", "treze", "quatorze", "quinze", "dezesseis", "dezessete", "dezoito", "dezenove"];
@@ -51,11 +51,11 @@ const ContractWorkspace: React.FC<Props> = ({ data, onChange, onBack }) => {
       return s;
     };
 
-    if (num === 0) return "zero";
+    if (num === 0) return "zero reais";
     
-    let res = "";
     let n = Math.floor(num);
     let c = Math.round((num - n) * 100);
+    let res = "";
 
     if (n >= 1000) {
       const mil = Math.floor(n / 1000);
@@ -63,13 +63,18 @@ const ContractWorkspace: React.FC<Props> = ({ data, onChange, onBack }) => {
       n %= 1000;
       if (n > 0) res += (n < 100 || n % 100 === 0 ? " e " : ", ");
     }
-    res += conv(n);
-
-    if (c > 0) {
-      res += (res ? " e " : "") + conv(c) + (c === 1 ? " centavo" : " centavos");
+    
+    if (n > 0 || res === "") {
+      res += conv(n);
     }
 
-    return res;
+    res += (n === 1 && res === "um") ? " real" : " reais";
+
+    if (c > 0) {
+      res += " e " + conv(c) + (c === 1 ? " centavo" : " centavos");
+    }
+
+    return res.charAt(0).toUpperCase() + res.slice(1);
   };
 
   // Efeito para calcular dias e extenso automaticamente
@@ -91,7 +96,8 @@ const ContractWorkspace: React.FC<Props> = ({ data, onChange, onBack }) => {
 
     // Cálculo de Extenso
     if (data.contract.planValue) {
-      const val = parseFloat(data.contract.planValue.replace('.', '').replace(',', '.'));
+      const valStr = data.contract.planValue.replace(/[^\d,.-]/g, '').replace(',', '.');
+      const val = parseFloat(valStr);
       if (!isNaN(val)) {
         const text = converterParaExtenso(val);
         if (data.contract.planValueWords !== text) {

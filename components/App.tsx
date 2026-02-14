@@ -3,9 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { ProtocolData } from '../types';
 import { EMPTY_DATA, LOGO_RHINO_BLACK } from '../constants';
 import { db } from '../services/db';
-import ProtocolForm from './ProtocolForm';
-import ProtocolPreview from './ProtocolPreview';
-import ContractWorkspace from './ContractWorkspace';
+import UnifiedEditor from './UnifiedEditor';
 import EvolutionTracker from './EvolutionTracker';
 import MainDashboard from './MainDashboard';
 import StudentSearch from './StudentSearch';
@@ -21,7 +19,7 @@ import {
   ChevronLeft
 } from 'lucide-react';
 
-type ViewMode = 'home' | 'search' | 'protocol' | 'contract' | 'evolution' | 'settings' | 'student-dashboard';
+type ViewMode = 'home' | 'search' | 'manage' | 'evolution' | 'settings' | 'student-dashboard';
 
 const App: React.FC = () => {
   const [data, setData] = useState<ProtocolData>(EMPTY_DATA);
@@ -51,9 +49,9 @@ const App: React.FC = () => {
   }, []);
 
   // Save changes to Supabase
-  const handleSave = async () => {
+  const handleSave = async (silent = false) => {
     if (!data.clientName) {
-      alert("⚠️ Defina o nome do aluno antes de salvar.");
+      if (!silent) alert("⚠️ Defina o nome do aluno antes de salvar.");
       return;
     }
     
@@ -76,12 +74,14 @@ const App: React.FC = () => {
       
       setData(updatedProtocol);
       setCloudStatus('online');
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 3000);
+      if (!silent) {
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
+      }
     } catch (err: any) {
       console.error(err);
       setCloudStatus('error');
-      alert(`⚠️ ERRO NO SUPABASE: ${err.message}`);
+      if (!silent) alert(`⚠️ ERRO NO SUPABASE: ${err.message}`);
     } finally {
       setIsSyncing(false);
     }
@@ -91,7 +91,7 @@ const App: React.FC = () => {
   const handleNew = () => {
     const newId = "vbr-" + Math.random().toString(36).substr(2, 9);
     setData({ ...EMPTY_DATA, id: newId, updatedAt: new Date().toISOString() });
-    setActiveView('protocol');
+    setActiveView('manage');
   };
 
   const loadStudent = (student: ProtocolData, view: ViewMode = 'student-dashboard') => {
@@ -109,10 +109,6 @@ const App: React.FC = () => {
         alert('Erro ao excluir do banco.');
       }
     }
-  };
-
-  const handlePrint = () => {
-    window.print();
   };
 
   const sqlRepairScript = `-- SCRIPT DE REPARO DEFINITIVO VBR
@@ -156,23 +152,14 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
         </div>
 
         <div className="flex items-center gap-2 md:gap-4">
-          {(activeView === 'protocol' || activeView === 'contract') && (
-            <button 
-              onClick={handlePrint} 
-              className="p-3 bg-[#d4af37]/10 hover:bg-[#d4af37] text-[#d4af37] hover:text-black border border-[#d4af37]/30 rounded-xl transition-all flex items-center gap-2 font-black text-[10px] uppercase"
-            >
-              <Printer size={20} /> <span className="hidden lg:inline">Imprimir PDF</span>
-            </button>
-          )}
-
           {data.id && activeView !== 'home' && activeView !== 'search' && (
             <button 
-              onClick={handleSave} 
+              onClick={() => handleSave()} 
               disabled={isSyncing}
               className="flex items-center gap-2 bg-[#d4af37] text-black px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all shadow-lg disabled:opacity-50"
             >
               {isSyncing ? <RefreshCw size={16} className="animate-spin" /> : <Database size={16} />}
-              Salvar
+              Salvar Alterações
             </button>
           )}
         </div>
@@ -212,23 +199,12 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
           <StudentDashboard data={data} setView={(v) => setActiveView(v as ViewMode)} />
         )}
 
-        {activeView === 'protocol' && (
-          <div className="flex flex-col gap-16">
-            <div className="max-w-4xl mx-auto w-full no-print">
-               <div className="bg-white/5 p-10 rounded-[3rem] border border-white/10 shadow-xl">
-                  <ProtocolForm data={data} onChange={setData} onBack={() => setActiveView('student-dashboard')} />
-               </div>
-            </div>
-            <div className="w-full flex justify-center print:bg-white p-0 md:p-16 rounded-[4rem] print:rounded-none">
-               <ProtocolPreview data={data} onBack={() => setActiveView('student-dashboard')} />
-            </div>
-          </div>
-        )}
-
-        {activeView === 'contract' && (
-          <div className="w-full flex flex-col items-center gap-10 p-0 md:p-16">
-            <ContractWorkspace data={data} onChange={setData} onBack={() => setActiveView('student-dashboard')} />
-          </div>
+        {activeView === 'manage' && (
+          <UnifiedEditor 
+            data={data} 
+            onChange={setData} 
+            onBack={() => setActiveView('student-dashboard')} 
+          />
         )}
         
         {activeView === 'evolution' && (
@@ -243,6 +219,11 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
               currentProtocol={data} 
               history={savedProtocols.filter(p => p.clientName === data.clientName)} 
               onNotesChange={(n) => setData({...data, privateNotes: n})} 
+              onUpdateData={(newData) => {
+                setData(newData);
+                // Salvar silenciosamente após atualização rápida
+                setTimeout(() => handleSave(true), 100);
+              }}
             />
           </div>
         )}

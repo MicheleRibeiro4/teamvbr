@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { ProtocolData } from '../types';
-import { FileText, TrendingUp, ScrollText, Calendar, User, ArrowRight } from 'lucide-react';
+import { FileText, TrendingUp, ScrollText, Calendar, User, ArrowRight, Settings2 } from 'lucide-react';
 
 interface Props {
   data: ProtocolData;
@@ -37,65 +37,45 @@ const StudentDashboard: React.FC<Props> = ({ data, setView }) => {
       </div>
 
       {/* Grid de Opções */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         
-        {/* Card Protocolo */}
+        {/* Card Gerenciar (Unificado) */}
         <button 
-          onClick={() => setView('protocol')}
-          className="group relative bg-white/5 p-8 rounded-[2rem] border border-white/5 hover:border-[#d4af37]/50 transition-all hover:bg-white/[0.08] text-left overflow-hidden"
+          onClick={() => setView('manage')}
+          className="group relative bg-[#d4af37]/5 p-8 rounded-[2rem] border border-[#d4af37]/20 hover:border-[#d4af37]/50 transition-all hover:bg-[#d4af37]/10 text-left overflow-hidden h-full"
         >
           <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-            <FileText size={120} />
+            <Settings2 size={160} />
           </div>
-          <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-[#d4af37] group-hover:text-black transition-all">
-            <FileText size={28} />
+          <div className="w-16 h-16 bg-[#d4af37] text-black rounded-2xl flex items-center justify-center mb-6 transition-all group-hover:scale-110">
+            <Settings2 size={32} />
           </div>
-          <h3 className="text-xl font-black text-white uppercase tracking-tighter mb-2">Protocolo VBR</h3>
-          <p className="text-sm text-white/40 leading-relaxed font-medium mb-6">
-            Editar treinos, dieta e suplementação. Gere o PDF técnico de 6 páginas.
+          <h3 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">Gerenciar Aluno</h3>
+          <p className="text-sm text-white/50 leading-relaxed font-medium mb-8">
+            Aba completa para editar Treinos, Dieta e Contrato em um só lugar. Gere PDFs de Protocolo e Documentação Jurídica.
           </p>
-          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[#d4af37]">
-            Gerenciar Protocolo <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[#d4af37]">
+            Abrir Editor Unificado <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
           </div>
         </button>
 
         {/* Card Evolução */}
         <button 
           onClick={() => setView('evolution')}
-          className="group relative bg-white/5 p-8 rounded-[2rem] border border-white/5 hover:border-[#d4af37]/50 transition-all hover:bg-white/[0.08] text-left overflow-hidden"
+          className="group relative bg-white/5 p-8 rounded-[2rem] border border-white/5 hover:border-[#d4af37]/50 transition-all hover:bg-white/[0.08] text-left overflow-hidden h-full"
         >
           <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-            <TrendingUp size={120} />
+            <TrendingUp size={160} />
           </div>
-          <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-[#d4af37] group-hover:text-black transition-all">
-            <TrendingUp size={28} />
+          <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-[#d4af37] group-hover:text-black transition-all group-hover:scale-110">
+            <TrendingUp size={32} />
           </div>
-          <h3 className="text-xl font-black text-white uppercase tracking-tighter mb-2">Evolução</h3>
-          <p className="text-sm text-white/40 leading-relaxed font-medium mb-6">
-            Histórico de medidas, notas privadas do coach e comparativos.
+          <h3 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">Evolução & Progresso</h3>
+          <p className="text-sm text-white/50 leading-relaxed font-medium mb-8">
+            Acompanhe o histórico de peso, gordura e massa muscular. Anotações privadas do coach e comparativos rápidos.
           </p>
-          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[#d4af37]">
-            Ver Progresso <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-          </div>
-        </button>
-
-        {/* Card Contrato */}
-        <button 
-          onClick={() => setView('contract')}
-          className="group relative bg-white/5 p-8 rounded-[2rem] border border-white/5 hover:border-[#d4af37]/50 transition-all hover:bg-white/[0.08] text-left overflow-hidden"
-        >
-          <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-            <ScrollText size={120} />
-          </div>
-          <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-[#d4af37] group-hover:text-black transition-all">
-            <ScrollText size={28} />
-          </div>
-          <h3 className="text-xl font-black text-white uppercase tracking-tighter mb-2">Contrato</h3>
-          <p className="text-sm text-white/40 leading-relaxed font-medium mb-6">
-            Documentação jurídica, vigência, valores e termos de responsabilidade.
-          </p>
-          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[#d4af37]">
-            Configurar Contrato <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[#d4af37]">
+            Ver Progresso <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
           </div>
         </button>
 
