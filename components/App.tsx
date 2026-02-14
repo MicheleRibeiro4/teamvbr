@@ -1,22 +1,20 @@
 
 import React, { useState, useEffect } from 'react';
-import { ProtocolData } from '../types';
-import { EMPTY_DATA, LOGO_VBR_BLACK } from '../constants';
-import { db } from '../services/db';
-import UnifiedEditor from './UnifiedEditor';
-import EvolutionTracker from './EvolutionTracker';
-import MainDashboard from './MainDashboard';
-import StudentSearch from './StudentSearch';
-import StudentDashboard from './StudentDashboard';
+import { ProtocolData } from './types';
+import { EMPTY_DATA, LOGO_VBR_BLACK } from './constants';
+import { db } from './services/db';
+import UnifiedEditor from './components/UnifiedEditor';
+import EvolutionTracker from './components/EvolutionTracker';
+import MainDashboard from './components/MainDashboard';
+import StudentSearch from './components/StudentSearch';
+import StudentDashboard from './components/StudentDashboard';
 import { 
-  Plus, 
-  FolderOpen,
   RefreshCw,
   CheckCircle2,
-  AlertTriangle,
   Database,
-  Printer,
-  ChevronLeft
+  ChevronLeft,
+  Lock,
+  AlertTriangle
 } from 'lucide-react';
 
 type ViewMode = 'home' | 'search' | 'manage' | 'evolution' | 'settings' | 'student-dashboard';
@@ -28,28 +26,37 @@ const App: React.FC = () => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [cloudStatus, setCloudStatus] = useState<'online' | 'error'>('online');
   const [showToast, setShowToast] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginError, setLoginError] = useState(false);
+
+  const MASTER_PASSWORD = "vbr-master-2025";
+
+  // Login handler
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (loginPassword === MASTER_PASSWORD) {
+      setIsAuthenticated(true);
+      setLoginError(false);
+      localStorage.setItem('vbr_auth', 'true');
+    } else {
+      setLoginError(true);
+    }
+  };
+
+  // Check auth and load data
+  useEffect(() => {
+    const auth = localStorage.getItem('vbr_auth');
+    if (auth === 'true') setIsAuthenticated(true);
+    loadData();
+  }, []);
 
   // Load saved data from backend
   const loadData = async () => {
     setIsSyncing(true);
     try {
       const protocols = await db.getAll();
-      
-      // Patch para contratos antigos sem corpo de texto
-      const patchedProtocols = protocols.map(p => {
-        if (!p.contract.contractBody) {
-          return {
-            ...p,
-            contract: {
-              ...p.contract,
-              contractBody: EMPTY_DATA.contract.contractBody
-            }
-          };
-        }
-        return p;
-      });
-
-      setSavedProtocols(patchedProtocols);
+      setSavedProtocols(protocols);
       setCloudStatus('online');
     } catch (e: any) {
       setCloudStatus('error');
@@ -59,12 +66,7 @@ const App: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
   // Save changes to Supabase
-  // Alterado para aceitar dados específicos para evitar problemas de estado assíncrono
   const handleSave = async (silent = false, specificData?: ProtocolData) => {
     const dataToSave = specificData || data;
 
@@ -75,33 +77,31 @@ const App: React.FC = () => {
     
     setIsSyncing(true);
     try {
+      // Se tivermos salvando um histórico novo, usamos o ID que foi gerado.
+      // Se for atualização normal, usamos o ID existente ou geramos um.
       const currentId = dataToSave.id || "vbr-" + Math.random().toString(36).substr(2, 9);
       
-      // Garante que o contrato tenha corpo antes de salvar
       const protocolToSave = { 
         ...dataToSave, 
         id: currentId, 
-        updatedAt: new Date().toISOString(),
-        contract: {
-          ...dataToSave.contract,
-          contractBody: dataToSave.contract.contractBody || EMPTY_DATA.contract.contractBody
-        }
+        updatedAt: new Date().toISOString()
       };
       
       await db.saveProtocol(protocolToSave);
       
       setSavedProtocols(prev => {
-        // Se o ID já existe, atualiza. Se é novo, adiciona no topo.
+        // Verifica se já existe esse ID na lista
         const index = prev.findIndex(p => p.id === currentId);
         if (index >= 0) {
           const newList = [...prev];
           newList[index] = protocolToSave;
           return newList;
         }
+        // Se não existe (novo histórico), adiciona no topo
         return [protocolToSave, ...prev];
       });
       
-      // Se estamos salvando os dados atualmente visíveis, atualiza o estado principal
+      // Se estamos editando este protocolo na tela, atualiza o estado principal também
       if (!specificData || specificData.id === data.id) {
         setData(protocolToSave);
       }
@@ -128,14 +128,7 @@ const App: React.FC = () => {
   };
 
   const loadStudent = (student: ProtocolData, view: ViewMode = 'student-dashboard') => {
-    const safeStudent = {
-      ...student,
-      contract: {
-        ...student.contract,
-        contractBody: student.contract.contractBody || EMPTY_DATA.contract.contractBody
-      }
-    };
-    setData(safeStudent);
+    setData(student);
     setActiveView(view);
   };
 
@@ -164,6 +157,25 @@ GRANT ALL ON TABLE public.protocols TO anon;
 GRANT ALL ON TABLE public.protocols TO authenticated;
 GRANT ALL ON TABLE public.protocols TO service_role;`;
 
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center p-6 text-center">
+        <div className="w-full max-w-md animate-in fade-in zoom-in duration-700">
+          <img src={LOGO_VBR_BLACK} alt="Team VBR Logo" className="h-32 w-auto mx-auto mb-10" />
+          <div className="bg-white/5 border border-white/10 p-10 rounded-[2.5rem] shadow-2xl">
+            <div className="w-12 h-12 bg-[#d4af37] rounded-xl flex items-center justify-center text-black mx-auto mb-6"><Lock size={24} /></div>
+            <h1 className="text-xl font-black text-white uppercase tracking-tighter mb-8">Acesso Consultor Team VBR</h1>
+            <form onSubmit={handleLogin} className="space-y-6">
+              <input type="password" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} placeholder="Senha" />
+              {loginError && <p className="text-xs text-red-500 font-black uppercase">Senha incorreta.</p>}
+              <button type="submit" className="w-full bg-[#d4af37] text-black py-4 rounded-2xl font-black uppercase text-xs tracking-[0.2em]">Entrar</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white font-sans selection:bg-[#d4af37] selection:text-black">
       
@@ -175,10 +187,10 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
         </div>
       )}
 
-      <header className="h-auto py-4 md:py-0 md:h-24 border-b border-white/10 px-4 md:px-8 flex flex-col md:flex-row items-center justify-between sticky top-0 bg-[#0a0a0a]/90 backdrop-blur-xl z-50 no-print gap-4 md:gap-0">
-        <div className="flex items-center gap-6 w-full md:w-auto justify-between md:justify-start">
+      <header className="h-24 border-b border-white/10 px-8 flex items-center justify-between sticky top-0 bg-[#0a0a0a]/90 backdrop-blur-xl z-50 no-print">
+        <div className="flex items-center gap-6">
           <button onClick={() => setActiveView('home')} className="hover:scale-105 transition-transform">
-            <img src={LOGO_VBR_BLACK} alt="VBR Logo" className="h-12 md:h-20 w-auto" />
+            <img src={LOGO_VBR_BLACK} alt="Team VBR" className="h-20 w-auto" />
           </button>
           
           {activeView !== 'home' && (
@@ -191,16 +203,16 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
           )}
         </div>
 
-        <div className="flex items-center gap-2 md:gap-4 w-full md:w-auto justify-end">
+        <div className="flex items-center gap-4">
+          <button onClick={() => { localStorage.removeItem('vbr_auth'); setIsAuthenticated(false); }} className="text-[9px] font-black uppercase text-white/20 hover:text-red-500">Sair</button>
           {data.id && activeView !== 'home' && activeView !== 'search' && (
             <button 
               onClick={() => handleSave()} 
               disabled={isSyncing}
-              className="flex items-center gap-2 bg-[#d4af37] text-black px-4 md:px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all shadow-lg disabled:opacity-50 w-full md:w-auto justify-center"
+              className="flex items-center gap-2 bg-[#d4af37] text-black px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all shadow-lg disabled:opacity-50"
             >
               {isSyncing ? <RefreshCw size={16} className="animate-spin" /> : <Database size={16} />}
-              <span className="hidden md:inline">Salvar Alterações</span>
-              <span className="md:hidden">Salvar</span>
+              Salvar
             </button>
           )}
         </div>
@@ -209,7 +221,7 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
       <main className="max-w-[1600px] mx-auto p-4 md:p-10">
         
         {cloudStatus === 'error' && (
-          <div className="bg-red-600/10 border border-red-600/30 p-6 md:p-8 rounded-[2.5rem] mb-10">
+          <div className="bg-red-600/10 border border-red-600/30 p-8 rounded-[2.5rem] mb-10">
             <div className="flex flex-col md:flex-row items-center gap-6 justify-between">
               <div className="flex items-center gap-4 text-left">
                 <AlertTriangle className="text-red-500 shrink-0" size={40} />
@@ -220,7 +232,7 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
               </div>
               <button 
                 onClick={() => { navigator.clipboard.writeText(sqlRepairScript); alert('Copiado!'); }}
-                className="px-8 py-4 rounded-2xl font-black text-[11px] uppercase border border-white/10 w-full md:w-auto"
+                className="px-8 py-4 rounded-2xl font-black text-[11px] uppercase border border-white/10"
               >
                 Copiar SQL
               </button>
@@ -258,23 +270,26 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
             </button>
             <EvolutionTracker 
               currentProtocol={data} 
-              history={savedProtocols.filter(p => p.clientName === data.clientName)} 
+              // Melhorado: Filtro mais robusto
+              history={savedProtocols.filter(p => p.clientName?.trim() === data.clientName?.trim())} 
               onNotesChange={(n) => setData({...data, privateNotes: n})} 
+              onSelectHistory={(historyData) => {
+                 setData(historyData);
+              }}
+              onOpenEditor={() => setActiveView('manage')}
               onUpdateData={(newData, createHistory = false) => {
-                // Se for para criar histórico, geramos um NOVO ID
                 if (createHistory) {
+                  // GERAR NOVO PROTOCOLO: Cria um novo ID e salva como novo registro
                   const historyId = "vbr-" + Math.random().toString(36).substr(2, 9);
                   const dataToSave = { 
                     ...newData, 
                     id: historyId, 
                     updatedAt: new Date().toISOString() 
                   };
-                  // Atualiza a tela com os novos dados
                   setData(dataToSave);
-                  // Salva no banco como um novo registro
                   handleSave(true, dataToSave);
                 } else {
-                  // Apenas atualiza o registro atual
+                  // SALVAR ALTERAÇÕES: Mantém ID atual e atualiza registro
                   setData(newData);
                   handleSave(true, newData);
                 }
