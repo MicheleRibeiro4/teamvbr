@@ -61,49 +61,49 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
         {/* PÁGINA 1: CAPA */}
         <div className={`${fixedPageClass} !bg-[#0a0a0a] !text-white border-b-[20px] border-[#d4af37] justify-center items-center p-[2cm]`}>
           <div className="flex flex-col items-center w-full text-center">
-            <img src={LOGO_RHINO_BLACK} alt="Logo" className="w-80 h-auto mb-20" />
-            <h1 className="text-5xl font-montserrat font-black text-[#d4af37] uppercase mb-24">PROTOCOLO COMPLETO DE <br/><span className="text-white">{data.protocolTitle || 'OBJETIVO'}</span></h1>
-            <h2 className="text-7xl font-montserrat font-black text-white uppercase mb-6 leading-tight">{data.clientName || 'NOME DO ALUNO'}</h2>
-            <div className="h-1 w-32 bg-[#d4af37] mx-auto mb-6"></div>
-            <p className="text-xl font-bold text-white/40 uppercase tracking-[0.3em]">{data.contract.startDate} — {data.contract.endDate}</p>
+            <img src={LOGO_RHINO_BLACK} alt="Logo" className="w-64 h-auto mb-16" />
+            <h1 className="text-4xl font-montserrat font-black text-[#d4af37] uppercase mb-16 italic tracking-tight">PROTOCOLO COMPLETO DE <br/><span className="text-white">{data.protocolTitle || 'OBJETIVO'}</span></h1>
+            <h2 className="text-5xl font-montserrat font-black text-white uppercase mb-6 leading-tight tracking-tighter">{data.clientName || 'NOME DO ALUNO'}</h2>
+            <div className="h-1 w-24 bg-[#d4af37] mx-auto mb-6"></div>
+            <p className="text-lg font-bold text-white/40 uppercase tracking-[0.3em]">{data.contract.startDate} — {data.contract.endDate}</p>
           </div>
         </div>
 
         {/* PÁGINA 2: DADOS FÍSICOS E ESTRATÉGIA */}
         <div className={`${fixedPageClass} p-[1.5cm]`}>
-          <div className="space-y-10">
+          <div className="space-y-8">
             <section>
               <div className="flex justify-between items-end border-b-2 border-[#d4af37] pb-2 mb-6">
-                <h2 className="text-3xl font-bold text-[#d4af37] uppercase tracking-tighter">1. Dados Físicos</h2>
-                <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Avaliação em: {data.physicalData.date || '--/--/----'}</span>
+                <h2 className="text-2xl font-bold text-[#d4af37] uppercase tracking-tighter">1. Dados Físicos</h2>
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Avaliação: {data.physicalData.date || '--/--/----'}</span>
               </div>
-              <div className="grid grid-cols-3 gap-6 mb-8">
+              <div className="grid grid-cols-3 gap-4 mb-6">
                 {[{ label: 'Peso Atual', val: data.physicalData.weight, unit: 'kg' }, { label: 'Altura', val: data.physicalData.height, unit: 'm' }, { label: 'Idade', val: data.physicalData.age, unit: 'anos' }].map((item, i) => (
-                  <div key={i} className="bg-gray-50 p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <span className="text-sm text-gray-400 font-bold block mb-2 uppercase tracking-widest">{item.label}</span>
-                    <div className="text-3xl font-black">{item.val || '--'} <span className="text-lg font-bold">{item.unit}</span></div>
+                  <div key={i} className="bg-gray-50 p-4 rounded-xl shadow-sm border border-gray-100">
+                    <span className="text-[10px] text-gray-400 font-bold block mb-1 uppercase tracking-widest">{item.label}</span>
+                    <div className="text-2xl font-black">{item.val || '--'} <span className="text-base font-bold">{item.unit}</span></div>
                   </div>
                 ))}
               </div>
-              <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Bioimpedância Detalhada</h3>
-              <div className="grid grid-cols-4 gap-4">
+              <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Bioimpedância Detalhada</h3>
+              <div className="grid grid-cols-4 gap-3">
                 {[{ label: 'Massa Musc.', val: data.physicalData.muscleMass, unit: 'kg' }, { label: 'Gordura', val: data.physicalData.bodyFat, unit: '%' }, { label: 'G. Visceral', val: data.physicalData.visceralFat, unit: '' }, { label: 'IMC', val: data.physicalData.imc, unit: '' }].map((item, i) => (
-                  <div key={i} className="bg-white p-4 rounded-xl border-l-4 border-[#d4af37] shadow-lg">
-                    <span className="text-[10px] text-gray-400 font-black uppercase block mb-1">{item.label}</span>
-                    <div className="text-xl font-black">{item.val || '--'}<span className="text-sm ml-1">{item.unit}</span></div>
+                  <div key={i} className="bg-white p-3 rounded-xl border-l-4 border-[#d4af37] shadow-lg">
+                    <span className="text-[9px] text-gray-400 font-black uppercase block mb-0.5">{item.label}</span>
+                    <div className="text-xl font-black">{item.val || '--'}<span className="text-xs ml-0.5">{item.unit}</span></div>
                   </div>
                 ))}
               </div>
             </section>
 
             <section>
-              <h2 className="text-3xl font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-2 mb-6 uppercase tracking-tighter">2. Estratégia Nutricional</h2>
-              <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 italic font-medium leading-relaxed text-gray-700 mb-8">
+              <h2 className="text-2xl font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-2 mb-4 uppercase tracking-tighter">2. Estratégia Nutricional</h2>
+              <div className="bg-gray-50 p-5 rounded-2xl border border-gray-100 italic font-medium leading-relaxed text-gray-700 mb-6 text-sm">
                 <span className="font-black not-italic text-black mr-2">Observação:</span> {data.nutritionalStrategy}
               </div>
-              <div className="bg-[#1a1a1a] text-white p-8 rounded-3xl text-center shadow-xl border-b-8 border-[#d4af37]">
-                 <span className="text-sm font-black uppercase tracking-[0.3em] mb-4 block">META CALÓRICA DIÁRIA {data.kcalSubtext}</span>
-                 <div className="text-6xl font-black text-[#d4af37] font-montserrat">{data.kcalGoal || '0.000'} <span className="text-2xl">kcal</span></div>
+              <div className="bg-[#1a1a1a] text-white p-6 rounded-3xl text-center shadow-xl border-b-4 border-[#d4af37]">
+                 <span className="text-xs font-black uppercase tracking-[0.3em] mb-2 block">META CALÓRICA DIÁRIA {data.kcalSubtext}</span>
+                 <div className="text-4xl font-black text-[#d4af37] font-montserrat">{data.kcalGoal || '0.000'} <span className="text-xl">kcal</span></div>
               </div>
             </section>
           </div>
@@ -111,22 +111,22 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
 
         {/* PÁGINA 3: PLANO ALIMENTAR */}
         <div className={`${dynamicPageClass} p-[1.5cm]`}>
-          <h2 className="text-4xl font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-4 mb-8 uppercase tracking-tighter">3. Plano Alimentar</h2>
-          <div className="rounded-[2.5rem] border border-gray-100 overflow-hidden shadow-xl mb-10">
+          <h2 className="text-2xl font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-3 mb-6 uppercase tracking-tighter">3. Plano Alimentar</h2>
+          <div className="rounded-[1.5rem] border border-gray-100 overflow-hidden shadow-lg mb-8">
             <table className="w-full">
               <thead className="bg-[#d4af37] text-white">
                 <tr>
-                  <th className="p-6 text-left text-2xl font-black w-32 uppercase tracking-tighter">Hora</th>
-                  <th className="p-6 text-left text-2xl font-black uppercase tracking-tighter">Refeição & Detalhes</th>
+                  <th className="p-4 text-left text-lg font-black w-24 uppercase tracking-tighter">Hora</th>
+                  <th className="p-4 text-left text-lg font-black uppercase tracking-tighter">Refeição & Detalhes</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {data.meals.map((meal) => (
                   <tr key={meal.id} className="avoid-break hover:bg-gray-50 transition-colors">
-                    <td className="p-6 font-black text-[#d4af37] text-3xl align-top leading-none">{meal.time}</td>
-                    <td className="p-6">
-                      <div className="font-black text-xl text-black mb-2 uppercase tracking-tight">{meal.name}</div>
-                      <div className="text-gray-600 leading-relaxed font-bold text-lg whitespace-pre-line">{meal.details}</div>
+                    <td className="p-4 font-black text-[#d4af37] text-xl align-top leading-none">{meal.time}</td>
+                    <td className="p-4">
+                      <div className="font-black text-lg text-black mb-1 uppercase tracking-tight">{meal.name}</div>
+                      <div className="text-gray-600 leading-relaxed font-bold text-base whitespace-pre-line">{meal.details}</div>
                     </td>
                   </tr>
                 ))}
@@ -134,19 +134,19 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
             </table>
           </div>
 
-          {/* SUPLEMENTAÇÃO (NOVA SEÇÃO NO PDF) */}
+          {/* SUPLEMENTAÇÃO */}
           {data.supplements.length > 0 && (
-            <div className="mt-6 avoid-break">
-              <h2 className="text-3xl font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-2 mb-6 uppercase tracking-tighter">4. Suplementação</h2>
-              <div className="grid grid-cols-1 gap-4">
+            <div className="mt-4 avoid-break">
+              <h2 className="text-2xl font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-2 mb-4 uppercase tracking-tighter">4. Suplementação</h2>
+              <div className="grid grid-cols-1 gap-3">
                 {data.supplements.map((supp, i) => (
-                  <div key={i} className="bg-gray-50 p-6 rounded-2xl border-l-8 border-[#d4af37] shadow-sm flex justify-between items-center">
+                  <div key={i} className="bg-gray-50 p-4 rounded-xl border-l-4 border-[#d4af37] shadow-sm flex justify-between items-center">
                     <div>
-                      <span className="text-xl font-black text-black uppercase block">{supp.name}</span>
-                      <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">{supp.timing}</span>
+                      <span className="text-lg font-black text-black uppercase block">{supp.name}</span>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{supp.timing}</span>
                     </div>
                     <div className="text-right">
-                       <span className="text-2xl font-black text-[#d4af37]">{supp.dosage}</span>
+                       <span className="text-xl font-black text-[#d4af37]">{supp.dosage}</span>
                     </div>
                   </div>
                 ))}
@@ -157,21 +157,21 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
 
         {/* PÁGINA 4: TREINO + RODAPÉ FINAL */}
         <div className={`${dynamicPageClass} p-[1.5cm]`}>
-          <h2 className="text-4xl font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-4 mb-4 uppercase tracking-tighter">5. Divisão de Treino</h2>
-          <div className="mb-8 font-black text-gray-400 uppercase tracking-widest text-xl">Frequência: {data.trainingFrequency}</div>
-          <div className="space-y-10">
+          <h2 className="text-2xl font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-3 mb-3 uppercase tracking-tighter">5. Divisão de Treino</h2>
+          <div className="mb-6 font-black text-gray-400 uppercase tracking-widest text-lg">Frequência: {data.trainingFrequency}</div>
+          <div className="space-y-6">
             {data.trainingDays.map((day) => (
-              <div key={day.id} className="rounded-[2rem] border border-gray-100 overflow-hidden shadow-xl avoid-break">
-                 <div className="bg-[#1a1a1a] text-white p-6 flex justify-between items-center border-b-4 border-[#d4af37]">
-                    <h3 className="text-2xl font-black text-[#d4af37] uppercase tracking-tighter">{day.title}</h3>
-                    <span className="bg-[#d4af37] text-black px-6 py-1.5 rounded-xl text-xs font-black uppercase tracking-widest">{day.focus}</span>
+              <div key={day.id} className="rounded-[1.2rem] border border-gray-100 overflow-hidden shadow-lg avoid-break">
+                 <div className="bg-[#1a1a1a] text-white p-4 flex justify-between items-center border-b-2 border-[#d4af37]">
+                    <h3 className="text-xl font-black text-[#d4af37] uppercase tracking-tighter">{day.title}</h3>
+                    <span className="bg-[#d4af37] text-black px-4 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest">{day.focus}</span>
                  </div>
                  <table className="w-full">
                    <tbody className="divide-y divide-gray-100">
                       {day.exercises.map((ex) => (
                         <tr key={ex.id}>
-                           <td className="p-5 text-black font-black text-xl pl-10 uppercase tracking-tight">{ex.name}</td>
-                           <td className="p-5 text-[#d4af37] font-black text-2xl text-right pr-10">{ex.sets}</td>
+                           <td className="p-3.5 text-black font-black text-lg pl-8 uppercase tracking-tight">{ex.name}</td>
+                           <td className="p-3.5 text-[#d4af37] font-black text-xl text-right pr-8">{ex.sets}</td>
                         </tr>
                       ))}
                    </tbody>
@@ -180,8 +180,8 @@ const ProtocolPreview: React.FC<Props> = ({ data, onBack }) => {
             ))}
           </div>
 
-          <div className="mt-auto bg-black p-8 rounded-[2rem] border-t-8 border-[#d4af37]">
-            <p className="text-[12px] text-white font-black uppercase tracking-[0.2em] text-center italic">
+          <div className="mt-auto bg-black p-6 rounded-[1.5rem] border-t-4 border-[#d4af37]">
+            <p className="text-[10px] text-white font-black uppercase tracking-[0.2em] text-center italic">
               Documento confidencial para uso exclusivo do aluno e protegido por direitos autorais.
             </p>
           </div>

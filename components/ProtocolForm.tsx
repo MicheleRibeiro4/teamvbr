@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { ProtocolData, Meal, Supplement, TrainingDay } from '../types';
-import { Plus, Trash2, Activity, Utensils, Dumbbell, Target, Sparkles, Loader2, User, Pill, ClipboardList, ChevronLeft } from 'lucide-react';
+import { Plus, Trash2, Activity, Utensils, Dumbbell, Target, Sparkles, Loader2, User, Pill, ClipboardList, ChevronLeft, ShieldCheck, DollarSign, Calendar } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 import { CONSULTANT_DEFAULT } from '../constants';
 
@@ -113,6 +113,65 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
           <ChevronLeft size={16} /> Voltar ao Painel do Aluno
         </button>
       )}
+
+      {/* IDENTIFICAÇÃO DO ALUNO */}
+      <section>
+        <div className={sectionHeaderClass}>
+          <User className="text-[#d4af37]" size={20} />
+          <h2 className="text-xl font-black text-white uppercase tracking-tighter">Identificação do Aluno</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="md:col-span-2">
+            <label className={labelClass}>Nome Completo</label>
+            <input className={inputClass} value={data.clientName} onChange={(e) => handleChange('clientName', e.target.value)} placeholder="Nome do Aluno" />
+          </div>
+          <div>
+            <label className={labelClass}>CPF</label>
+            <input className={inputClass} value={data.contract.cpf} onChange={(e) => handleChange('contract.cpf', e.target.value)} placeholder="000.000.000-00" />
+          </div>
+          <div>
+            <label className={labelClass}>WhatsApp / Telefone</label>
+            <input className={inputClass} value={data.contract.phone} onChange={(e) => handleChange('contract.phone', e.target.value)} placeholder="(00) 00000-0000" />
+          </div>
+          <div className="md:col-span-2">
+            <label className={labelClass}>E-mail</label>
+            <input className={inputClass} value={data.contract.email} onChange={(e) => handleChange('contract.email', e.target.value)} placeholder="exemplo@email.com" />
+          </div>
+          <div className="md:col-span-2">
+            <label className={labelClass}>Endereço Residencial</label>
+            <input className={inputClass} value={data.contract.address} onChange={(e) => handleChange('contract.address', e.target.value)} placeholder="Rua, Número, Bairro, Cidade - UF" />
+          </div>
+        </div>
+      </section>
+
+      {/* DADOS DO CONTRATO */}
+      <section>
+        <div className={sectionHeaderClass}>
+          <ShieldCheck className="text-[#d4af37]" size={20} />
+          <h2 className="text-xl font-black text-white uppercase tracking-tighter">Vigência & Financeiro</h2>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="col-span-2">
+            <label className={labelClass}>Data de Início</label>
+            <input className={inputClass} value={data.contract.startDate} onChange={(e) => handleChange('contract.startDate', e.target.value)} placeholder="DD/MM/AAAA" />
+          </div>
+          <div className="col-span-2">
+            <label className={labelClass}>Data de Término</label>
+            <input className={inputClass} value={data.contract.endDate} onChange={(e) => handleChange('contract.endDate', e.target.value)} placeholder="DD/MM/AAAA" />
+          </div>
+          <div className="col-span-2">
+            <label className={labelClass}>Valor do Plano (R$)</label>
+            <input className={inputClass} value={data.contract.planValue} onChange={(e) => handleChange('contract.planValue', e.target.value)} placeholder="0,00" />
+          </div>
+          <div className="col-span-2">
+            <label className={labelClass}>Método de Pagamento</label>
+            <select className={inputClass} value={data.contract.paymentMethod} onChange={(e) => handleChange('contract.paymentMethod', e.target.value)}>
+              <option value="Pix">Pix</option>
+              <option value="Cartão de Crédito">Cartão de Crédito</option>
+            </select>
+          </div>
+        </div>
+      </section>
 
       {/* DADOS FÍSICOS */}
       <section>

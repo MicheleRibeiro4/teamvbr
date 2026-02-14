@@ -97,7 +97,7 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
 
         <div className="mb-8 space-y-4">
           <div>
-            <h2 className="font-bold uppercase mb-2 text-[#d4af37]">I. CONTRATANTE:</h2>
+            <h2 className="font-bold uppercase mb-2">CONTRATANTE:</h2>
             <div className="space-y-1 pl-4 border-l-2 border-gray-100">
               <p><span className="font-bold">Nome:</span> {lineValue(data.clientName)}</p>
               <p><span className="font-bold">CPF:</span> {lineValue(data.contract.cpf)}</p>
@@ -107,7 +107,7 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
           </div>
 
           <div>
-            <h2 className="font-bold uppercase mb-2 text-[#d4af37]">II. CONTRATADO:</h2>
+            <h2 className="font-bold uppercase mb-2">CONTRATADO:</h2>
             <div className="space-y-1 pl-4 border-l-2 border-gray-100">
               <p><span className="font-bold">Nome:</span> {CONSULTANT_DEFAULT.consultantName}</p>
               <p><span className="font-bold">CPF:</span> {CONSULTANT_DEFAULT.consultantCpf}</p>
@@ -121,23 +121,10 @@ const ContractPreview: React.FC<Props> = ({ data, onBack }) => {
           {renderContractText()}
         </div>
 
-        <div className="mt-12 space-y-12 avoid-break pt-8 border-t border-gray-100">
+        <div className="mt-12 space-y-4 avoid-break pt-8 border-t border-gray-100">
            <div className="flex flex-col gap-2">
               <p><span className="font-bold">Cidade/Local:</span> Vespasiano, Minas Gerais</p>
               <p><span className="font-bold">Data de Emissão:</span> {data.contract.contractDate || new Date().toLocaleDateString('pt-BR')}</p>
-           </div>
-           
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 mt-20">
-              <div className="space-y-2 text-center">
-                 <div className="w-full border-b border-black pt-12"></div>
-                 <p className="font-black uppercase text-[8pt] tracking-widest">CONTRATANTE: {data.clientName}</p>
-                 <p className="text-[7pt] text-gray-400">Assinatura do Aluno</p>
-              </div>
-              <div className="space-y-2 text-center">
-                 <div className="w-full border-b border-black pt-12"></div>
-                 <p className="font-black uppercase text-[8pt] tracking-widest">CONTRATADO: {CONSULTANT_DEFAULT.consultantName}</p>
-                 <p className="text-[7pt] text-gray-400">Assinatura do Consultor</p>
-              </div>
            </div>
         </div>
       </div>
