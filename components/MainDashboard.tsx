@@ -61,9 +61,9 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
         </div>
         
         <div className="relative z-10 text-center md:text-left flex items-center gap-6">
-          <img src={LOGO_VBR_BLACK} alt="Team VBR" className="w-48 h-auto hidden md:block" />
+          <img src={LOGO_VBR_BLACK} alt="Team VBR Rhino" className="w-48 h-auto hidden md:block" />
           <h1 className="text-4xl md:text-7xl font-black text-white uppercase tracking-tighter leading-none">
-            Team VBR
+            Team VBR Rhino
           </h1>
         </div>
 

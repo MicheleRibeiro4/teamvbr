@@ -8,6 +8,7 @@ import EvolutionTracker from './components/EvolutionTracker';
 import MainDashboard from './components/MainDashboard';
 import StudentSearch from './components/StudentSearch';
 import StudentDashboard from './components/StudentDashboard';
+import VBRChatbot from './components/VBRChatbot';
 import { 
   RefreshCw,
   CheckCircle2,
@@ -97,7 +98,7 @@ const App: React.FC = () => {
               </div>
               <div>
                 <h1 className="text-xl font-black text-white uppercase tracking-tighter leading-none">Acesso Consultor</h1>
-                <p className="text-[10px] text-white/40 font-black uppercase tracking-widest mt-1">Portal Team VBR</p>
+                <p className="text-[10px] text-white/40 font-black uppercase tracking-widest mt-1">Portal Team VBR Rhino</p>
               </div>
             </div>
 
@@ -123,7 +124,7 @@ const App: React.FC = () => {
             </form>
           </div>
           <p className="text-center mt-8 text-[9px] font-black text-white/20 uppercase tracking-[0.3em]">
-            &copy; 2025 Team VBR - Excelência em Performance
+            &copy; 2025 Team VBR Rhino - Excelência em Performance
           </p>
         </div>
       </div>
@@ -173,6 +174,7 @@ const App: React.FC = () => {
           </div>
         )}
       </main>
+      <VBRChatbot />
     </div>
   );
 };
