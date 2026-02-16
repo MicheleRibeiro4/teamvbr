@@ -41,7 +41,12 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
 
     setIsGenerating(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const apiKey = process.env.API_KEY;
+      if (!apiKey) {
+        throw new Error("A chave de API (process.env.API_KEY) não foi encontrada no ambiente. Verifique as configurações.");
+      }
+
+      const ai = new GoogleGenAI({ apiKey });
       
       const prompt = `
         Você é um treinador de elite e nutricionista esportivo (Estilo Team VBR).
