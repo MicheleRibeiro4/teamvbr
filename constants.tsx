@@ -101,7 +101,7 @@ export const EMPTY_DATA: ProtocolData = {
   updatedAt: new Date().toISOString(),
   privateNotes: "",
   clientName: "",
-  protocolTitle: "Hipertrofia",
+  protocolTitle: "",
   totalPeriod: "",
   ...CONSULTANT_DEFAULT,
   physicalData: {
@@ -109,7 +109,7 @@ export const EMPTY_DATA: ProtocolData = {
     weight: "",
     height: "",
     age: "",
-    gender: "Masculino",
+    gender: "",
     bodyFat: "",
     muscleMass: "",
     visceralFat: "",
@@ -133,25 +133,17 @@ export const EMPTY_DATA: ProtocolData = {
   },
   nutritionalStrategy: "",
   kcalGoal: "",
-  kcalSubtext: "Foco em Recomposição",
-  waterGoal: "", // Inicializa vazio
+  kcalSubtext: "",
+  waterGoal: "",
   macros: {
     protein: { value: "", ratio: "" },
     carbs: { value: "", ratio: "" },
     fats: { value: "", ratio: "" }
   },
   meals: [],
-  supplements: [
-    { id: '1', name: 'CREATINA', dosage: '5g todos os dias', timing: 'Pós-Treino' },
-    { id: '2', name: 'WHEY PROTEIN', dosage: '30g', timing: 'Lanche' },
-    { id: '3', name: 'CAFEÍNA', dosage: '200mg', timing: 'Pré-Treino' }
-  ],
-  tips: [
-    "Mantenha a hidratação constante.",
-    "A consistência é o segredo do resultado.",
-    "Priorize o sono reparador."
-  ],
-  trainingFrequency: "5x na semana",
+  supplements: [],
+  tips: [],
+  trainingFrequency: "",
   trainingDays: [],
   generalObservations: "",
   contract: {

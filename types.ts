@@ -19,7 +19,7 @@ export interface PhysicalData {
   weight: string;
   height: string;
   age: string;
-  gender: 'Masculino' | 'Feminino';
+  gender: 'Masculino' | 'Feminino' | '';
   bodyFat: string;
   muscleMass: string;
   visceralFat: string;
