@@ -207,7 +207,7 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
           <button onClick={() => { localStorage.removeItem('vbr_auth'); setIsAuthenticated(false); }} className="text-[9px] font-black uppercase text-white/20 hover:text-red-500">Sair</button>
           {data.id && activeView !== 'home' && activeView !== 'search' && (
             <button 
-              onClick={() => handleSave()} 
+              onClick={() => handleSave(false)} 
               disabled={isSyncing}
               className="flex items-center gap-2 bg-[#d4af37] text-black px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all shadow-lg disabled:opacity-50"
             >
@@ -277,9 +277,9 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
                  setData(historyData);
               }}
               onOpenEditor={() => setActiveView('manage')}
-              onUpdateData={(newData, createHistory = false) => {
+              onUpdateData={async (newData, createHistory = false) => {
                 if (createHistory) {
-                  // GERAR NOVO PROTOCOLO: Cria um novo ID e salva como novo registro
+                  // GERAR NOVO PROTOCOLO (Fechar Ciclo)
                   const historyId = "vbr-" + Math.random().toString(36).substr(2, 9);
                   const dataToSave = { 
                     ...newData, 
@@ -287,11 +287,16 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
                     updatedAt: new Date().toISOString() 
                   };
                   setData(dataToSave);
-                  handleSave(true, dataToSave);
+                  // Salva COM feedback visual (false)
+                  await handleSave(false, dataToSave);
+                  // Força recarga do banco para garantir que a lista lateral de histórico
+                  // pegue o protocolo antigo que acabou de ser "arquivado"
+                  await loadData();
+                  alert("Ciclo encerrado com sucesso! Um novo registro foi criado com a data de hoje.");
                 } else {
-                  // SALVAR ALTERAÇÕES: Mantém ID atual e atualiza registro
+                  // SALVAR ALTERAÇÕES (Mesmo ID)
                   setData(newData);
-                  handleSave(true, newData);
+                  handleSave(false, newData);
                 }
               }}
             />

@@ -94,16 +94,17 @@ const EvolutionTracker: React.FC<Props> = ({ currentProtocol, history, onNotesCh
     if (onUpdateData) {
       if(confirm("Confirmar fechamento do ciclo atual? \n\nIsso arquivará os dados atuais no histórico e criará uma nova avaliação com a data de hoje para você preencher os novos dados.")) {
         setIsSaving(true);
+        // Atualiza a data para HOJE nos novos dados
         onUpdateData({
           ...currentProtocol,
-          clientName: currentProtocol.clientName, // Mantém nome
+          clientName: currentProtocol.clientName, 
           physicalData: {
              ...tempData,
-             date: new Date().toLocaleDateString('pt-BR') // Nova data
+             date: new Date().toLocaleDateString('pt-BR') 
           },
           updatedAt: new Date().toISOString()
         }, true); // TRUE = CRIA NOVO ID E ARQUIVA O ANTIGO
-        setTimeout(() => setIsSaving(false), 800);
+        setTimeout(() => setIsSaving(false), 2000);
       }
     }
   };
@@ -326,7 +327,7 @@ const EvolutionTracker: React.FC<Props> = ({ currentProtocol, history, onNotesCh
                  className="flex-1 flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white py-4 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all border border-white/10"
                >
                  {isSaving ? <Loader2 className="animate-spin" size={14} /> : <Save size={14} />}
-                 Salvar Dados Atuais
+                 {isSaving ? 'Salvando...' : 'Salvar Dados Atuais'}
                </button>
 
                <button 
