@@ -78,24 +78,32 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
     handleChange(path, v);
   };
 
-  // Máscara de Altura (0,00) - Corrigida
+  // Máscara de Altura (Permite 1,XX)
   const handleHeightMask = (path: string, value: string) => {
-    let v = value.replace(/\D/g, '');
-    // Limita a 3 dígitos (ex: 9,99m máx)
-    if (v.length > 3) v = v.substring(0, 3); 
+    // 1. Substituir ponto por vírgula para padronizar
+    let v = value.replace(/\./g, ',');
     
-    if (v === '') {
-      handleChange(path, '');
-      return;
+    // 2. Remover qualquer coisa que não seja número ou vírgula
+    v = v.replace(/[^0-9,]/g, '');
+    
+    // 3. Impedir mais de uma vírgula
+    const parts = v.split(',');
+    if (parts.length > 2) {
+       v = parts[0] + ',' + parts.slice(1).join('');
     }
     
-    // Formatação ATM: 175 -> 1,75
-    const numberValue = parseInt(v) / 100;
-    const formatted = numberValue.toFixed(2).replace('.', ',');
-    handleChange(path, formatted);
+    // 4. Limitar casas decimais (máx 2)
+    if (parts[1] && parts[1].length > 2) {
+       v = parts[0] + ',' + parts[1].substring(0, 2);
+    }
+    
+    // 5. Limitar tamanho total (ex: 2,55 = 4 chars)
+    if (v.length > 4) v = v.substring(0, 4);
+    
+    handleChange(path, v);
   };
 
-  // Máscara de Peso (00,00) - Corrigida
+  // Máscara de Peso (00,00) - Mantendo ATM style pois é mais comum para peso, mas pode ser ajustado se necessário
   const handleWeightMask = (path: string, value: string) => {
     let v = value.replace(/\D/g, '');
     // Limita tamanho para evitar números gigantes (ex: 999kg)
@@ -624,8 +632,8 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                   className={inputClass} 
                   value={data.physicalData.height} 
                   onChange={(e) => handleHeightMask('physicalData.height', e.target.value)} 
-                  placeholder="0,00" 
-                  inputMode="numeric"
+                  placeholder="1,75" 
+                  inputMode="decimal"
                 />
               </div>
               <div className="col-span-2 md:col-span-1">
