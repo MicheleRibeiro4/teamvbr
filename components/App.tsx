@@ -81,8 +81,9 @@ const App: React.FC = () => {
       // Se for atualização normal, usamos o ID existente ou geramos um.
       const currentId = dataToSave.id || "vbr-" + Math.random().toString(36).substr(2, 9);
       
+      // CRITICAL FIX: Deep clone to prevent reference issues between state and saved list
       const protocolToSave = { 
-        ...dataToSave, 
+        ...JSON.parse(JSON.stringify(dataToSave)), 
         id: currentId, 
         updatedAt: new Date().toISOString()
       };
@@ -144,15 +145,19 @@ const App: React.FC = () => {
     }
   };
 
-  const sqlRepairScript = `-- SCRIPT DE REPARO DEFINITIVO VBR
-DROP TABLE IF EXISTS public.protocols CASCADE;
-CREATE TABLE public.protocols (
+  const sqlRepairScript = `-- SCRIPT DE CONFIGURAÇÃO (SEGURANÇA + TABELA)
+-- 1. Cria a tabela se não existir
+CREATE TABLE IF NOT EXISTS public.protocols (
   id text NOT NULL PRIMARY KEY,
   client_name text NOT NULL,
   updated_at timestamp with time zone DEFAULT now(),
   data jsonb NOT NULL
 );
+
+-- 2. Desabilita RLS (Importante para acesso direto via API Anon)
 ALTER TABLE public.protocols DISABLE ROW LEVEL SECURITY;
+
+-- 3. Garante permissões de leitura e escrita
 GRANT ALL ON TABLE public.protocols TO anon;
 GRANT ALL ON TABLE public.protocols TO authenticated;
 GRANT ALL ON TABLE public.protocols TO service_role;`;
@@ -227,14 +232,14 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
                 <AlertTriangle className="text-red-500 shrink-0" size={40} />
                 <div>
                   <h4 className="font-black uppercase text-sm text-red-500">Erro de Banco de Dados</h4>
-                  <p className="text-xs text-white/60">Rode o SQL de reparo no seu Supabase.</p>
+                  <p className="text-xs text-white/60">Permissões ou tabela faltando. Copie o SQL ao lado.</p>
                 </div>
               </div>
               <button 
-                onClick={() => { navigator.clipboard.writeText(sqlRepairScript); alert('Copiado!'); }}
-                className="px-8 py-4 rounded-2xl font-black text-[11px] uppercase border border-white/10"
+                onClick={() => { navigator.clipboard.writeText(sqlRepairScript); alert('SQL Copiado! Cole no Editor SQL do Supabase.'); }}
+                className="px-8 py-4 rounded-2xl font-black text-[11px] uppercase border border-white/10 hover:bg-white/5 transition-colors"
               >
-                Copiar SQL
+                Copiar SQL de Correção
               </button>
             </div>
           </div>

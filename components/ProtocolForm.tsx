@@ -152,7 +152,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
       
       // Lógica para Plano Avulso
       if (data.contract.planType === 'Avulso') {
-        const newData = { ...data };
+        const newData = JSON.parse(JSON.stringify(data));
         if (newData.contract.endDate !== newData.contract.startDate) {
           newData.contract.endDate = newData.contract.startDate;
           newData.contract.durationDays = "1";
@@ -185,7 +185,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
           const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
 
           if (data.contract.endDate !== newEndDate || data.contract.durationDays !== String(diffDays)) {
-             const newData = { ...data };
+             const newData = JSON.parse(JSON.stringify(data));
              newData.contract.endDate = newEndDate;
              newData.contract.durationDays = String(diffDays);
              onChange(newData);
@@ -249,10 +249,14 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
   }, [data.contract.planValue]);
 
   const handleChange = (path: string, value: any) => {
-    const newData = { ...data };
+    // CRITICAL FIX: Deep copy to prevent state mutation and ensure React updates correctly
+    const newData = JSON.parse(JSON.stringify(data));
     const keys = path.split('.');
     let current: any = newData;
-    for (let i = 0; i < keys.length - 1; i++) current = current[keys[i]];
+    for (let i = 0; i < keys.length - 1; i++) {
+        if (!current[keys[i]]) current[keys[i]] = {};
+        current = current[keys[i]];
+    }
     current[keys[keys.length - 1]] = value;
     onChange(newData);
   };
