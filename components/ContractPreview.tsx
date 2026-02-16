@@ -63,7 +63,7 @@ const ContractPreview = forwardRef<ContractPreviewHandle, Props>(({ data, onBack
     setIsGenerating(true);
     
     const opt = {
-      margin: [20, 15, 20, 15], 
+      margin: [15, 15, 15, 15], // Margens reduzidas para aproveitar melhor o espaço
       filename: `Contrato_VBR_${data.clientName.replace(/\s+/g, '_')}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { 
@@ -113,8 +113,8 @@ const ContractPreview = forwardRef<ContractPreviewHandle, Props>(({ data, onBack
       )}
 
       {/* Container principal */}
-      <div ref={contractRef} className="bg-white text-black p-[15mm] w-[210mm] mx-auto font-sans leading-[1.6] text-[10pt] shadow-2xl print:shadow-none print:w-full h-auto min-h-[297mm]">
-        <div className="mb-8">
+      <div ref={contractRef} className="bg-white text-black px-[15mm] py-[10mm] w-[210mm] mx-auto font-sans leading-[1.5] text-[10pt] shadow-2xl print:shadow-none print:w-full h-auto">
+        <div className="mb-6">
           <h1 className="font-bold text-center text-sm mb-6 uppercase">CONTRATO DE ASSESSORIA EM ESTILO DE VIDA SAUDÁVEL</h1>
           
           <div className="mb-4 text-justify">
@@ -133,13 +133,13 @@ const ContractPreview = forwardRef<ContractPreviewHandle, Props>(({ data, onBack
             <p>Endereço: {CONSULTANT_DEFAULT.consultantAddress}</p>
           </div>
 
-          <p className="mb-6 text-justify">As partes acima identificadas celebram o presente contrato, mediante as seguintes cláusulas e condições:</p>
+          <p className="mb-4 text-justify">As partes acima identificadas celebram o presente contrato, mediante as seguintes cláusulas e condições:</p>
         </div>
 
         {/* Renderização em Parágrafos para Evitar Corte de Texto */}
-        <div className="mb-10 text-justify">
+        <div className="mb-8 text-justify">
           {getCleanContractText().split('\n').map((line, i) => {
-            if (line.trim() === '') return <div key={i} className="h-4"></div>;
+            if (line.trim() === '') return <div key={i} className="h-3"></div>;
             
             // Verifica se a linha é o título da Cláusula 3 ou 7 para forçar quebra
             const upperLine = line.toUpperCase();
@@ -156,16 +156,16 @@ const ContractPreview = forwardRef<ContractPreviewHandle, Props>(({ data, onBack
           })}
         </div>
 
-        <p className="mb-12 text-justify">
+        <p className="mb-8 text-justify">
           E, por estarem justas e contratadas, as partes assinam o presente instrumento em 2 (duas) vias de igual teor e forma, para que produza seus jurídicos e legais efeitos.
         </p>
 
-        <div className="mb-12">
+        <div className="mb-8">
            <p>Vespasiano, Minas Gerais</p>
            <p>Data: {new Date().toLocaleDateString('pt-BR')}</p>
         </div>
 
-        <div className="mt-8 space-y-12">
+        <div className="mt-8 space-y-10">
           <div className="break-inside-avoid">
             <p className="font-bold mb-4">CONTRATANTE:</p>
             <div className="border-b border-black w-2/3 mb-1"></div>
