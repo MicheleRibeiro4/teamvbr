@@ -41,11 +41,8 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
 
     setIsGenerating(true);
     try {
-      const apiKey = process.env.API_KEY;
-      if (!apiKey) {
-        throw new Error("A chave de API (process.env.API_KEY) não foi encontrada no ambiente. Verifique as configurações.");
-      }
-
+      const apiKey = "AIzaSyCdc2gt-S321N9qjNU3ZK4vHxPuTeOrVbA";
+      
       const ai = new GoogleGenAI({ apiKey });
       
       const prompt = `
