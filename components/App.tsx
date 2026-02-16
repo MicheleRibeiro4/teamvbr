@@ -1,23 +1,22 @@
-
-import React, { useState, useEffect } from 'react';
-import { ProtocolData } from './types';
-import { EMPTY_DATA, LOGO_VBR_BLACK } from './constants';
-import { db } from './services/db';
-import UnifiedEditor from './components/UnifiedEditor';
-import EvolutionTracker from './components/EvolutionTracker';
-import MainDashboard from './components/MainDashboard';
-import StudentSearch from './components/StudentSearch';
-import StudentDashboard from './components/StudentDashboard';
+import React, { useState, useEffect, useRef } from 'react';
+import { ProtocolData } from '../types';
+import { EMPTY_DATA, LOGO_VBR_BLACK } from '../constants';
+import { db } from '../services/db';
+import UnifiedEditor from '../components/UnifiedEditor';
+import MainDashboard from '../components/MainDashboard';
+import StudentSearch from '../components/StudentSearch';
+import StudentDashboard from '../components/StudentDashboard';
 import { 
   RefreshCw,
   CheckCircle2,
   Database,
   ChevronLeft,
   Lock,
-  AlertTriangle
+  AlertTriangle,
+  Loader2
 } from 'lucide-react';
 
-type ViewMode = 'home' | 'search' | 'manage' | 'evolution' | 'settings' | 'student-dashboard';
+type ViewMode = 'home' | 'search' | 'manage' | 'settings' | 'student-dashboard';
 
 const App: React.FC = () => {
   const [data, setData] = useState<ProtocolData>(EMPTY_DATA);
@@ -29,6 +28,9 @@ const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState(false);
+
+  // Ref para o timer do auto-save
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const MASTER_PASSWORD = "vbr-master-2025";
 
@@ -50,6 +52,26 @@ const App: React.FC = () => {
     if (auth === 'true') setIsAuthenticated(true);
     loadData();
   }, []);
+
+  // AUTO-SAVE LOGIC
+  useEffect(() => {
+    // Só ativa o auto-save se estiver editando um aluno e tiver um ID válido
+    if (activeView === 'manage' && data.id && data.clientName) {
+      // Limpa timer anterior se houver (debounce)
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+
+      // Configura novo timer de 2 segundos
+      autoSaveTimerRef.current = setTimeout(() => {
+        handleSave(true); // Salvar silenciosamente
+      }, 2000);
+    }
+
+    return () => {
+      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    };
+  }, [data]); // Dispara sempre que 'data' muda
 
   // Load saved data from backend
   const loadData = async () => {
@@ -77,11 +99,8 @@ const App: React.FC = () => {
     
     setIsSyncing(true);
     try {
-      // Se tivermos salvando um histórico novo, usamos o ID que foi gerado.
-      // Se for atualização normal, usamos o ID existente ou geramos um.
       const currentId = dataToSave.id || "vbr-" + Math.random().toString(36).substr(2, 9);
       
-      // CRITICAL FIX: Deep clone to prevent reference issues between state and saved list
       const protocolToSave = { 
         ...JSON.parse(JSON.stringify(dataToSave)), 
         id: currentId, 
@@ -91,18 +110,15 @@ const App: React.FC = () => {
       await db.saveProtocol(protocolToSave);
       
       setSavedProtocols(prev => {
-        // Verifica se já existe esse ID na lista
         const index = prev.findIndex(p => p.id === currentId);
         if (index >= 0) {
           const newList = [...prev];
           newList[index] = protocolToSave;
           return newList;
         }
-        // Se não existe (novo histórico), adiciona no topo
         return [protocolToSave, ...prev];
       });
       
-      // Se estamos editando este protocolo na tela, atualiza o estado principal também
       if (!specificData || specificData.id === data.id) {
         setData(protocolToSave);
       }
@@ -146,18 +162,13 @@ const App: React.FC = () => {
   };
 
   const sqlRepairScript = `-- SCRIPT DE CONFIGURAÇÃO (SEGURANÇA + TABELA)
--- 1. Cria a tabela se não existir
 CREATE TABLE IF NOT EXISTS public.protocols (
   id text NOT NULL PRIMARY KEY,
   client_name text NOT NULL,
   updated_at timestamp with time zone DEFAULT now(),
   data jsonb NOT NULL
 );
-
--- 2. Desabilita RLS (Importante para acesso direto via API Anon)
 ALTER TABLE public.protocols DISABLE ROW LEVEL SECURITY;
-
--- 3. Garante permissões de leitura e escrita
 GRANT ALL ON TABLE public.protocols TO anon;
 GRANT ALL ON TABLE public.protocols TO authenticated;
 GRANT ALL ON TABLE public.protocols TO service_role;`;
@@ -187,9 +198,18 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
       {showToast && (
         <div className="fixed bottom-10 right-10 z-[100] animate-in slide-in-from-right-10 duration-500">
            <div className="bg-[#d4af37] text-black px-8 py-4 rounded-2xl font-black uppercase text-xs flex items-center gap-3 shadow-[0_0_40px_rgba(212,175,55,0.4)]">
-              <CheckCircle2 size={20} /> Sincronizado
+              <CheckCircle2 size={20} /> Salvo Automaticamente
            </div>
         </div>
+      )}
+
+      {/* Indicador de Auto Save no Header se estiver syncando silenciosamente */}
+      {isSyncing && !showToast && (
+         <div className="fixed bottom-10 right-10 z-[100] animate-in fade-in duration-300">
+             <div className="bg-white/10 backdrop-blur-md text-white px-6 py-3 rounded-xl font-bold text-xs flex items-center gap-3 border border-white/10">
+                <Loader2 size={16} className="animate-spin text-[#d4af37]" /> Salvando...
+             </div>
+         </div>
       )}
 
       <header className="h-24 border-b border-white/10 px-8 flex items-center justify-between sticky top-0 bg-[#0a0a0a]/90 backdrop-blur-xl z-50 no-print">
@@ -217,7 +237,7 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
               className="flex items-center gap-2 bg-[#d4af37] text-black px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all shadow-lg disabled:opacity-50"
             >
               {isSyncing ? <RefreshCw size={16} className="animate-spin" /> : <Database size={16} />}
-              Salvar
+              Salvar Agora
             </button>
           )}
         </div>
@@ -263,51 +283,6 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
             onChange={setData} 
             onBack={() => setActiveView('student-dashboard')} 
           />
-        )}
-        
-        {activeView === 'evolution' && (
-          <div className="space-y-10">
-            <button 
-              onClick={() => setActiveView('student-dashboard')}
-              className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-[#d4af37] transition-colors no-print"
-            >
-              <ChevronLeft size={16} /> Voltar ao Painel
-            </button>
-            <EvolutionTracker 
-              currentProtocol={data} 
-              // Melhorado: Filtro mais robusto
-              history={savedProtocols.filter(p => p.clientName?.trim() === data.clientName?.trim())} 
-              onNotesChange={(n) => setData({...data, privateNotes: n})} 
-              onSelectHistory={(historyData) => {
-                 setData(historyData);
-              }}
-              onOpenEditor={() => setActiveView('manage')}
-              onUpdateData={async (newData, createHistory = false) => {
-                // Atualiza o estado LOCAL imediatamente para refletir na UI
-                setData(newData);
-
-                if (createHistory) {
-                  // GERAR NOVO PROTOCOLO (Fechar Ciclo)
-                  const historyId = "vbr-" + Math.random().toString(36).substr(2, 9);
-                  const dataToSave = { 
-                    ...newData, 
-                    id: historyId, 
-                    updatedAt: new Date().toISOString() 
-                  };
-                  setData(dataToSave);
-                  // Salva COM feedback visual (false)
-                  await handleSave(false, dataToSave);
-                  // Força recarga do banco para garantir que a lista lateral de histórico
-                  // pegue o protocolo antigo que acabou de ser "arquivado"
-                  await loadData();
-                  alert("Ciclo encerrado com sucesso! Um novo registro foi criado com a data de hoje.");
-                } else {
-                  // SALVAR ALTERAÇÕES (Mesmo ID)
-                  await handleSave(false, newData);
-                }
-              }}
-            />
-          </div>
         )}
       </main>
     </div>

@@ -1,11 +1,11 @@
 
 import React, { useState } from 'react';
 import { ProtocolData } from '../types';
-import { Search, Trash2, ChevronRight, Calendar, User, Target, FileText, TrendingUp, ScrollText, AlertTriangle } from 'lucide-react';
+import { Search, Trash2, ChevronRight, Calendar, User, Target, FileText } from 'lucide-react';
 
 interface Props {
   protocols: ProtocolData[];
-  onLoad: (protocol: ProtocolData, view: 'manage' | 'evolution' | 'student-dashboard') => void;
+  onLoad: (protocol: ProtocolData, view: 'manage' | 'student-dashboard') => void;
   onDelete: (id: string) => void;
 }
 
@@ -16,14 +16,6 @@ const StudentSearch: React.FC<Props> = ({ protocols, onLoad, onDelete }) => {
     p.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.protocolTitle.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  const isEvolutionDue = (dateString: string) => {
-    const today = new Date();
-    const lastUpdate = new Date(dateString);
-    const diffTime = Math.abs(today.getTime() - lastUpdate.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays >= 15;
-  };
 
   return (
     <div className="max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -48,34 +40,33 @@ const StudentSearch: React.FC<Props> = ({ protocols, onLoad, onDelete }) => {
           </div>
         ) : (
           filtered.map((p) => {
-            const due = isEvolutionDue(p.updatedAt);
+            const isFemale = p.physicalData.gender === 'Feminino';
+            const iconBgClass = isFemale ? 'bg-pink-500/10 text-pink-500 border-pink-500' : 'bg-black text-[#d4af37] border-[#d4af37]';
+            const nameHoverClass = isFemale ? 'group-hover:text-pink-500' : 'group-hover:text-[#d4af37]';
+            const borderClass = isFemale ? 'hover:border-pink-500/40' : 'hover:border-[#d4af37]/40';
+            const badgeClass = isFemale ? 'text-pink-500 bg-pink-500/10' : 'text-[#d4af37] bg-[#d4af37]/10';
+
             return (
               <div 
                 key={p.id} 
-                className={`bg-white/5 p-6 rounded-[1.5rem] border shadow-sm hover:shadow-2xl transition-all flex flex-col md:flex-row md:items-center justify-between group gap-6 ${due ? 'border-[#d4af37]/30 bg-[#d4af37]/5' : 'border-white/5 hover:border-[#d4af37]/40'}`}
+                className={`bg-white/5 p-6 rounded-[1.5rem] border shadow-sm hover:shadow-2xl transition-all flex flex-col md:flex-row md:items-center justify-between group gap-6 border-white/5 ${borderClass}`}
               >
                 <div className="flex items-center gap-6">
-                  <div className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center text-[#d4af37] border-b-4 border-[#d4af37] shadow-xl group-hover:scale-105 transition-transform shrink-0 relative">
+                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center border-b-4 shadow-xl group-hover:scale-105 transition-transform shrink-0 relative ${iconBgClass}`}>
                     <User size={30} />
-                    {due && (
-                        <div className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full border-2 border-[#0a0a0a]" title="Atualização Pendente">
-                            <AlertTriangle size={12} fill="currentColor" />
-                        </div>
-                    )}
                   </div>
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2">
-                        <span className="text-2xl font-black text-white uppercase tracking-tighter leading-none mb-1 group-hover:text-[#d4af37] transition-colors break-words">
+                        <span className={`text-2xl font-black text-white uppercase tracking-tighter leading-none mb-1 ${nameHoverClass} transition-colors break-words`}>
                         {p.clientName || 'Novo Aluno'}
                         </span>
-                        {due && <span className="text-[9px] font-black uppercase bg-red-500/20 text-red-500 px-2 py-0.5 rounded ml-2">Atualizar!</span>}
                     </div>
                     <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3 text-[10px] font-black text-white/40 uppercase tracking-widest">
-                      <span className="flex items-center gap-1 text-[#d4af37] px-2 py-0.5 bg-[#d4af37]/10 rounded-md w-fit">
+                      <span className={`flex items-center gap-1 px-2 py-0.5 rounded-md w-fit ${badgeClass}`}>
                         <Target size={12}/> {p.protocolTitle || 'Sem Objetivo'}
                       </span>
                       <span className="hidden md:block w-1 h-1 bg-white/10 rounded-full"></span>
-                      <span className={`flex items-center gap-1 ${due ? 'text-red-400' : ''}`}>
+                      <span className="flex items-center gap-1">
                         <Calendar size={12} />
                         {new Date(p.updatedAt).toLocaleDateString('pt-BR')}
                       </span>
@@ -95,16 +86,8 @@ const StudentSearch: React.FC<Props> = ({ protocols, onLoad, onDelete }) => {
                           <span className="text-[7px] font-black uppercase">Gerenciar</span>
                       </button>
                       <button 
-                          onClick={() => onLoad(p, 'evolution')}
-                          className="p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all text-white/40 flex flex-col items-center gap-1 min-w-[65px]"
-                          title="Ver Evolução"
-                      >
-                          <TrendingUp size={18} />
-                          <span className="text-[7px] font-black uppercase">Evolução</span>
-                      </button>
-                      <button 
                           onClick={() => onLoad(p, 'student-dashboard')}
-                          className="p-3 bg-[#d4af37]/10 hover:bg-[#d4af37] hover:text-black rounded-xl transition-all text-[#d4af37] flex flex-col items-center gap-1 min-w-[65px] border border-[#d4af37]/20"
+                          className={`p-3 rounded-xl transition-all flex flex-col items-center gap-1 min-w-[65px] border ${isFemale ? 'bg-pink-500/10 hover:bg-pink-500 hover:text-white text-pink-500 border-pink-500/20' : 'bg-[#d4af37]/10 hover:bg-[#d4af37] hover:text-black text-[#d4af37] border-[#d4af37]/20'}`}
                           title="Painel do Aluno"
                       >
                           <ChevronRight size={18} />

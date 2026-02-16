@@ -10,16 +10,14 @@ import {
   Search,
   Clock,
   FileText,
-  ChevronRight,
-  TrendingUp,
-  AlertTriangle
+  ChevronRight
 } from 'lucide-react';
 
 interface Props {
   protocols: ProtocolData[];
   onNew: () => void;
   onList: () => void;
-  onLoadStudent: (student: ProtocolData, view: 'manage' | 'evolution' | 'student-dashboard') => void;
+  onLoadStudent: (student: ProtocolData, view: 'manage' | 'student-dashboard') => void;
 }
 
 const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStudent }) => {
@@ -39,15 +37,6 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
     }
   });
   const totalStudents = uniqueStudentsMap.size;
-
-  // Lógica de Alerta de Evolução (15 dias)
-  const today = new Date();
-  const studentsDueForUpdate = Array.from(uniqueStudentsMap.values()).filter(p => {
-    const lastUpdate = new Date(p.updatedAt);
-    const diffTime = Math.abs(today.getTime() - lastUpdate.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays >= 15;
-  });
 
   const recentStudents = [...protocols].sort((a, b) => 
     new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
@@ -90,38 +79,6 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
         </div>
       </div>
 
-      {/* Seção de Alertas de Evolução */}
-      {studentsDueForUpdate.length > 0 && (
-         <div className="bg-[#d4af37]/10 border border-[#d4af37]/30 rounded-[1.5rem] p-6 animate-pulse-slow">
-            <div className="flex items-center gap-3 mb-4">
-               <AlertTriangle className="text-[#d4af37]" size={24} />
-               <h3 className="text-lg font-black uppercase tracking-tighter text-[#d4af37]">Atenção: Evoluções Pendentes (+15 Dias)</h3>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-               {studentsDueForUpdate.slice(0, 6).map(p => {
-                  const days = Math.ceil(Math.abs(new Date().getTime() - new Date(p.updatedAt).getTime()) / (1000 * 60 * 60 * 24));
-                  return (
-                    <button 
-                       key={p.id}
-                       onClick={() => onLoadStudent(p, 'evolution')}
-                       className="flex items-center justify-between bg-black/40 p-3 rounded-xl hover:bg-[#d4af37] hover:text-black group transition-all"
-                    >
-                       <span className="font-bold text-sm truncate max-w-[150px]">{p.clientName}</span>
-                       <span className="text-[10px] font-black uppercase bg-red-500/20 text-red-500 px-2 py-1 rounded group-hover:bg-black/20 group-hover:text-black">
-                          {days} Dias s/ att
-                       </span>
-                    </button>
-                  )
-               })}
-               {studentsDueForUpdate.length > 6 && (
-                  <button onClick={onList} className="text-xs font-bold text-white/40 hover:text-white underline">
-                     + {studentsDueForUpdate.length - 6} outros alunos
-                  </button>
-               )}
-            </div>
-         </div>
-      )}
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {metrics.map((s, i) => (
           <button 
@@ -152,32 +109,38 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
         </div>
         
         <div className="grid grid-cols-1 gap-3">
-          {recentStudents.length > 0 ? recentStudents.map((p) => (
-            <div key={p.id} className="bg-white/5 p-4 rounded-2xl border border-white/5 flex flex-col md:flex-row items-center justify-between gap-4 hover:border-white/20 transition-all group">
-              <div className="flex items-center gap-4 w-full md:w-auto overflow-hidden">
-                 <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center text-[#d4af37] border border-white/10 group-hover:bg-[#d4af37] group-hover:text-black transition-all shrink-0">
-                    <Users size={20} />
-                 </div>
-                 <div className="flex flex-col min-w-0">
-                    <h4 className="font-black text-lg uppercase tracking-tighter text-white group-hover:text-[#d4af37] transition-colors leading-none truncate">{p.clientName}</h4>
-                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                      <span className="text-[9px] text-white/30 font-bold uppercase tracking-widest truncate max-w-[200px]">{p.protocolTitle}</span>
-                      <span className="w-1 h-1 bg-green-500 rounded-full shrink-0"></span>
-                      <span className="text-[9px] text-green-500/80 font-black uppercase tracking-widest">Ativo</span>
-                    </div>
-                 </div>
-              </div>
+          {recentStudents.length > 0 ? recentStudents.map((p) => {
+            // Definição de Cores Baseada no Gênero
+            const isFemale = p.physicalData.gender === 'Feminino';
+            const iconColorClass = isFemale ? 'bg-pink-500/20 text-pink-500 border-pink-500/20 group-hover:bg-pink-500' : 'bg-black text-[#d4af37] border-white/10 group-hover:bg-[#d4af37]';
+            const hoverTextClass = isFemale ? 'group-hover:text-pink-500' : 'group-hover:text-[#d4af37]';
 
-              <div className="flex items-center gap-2 w-full md:w-auto justify-end border-t border-white/5 md:border-0 pt-3 md:pt-0 mt-1 md:mt-0 shrink-0">
-                <div className="flex gap-2">
-                  <button onClick={() => onLoadStudent(p, 'manage')} className="p-2 bg-white/5 hover:bg-[#d4af37] hover:text-black rounded-lg transition-all text-white/40" title="Gerenciar Aluno"><FileText size={16} /></button>
-                  <button onClick={() => onLoadStudent(p, 'evolution')} className="p-2 bg-white/5 hover:bg-[#d4af37] hover:text-black rounded-lg transition-all text-white/40" title="Ver Evolução"><TrendingUp size={16} /></button>
+            return (
+              <div key={p.id} className="bg-white/5 p-4 rounded-2xl border border-white/5 flex flex-col md:flex-row items-center justify-between gap-4 hover:border-white/20 transition-all group">
+                <div className="flex items-center gap-4 w-full md:w-auto overflow-hidden">
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center border transition-all shrink-0 ${iconColorClass} group-hover:text-black`}>
+                      <Users size={20} />
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                      <h4 className={`font-black text-lg uppercase tracking-tighter text-white ${hoverTextClass} transition-colors leading-none truncate`}>{p.clientName}</h4>
+                      <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                        <span className="text-[9px] text-white/30 font-bold uppercase tracking-widest truncate max-w-[200px]">{p.protocolTitle}</span>
+                        <span className="w-1 h-1 bg-green-500 rounded-full shrink-0"></span>
+                        <span className="text-[9px] text-green-500/80 font-black uppercase tracking-widest">Ativo</span>
+                      </div>
+                  </div>
                 </div>
-                <div className="w-px h-8 bg-white/5 mx-2 hidden md:block"></div>
-                <button onClick={() => onLoadStudent(p, 'student-dashboard')} className="w-10 h-10 bg-white/5 hover:bg-white/10 rounded-lg flex items-center justify-center text-[#d4af37] ml-auto md:ml-0"><ChevronRight size={20} /></button>
+
+                <div className="flex items-center gap-2 w-full md:w-auto justify-end border-t border-white/5 md:border-0 pt-3 md:pt-0 mt-1 md:mt-0 shrink-0">
+                  <div className="flex gap-2">
+                    <button onClick={() => onLoadStudent(p, 'manage')} className="p-2 bg-white/5 hover:bg-[#d4af37] hover:text-black rounded-lg transition-all text-white/40" title="Gerenciar Aluno"><FileText size={16} /></button>
+                  </div>
+                  <div className="w-px h-8 bg-white/5 mx-2 hidden md:block"></div>
+                  <button onClick={() => onLoadStudent(p, 'student-dashboard')} className="w-10 h-10 bg-white/5 hover:bg-white/10 rounded-lg flex items-center justify-center text-[#d4af37] ml-auto md:ml-0"><ChevronRight size={20} /></button>
+                </div>
               </div>
-            </div>
-          )) : (
+            );
+          }) : (
             <div className="text-center py-16 bg-white/5 rounded-[2rem] border-2 border-dashed border-white/5">
               <p className="text-white/20 font-black uppercase tracking-widest text-[10px]">Nenhum registro recente</p>
             </div>
