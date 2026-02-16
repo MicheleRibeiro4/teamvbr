@@ -265,6 +265,26 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
     }
   }, [data.contract.planValue]);
 
+  // --- LÓGICA: ATUALIZAR SUBTEXTO DA META BASEADO NO OBJETIVO ---
+  useEffect(() => {
+    let newSubtext = "";
+    switch (data.protocolTitle) {
+      case "Emagrecimento":
+        newSubtext = "Déficit Calórico";
+        break;
+      case "Hipertrofia":
+        newSubtext = "Superávit Calórico";
+        break;
+      case "Recomposição Corporal":
+        newSubtext = "Normocalórica / Manutenção";
+        break;
+    }
+
+    if (newSubtext && data.kcalSubtext !== newSubtext) {
+      handleChange('kcalSubtext', newSubtext);
+    }
+  }, [data.protocolTitle]);
+
   const handleChange = (path: string, value: any) => {
     // CRITICAL FIX: Deep copy to prevent state mutation and ensure React updates correctly
     const newData = JSON.parse(JSON.stringify(data));
