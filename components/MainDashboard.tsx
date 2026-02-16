@@ -112,8 +112,21 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
           {recentStudents.length > 0 ? recentStudents.map((p) => {
             // Definição de Cores Baseada no Gênero
             const isFemale = p.physicalData.gender === 'Feminino';
-            const iconColorClass = isFemale ? 'bg-pink-500/20 text-pink-500 border-pink-500/20 group-hover:bg-pink-500' : 'bg-black text-[#d4af37] border-white/10 group-hover:bg-[#d4af37]';
-            const hoverTextClass = isFemale ? 'group-hover:text-pink-500' : 'group-hover:text-[#d4af37]';
+            const isMale = p.physicalData.gender === 'Masculino';
+            
+            let iconColorClass = 'bg-black text-[#d4af37] border-white/10 group-hover:bg-[#d4af37]';
+            let hoverTextClass = 'group-hover:text-[#d4af37]';
+            let buttonHoverBg = 'hover:bg-[#d4af37]';
+
+            if (isFemale) {
+              iconColorClass = 'bg-pink-500/20 text-pink-500 border-pink-500/20 group-hover:bg-pink-500';
+              hoverTextClass = 'group-hover:text-pink-500';
+              buttonHoverBg = 'hover:bg-pink-500';
+            } else if (isMale) {
+              iconColorClass = 'bg-blue-500/20 text-blue-500 border-blue-500/20 group-hover:bg-blue-500';
+              hoverTextClass = 'group-hover:text-blue-500';
+              buttonHoverBg = 'hover:bg-blue-500';
+            }
 
             return (
               <div key={p.id} className="bg-white/5 p-4 rounded-2xl border border-white/5 flex flex-col md:flex-row items-center justify-between gap-4 hover:border-white/20 transition-all group">
@@ -133,7 +146,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
 
                 <div className="flex items-center gap-2 w-full md:w-auto justify-end border-t border-white/5 md:border-0 pt-3 md:pt-0 mt-1 md:mt-0 shrink-0">
                   <div className="flex gap-2">
-                    <button onClick={() => onLoadStudent(p, 'manage')} className="p-2 bg-white/5 hover:bg-[#d4af37] hover:text-black rounded-lg transition-all text-white/40" title="Gerenciar Aluno"><FileText size={16} /></button>
+                    <button onClick={() => onLoadStudent(p, 'manage')} className={`p-2 bg-white/5 ${buttonHoverBg} hover:text-black rounded-lg transition-all text-white/40`} title="Gerenciar Aluno"><FileText size={16} /></button>
                   </div>
                   <div className="w-px h-8 bg-white/5 mx-2 hidden md:block"></div>
                   <button onClick={() => onLoadStudent(p, 'student-dashboard')} className="w-10 h-10 bg-white/5 hover:bg-white/10 rounded-lg flex items-center justify-center text-[#d4af37] ml-auto md:ml-0"><ChevronRight size={20} /></button>

@@ -41,10 +41,27 @@ const StudentSearch: React.FC<Props> = ({ protocols, onLoad, onDelete }) => {
         ) : (
           filtered.map((p) => {
             const isFemale = p.physicalData.gender === 'Feminino';
-            const iconBgClass = isFemale ? 'bg-pink-500/10 text-pink-500 border-pink-500' : 'bg-black text-[#d4af37] border-[#d4af37]';
-            const nameHoverClass = isFemale ? 'group-hover:text-pink-500' : 'group-hover:text-[#d4af37]';
-            const borderClass = isFemale ? 'hover:border-pink-500/40' : 'hover:border-[#d4af37]/40';
-            const badgeClass = isFemale ? 'text-pink-500 bg-pink-500/10' : 'text-[#d4af37] bg-[#d4af37]/10';
+            const isMale = p.physicalData.gender === 'Masculino';
+            
+            let iconBgClass = 'bg-black text-[#d4af37] border-[#d4af37]';
+            let nameHoverClass = 'group-hover:text-[#d4af37]';
+            let borderClass = 'hover:border-[#d4af37]/40';
+            let badgeClass = 'text-[#d4af37] bg-[#d4af37]/10';
+            let buttonClass = 'bg-[#d4af37]/10 hover:bg-[#d4af37] hover:text-black text-[#d4af37] border-[#d4af37]/20';
+
+            if (isFemale) {
+              iconBgClass = 'bg-pink-500/10 text-pink-500 border-pink-500';
+              nameHoverClass = 'group-hover:text-pink-500';
+              borderClass = 'hover:border-pink-500/40';
+              badgeClass = 'text-pink-500 bg-pink-500/10';
+              buttonClass = 'bg-pink-500/10 hover:bg-pink-500 hover:text-white text-pink-500 border-pink-500/20';
+            } else if (isMale) {
+              iconBgClass = 'bg-blue-500/10 text-blue-500 border-blue-500';
+              nameHoverClass = 'group-hover:text-blue-500';
+              borderClass = 'hover:border-blue-500/40';
+              badgeClass = 'text-blue-500 bg-blue-500/10';
+              buttonClass = 'bg-blue-500/10 hover:bg-blue-500 hover:text-white text-blue-500 border-blue-500/20';
+            }
 
             return (
               <div 
@@ -87,7 +104,7 @@ const StudentSearch: React.FC<Props> = ({ protocols, onLoad, onDelete }) => {
                       </button>
                       <button 
                           onClick={() => onLoad(p, 'student-dashboard')}
-                          className={`p-3 rounded-xl transition-all flex flex-col items-center gap-1 min-w-[65px] border ${isFemale ? 'bg-pink-500/10 hover:bg-pink-500 hover:text-white text-pink-500 border-pink-500/20' : 'bg-[#d4af37]/10 hover:bg-[#d4af37] hover:text-black text-[#d4af37] border-[#d4af37]/20'}`}
+                          className={`p-3 rounded-xl transition-all flex flex-col items-center gap-1 min-w-[65px] border ${buttonClass}`}
                           title="Painel do Aluno"
                       >
                           <ChevronRight size={18} />

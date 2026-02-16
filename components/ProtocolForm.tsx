@@ -55,6 +55,29 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
     return v;
   };
 
+  // Máscara de CPF (000.000.000-00)
+  const handleCPFMask = (path: string, value: string) => {
+    let v = value.replace(/\D/g, '');
+    if (v.length > 11) v = v.substring(0, 11);
+    
+    v = v.replace(/(\d{3})(\d)/, '$1.$2');
+    v = v.replace(/(\d{3})(\d)/, '$1.$2');
+    v = v.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+
+    handleChange(path, v);
+  };
+
+  // Máscara de Telefone ((00) 00000-0000)
+  const handlePhoneMask = (path: string, value: string) => {
+    let v = value.replace(/\D/g, '');
+    if (v.length > 11) v = v.substring(0, 11);
+
+    v = v.replace(/^(\d{2})(\d)/g, '($1) $2');
+    v = v.replace(/(\d)(\d{4})$/, '$1-$2');
+
+    handleChange(path, v);
+  };
+
   // Máscara de Altura (0,00) - Corrigida
   const handleHeightMask = (path: string, value: string) => {
     let v = value.replace(/\D/g, '');
@@ -460,8 +483,26 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2"><label className={labelClass}>Nome Completo</label><input className={inputClass} value={data.clientName} onChange={(e) => handleChange('clientName', e.target.value)} /></div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 col-span-1 md:col-span-2">
-                 <div><label className={labelClass}>WhatsApp / Celular</label><input className={inputClass} value={data.contract.phone} onChange={(e) => handleChange('contract.phone', e.target.value)} placeholder="(00) 00000-0000" /></div>
-                 <div><label className={labelClass}>CPF</label><input className={inputClass} value={data.contract.cpf} onChange={(e) => handleChange('contract.cpf', e.target.value)} placeholder="000.000.000-00" /></div>
+                 <div>
+                   <label className={labelClass}>WhatsApp / Celular</label>
+                   <input 
+                      className={inputClass} 
+                      value={data.contract.phone} 
+                      onChange={(e) => handlePhoneMask('contract.phone', e.target.value)} 
+                      placeholder="(00) 00000-0000" 
+                      maxLength={15}
+                    />
+                 </div>
+                 <div>
+                   <label className={labelClass}>CPF</label>
+                   <input 
+                      className={inputClass} 
+                      value={data.contract.cpf} 
+                      onChange={(e) => handleCPFMask('contract.cpf', e.target.value)} 
+                      placeholder="000.000.000-00" 
+                      maxLength={14}
+                    />
+                 </div>
               </div>
               
               <div className="md:col-span-2 border-t border-white/5 pt-4 mt-2">
