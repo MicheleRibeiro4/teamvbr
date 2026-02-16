@@ -16,10 +16,25 @@ interface Props {
 const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTabChange }) => {
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // --- MÁSCARA DE DATA ---
+  // --- MÁSCARAS E HANDLERS ---
+  
+  const handleChange = (path: string, value: any) => {
+    // CRITICAL FIX: Deep copy to prevent state mutation and ensure React updates correctly
+    const newData = JSON.parse(JSON.stringify(data));
+    const keys = path.split('.');
+    let current: any = newData;
+    for (let i = 0; i < keys.length - 1; i++) {
+        if (!current[keys[i]]) current[keys[i]] = {};
+        current = current[keys[i]];
+    }
+    current[keys[keys.length - 1]] = value;
+    onChange(newData);
+  };
+
+  // Máscara de Data (DD/MM/AAAA)
   const handleDateInput = (path: string, value: string) => {
-    let v = value.replace(/\D/g, ''); // Remove tudo que não é dígito
-    if (v.length > 8) v = v.substr(0, 8); // Limita a 8 caracteres
+    let v = value.replace(/\D/g, ''); 
+    if (v.length > 8) v = v.substr(0, 8); 
 
     if (v.length > 4) {
       v = `${v.slice(0, 2)}/${v.slice(2, 4)}/${v.slice(4)}`;
@@ -28,6 +43,62 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
     }
     
     handleChange(path, v);
+  };
+
+  // Máscara de Horário (00:00)
+  const formatTime = (value: string) => {
+    let v = value.replace(/\D/g, '');
+    if (v.length > 4) v = v.substr(0, 4);
+    if (v.length > 2) {
+      v = v.replace(/^(\d{2})(\d)/, '$1:$2');
+    }
+    return v;
+  };
+
+  // Máscara de Altura (0,00)
+  const handleHeightMask = (path: string, value: string) => {
+    let v = value.replace(/\D/g, '');
+    if (v.length > 3) v = v.substring(0, 3); // Limita a 3 dígitos (ex: 195)
+    
+    // Formatação: 175 -> 1,75
+    if (v.length >= 3) {
+       v = v.replace(/^(\d)(\d{2})$/, '$1,$2');
+    } else if (v.length === 2) {
+       v = '0,' + v;
+    } else if (v.length === 1) {
+       v = '0,0' + v;
+    } else {
+       v = '';
+    }
+    
+    // Remove zeros à esquerda desnecessários (ex: 0,00 -> limpa se apagar tudo)
+    if(parseInt(v.replace(',','')) === 0) v = '';
+
+    handleChange(path, v);
+  };
+
+  // Máscara de Peso (00,00) - Estilo ATM
+  const handleWeightMask = (path: string, value: string) => {
+    let v = value.replace(/\D/g, '');
+    // Limita tamanho para evitar números gigantes (ex: 999kg)
+    if (v.length > 5) v = v.substring(0, 5);
+    
+    if (v === '') {
+      handleChange(path, '');
+      return;
+    }
+
+    // Lógica ATM: Preenche da direita para esquerda
+    const numberValue = parseInt(v) / 100;
+    const formatted = numberValue.toFixed(2).replace('.', ',');
+    
+    handleChange(path, formatted);
+  };
+
+  // Wrapper específico para Horário em Refeições
+  const updateMealTime = (index: number, val: string) => {
+    const formatted = formatTime(val);
+    updateMeal(index, 'time', formatted);
   };
 
   // --- LÓGICA DO GERADOR IA ---
@@ -285,19 +356,6 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
     }
   }, [data.protocolTitle]);
 
-  const handleChange = (path: string, value: any) => {
-    // CRITICAL FIX: Deep copy to prevent state mutation and ensure React updates correctly
-    const newData = JSON.parse(JSON.stringify(data));
-    const keys = path.split('.');
-    let current: any = newData;
-    for (let i = 0; i < keys.length - 1; i++) {
-        if (!current[keys[i]]) current[keys[i]] = {};
-        current = current[keys[i]];
-    }
-    current[keys[keys.length - 1]] = value;
-    onChange(newData);
-  };
-
   // --- HANDLERS PARA LISTAS DINÂMICAS ---
 
   const addMeal = () => {
@@ -516,11 +574,23 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
               </div>
               <div>
                 <label className={labelClass}>Peso Atual (kg)</label>
-                <input className={inputClass} value={data.physicalData.weight} onChange={(e) => handleChange('physicalData.weight', e.target.value)} placeholder="0.0" />
+                <input 
+                  className={inputClass} 
+                  value={data.physicalData.weight} 
+                  onChange={(e) => handleWeightMask('physicalData.weight', e.target.value)} 
+                  placeholder="00,00" 
+                  inputMode="numeric"
+                />
               </div>
               <div>
                 <label className={labelClass}>Altura (m)</label>
-                <input className={inputClass} value={data.physicalData.height} onChange={(e) => handleChange('physicalData.height', e.target.value)} placeholder="0.00" />
+                <input 
+                  className={inputClass} 
+                  value={data.physicalData.height} 
+                  onChange={(e) => handleHeightMask('physicalData.height', e.target.value)} 
+                  placeholder="0,00" 
+                  inputMode="numeric"
+                />
               </div>
               <div className="col-span-2 md:col-span-1">
                 <label className={labelClass}>IMC (Calc. Auto)</label>
@@ -660,7 +730,13 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                 <div key={meal.id} className="bg-white/5 p-4 rounded-xl border border-white/5 flex flex-col md:flex-row gap-4 items-start group">
                     <div className="w-full md:w-1/4">
                       <label className={labelClass}>Horário</label>
-                      <input className={inputClass} value={meal.time} onChange={(e) => updateMeal(index, 'time', e.target.value)} placeholder="08:00" />
+                      <input 
+                        className={inputClass} 
+                        value={meal.time} 
+                        onChange={(e) => updateMealTime(index, e.target.value)} 
+                        placeholder="08:00" 
+                        maxLength={5}
+                      />
                     </div>
                     <div className="flex-1 w-full">
                       <label className={labelClass}>Nome da Refeição</label>
