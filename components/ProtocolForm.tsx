@@ -331,24 +331,23 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
   const TabButton = ({ id, label, icon: Icon }: { id: typeof activeTab, label: string, icon: any }) => (
     <button 
       onClick={() => onTabChange(id)}
-      className={`flex items-center gap-2 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === id ? 'bg-[#d4af37] text-black shadow-lg shadow-[#d4af37]/20 scale-105' : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white'}`}
+      className={`flex flex-1 md:flex-none justify-center items-center gap-2 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap min-w-[120px] ${activeTab === id ? 'bg-[#d4af37] text-black shadow-lg shadow-[#d4af37]/20 scale-105' : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white'}`}
     >
-      <Icon size={14} /> {label}
+      <Icon size={14} className="shrink-0" /> {label}
     </button>
   );
 
   return (
-    <div className="space-y-8 no-print">
+    <div className="space-y-8 no-print w-full">
       {onBack && (
         <button onClick={onBack} className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-[#d4af37] transition-colors mb-4">
           <ChevronLeft size={16} /> Voltar
         </button>
       )}
 
-      {/* NAVEGAÇÃO POR ABAS */}
-      <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
-        <TabButton id="identificacao" label="Identificação e Contrato" icon={User} />
-        {/* Ícone alterado para Ruler (Fita Métrica) conforme solicitado */}
+      {/* NAVEGAÇÃO POR ABAS - CENTRALIZADO e RESPONSIVO */}
+      <div className="flex flex-nowrap md:flex-wrap md:justify-center gap-2 overflow-x-auto pb-4 scrollbar-hide w-full">
+        <TabButton id="identificacao" label="Identificação" icon={User} />
         <TabButton id="medidas" label="Medidas" icon={Ruler} />
         <TabButton id="nutricao" label="Nutrição" icon={Utensils} />
         <TabButton id="treino" label="Treino" icon={Dumbbell} />
@@ -366,15 +365,17 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2"><label className={labelClass}>Nome Completo</label><input className={inputClass} value={data.clientName} onChange={(e) => handleChange('clientName', e.target.value)} /></div>
-              <div><label className={labelClass}>WhatsApp / Celular</label><input className={inputClass} value={data.contract.phone} onChange={(e) => handleChange('contract.phone', e.target.value)} placeholder="(00) 00000-0000" /></div>
-              <div><label className={labelClass}>CPF</label><input className={inputClass} value={data.contract.cpf} onChange={(e) => handleChange('contract.cpf', e.target.value)} placeholder="000.000.000-00" /></div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 col-span-1 md:col-span-2">
+                 <div><label className={labelClass}>WhatsApp / Celular</label><input className={inputClass} value={data.contract.phone} onChange={(e) => handleChange('contract.phone', e.target.value)} placeholder="(00) 00000-0000" /></div>
+                 <div><label className={labelClass}>CPF</label><input className={inputClass} value={data.contract.cpf} onChange={(e) => handleChange('contract.cpf', e.target.value)} placeholder="000.000.000-00" /></div>
+              </div>
               
               <div className="md:col-span-2 border-t border-white/5 pt-4 mt-2">
                 <div className="flex items-center gap-2 mb-4 text-[#d4af37]"><MapPin size={14}/> <span className="text-[10px] font-black uppercase tracking-widest">Endereço</span></div>
                 <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
                   <div className="md:col-span-4"><label className={labelClass}>Rua / Logradouro</label><input className={inputClass} value={data.contract.street} onChange={(e) => handleChange('contract.street', e.target.value)} /></div>
-                  <div className="md:col-span-2"><label className={labelClass}>Número</label><input className={inputClass} value={data.contract.number} onChange={(e) => handleChange('contract.number', e.target.value)} /></div>
-                  <div className="md:col-span-2"><label className={labelClass}>Bairro</label><input className={inputClass} value={data.contract.neighborhood} onChange={(e) => handleChange('contract.neighborhood', e.target.value)} /></div>
+                  <div className="col-span-1 md:col-span-2"><label className={labelClass}>Número</label><input className={inputClass} value={data.contract.number} onChange={(e) => handleChange('contract.number', e.target.value)} /></div>
+                  <div className="col-span-1 md:col-span-2"><label className={labelClass}>Bairro</label><input className={inputClass} value={data.contract.neighborhood} onChange={(e) => handleChange('contract.neighborhood', e.target.value)} /></div>
                   <div className="md:col-span-3"><label className={labelClass}>Cidade</label><input className={inputClass} value={data.contract.city} onChange={(e) => handleChange('contract.city', e.target.value)} placeholder="Cidade" /></div>
                   <div className="md:col-span-1">
                     <label className={labelClass}>UF</label>
@@ -396,8 +397,8 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
               <ShieldCheck className="text-[#d4af37]" size={20} />
               <h2 className="text-xl font-black text-white uppercase tracking-tighter">Detalhes do Contrato e Pagamento</h2>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="col-span-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="col-span-1 md:col-span-2">
                 <label className={labelClass}>Tipo de Plano</label>
                 <select className={selectClass} value={data.contract.planType} onChange={(e) => handleChange('contract.planType', e.target.value)}>
                   <option value="Avulso">Avulso (1 Dia)</option>
@@ -405,7 +406,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                   <option value="Semestral">Semestral (6 Meses)</option>
                 </select>
               </div>
-              <div className="col-span-2 hidden md:block"></div>
+              <div className="col-span-2 hidden lg:block"></div>
 
               <div>
                 <label className={labelClass}>Início</label>
@@ -416,10 +417,10 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                 <input className={inputClass + " opacity-60"} value={data.contract.endDate} readOnly />
               </div>
               
-              <div className="col-span-2"><label className={labelClass}>Valor do Plano (R$)</label><input className={inputClass} value={data.contract.planValue} onChange={(e) => handleChange('contract.planValue', e.target.value)} placeholder="0,00" /></div>
-              <div className="md:col-span-4"><label className={labelClass}>Valor por Extenso (Automático)</label><input className={inputClass + " opacity-60 italic bg-transparent border-none"} value={data.contract.planValueWords} readOnly /></div>
+              <div className="col-span-1 md:col-span-2"><label className={labelClass}>Valor do Plano (R$)</label><input className={inputClass} value={data.contract.planValue} onChange={(e) => handleChange('contract.planValue', e.target.value)} placeholder="0,00" /></div>
+              <div className="col-span-1 md:col-span-4"><label className={labelClass}>Valor por Extenso (Automático)</label><input className={inputClass + " opacity-60 italic bg-transparent border-none"} value={data.contract.planValueWords} readOnly /></div>
               
-              <div className="col-span-2">
+              <div className="col-span-1 md:col-span-2">
                 <label className={labelClass}>Método de Pagamento</label>
                 <select className={selectClass} value={data.contract.paymentMethod} onChange={(e) => handleChange('contract.paymentMethod', e.target.value)}>
                   <option value="Pix">Pix (À vista)</option>
@@ -442,8 +443,8 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
             </div>
             
             {/* Linha 1: Dados Pessoais Básicos */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-              <div className="md:col-span-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+              <div className="sm:col-span-2">
                 <label className={labelClass}>Objetivo do Protocolo</label>
                 <input className={inputClass} value={data.protocolTitle} onChange={(e) => handleChange('protocolTitle', e.target.value)} placeholder="Ex: Hipertrofia, Emagrecimento" />
               </div>
@@ -459,7 +460,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
 
             {/* Linha 2: Antropometria */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-              <div>
+              <div className="col-span-2 md:col-span-1">
                 <label className={labelClass}>Gênero</label>
                 <select className={selectClass} value={data.physicalData.gender} onChange={(e) => handleChange('physicalData.gender', e.target.value)}>
                   <option value="Masculino">Masculino</option>
@@ -474,7 +475,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                 <label className={labelClass}>Altura (m)</label>
                 <input className={inputClass} value={data.physicalData.height} onChange={(e) => handleChange('physicalData.height', e.target.value)} placeholder="0.00" />
               </div>
-              <div>
+              <div className="col-span-2 md:col-span-1">
                 <label className={labelClass}>IMC (Calc. Auto)</label>
                 <input className={inputClass + " opacity-60"} value={data.physicalData.imc} readOnly />
               </div>
@@ -556,7 +557,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                 placeholder="Ex: Dieta Cetogênica, Ciclo de Carboidratos, Jejum Intermitente..."
               />
             </div>
-            <div className="grid grid-cols-2 gap-4 mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
               <div>
                   <label className={labelClass}>Meta Calórica (Kcal)</label>
                   <input className={inputClass} value={data.kcalGoal} onChange={(e) => handleChange('kcalGoal', e.target.value)} placeholder="Ex: 2500 (Deixe vazio para IA calcular)" />
@@ -574,7 +575,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
             
             <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
                 <div className="flex items-start gap-4">
-                  <div className="p-3 bg-[#d4af37] text-black rounded-xl">
+                  <div className="p-3 bg-[#d4af37] text-black rounded-xl shrink-0">
                     <Sparkles size={24} />
                   </div>
                   <div>
@@ -588,7 +589,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                 <button 
                   onClick={handleGenerateAI} 
                   disabled={isGenerating}
-                  className="px-8 py-4 bg-[#d4af37] text-black rounded-xl font-black uppercase text-xs tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto justify-center"
+                  className="px-8 py-4 bg-[#d4af37] text-black rounded-xl font-black uppercase text-xs tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto justify-center whitespace-nowrap"
                 >
                   {isGenerating ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
                   {isGenerating ? 'Gerando...' : 'Gerar Protocolo Agora'}

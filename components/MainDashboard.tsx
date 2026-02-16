@@ -11,7 +11,8 @@ import {
   Clock,
   FileText,
   ChevronRight,
-  TrendingUp
+  TrendingUp,
+  AlertTriangle
 } from 'lucide-react';
 
 interface Props {
@@ -25,7 +26,28 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
   
   const activeProtocolsCount = protocols.filter(p => p.contract.status === 'Ativo').length;
   const totalRevenue = protocols.reduce((acc, curr) => acc + (parseFloat(curr.contract.planValue.replace(',', '.')) || 0), 0);
-  const totalStudents = Array.from(new Set(protocols.map(p => p.clientName))).length;
+  // Get unique students (latest protocol for each)
+  const uniqueStudentsMap = new Map();
+  protocols.forEach(p => {
+    if (!uniqueStudentsMap.has(p.clientName)) {
+        uniqueStudentsMap.set(p.clientName, p);
+    } else {
+        const existing = uniqueStudentsMap.get(p.clientName);
+        if (new Date(p.updatedAt) > new Date(existing.updatedAt)) {
+            uniqueStudentsMap.set(p.clientName, p);
+        }
+    }
+  });
+  const totalStudents = uniqueStudentsMap.size;
+
+  // Lógica de Alerta de Evolução (15 dias)
+  const today = new Date();
+  const studentsDueForUpdate = Array.from(uniqueStudentsMap.values()).filter(p => {
+    const lastUpdate = new Date(p.updatedAt);
+    const diffTime = Math.abs(today.getTime() - lastUpdate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays >= 15;
+  });
 
   const recentStudents = [...protocols].sort((a, b) => 
     new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
@@ -67,6 +89,38 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
           </button>
         </div>
       </div>
+
+      {/* Seção de Alertas de Evolução */}
+      {studentsDueForUpdate.length > 0 && (
+         <div className="bg-[#d4af37]/10 border border-[#d4af37]/30 rounded-[1.5rem] p-6 animate-pulse-slow">
+            <div className="flex items-center gap-3 mb-4">
+               <AlertTriangle className="text-[#d4af37]" size={24} />
+               <h3 className="text-lg font-black uppercase tracking-tighter text-[#d4af37]">Atenção: Evoluções Pendentes (+15 Dias)</h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+               {studentsDueForUpdate.slice(0, 6).map(p => {
+                  const days = Math.ceil(Math.abs(new Date().getTime() - new Date(p.updatedAt).getTime()) / (1000 * 60 * 60 * 24));
+                  return (
+                    <button 
+                       key={p.id}
+                       onClick={() => onLoadStudent(p, 'evolution')}
+                       className="flex items-center justify-between bg-black/40 p-3 rounded-xl hover:bg-[#d4af37] hover:text-black group transition-all"
+                    >
+                       <span className="font-bold text-sm truncate max-w-[150px]">{p.clientName}</span>
+                       <span className="text-[10px] font-black uppercase bg-red-500/20 text-red-500 px-2 py-1 rounded group-hover:bg-black/20 group-hover:text-black">
+                          {days} Dias s/ att
+                       </span>
+                    </button>
+                  )
+               })}
+               {studentsDueForUpdate.length > 6 && (
+                  <button onClick={onList} className="text-xs font-bold text-white/40 hover:text-white underline">
+                     + {studentsDueForUpdate.length - 6} outros alunos
+                  </button>
+               )}
+            </div>
+         </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {metrics.map((s, i) => (
