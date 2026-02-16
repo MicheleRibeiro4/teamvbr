@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useImperativeHandle, forwardRef } from 'react';
 import { ProtocolData } from '../types';
 import { LOGO_VBR_BLACK } from '../constants';
@@ -79,6 +80,14 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
     carbs: { value: '0', ratio: '' }, 
     fats: { value: '0', ratio: '' } 
   };
+  
+  const measurements = data.physicalData.measurements || {
+      thorax: "-", waist: "-", abdomen: "-", glutes: "-",
+      rightArmRelaxed: "-", leftArmRelaxed: "-",
+      rightArmContracted: "-", leftArmContracted: "-",
+      rightThigh: "-", leftThigh: "-",
+      rightCalf: "-", leftCalf: "-"
+  };
 
   return (
     <div className="flex flex-col items-center w-full pb-20 print:pb-0">
@@ -124,11 +133,34 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
           </div>
 
           <h4 className="text-sm font-bold uppercase text-black mb-3">Bioimpedância</h4>
-          <div className="grid grid-cols-4 gap-4 mb-10">
+          <div className="grid grid-cols-4 gap-4 mb-8">
             <div className={dataCardStyle}><span className={labelStyle}>Massa Musc.</span><span className={valueStyle}>{data.physicalData.muscleMass} kg</span></div>
             <div className={dataCardStyle}><span className={labelStyle}>Gordura</span><span className={valueStyle}>{data.physicalData.bodyFat}%</span></div>
             <div className={dataCardStyle}><span className={labelStyle}>G. Visceral</span><span className={valueStyle}>{data.physicalData.visceralFat}</span></div>
             <div className={dataCardStyle}><span className={labelStyle}>IMC</span><span className={valueStyle}>{data.physicalData.imc}</span></div>
+          </div>
+          
+          <h4 className="text-sm font-bold uppercase text-black mb-3">Medidas Corporais</h4>
+          <div className="mb-10 bg-gray-50 p-4 rounded-lg border border-gray-100">
+             <div className="grid grid-cols-4 gap-4 mb-4 border-b border-gray-200 pb-4">
+                 <div className="col-span-4 text-xs font-black text-[#d4af37] uppercase tracking-widest">Superior</div>
+                 <div><span className={labelStyle}>Tórax</span><span className="font-bold text-gray-900">{measurements.thorax}</span></div>
+                 <div><span className={labelStyle}>Cintura</span><span className="font-bold text-gray-900">{measurements.waist}</span></div>
+                 <div><span className={labelStyle}>Abdômen</span><span className="font-bold text-gray-900">{measurements.abdomen}</span></div>
+                 <div><span className={labelStyle}>Glúteo</span><span className="font-bold text-gray-900">{measurements.glutes}</span></div>
+                 
+                 <div><span className={labelStyle}>Braço Dir (Rel)</span><span className="font-bold text-gray-900">{measurements.rightArmRelaxed}</span></div>
+                 <div><span className={labelStyle}>Braço Esq (Rel)</span><span className="font-bold text-gray-900">{measurements.leftArmRelaxed}</span></div>
+                 <div><span className={labelStyle}>Braço Dir (Cont)</span><span className="font-bold text-gray-900">{measurements.rightArmContracted}</span></div>
+                 <div><span className={labelStyle}>Braço Esq (Cont)</span><span className="font-bold text-gray-900">{measurements.leftArmContracted}</span></div>
+             </div>
+             <div className="grid grid-cols-4 gap-4">
+                 <div className="col-span-4 text-xs font-black text-[#d4af37] uppercase tracking-widest">Inferior</div>
+                 <div><span className={labelStyle}>Coxa Dir</span><span className="font-bold text-gray-900">{measurements.rightThigh}</span></div>
+                 <div><span className={labelStyle}>Coxa Esq</span><span className="font-bold text-gray-900">{measurements.leftThigh}</span></div>
+                 <div><span className={labelStyle}>Panturrilha Dir</span><span className="font-bold text-gray-900">{measurements.rightCalf}</span></div>
+                 <div><span className={labelStyle}>Panturrilha Esq</span><span className="font-bold text-gray-900">{measurements.leftCalf}</span></div>
+             </div>
           </div>
 
           <h3 className={sectionTitle}>2. Estratégia Nutricional</h3>

@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { ProtocolData, Meal, Supplement, TrainingDay, Exercise } from '../types';
-import { Activity, User, ShieldCheck, ChevronLeft, MapPin, Dumbbell, Utensils, Pill, Plus, Trash2, FileText, AlertCircle, Sparkles, Loader2 } from 'lucide-react';
+import { Activity, User, ShieldCheck, ChevronLeft, MapPin, Dumbbell, Utensils, Pill, Plus, Trash2, FileText, AlertCircle, Sparkles, Loader2, Ruler } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 
 interface Props {
@@ -448,7 +448,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
         </div>
 
         {/* Linha 3: Composição Corporal */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
            <div>
              <label className={labelClass}>Gordura Corporal (%)</label>
              <input className={inputClass} value={data.physicalData.bodyFat} onChange={(e) => handleChange('physicalData.bodyFat', e.target.value)} />
@@ -466,6 +466,42 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
              <input className={inputClass} value={data.physicalData.waterPercentage || ''} onChange={(e) => handleChange('physicalData.waterPercentage', e.target.value)} />
            </div>
         </div>
+
+        {/* NOVAS MEDIDAS CORPORAIS */}
+        <div className="bg-white/5 p-6 rounded-2xl border border-white/5">
+          <div className="flex items-center gap-2 mb-6">
+             <Ruler className="text-[#d4af37]" size={16} />
+             <h3 className="text-sm font-black text-white uppercase tracking-widest">Medidas Corporais (cm)</h3>
+          </div>
+          
+          {/* Parte Superior */}
+          <div className="mb-6">
+            <h4 className="text-[10px] font-black text-[#d4af37] uppercase tracking-widest mb-3 border-b border-white/5 pb-1">Parte Superior</h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div><label className={labelClass}>Tórax / Peitoral</label><input className={inputClass} value={data.physicalData.measurements?.thorax} onChange={(e) => handleChange('physicalData.measurements.thorax', e.target.value)} /></div>
+              <div><label className={labelClass}>Cintura</label><input className={inputClass} value={data.physicalData.measurements?.waist} onChange={(e) => handleChange('physicalData.measurements.waist', e.target.value)} /></div>
+              <div><label className={labelClass}>Abdômen</label><input className={inputClass} value={data.physicalData.measurements?.abdomen} onChange={(e) => handleChange('physicalData.measurements.abdomen', e.target.value)} /></div>
+              <div><label className={labelClass}>Glúteo</label><input className={inputClass} value={data.physicalData.measurements?.glutes} onChange={(e) => handleChange('physicalData.measurements.glutes', e.target.value)} /></div>
+              
+              <div><label className={labelClass}>Braço Dir. Relaxado</label><input className={inputClass} value={data.physicalData.measurements?.rightArmRelaxed} onChange={(e) => handleChange('physicalData.measurements.rightArmRelaxed', e.target.value)} /></div>
+              <div><label className={labelClass}>Braço Esq. Relaxado</label><input className={inputClass} value={data.physicalData.measurements?.leftArmRelaxed} onChange={(e) => handleChange('physicalData.measurements.leftArmRelaxed', e.target.value)} /></div>
+              <div><label className={labelClass}>Braço Dir. Contraído</label><input className={inputClass} value={data.physicalData.measurements?.rightArmContracted} onChange={(e) => handleChange('physicalData.measurements.rightArmContracted', e.target.value)} /></div>
+              <div><label className={labelClass}>Braço Esq. Contraído</label><input className={inputClass} value={data.physicalData.measurements?.leftArmContracted} onChange={(e) => handleChange('physicalData.measurements.leftArmContracted', e.target.value)} /></div>
+            </div>
+          </div>
+
+          {/* Parte Inferior */}
+          <div>
+            <h4 className="text-[10px] font-black text-[#d4af37] uppercase tracking-widest mb-3 border-b border-white/5 pb-1">Parte Inferior</h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div><label className={labelClass}>Coxa Direita</label><input className={inputClass} value={data.physicalData.measurements?.rightThigh} onChange={(e) => handleChange('physicalData.measurements.rightThigh', e.target.value)} /></div>
+              <div><label className={labelClass}>Coxa Esquerda</label><input className={inputClass} value={data.physicalData.measurements?.leftThigh} onChange={(e) => handleChange('physicalData.measurements.leftThigh', e.target.value)} /></div>
+              <div><label className={labelClass}>Panturrilha Direita</label><input className={inputClass} value={data.physicalData.measurements?.rightCalf} onChange={(e) => handleChange('physicalData.measurements.rightCalf', e.target.value)} /></div>
+              <div><label className={labelClass}>Panturrilha Esquerda</label><input className={inputClass} value={data.physicalData.measurements?.leftCalf} onChange={(e) => handleChange('physicalData.measurements.leftCalf', e.target.value)} /></div>
+            </div>
+          </div>
+        </div>
+
       </section>
 
       {/* BLOCO 4: ESTRATÉGIA NUTRICIONAL (AGORA ANTES DA IA) */}

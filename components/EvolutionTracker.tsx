@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { ProtocolData } from '../types';
-import { TrendingUp, ClipboardList, ArrowUpRight, ArrowDownRight, Minus, Calendar, Clock, Activity, Edit3, Save, Loader2, Eye, PlusCircle, FileText, ArrowRight } from 'lucide-react';
+import { TrendingUp, ClipboardList, ArrowUpRight, ArrowDownRight, Minus, Calendar, Clock, Activity, Edit3, Save, Loader2, Eye, PlusCircle, FileText, ArrowRight, Ruler } from 'lucide-react';
 
 interface Props {
   currentProtocol: ProtocolData;
@@ -50,6 +50,16 @@ const EvolutionTracker: React.FC<Props> = ({ currentProtocol, history, onNotesCh
     );
   };
 
+  const handleMeasurementChange = (key: string, value: string) => {
+    setTempData({
+        ...tempData,
+        measurements: {
+            ...tempData.measurements,
+            [key]: value
+        }
+    });
+  };
+
   // Salva alterações no protocolo ATUAL (sem criar novo ID)
   const handleSaveChanges = () => {
     if (onUpdateData) {
@@ -83,6 +93,7 @@ const EvolutionTracker: React.FC<Props> = ({ currentProtocol, history, onNotesCh
   const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString('pt-BR');
 
   const inputClass = "w-full bg-black/40 border border-white/10 rounded-xl p-3 text-xl font-black text-[#d4af37] outline-none focus:ring-1 focus:ring-[#d4af37] transition-all";
+  const measureInputClass = "w-full bg-black/40 border border-white/10 rounded-lg p-2 text-sm font-bold text-white outline-none focus:ring-1 focus:ring-[#d4af37] transition-all";
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
@@ -114,7 +125,7 @@ const EvolutionTracker: React.FC<Props> = ({ currentProtocol, history, onNotesCh
               )}
             </div>
 
-            {/* Grid de Medidas */}
+            {/* Grid de Medidas Básicas */}
             <div className="grid grid-cols-2 gap-4 mb-8">
               {[
                 { key: 'weight', label: 'Peso (kg)', value: currentProtocol.physicalData.weight, prev: previous?.physicalData.weight, inverse: true },
@@ -135,6 +146,69 @@ const EvolutionTracker: React.FC<Props> = ({ currentProtocol, history, onNotesCh
                   </div>
                 </div>
               ))}
+            </div>
+
+            {/* Seção de Medidas Corporais */}
+            <div className="bg-black/20 p-6 rounded-3xl border border-white/5 mb-8">
+               <div className="flex items-center gap-2 mb-6">
+                 <Ruler size={16} className="text-[#d4af37]" />
+                 <h4 className="text-xs font-black text-white/60 uppercase tracking-widest">Medidas Corporais (cm)</h4>
+               </div>
+               
+               <div className="space-y-6">
+                   {/* Superior */}
+                   <div>
+                       <h5 className="text-[9px] font-bold text-[#d4af37] uppercase tracking-widest mb-3 border-b border-white/5 pb-1">Superior</h5>
+                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                           {[
+                               { k: 'thorax', l: 'Tórax' }, { k: 'waist', l: 'Cintura' }, { k: 'abdomen', l: 'Abdômen' }, { k: 'glutes', l: 'Glúteo' },
+                               { k: 'rightArmRelaxed', l: 'Braço Dir (R)' }, { k: 'leftArmRelaxed', l: 'Braço Esq (R)' },
+                               { k: 'rightArmContracted', l: 'Braço Dir (C)' }, { k: 'leftArmContracted', l: 'Braço Esq (C)' }
+                           ].map((m) => (
+                               <div key={m.k}>
+                                   <label className="text-[8px] uppercase font-bold text-white/30 block mb-1">{m.l}</label>
+                                   <div className="flex items-center gap-2">
+                                       <input 
+                                           className={measureInputClass} 
+                                           value={(tempData.measurements as any)?.[m.k]}
+                                           onChange={(e) => handleMeasurementChange(m.k, e.target.value)}
+                                       />
+                                       {renderDiff(getDifference(
+                                           (currentProtocol.physicalData.measurements as any)?.[m.k], 
+                                           (previous?.physicalData.measurements as any)?.[m.k]
+                                       ))}
+                                   </div>
+                               </div>
+                           ))}
+                       </div>
+                   </div>
+
+                   {/* Inferior */}
+                   <div>
+                       <h5 className="text-[9px] font-bold text-[#d4af37] uppercase tracking-widest mb-3 border-b border-white/5 pb-1">Inferior</h5>
+                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                           {[
+                               { k: 'rightThigh', l: 'Coxa Dir' }, { k: 'leftThigh', l: 'Coxa Esq' },
+                               { k: 'rightCalf', l: 'Panturrilha Dir' }, { k: 'leftCalf', l: 'Panturrilha Esq' }
+                           ].map((m) => (
+                               <div key={m.k}>
+                                   <label className="text-[8px] uppercase font-bold text-white/30 block mb-1">{m.l}</label>
+                                   <div className="flex items-center gap-2">
+                                       <input 
+                                           className={measureInputClass} 
+                                           value={(tempData.measurements as any)?.[m.k]}
+                                           onChange={(e) => handleMeasurementChange(m.k, e.target.value)}
+                                       />
+                                       {renderDiff(getDifference(
+                                           (currentProtocol.physicalData.measurements as any)?.[m.k], 
+                                           (previous?.physicalData.measurements as any)?.[m.k]
+                                       ))}
+                                   </div>
+                               </div>
+                           ))}
+                       </div>
+                   </div>
+               </div>
             </div>
 
             {/* Observações Integradas */}

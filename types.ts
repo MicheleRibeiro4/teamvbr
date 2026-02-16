@@ -1,4 +1,19 @@
 
+export interface BodyMeasurements {
+  thorax: string;
+  waist: string;
+  abdomen: string;
+  glutes: string;
+  rightArmRelaxed: string;
+  leftArmRelaxed: string;
+  rightArmContracted: string;
+  leftArmContracted: string;
+  rightThigh: string;
+  leftThigh: string;
+  rightCalf: string;
+  leftCalf: string;
+}
+
 export interface PhysicalData {
   date: string;
   weight: string;
@@ -8,8 +23,9 @@ export interface PhysicalData {
   bodyFat: string;
   muscleMass: string;
   visceralFat: string;
-  waterPercentage: string; // Novo campo
+  waterPercentage: string;
   imc: string;
+  measurements: BodyMeasurements; // Novos campos de medidas
   observations?: string;
 }
 
@@ -58,7 +74,7 @@ export interface ContractInfo {
   city: string;
   state: string; // UF separado
   // Vigência
-  planType: 'Trimestral' | 'Semestral' | 'Avulso'; // Adicionado Avulso
+  planType: 'Trimestral' | 'Semestral' | 'Avulso'; 
   startDate: string;
   endDate: string;
   durationDays: string;

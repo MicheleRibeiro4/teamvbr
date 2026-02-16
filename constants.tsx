@@ -115,6 +115,20 @@ export const EMPTY_DATA: ProtocolData = {
     visceralFat: "",
     waterPercentage: "",
     imc: "",
+    measurements: {
+      thorax: "",
+      waist: "",
+      abdomen: "",
+      glutes: "",
+      rightArmRelaxed: "",
+      leftArmRelaxed: "",
+      rightArmContracted: "",
+      leftArmContracted: "",
+      rightThigh: "",
+      leftThigh: "",
+      rightCalf: "",
+      leftCalf: ""
+    },
     observations: ""
   },
   nutritionalStrategy: "",
