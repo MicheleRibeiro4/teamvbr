@@ -278,7 +278,7 @@ const EvolutionTracker: React.FC<Props> = ({ currentProtocol, history, onNotesCh
             <div className="bg-black/20 p-6 rounded-2xl border border-white/5 mb-8">
                <div className="flex items-center gap-2 mb-4">
                  <Ruler size={14} className="text-[#d4af37]" />
-                 <h4 className="text-[10px] font-black text-white/60 uppercase tracking-widest">Perímetros (cm)</h4>
+                 <h4 className="text-[10px] font-black text-white/60 uppercase tracking-widest">Medidas Corporais (cm)</h4>
                </div>
                <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-6">
                  {[
