@@ -283,6 +283,9 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
               }}
               onOpenEditor={() => setActiveView('manage')}
               onUpdateData={async (newData, createHistory = false) => {
+                // Atualiza o estado LOCAL imediatamente para refletir na UI
+                setData(newData);
+
                 if (createHistory) {
                   // GERAR NOVO PROTOCOLO (Fechar Ciclo)
                   const historyId = "vbr-" + Math.random().toString(36).substr(2, 9);
@@ -300,8 +303,7 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
                   alert("Ciclo encerrado com sucesso! Um novo registro foi criado com a data de hoje.");
                 } else {
                   // SALVAR ALTERAÇÕES (Mesmo ID)
-                  setData(newData);
-                  handleSave(false, newData);
+                  await handleSave(false, newData);
                 }
               }}
             />
