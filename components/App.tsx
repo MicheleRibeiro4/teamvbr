@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { ProtocolData } from '../types';
 import { EMPTY_DATA, LOGO_VBR_BLACK } from '../constants';
@@ -6,6 +7,7 @@ import UnifiedEditor from '../components/UnifiedEditor';
 import MainDashboard from '../components/MainDashboard';
 import StudentSearch from '../components/StudentSearch';
 import StudentDashboard from '../components/StudentDashboard';
+import EvolutionTracker from '../components/EvolutionTracker';
 import { 
   RefreshCw,
   CheckCircle2,
@@ -16,7 +18,7 @@ import {
   Loader2
 } from 'lucide-react';
 
-type ViewMode = 'home' | 'search' | 'manage' | 'settings' | 'student-dashboard';
+type ViewMode = 'home' | 'search' | 'manage' | 'settings' | 'student-dashboard' | 'evolution';
 
 const App: React.FC = () => {
   const [data, setData] = useState<ProtocolData>(EMPTY_DATA);
@@ -89,7 +91,8 @@ const App: React.FC = () => {
   };
 
   // Save changes to Supabase
-  const handleSave = async (silent = false, specificData?: ProtocolData) => {
+  // forceNewId: Se true, cria um novo registro (Check-in histórico) em vez de atualizar
+  const handleSave = async (silent = false, specificData?: ProtocolData, forceNewId = false) => {
     const dataToSave = specificData || data;
 
     if (!dataToSave.clientName) {
@@ -99,7 +102,10 @@ const App: React.FC = () => {
     
     setIsSyncing(true);
     try {
-      const currentId = dataToSave.id || "vbr-" + Math.random().toString(36).substr(2, 9);
+      // Se forçado um novo ID, gera um novo. Se não, usa o existente ou gera um se não tiver.
+      const currentId = (forceNewId) 
+        ? "vbr-" + Math.random().toString(36).substr(2, 9)
+        : (dataToSave.id || "vbr-" + Math.random().toString(36).substr(2, 9));
       
       const protocolToSave = { 
         ...JSON.parse(JSON.stringify(dataToSave)), 
@@ -110,16 +116,22 @@ const App: React.FC = () => {
       await db.saveProtocol(protocolToSave);
       
       setSavedProtocols(prev => {
-        const index = prev.findIndex(p => p.id === currentId);
-        if (index >= 0) {
-          const newList = [...prev];
-          newList[index] = protocolToSave;
-          return newList;
+        // Se for novo ID, adiciona à lista. Se for atualização, substitui.
+        if (forceNewId) {
+             return [protocolToSave, ...prev];
+        } else {
+             const index = prev.findIndex(p => p.id === currentId);
+             if (index >= 0) {
+               const newList = [...prev];
+               newList[index] = protocolToSave;
+               return newList;
+             }
+             return [protocolToSave, ...prev];
         }
-        return [protocolToSave, ...prev];
       });
       
-      if (!specificData || specificData.id === data.id) {
+      // Se estivermos salvando o dado ativo, atualiza o estado
+      if (!specificData || specificData.id === data.id || forceNewId) {
         setData(protocolToSave);
       }
       
@@ -284,6 +296,19 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
             onBack={() => setActiveView('student-dashboard')} 
           />
         )}
+
+        {/* VIEW DE EVOLUÇÃO */}
+        {activeView === 'evolution' && (
+          <EvolutionTracker 
+              currentProtocol={data} 
+              history={savedProtocols.filter(p => p.clientName === data.clientName)} 
+              onNotesChange={(n) => setData({...data, privateNotes: n})} 
+              onUpdateData={(newData, createHistory) => handleSave(false, newData, createHistory)}
+              onSelectHistory={(hist) => setData(hist)}
+              onOpenEditor={() => setActiveView('manage')}
+          />
+        )}
+
       </main>
     </div>
   );

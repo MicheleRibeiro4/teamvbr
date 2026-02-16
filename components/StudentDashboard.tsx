@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { ProtocolData } from '../types';
-import { Calendar, User, ArrowRight, Settings2 } from 'lucide-react';
+import { Calendar, User, ArrowRight, Settings2, TrendingUp, Activity } from 'lucide-react';
 
 interface Props {
   data: ProtocolData;
@@ -37,7 +37,7 @@ const StudentDashboard: React.FC<Props> = ({ data, setView }) => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-6 duration-700 px-4 md:px-0">
+    <div className="max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-6 duration-700 px-4 md:px-0">
       
       {/* CARD DO ALUNO */}
       <div className="bg-[#111] p-8 md:p-10 rounded-[2.5rem] border border-white/5 mb-8 flex flex-col md:flex-row justify-between items-center gap-8 shadow-2xl relative overflow-hidden group">
@@ -85,32 +85,57 @@ const StudentDashboard: React.FC<Props> = ({ data, setView }) => {
       </div>
 
       {/* GRID DE AÇÕES */}
-      <div className="grid grid-cols-1">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         
-        {/* 1. GERENCIAR ALUNO - Full Width */}
+        {/* 1. GERENCIAR ALUNO */}
         <button 
           onClick={() => setView('manage')}
-          className={`group relative bg-[#111] p-10 rounded-[2.5rem] border border-white/5 ${hoverBorder} transition-all hover:bg-white/[0.02] text-left overflow-hidden h-[320px] flex flex-col justify-between cursor-pointer`}
+          className={`group relative bg-[#111] p-8 rounded-[2rem] border border-white/5 ${hoverBorder} transition-all hover:bg-white/[0.02] text-left overflow-hidden h-[280px] flex flex-col justify-between cursor-pointer`}
         >
-          {/* Background Icon Faded */}
-          <div className="absolute -right-8 -bottom-8 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity duration-500 scale-150 pointer-events-none">
-             <Settings2 size={240} />
+          <div className="absolute -right-6 -bottom-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity duration-500 scale-150 pointer-events-none">
+             <Settings2 size={200} />
           </div>
 
           <div>
-             <div className={`w-16 h-16 ${iconBg} text-black rounded-2xl flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(255,255,255,0.1)] group-hover:scale-110 transition-transform duration-300`}>
-               <Settings2 size={32} strokeWidth={2} />
+             <div className={`w-14 h-14 ${iconBg} text-black rounded-2xl flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(255,255,255,0.1)] group-hover:scale-110 transition-transform duration-300`}>
+               <Settings2 size={28} strokeWidth={2} />
              </div>
-             <h3 className="text-3xl font-black text-white uppercase tracking-tighter mb-3">
-               Gerenciar Aluno
+             <h3 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">
+               Editor Completo
              </h3>
-             <p className="text-sm text-white/40 leading-relaxed font-medium max-w-md">
-               Acesse o editor completo para montar Treinos, Dieta e gerar Contratos. Tudo salvo automaticamente.
+             <p className="text-xs text-white/40 leading-relaxed font-medium max-w-xs">
+               Ajuste treinos, dieta, suplementação e gere o contrato PDF.
              </p>
           </div>
 
-          <div className={`flex items-center gap-3 text-xs font-black uppercase tracking-[0.2em] ${accentColor} mt-8 group-hover:translate-x-2 transition-transform`}>
-            Abrir Editor Unificado <ArrowRight size={14} />
+          <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] ${accentColor} mt-4 group-hover:translate-x-2 transition-transform`}>
+            Acessar Editor <ArrowRight size={12} />
+          </div>
+        </button>
+
+        {/* 2. EVOLUÇÃO E CHECK-IN */}
+        <button 
+          onClick={() => setView('evolution')}
+          className={`group relative bg-[#111] p-8 rounded-[2rem] border border-white/5 ${hoverBorder} transition-all hover:bg-white/[0.02] text-left overflow-hidden h-[280px] flex flex-col justify-between cursor-pointer`}
+        >
+          <div className="absolute -right-6 -bottom-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity duration-500 scale-150 pointer-events-none">
+             <TrendingUp size={200} />
+          </div>
+
+          <div>
+             <div className={`w-14 h-14 bg-white/10 text-white rounded-2xl flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(255,255,255,0.05)] group-hover:scale-110 transition-transform duration-300 border border-white/10`}>
+               <Activity size={28} strokeWidth={2} className={accentColor} />
+             </div>
+             <h3 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">
+               Acompanhar Evolução
+             </h3>
+             <p className="text-xs text-white/40 leading-relaxed font-medium max-w-xs">
+               Registre novos check-ins, compare fotos, medidas e visualize gráficos de progresso.
+             </p>
+          </div>
+
+          <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] ${accentColor} mt-4 group-hover:translate-x-2 transition-transform`}>
+            Ver Progresso <ArrowRight size={12} />
           </div>
         </button>
 

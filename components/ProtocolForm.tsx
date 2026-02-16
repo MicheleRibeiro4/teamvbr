@@ -159,18 +159,19 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
         DIRETRIZES DO TREINADOR (Obrigatório Seguir):
         - Estratégia Nutricional: ${data.nutritionalStrategy || "Definir automaticamente baseada no objetivo"}
         - Meta Calórica: ${data.kcalGoal || "Calcular automaticamente"}
-        - Contexto da Meta: ${data.kcalSubtext || "Calcular automaticamente"}
+        - Frequência de Treino Definida: ${data.trainingFrequency || "Sugerir baseada no objetivo"}
 
         INSTRUÇÕES:
         1. Se o treinador já definiu a estratégia ou calorias acima, USE esses valores para calcular os macros e montar as refeições.
-        2. Se estiver vazio, crie a melhor estratégia possível.
-        3. Gere treinos intensos e periodizados.
+        2. A Frequência de Treino foi definida pelo treinador como "${data.trainingFrequency}". USE EXATAMENTE ESTA FREQUÊNCIA para gerar a divisão de treino e calcular o gasto calórico.
+        3. Se estiver vazio, crie a melhor estratégia possível.
+        4. Gere treinos intensos e periodizados.
 
         Gere um JSON com a seguinte estrutura estrita (não inclua markdown, apenas o JSON):
         {
           "nutritionalStrategy": "Texto explicando a estratégia (se já informado, mantenha ou refine)",
           "kcalGoal": "Valor numérico (se já informado, mantenha)",
-          "kcalSubtext": "Contexto (se já informado, mantenha)",
+          "kcalSubtext": "Contexto (Déficit, Superávit ou Manutenção)",
           "macros": {
             "protein": { "value": "Ex: 180", "ratio": "2g/kg" },
             "carbs": { "value": "Ex: 250", "ratio": "3g/kg" },
@@ -182,7 +183,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
           "supplements": [
              { "id": "1", "name": "Creatina", "dosage": "5g", "timing": "Pós-treino" }
           ],
-          "trainingFrequency": "Ex: 5x na semana",
+          "trainingFrequency": "A frequência definida pelo treinador (Ex: 5x na semana)",
           "trainingDays": [
             {
               "id": "1",
@@ -218,12 +219,15 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
           // Prioriza o que a IA gerou/refinou, mas mantém o input do usuário se a IA falhar
           nutritionalStrategy: generatedData.nutritionalStrategy || data.nutritionalStrategy,
           kcalGoal: generatedData.kcalGoal || data.kcalGoal,
-          kcalSubtext: generatedData.kcalSubtext || data.kcalSubtext,
+          kcalSubtext: generatedData.kcalSubtext || data.kcalSubtext, // A IA gera o contexto agora (déficit/superávit)
           
           macros: generatedData.macros || data.macros,
           meals: generatedData.meals ? generatedData.meals.map((m: any, i: number) => ({ ...m, id: Date.now().toString() + i })) : [],
           supplements: generatedData.supplements ? generatedData.supplements.map((s: any, i: number) => ({ ...s, id: Date.now().toString() + i })) : [],
+          
+          // Usa a frequência gerada (que deve respeitar a diretriz) ou a digitada
           trainingFrequency: generatedData.trainingFrequency || data.trainingFrequency,
+          
           trainingDays: generatedData.trainingDays ? generatedData.trainingDays.map((d: any, i: number) => ({
              ...d, 
              id: Date.now().toString() + i,
@@ -233,7 +237,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
         };
         
         onChange(newData);
-        alert("Protocolo gerado com sucesso considerando sua estratégia!");
+        alert("Protocolo gerado com sucesso considerando sua estratégia e frequência de treino!");
       }
     } catch (error: any) {
       console.error("Erro na IA:", error);
@@ -361,26 +365,6 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
       }
     }
   }, [data.contract.planValue]);
-
-  // --- LÓGICA: ATUALIZAR SUBTEXTO DA META BASEADO NO OBJETIVO ---
-  useEffect(() => {
-    let newSubtext = "";
-    switch (data.protocolTitle) {
-      case "Emagrecimento":
-        newSubtext = "Déficit Calórico";
-        break;
-      case "Hipertrofia":
-        newSubtext = "Superávit Calórico";
-        break;
-      case "Recomposição Corporal":
-        newSubtext = "Normocalórica / Manutenção";
-        break;
-    }
-
-    if (newSubtext && data.kcalSubtext !== newSubtext) {
-      handleChange('kcalSubtext', newSubtext);
-    }
-  }, [data.protocolTitle]);
 
   // --- HANDLERS PARA LISTAS DINÂMICAS ---
 
@@ -724,8 +708,8 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                   <input className={inputClass} value={data.kcalGoal} onChange={(e) => handleChange('kcalGoal', e.target.value)} placeholder="Ex: 2500 (Deixe vazio para IA calcular)" />
               </div>
               <div>
-                  <label className={labelClass}>Subtexto da Meta</label>
-                  <input className={inputClass} value={data.kcalSubtext} onChange={(e) => handleChange('kcalSubtext', e.target.value)} placeholder="Ex: Déficit Moderado" />
+                  <label className={labelClass}>Frequência de Treino</label>
+                  <input className={inputClass} value={data.trainingFrequency} onChange={(e) => handleChange('trainingFrequency', e.target.value)} placeholder="Ex: 5x na semana" />
               </div>
               <div className="relative">
                   <label className={labelClass}>Meta Hídrica Diária (L)</label>

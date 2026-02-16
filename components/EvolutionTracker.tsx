@@ -12,9 +12,10 @@ import {
   ArrowUpRight, 
   ArrowDownRight, 
   Minus,
-  Calendar,
+  Scale,
   ChevronRight,
-  Scale
+  Camera,
+  CalendarCheck
 } from 'lucide-react';
 
 interface Props {
@@ -36,39 +37,40 @@ const EvolutionTracker: React.FC<Props> = ({
 }) => {
   const [isSaving, setIsSaving] = useState(false);
   
-  // Estado local para edição dos dados físicos
+  // Estado local para edição dos dados físicos (Check-in atual)
   const [localPhysical, setLocalPhysical] = useState<PhysicalData>(currentProtocol.physicalData);
   
-  // Estado para controlar qual gráfico está visível
-  const [activeChart, setActiveChart] = useState<'weight' | 'bodyFat' | 'muscleMass'>('weight');
+  // Aba ativa do dashboard
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'measures'>('dashboard');
 
-  // Sincroniza o estado local quando o protocolo selecionado muda (ex: clicou no histórico)
+  // Sincroniza o estado local
   useEffect(() => {
     setLocalPhysical(currentProtocol.physicalData);
   }, [currentProtocol.id, currentProtocol.updatedAt]);
 
   // --- PREPARAÇÃO DE DADOS ---
 
-  // Ordena o histórico do mais novo para o mais antigo para a lista lateral
+  // Lista de histórico ordenada
   const sortedHistoryList = useMemo(() => {
-    const list = [...history];
-    // Garante que o atual esteja na lista se não estiver salvo ainda no banco como histórico
-    if (!list.find(p => p.id === currentProtocol.id)) {
-      list.unshift(currentProtocol);
-    }
-    return list.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+    // Cria um mapa para remover duplicatas baseadas no ID
+    const uniqueMap = new Map();
+    [currentProtocol, ...history].forEach(p => {
+        uniqueMap.set(p.id, p);
+    });
+    
+    return Array.from(uniqueMap.values())
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
   }, [history, currentProtocol]);
 
-  // Encontra o item anterior para comparação (o próximo na lista ordenada por data desc)
+  // Protocolo anterior para comparação (o índice 1 da lista, já que o 0 é o atual)
   const previousProtocol = useMemo(() => {
-    const currentIndex = sortedHistoryList.findIndex(p => p.id === currentProtocol.id);
-    if (currentIndex >= 0 && currentIndex < sortedHistoryList.length - 1) {
-      return sortedHistoryList[currentIndex + 1];
+    if (sortedHistoryList.length > 1) {
+      return sortedHistoryList[1];
     }
     return null;
-  }, [sortedHistoryList, currentProtocol]);
+  }, [sortedHistoryList]);
 
-  // Dados para o gráfico (Ordenados Cronologicamente: Antigo -> Novo)
+  // Dados para os gráficos (cronológico)
   const chartData = useMemo(() => {
     const data = sortedHistoryList
       .map(p => ({
@@ -78,7 +80,7 @@ const EvolutionTracker: React.FC<Props> = ({
         muscleMass: parseFloat(p.physicalData.muscleMass?.replace(',', '.') || '0'),
       }))
       .filter(d => !isNaN(d.weight) && d.weight > 0)
-      .reverse(); // Inverte para ficar cronológico no gráfico
+      .reverse();
     return data;
   }, [sortedHistoryList]);
 
@@ -98,55 +100,59 @@ const EvolutionTracker: React.FC<Props> = ({
     }));
   };
 
+  // Salva apenas alterações no registro atual
   const handleSaveCurrent = async () => {
     setIsSaving(true);
     try {
-      // Reconstrói o objeto completo garantindo que physicalData seja o local editado
       const updatedProtocol = {
         ...currentProtocol,
-        physicalData: localPhysical
+        physicalData: localPhysical,
+        updatedAt: new Date().toISOString()
       };
-      
       await onUpdateData(updatedProtocol, false);
     } finally {
       setTimeout(() => setIsSaving(false), 500);
     }
   };
 
-  const handleCloseCycle = async () => {
-    if (confirm("Deseja fechar este ciclo de avaliação?\n\nIsso salvará os dados atuais no histórico e criará uma nova ficha com a data de hoje para novos registros.")) {
+  // Cria um novo Check-in (Novo registro no histórico)
+  const handleNewCheckin = async () => {
+    if (confirm("Iniciar nova atualização?\n\nIsso salvará os dados atuais no histórico e criará uma nova avaliação com a data de hoje.")) {
       setIsSaving(true);
       try {
-        const updatedProtocol = {
+        // 1. O registro atual será salvo automaticamente como histórico pois criaremos um novo ID
+        // 2. Preparamos o objeto para o novo registro
+        const newProtocolState = {
           ...currentProtocol,
           physicalData: {
              ...localPhysical,
-             date: new Date().toLocaleDateString('pt-BR') // Atualiza data para hoje
+             date: new Date().toLocaleDateString('pt-BR'), // Data de hoje
+             // Opcional: Limpar medidas para forçar nova medição? 
+             // Por enquanto mantemos para facilitar ajustes pequenos.
           },
           updatedAt: new Date().toISOString()
         };
-        await onUpdateData(updatedProtocol, true); // true = createHistory
+        
+        // true indica para o App.tsx gerar um novo ID
+        await onUpdateData(newProtocolState, true); 
       } finally {
         setTimeout(() => setIsSaving(false), 1000);
       }
     }
   };
 
-  // --- COMPONENTES AUXILIARES ---
+  // --- COMPONENTES VISUAIS ---
 
   const DiffBadge = ({ current, prev, inverse = false }: { current: string, prev?: string, inverse?: boolean }) => {
     if (!current || !prev) return null;
-    
     const c = parseFloat(current.replace(',', '.'));
     const p = parseFloat(prev.replace(',', '.'));
-    
     if (isNaN(c) || isNaN(p)) return null;
     
     const diff = c - p;
     if (Math.abs(diff) < 0.1) return <div className="text-[9px] text-white/30 font-bold bg-white/5 px-2 py-0.5 rounded-md flex items-center gap-1"><Minus size={10}/> Estável</div>;
 
     const isPositive = diff > 0;
-    // Se inverse for true (ex: gordura), aumentar é RUIM (vermelho). Se false (ex: musculo), aumentar é BOM (verde).
     const isGood = inverse ? !isPositive : isPositive;
     const colorClass = isGood ? 'text-green-400 bg-green-400/10 border-green-400/20' : 'text-red-400 bg-red-400/10 border-red-400/20';
     const Icon = isPositive ? ArrowUpRight : ArrowDownRight;
@@ -159,77 +165,98 @@ const EvolutionTracker: React.FC<Props> = ({
     );
   };
 
-  // Input Estilizado
-  const InputField = ({ 
-    label, 
-    value, 
-    onChange, 
-    prevValue, 
-    inverse = false 
-  }: { 
-    label: string, 
-    value: string, 
-    onChange: (val: string) => void, 
-    prevValue?: string, 
-    inverse?: boolean 
-  }) => (
-    <div className="bg-[#151515] p-3 rounded-xl border border-white/5 hover:border-white/10 transition-colors group">
+  const InputField = ({ label, value, onChange, prevValue, inverse = false }: any) => (
+    <div className="bg-[#1a1a1a] p-4 rounded-2xl border border-white/5 hover:border-[#d4af37]/50 transition-colors group relative">
       <div className="flex justify-between items-start mb-2">
         <label className="text-[9px] font-black text-white/40 uppercase tracking-widest">{label}</label>
         <DiffBadge current={value} prev={prevValue} inverse={inverse} />
       </div>
-      <input 
-        className="w-full bg-transparent text-white font-bold text-lg outline-none placeholder:text-white/10"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="-"
-      />
-      {prevValue && (
-        <div className="text-[9px] text-white/20 mt-1 font-mono">
-          Ant: {prevValue}
-        </div>
-      )}
+      <div className="flex items-end gap-1">
+        <input 
+          className="w-full bg-transparent text-white font-black text-2xl outline-none placeholder:text-white/5"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="0,0"
+        />
+      </div>
     </div>
   );
 
   return (
     <div className="max-w-[1600px] mx-auto animate-in fade-in duration-500 pb-20">
       
+      {/* HEADER DO ALUNO */}
+      <div className="bg-[#111] p-6 md:p-8 rounded-[2.5rem] border border-white/10 mb-8 flex flex-col md:flex-row justify-between items-center gap-6 shadow-2xl">
+         <div className="flex items-center gap-6">
+            <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10 text-[#d4af37]">
+               <Activity size={32} />
+            </div>
+            <div>
+               <h1 className="text-2xl font-black text-white uppercase tracking-tighter mb-1">
+                 Evolução: {currentProtocol.clientName}
+               </h1>
+               <div className="flex items-center gap-3 text-[10px] font-bold text-white/40 uppercase tracking-widest">
+                  <span className="bg-white/5 px-2 py-1 rounded-md text-white/60">
+                    {sortedHistoryList.length} Avaliações
+                  </span>
+                  <span>•</span>
+                  <span>Último: {new Date(currentProtocol.updatedAt).toLocaleDateString('pt-BR')}</span>
+               </div>
+            </div>
+         </div>
+         
+         <div className="flex gap-3">
+             <button 
+                onClick={handleNewCheckin}
+                disabled={isSaving}
+                className="bg-[#d4af37] text-black px-6 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest hover:scale-105 transition-all shadow-lg flex items-center gap-2"
+             >
+                <PlusCircle size={16} /> Atualização
+             </button>
+         </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        {/* COLUNA ESQUERDA: LISTA DE HISTÓRICO */}
+        {/* COLUNA ESQUERDA: LINHA DO TEMPO */}
         <div className="lg:col-span-3 space-y-4">
-           <div className="bg-[#111] border border-white/10 rounded-[2rem] p-6 h-fit sticky top-24">
+           <div className="bg-[#111] border border-white/10 rounded-[2rem] p-6 sticky top-24 max-h-[80vh] overflow-y-auto custom-scrollbar">
               <h3 className="text-xs font-black text-white/40 uppercase tracking-widest mb-6 flex items-center gap-2">
-                <History size={14} className="text-[#d4af37]" /> Histórico
+                <History size={14} className="text-[#d4af37]" /> Linha do Tempo
               </h3>
               
-              <div className="space-y-2">
-                {sortedHistoryList.map((p) => {
+              <div className="space-y-3">
+                {sortedHistoryList.map((p, idx) => {
                   const isActive = p.id === currentProtocol.id;
                   return (
                     <button
                       key={p.id}
                       onClick={() => onSelectHistory && onSelectHistory(p)}
-                      className={`w-full text-left p-4 rounded-xl border transition-all group relative overflow-hidden ${
+                      className={`w-full text-left p-4 rounded-2xl border transition-all relative group ${
                         isActive 
-                        ? 'bg-[#d4af37] border-[#d4af37] text-black shadow-lg shadow-[#d4af37]/20' 
-                        : 'bg-white/5 border-white/5 text-white/60 hover:bg-white/10 hover:text-white'
+                        ? 'bg-[#d4af37] border-[#d4af37] text-black shadow-lg scale-105 z-10' 
+                        : 'bg-white/5 border-white/5 text-white/60 hover:bg-white/10 hover:border-white/20'
                       }`}
                     >
                       <div className="flex justify-between items-center mb-1">
-                        <span className={`text-[10px] font-black uppercase tracking-widest ${isActive ? 'text-black/60' : 'text-[#d4af37]'}`}>
-                           {new Date(p.updatedAt).toLocaleDateString('pt-BR')}
-                        </span>
-                        {isActive && <div className="w-2 h-2 bg-black rounded-full animate-pulse"></div>}
+                         <div className="flex items-center gap-2">
+                            <CalendarCheck size={12} className={isActive ? 'text-black' : 'text-[#d4af37]'} />
+                            <span className="text-[10px] font-black uppercase tracking-widest">
+                               {new Date(p.updatedAt).toLocaleDateString('pt-BR')}
+                            </span>
+                         </div>
+                         {isActive && <span className="bg-black text-[#d4af37] text-[8px] font-bold px-1.5 py-0.5 rounded">ATUAL</span>}
                       </div>
-                      <div className={`text-sm font-bold leading-tight ${isActive ? 'text-black' : 'text-white'}`}>
-                        {p.protocolTitle || 'Avaliação'}
-                      </div>
-                      {/* Mini Resumo */}
-                      <div className={`mt-2 flex gap-3 text-[9px] font-mono ${isActive ? 'text-black/70' : 'text-white/30'}`}>
-                         <span>{p.physicalData.weight || '-'}kg</span>
-                         <span>{p.physicalData.bodyFat || '-'}% BF</span>
+                      
+                      <div className="grid grid-cols-2 gap-2 mt-3">
+                         <div className={`bg-black/10 p-2 rounded-lg text-center ${isActive ? 'text-black' : 'text-white'}`}>
+                            <span className="block text-[8px] font-black uppercase opacity-60">Peso</span>
+                            <span className="text-xs font-bold">{p.physicalData.weight || '-'}</span>
+                         </div>
+                         <div className={`bg-black/10 p-2 rounded-lg text-center ${isActive ? 'text-black' : 'text-white'}`}>
+                            <span className="block text-[8px] font-black uppercase opacity-60">BF%</span>
+                            <span className="text-xs font-bold">{p.physicalData.bodyFat || '-'}</span>
+                         </div>
                       </div>
                     </button>
                   );
@@ -238,157 +265,119 @@ const EvolutionTracker: React.FC<Props> = ({
            </div>
         </div>
 
-        {/* COLUNA CENTRAL: EDITOR E DADOS */}
+        {/* COLUNA CENTRAL: DADOS & GRÁFICOS */}
         <div className="lg:col-span-9 space-y-6">
           
-          {/* GRÁFICO DE TENDÊNCIA */}
-          <div className="bg-[#111] p-6 rounded-[2rem] border border-white/10 relative overflow-hidden">
-             <div className="flex items-center justify-between mb-6 relative z-10">
-               <h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
-                 <TrendingUp className="text-[#d4af37]" size={18} /> Tendência
-               </h3>
-               <div className="flex bg-black/40 p-1 rounded-lg border border-white/5">
-                 {[
-                   { id: 'weight', label: 'Peso' },
-                   { id: 'bodyFat', label: 'Gordura' },
-                   { id: 'muscleMass', label: 'Massa' }
-                 ].map((opt) => (
-                   <button
-                     key={opt.id}
-                     onClick={() => setActiveChart(opt.id as any)}
-                     className={`px-4 py-1.5 rounded-md text-[10px] font-black uppercase transition-all ${
-                       activeChart === opt.id 
-                       ? 'bg-[#d4af37] text-black shadow-md' 
-                       : 'text-white/40 hover:text-white'
-                     }`}
-                   >
-                     {opt.label}
-                   </button>
-                 ))}
-               </div>
-             </div>
-             
-             {/* Componente de Gráfico Customizado */}
-             <div className="h-48 w-full flex items-end justify-between gap-2 px-4 relative z-10">
-                {chartData.length < 2 ? (
-                   <div className="w-full h-full flex items-center justify-center text-white/20 text-xs font-bold uppercase border-2 border-dashed border-white/5 rounded-xl">
-                     Dados insuficientes para gráfico
-                   </div>
-                ) : (
-                  chartData.map((d, i) => {
-                    // Normalização simples para altura das barras
-                    const values = chartData.map(x => x[activeChart] as number);
-                    const min = Math.min(...values) * 0.9;
-                    const max = Math.max(...values) * 1.1;
-                    const heightPercent = (( (d[activeChart] as number) - min) / (max - min)) * 100;
-                    
-                    return (
-                      <div key={i} className="flex-1 flex flex-col items-center justify-end group h-full">
-                         <div 
-                           className="w-full bg-[#d4af37]/20 border-t border-x border-[#d4af37]/40 rounded-t-sm transition-all group-hover:bg-[#d4af37] relative min-h-[10%]"
-                           style={{ height: `${heightPercent}%` }}
-                         >
-                            <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-[9px] font-bold text-white opacity-0 group-hover:opacity-100 transition-opacity bg-black px-1 rounded border border-white/10">
-                              {d[activeChart]}
-                            </div>
-                         </div>
-                         <div className="mt-2 text-[8px] text-white/20 font-mono rotate-0 truncate w-full text-center">
-                           {d.date}
+          {/* GRÁFICOS RÁPIDOS */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+             {/* Gráfico Peso */}
+             <div className="bg-[#111] p-5 rounded-[2rem] border border-white/10 relative overflow-hidden group">
+                <div className="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><Scale size={40} /></div>
+                <h4 className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-4">Evolução de Peso</h4>
+                <div className="h-24 flex items-end gap-1">
+                   {chartData.map((d, i) => (
+                      <div key={i} className="flex-1 bg-[#d4af37]/20 hover:bg-[#d4af37] transition-colors rounded-t-sm relative group/bar" style={{ height: `${(d.weight / 150) * 100}%` }}>
+                         <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black text-white text-[9px] px-1 rounded opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap z-20 pointer-events-none">
+                            {d.weight}kg
                          </div>
                       </div>
-                    )
-                  })
-                )}
+                   ))}
+                </div>
              </div>
-             {/* Background Decoration */}
-             <div className="absolute inset-0 bg-gradient-to-t from-[#d4af37]/5 to-transparent pointer-events-none"></div>
+
+             {/* Gráfico BF */}
+             <div className="bg-[#111] p-5 rounded-[2rem] border border-white/10 relative overflow-hidden group">
+                <div className="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><Activity size={40} /></div>
+                <h4 className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-4">Evolução de Gordura</h4>
+                <div className="h-24 flex items-end gap-1">
+                   {chartData.map((d, i) => (
+                      <div key={i} className="flex-1 bg-red-500/20 hover:bg-red-500 transition-colors rounded-t-sm relative group/bar" style={{ height: `${(d.bodyFat / 50) * 100}%` }}>
+                         <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black text-white text-[9px] px-1 rounded opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap z-20 pointer-events-none">
+                            {d.bodyFat}%
+                         </div>
+                      </div>
+                   ))}
+                </div>
+             </div>
+
+             {/* Gráfico Massa */}
+             <div className="bg-[#111] p-5 rounded-[2rem] border border-white/10 relative overflow-hidden group">
+                <div className="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><TrendingUp size={40} /></div>
+                <h4 className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-4">Evolução Muscular</h4>
+                <div className="h-24 flex items-end gap-1">
+                   {chartData.map((d, i) => (
+                      <div key={i} className="flex-1 bg-blue-500/20 hover:bg-blue-500 transition-colors rounded-t-sm relative group/bar" style={{ height: `${(d.muscleMass / 100) * 100}%` }}>
+                         <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black text-white text-[9px] px-1 rounded opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap z-20 pointer-events-none">
+                            {d.muscleMass}kg
+                         </div>
+                      </div>
+                   ))}
+                </div>
+             </div>
           </div>
 
-          {/* EDITOR PRINCIPAL */}
-          <div className="bg-[#111] p-8 rounded-[2.5rem] border border-white/10 shadow-2xl relative">
-             
-             {/* Cabeçalho do Editor */}
-             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 pb-6 border-b border-white/5 gap-4">
-                <div>
-                   <h2 className="text-2xl font-black text-white uppercase tracking-tighter flex items-center gap-3">
-                      <Scale size={24} className="text-[#d4af37]" /> 
-                      {currentProtocol.clientName}
-                   </h2>
-                   <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mt-1">
-                      Editando Avaliação de: <span className="text-white">{new Date(currentProtocol.updatedAt).toLocaleDateString('pt-BR')}</span>
-                   </p>
-                </div>
-                
-                {/* Botão para ir ao Editor Completo */}
-                {onOpenEditor && (
-                  <button 
-                    onClick={onOpenEditor}
-                    className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-white/60 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors border border-white/5"
-                  >
-                    Editar Ficha Completa <ChevronRight size={12} />
-                  </button>
-                )}
+          {/* INPUTS DE CHECK-IN */}
+          <div className="bg-[#111] p-8 rounded-[2.5rem] border border-white/10 shadow-xl">
+             <div className="flex items-center justify-between mb-8">
+                <h2 className="text-xl font-black text-white uppercase tracking-tighter flex items-center gap-2">
+                   <Activity size={20} className="text-[#d4af37]" /> Bioimpedância & Composição
+                </h2>
+                <span className="text-[10px] font-black bg-white/5 px-3 py-1 rounded text-white/40">
+                   EDITANDO: {new Date(currentProtocol.updatedAt).toLocaleDateString('pt-BR')}
+                </span>
              </div>
 
-             {/* Grid de Inputs Principais */}
-             <div className="mb-8">
-               <h4 className="text-[10px] font-black text-[#d4af37] uppercase tracking-widest mb-4 flex items-center gap-2">
-                 <Activity size={12} /> Composição Corporal
-               </h4>
-               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                  <InputField 
                     label="Peso (kg)" 
                     value={localPhysical.weight} 
-                    onChange={v => handleInputChange('weight', v)}
+                    onChange={(v: string) => handleInputChange('weight', v)}
                     prevValue={previousProtocol?.physicalData.weight}
-                    inverse={true} // Perder peso nem sempre é bom, mas vamos assumir que sim para geral, ou false se for hipertrofia.
-                                   // Para simplificar, deixei true (reduzir = verde) para peso/gordura por padrão estético de "cutting".
-                                   // Num app real, dependeria do objetivo.
+                    inverse={true}
                  />
                  <InputField 
                     label="Gordura (%)" 
                     value={localPhysical.bodyFat} 
-                    onChange={v => handleInputChange('bodyFat', v)}
+                    onChange={(v: string) => handleInputChange('bodyFat', v)}
                     prevValue={previousProtocol?.physicalData.bodyFat}
                     inverse={true}
                  />
                  <InputField 
                     label="Massa Musc. (kg)" 
                     value={localPhysical.muscleMass} 
-                    onChange={v => handleInputChange('muscleMass', v)}
+                    onChange={(v: string) => handleInputChange('muscleMass', v)}
                     prevValue={previousProtocol?.physicalData.muscleMass}
                     inverse={false}
                  />
                  <InputField 
                     label="Visceral" 
                     value={localPhysical.visceralFat} 
-                    onChange={v => handleInputChange('visceralFat', v)}
+                    onChange={(v: string) => handleInputChange('visceralFat', v)}
                     prevValue={previousProtocol?.physicalData.visceralFat}
                     inverse={true}
                  />
-               </div>
              </div>
 
-             {/* Medidas */}
-             <div className="bg-black/20 p-6 rounded-2xl border border-white/5 mb-8">
-                <h4 className="text-[10px] font-black text-[#d4af37] uppercase tracking-widest mb-4 flex items-center gap-2">
-                   <Ruler size={12} /> Perimetria (cm)
+             {/* MEDIDAS */}
+             <div className="bg-white/5 p-6 rounded-3xl border border-white/5 mb-8">
+                <h4 className="text-[10px] font-black text-[#d4af37] uppercase tracking-widest mb-6 flex items-center gap-2">
+                   <Ruler size={14} /> Medidas Corporais (cm)
                 </h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-4 gap-y-6">
                   {[
                     { k: 'thorax', l: 'Tórax' }, { k: 'waist', l: 'Cintura' }, { k: 'abdomen', l: 'Abdômen' }, 
                     { k: 'glutes', l: 'Glúteo' }, { k: 'rightArmContracted', l: 'Braço Dir.' }, { k: 'leftArmContracted', l: 'Braço Esq.' },
                     { k: 'rightThigh', l: 'Coxa Dir.' }, { k: 'leftThigh', l: 'Coxa Esq.' }, { k: 'rightCalf', l: 'Pantur. Dir' }, { k: 'leftCalf', l: 'Pantur. Esq' }
                   ].map((m) => (
-                    <div key={m.k}>
+                    <div key={m.k} className="relative">
                        <label className="text-[8px] font-bold text-white/30 uppercase block mb-1">{m.l}</label>
                        <input 
-                         className="w-full bg-[#151515] border border-white/5 rounded-lg p-2 text-xs font-bold text-white text-center focus:border-[#d4af37] outline-none transition-colors"
+                         className="w-full bg-[#111] border border-white/10 rounded-xl p-3 text-sm font-bold text-white focus:border-[#d4af37] outline-none transition-colors"
                          value={(localPhysical.measurements as any)?.[m.k] || ''}
                          onChange={(e) => handleMeasurementChange(m.k, e.target.value)}
-                         placeholder="0"
+                         placeholder="-"
                        />
-                       <div className="flex justify-center mt-1">
+                       <div className="absolute top-0 right-0">
                           <DiffBadge 
                             current={(localPhysical.measurements as any)?.[m.k]} 
                             prev={(previousProtocol?.physicalData.measurements as any)?.[m.k]} 
@@ -400,42 +389,31 @@ const EvolutionTracker: React.FC<Props> = ({
                 </div>
              </div>
 
-             {/* Notas do Coach */}
-             <div className="mb-8">
-                <h4 className="text-[10px] font-black text-[#d4af37] uppercase tracking-widest mb-2">
-                   Notas Privadas
+             {/* OBSERVAÇÕES (Sem fotos) */}
+             <div className="w-full">
+                <h4 className="text-[10px] font-black text-[#d4af37] uppercase tracking-widest mb-4">
+                   Observações
                 </h4>
                 <textarea
-                  className="w-full bg-[#151515] border border-white/5 rounded-xl p-4 text-xs font-medium text-white/80 focus:border-[#d4af37] outline-none min-h-[80px] resize-y"
-                  placeholder="Registre aqui observações sobre o progresso, adesão ou feedback do aluno..."
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-xs font-medium text-white/80 focus:border-[#d4af37] outline-none min-h-[120px] resize-y"
+                  placeholder="Feedback sobre a adesão, pontos de melhoria, queixas..."
                   value={currentProtocol.privateNotes}
                   onChange={(e) => onNotesChange(e.target.value)}
                 />
              </div>
 
-             {/* Botões de Ação */}
-             <div className="flex flex-col md:flex-row gap-4 pt-4 border-t border-white/5">
+             {/* AÇÕES */}
+             <div className="flex justify-end gap-4 mt-8 pt-6 border-t border-white/5">
                 <button 
                   onClick={handleSaveCurrent}
                   disabled={isSaving}
-                  className="flex-1 bg-white/5 hover:bg-white/10 text-white border border-white/10 py-4 rounded-xl font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                  className="bg-white/10 hover:bg-white/20 text-white px-8 py-4 rounded-xl font-black uppercase text-[10px] tracking-widest flex items-center gap-2 transition-all disabled:opacity-50"
                 >
                   {isSaving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
                   Salvar Alterações
                 </button>
-                
-                <button 
-                  onClick={handleCloseCycle}
-                  disabled={isSaving}
-                  className="flex-1 bg-[#d4af37] hover:bg-[#b5952f] text-black py-4 rounded-xl font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg hover:shadow-[#d4af37]/20 disabled:opacity-50"
-                >
-                  <PlusCircle size={16} />
-                  Fechar Ciclo & Nova Avaliação
-                </button>
              </div>
-
           </div>
-
         </div>
       </div>
     </div>
