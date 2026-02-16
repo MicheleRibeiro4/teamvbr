@@ -104,6 +104,7 @@ export interface ProtocolData {
   nutritionalStrategy: string;
   kcalGoal: string;
   kcalSubtext: string;
+  waterGoal: string; // Novo campo para meta de água
   macros: Macronutrients;
   meals: Meal[];
   supplements: Supplement[];

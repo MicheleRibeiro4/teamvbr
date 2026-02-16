@@ -134,6 +134,7 @@ export const EMPTY_DATA: ProtocolData = {
   nutritionalStrategy: "",
   kcalGoal: "",
   kcalSubtext: "Foco em Recomposição",
+  waterGoal: "", // Inicializa vazio
   macros: {
     protein: { value: "", ratio: "" },
     carbs: { value: "", ratio: "" },

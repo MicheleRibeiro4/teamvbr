@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { ProtocolData, Meal, Supplement, TrainingDay, Exercise } from '../types';
-import { Activity, User, ShieldCheck, ChevronLeft, MapPin, Dumbbell, Utensils, Pill, Plus, Trash2, FileText, AlertCircle, Sparkles, Loader2, Ruler, DollarSign } from 'lucide-react';
+import { Activity, User, ShieldCheck, ChevronLeft, MapPin, Dumbbell, Utensils, Pill, Plus, Trash2, FileText, AlertCircle, Sparkles, Loader2, Ruler, DollarSign, Droplets } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 
 interface Props {
@@ -144,6 +144,22 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
       setIsGenerating(false);
     }
   };
+
+  // --- LÓGICA DE CÁLCULO DE ÁGUA ---
+  useEffect(() => {
+    const weight = parseFloat(data.physicalData.weight.replace(',', '.'));
+    if (!isNaN(weight) && weight > 0) {
+        // Cálculo atualizado: 35ml por kg
+        const liters = (weight * 0.035).toFixed(1).replace('.', ',');
+        
+        // Atualiza se estiver vazio ou se o valor calculado for diferente 
+        // (mantendo a sincronia com o peso, mas permitindo edição manual se o usuário mudar depois)
+        // Decisão: Forçar atualização se o peso mudar, pois é um dado derivado crítico.
+        if (data.waterGoal !== liters) {
+           handleChange('waterGoal', liters);
+        }
+    }
+  }, [data.physicalData.weight]);
 
   // --- LÓGICA DE CÁLCULO DE DATA DE TÉRMINO ---
   useEffect(() => {
@@ -561,7 +577,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                 placeholder="Ex: Dieta Cetogênica, Ciclo de Carboidratos, Jejum Intermitente..."
               />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
               <div>
                   <label className={labelClass}>Meta Calórica (Kcal)</label>
                   <input className={inputClass} value={data.kcalGoal} onChange={(e) => handleChange('kcalGoal', e.target.value)} placeholder="Ex: 2500 (Deixe vazio para IA calcular)" />
@@ -569,6 +585,11 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
               <div>
                   <label className={labelClass}>Subtexto da Meta</label>
                   <input className={inputClass} value={data.kcalSubtext} onChange={(e) => handleChange('kcalSubtext', e.target.value)} placeholder="Ex: Déficit Moderado" />
+              </div>
+              <div className="relative">
+                  <label className={labelClass}>Meta Hídrica Diária (L)</label>
+                  <input className={inputClass} value={data.waterGoal} onChange={(e) => handleChange('waterGoal', e.target.value)} placeholder="Ex: 4,0" />
+                  <Droplets size={16} className="absolute right-4 top-9 text-[#d4af37] opacity-50" />
               </div>
             </div>
           </section>

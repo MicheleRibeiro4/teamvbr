@@ -18,16 +18,24 @@ const StudentDashboard: React.FC<Props> = ({ data, setView }) => {
         <div className="absolute top-0 right-0 w-96 h-96 bg-[#d4af37] blur-[120px] opacity-[0.03] pointer-events-none group-hover:opacity-[0.05] transition-opacity duration-1000"></div>
 
         <div className="flex flex-col md:flex-row items-center gap-8 text-center md:text-left relative z-10 w-full md:w-auto">
-          {/* Avatar */}
-          <div className="w-24 h-24 rounded-3xl border-2 border-[#d4af37] flex items-center justify-center bg-black/50 shadow-[0_0_20px_rgba(212,175,55,0.15)] shrink-0">
+          {/* Avatar - Agora clicável */}
+          <button 
+            onClick={() => setView('manage')}
+            className="w-24 h-24 rounded-3xl border-2 border-[#d4af37] flex items-center justify-center bg-black/50 shadow-[0_0_20px_rgba(212,175,55,0.15)] shrink-0 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+          >
             <User size={40} className="text-[#d4af37]" strokeWidth={1.5} />
-          </div>
+          </button>
           
-          {/* Info */}
+          {/* Info - Nome agora clicável e menor */}
           <div>
-            <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter leading-none mb-4 break-words">
-              {data.clientName}
-            </h2>
+            <button 
+              onClick={() => setView('manage')}
+              className="text-left group/name hover:opacity-80 transition-opacity"
+            >
+              <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter leading-none mb-4 break-words group-hover/name:text-[#d4af37] transition-colors">
+                {data.clientName}
+              </h2>
+            </button>
             <div className="flex flex-col md:flex-row items-center gap-4 text-[10px] font-black uppercase tracking-widest justify-center md:justify-start">
               <span className="bg-[#d4af37] text-black px-3 py-1.5 rounded-lg shadow-[0_0_10px_rgba(212,175,55,0.4)]">
                 Perfil Ativo
@@ -40,10 +48,10 @@ const StudentDashboard: React.FC<Props> = ({ data, setView }) => {
           </div>
         </div>
 
-        {/* Estratégia */}
+        {/* Estratégia - Texto menor */}
         <div className="text-center md:text-right border-t border-white/5 pt-6 md:border-0 md:pt-0 w-full md:w-auto relative z-10">
           <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em] mb-2">Estratégia Atual</p>
-          <span className="text-xl md:text-2xl font-black text-[#d4af37] uppercase max-w-md block leading-tight">
+          <span className="text-sm md:text-base font-black text-[#d4af37] uppercase max-w-md block leading-tight">
             {data.protocolTitle || "Sem Objetivo Definido"}
           </span>
         </div>
@@ -52,10 +60,10 @@ const StudentDashboard: React.FC<Props> = ({ data, setView }) => {
       {/* GRID DE AÇÕES */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         
-        {/* 1. GERENCIAR ALUNO */}
+        {/* 1. GERENCIAR ALUNO - Botão inteiro clicável */}
         <button 
           onClick={() => setView('manage')}
-          className="group relative bg-[#111] p-10 rounded-[2.5rem] border border-white/5 hover:border-[#d4af37]/30 transition-all hover:bg-white/[0.02] text-left overflow-hidden h-[320px] flex flex-col justify-between"
+          className="group relative bg-[#111] p-10 rounded-[2.5rem] border border-white/5 hover:border-[#d4af37]/30 transition-all hover:bg-white/[0.02] text-left overflow-hidden h-[320px] flex flex-col justify-between cursor-pointer"
         >
           {/* Background Icon Faded */}
           <div className="absolute -right-8 -bottom-8 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity duration-500 scale-150 pointer-events-none">
@@ -79,10 +87,10 @@ const StudentDashboard: React.FC<Props> = ({ data, setView }) => {
           </div>
         </button>
 
-        {/* 2. EVOLUÇÃO */}
+        {/* 2. EVOLUÇÃO - Botão inteiro clicável */}
         <button 
           onClick={() => setView('evolution')}
-          className="group relative bg-[#111] p-10 rounded-[2.5rem] border border-white/5 hover:border-[#d4af37]/30 transition-all hover:bg-white/[0.02] text-left overflow-hidden h-[320px] flex flex-col justify-between"
+          className="group relative bg-[#111] p-10 rounded-[2.5rem] border border-white/5 hover:border-[#d4af37]/30 transition-all hover:bg-white/[0.02] text-left overflow-hidden h-[320px] flex flex-col justify-between cursor-pointer"
         >
           {/* Background Icon Faded */}
           <div className="absolute -right-8 -bottom-8 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity duration-500 scale-150 pointer-events-none">

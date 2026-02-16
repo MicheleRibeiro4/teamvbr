@@ -225,7 +225,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
           </table>
 
           <div className="mt-10 border-2 border-dashed border-gray-300 p-6 text-center text-gray-500 italic text-sm rounded-xl break-inside-avoid">
-             Lembre-se de manter a hidratação ao longo do dia (mínimo 3.5L de água).
+             Lembre-se de manter a hidratação ao longo do dia (mínimo {data.waterGoal || '3,5'}L de água).
           </div>
         </div>
 
