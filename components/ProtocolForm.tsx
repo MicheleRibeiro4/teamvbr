@@ -465,7 +465,12 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
               <div className="sm:col-span-2">
                 <label className={labelClass}>Objetivo do Protocolo</label>
-                <input className={inputClass} value={data.protocolTitle} onChange={(e) => handleChange('protocolTitle', e.target.value)} placeholder="Ex: Hipertrofia, Emagrecimento" />
+                <select className={selectClass} value={data.protocolTitle} onChange={(e) => handleChange('protocolTitle', e.target.value)}>
+                    <option value="">Selecione o Objetivo</option>
+                    <option value="Emagrecimento">Emagrecimento</option>
+                    <option value="Hipertrofia">Hipertrofia</option>
+                    <option value="Recomposição Corporal">Recomposição Corporal</option>
+                </select>
               </div>
               <div>
                 <label className={labelClass}>Data Avaliação</label>
