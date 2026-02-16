@@ -55,29 +55,24 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
     return v;
   };
 
-  // Máscara de Altura (0,00)
+  // Máscara de Altura (0,00) - Corrigida
   const handleHeightMask = (path: string, value: string) => {
     let v = value.replace(/\D/g, '');
-    if (v.length > 3) v = v.substring(0, 3); // Limita a 3 dígitos (ex: 195)
+    // Limita a 3 dígitos (ex: 9,99m máx)
+    if (v.length > 3) v = v.substring(0, 3); 
     
-    // Formatação: 175 -> 1,75
-    if (v.length >= 3) {
-       v = v.replace(/^(\d)(\d{2})$/, '$1,$2');
-    } else if (v.length === 2) {
-       v = '0,' + v;
-    } else if (v.length === 1) {
-       v = '0,0' + v;
-    } else {
-       v = '';
+    if (v === '') {
+      handleChange(path, '');
+      return;
     }
     
-    // Remove zeros à esquerda desnecessários (ex: 0,00 -> limpa se apagar tudo)
-    if(parseInt(v.replace(',','')) === 0) v = '';
-
-    handleChange(path, v);
+    // Formatação ATM: 175 -> 1,75
+    const numberValue = parseInt(v) / 100;
+    const formatted = numberValue.toFixed(2).replace('.', ',');
+    handleChange(path, formatted);
   };
 
-  // Máscara de Peso (00,00) - Estilo ATM
+  // Máscara de Peso (00,00) - Corrigida
   const handleWeightMask = (path: string, value: string) => {
     let v = value.replace(/\D/g, '');
     // Limita tamanho para evitar números gigantes (ex: 999kg)
