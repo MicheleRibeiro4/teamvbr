@@ -1,16 +1,19 @@
 
 import React, { useEffect, useState } from 'react';
 import { ProtocolData, Meal, Supplement, TrainingDay, Exercise } from '../types';
-import { Activity, User, ShieldCheck, ChevronLeft, MapPin, Dumbbell, Utensils, Pill, Plus, Trash2, FileText, AlertCircle, Sparkles, Loader2, Ruler } from 'lucide-react';
+import { Activity, User, ShieldCheck, ChevronLeft, MapPin, Dumbbell, Utensils, Pill, Plus, Trash2, FileText, AlertCircle, Sparkles, Loader2, Ruler, DollarSign } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 
 interface Props {
   data: ProtocolData;
   onChange: (data: ProtocolData) => void;
   onBack?: () => void;
+  // Novas props para controle externo das abas
+  activeTab: 'identificacao' | 'medidas' | 'nutricao' | 'treino' | 'obs';
+  onTabChange: (tab: 'identificacao' | 'medidas' | 'nutricao' | 'treino' | 'obs') => void;
 }
 
-const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
+const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTabChange }) => {
   const [isGenerating, setIsGenerating] = useState(false);
 
   // --- MÁSCARA DE DATA ---
@@ -29,8 +32,10 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
 
   // --- LÓGICA DO GERADOR IA ---
   const handleGenerateAI = async () => {
+    // Validação ajustada para a nova estrutura (Peso está na aba Medidas)
     if (!data.protocolTitle || !data.physicalData.weight) {
-      alert("Por favor, preencha pelo menos o 'Objetivo do Protocolo' e 'Peso' na seção acima para gerar.");
+      alert("Por favor, preencha pelo menos o 'Objetivo do Protocolo' e 'Peso' na aba 'Medidas' antes de gerar.");
+      onTabChange('medidas');
       return;
     }
 
@@ -322,360 +327,404 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack }) => {
   const sectionHeaderClass = "flex items-center gap-2 mb-8 border-b border-white/5 pb-4 mt-8 first:mt-0";
   const addButtonClass = "w-full py-4 border border-dashed border-white/20 rounded-xl text-white/40 font-black uppercase text-[10px] tracking-widest hover:border-[#d4af37] hover:text-[#d4af37] hover:bg-[#d4af37]/5 transition-all flex items-center justify-center gap-2";
 
+  // --- COMPONENTE DE TABS ---
+  const TabButton = ({ id, label, icon: Icon }: { id: typeof activeTab, label: string, icon: any }) => (
+    <button 
+      onClick={() => onTabChange(id)}
+      className={`flex items-center gap-2 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === id ? 'bg-[#d4af37] text-black shadow-lg shadow-[#d4af37]/20 scale-105' : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white'}`}
+    >
+      <Icon size={14} /> {label}
+    </button>
+  );
+
   return (
-    <div className="space-y-10 no-print">
+    <div className="space-y-8 no-print">
       {onBack && (
-        <button onClick={onBack} className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-[#d4af37] transition-colors">
+        <button onClick={onBack} className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-[#d4af37] transition-colors mb-4">
           <ChevronLeft size={16} /> Voltar
         </button>
       )}
 
-      {/* BLOCO 1: IDENTIFICAÇÃO */}
-      <section>
-        <div className={sectionHeaderClass}>
-          <User className="text-[#d4af37]" size={20} />
-          <h2 className="text-xl font-black text-white uppercase tracking-tighter">Identificação</h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="md:col-span-2"><label className={labelClass}>Nome Completo</label><input className={inputClass} value={data.clientName} onChange={(e) => handleChange('clientName', e.target.value)} /></div>
-          <div><label className={labelClass}>WhatsApp / Celular</label><input className={inputClass} value={data.contract.phone} onChange={(e) => handleChange('contract.phone', e.target.value)} placeholder="(00) 00000-0000" /></div>
-          <div><label className={labelClass}>CPF</label><input className={inputClass} value={data.contract.cpf} onChange={(e) => handleChange('contract.cpf', e.target.value)} placeholder="000.000.000-00" /></div>
-          
-          <div className="md:col-span-2 border-t border-white/5 pt-4 mt-2">
-            <div className="flex items-center gap-2 mb-4 text-[#d4af37]"><MapPin size={14}/> <span className="text-[10px] font-black uppercase tracking-widest">Endereço</span></div>
-            <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-              <div className="md:col-span-4"><label className={labelClass}>Rua / Logradouro</label><input className={inputClass} value={data.contract.street} onChange={(e) => handleChange('contract.street', e.target.value)} /></div>
-              <div className="md:col-span-2"><label className={labelClass}>Número</label><input className={inputClass} value={data.contract.number} onChange={(e) => handleChange('contract.number', e.target.value)} /></div>
-              <div className="md:col-span-2"><label className={labelClass}>Bairro</label><input className={inputClass} value={data.contract.neighborhood} onChange={(e) => handleChange('contract.neighborhood', e.target.value)} /></div>
-              <div className="md:col-span-3"><label className={labelClass}>Cidade</label><input className={inputClass} value={data.contract.city} onChange={(e) => handleChange('contract.city', e.target.value)} placeholder="Cidade" /></div>
-              <div className="md:col-span-1">
-                <label className={labelClass}>UF</label>
-                <select className={selectClass} value={data.contract.state} onChange={(e) => handleChange('contract.state', e.target.value)}>
-                   <option value="">--</option>
-                   {["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"].map(uf => (
-                     <option key={uf} value={uf}>{uf}</option>
-                   ))}
+      {/* NAVEGAÇÃO POR ABAS */}
+      <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
+        <TabButton id="identificacao" label="Identificação e Contrato" icon={User} />
+        {/* Ícone alterado para Ruler (Fita Métrica) conforme solicitado */}
+        <TabButton id="medidas" label="Medidas" icon={Ruler} />
+        <TabButton id="nutricao" label="Nutrição" icon={Utensils} />
+        <TabButton id="treino" label="Treino" icon={Dumbbell} />
+        <TabButton id="obs" label="Observações" icon={FileText} />
+      </div>
+
+      {/* ABA: IDENTIFICAÇÃO E CONTRATO */}
+      {activeTab === 'identificacao' && (
+        <div className="animate-in fade-in slide-in-from-left-4 duration-300 space-y-8">
+           {/* Identificação */}
+           <section>
+            <div className={sectionHeaderClass}>
+              <User className="text-[#d4af37]" size={20} />
+              <h2 className="text-xl font-black text-white uppercase tracking-tighter">Identificação do Aluno</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2"><label className={labelClass}>Nome Completo</label><input className={inputClass} value={data.clientName} onChange={(e) => handleChange('clientName', e.target.value)} /></div>
+              <div><label className={labelClass}>WhatsApp / Celular</label><input className={inputClass} value={data.contract.phone} onChange={(e) => handleChange('contract.phone', e.target.value)} placeholder="(00) 00000-0000" /></div>
+              <div><label className={labelClass}>CPF</label><input className={inputClass} value={data.contract.cpf} onChange={(e) => handleChange('contract.cpf', e.target.value)} placeholder="000.000.000-00" /></div>
+              
+              <div className="md:col-span-2 border-t border-white/5 pt-4 mt-2">
+                <div className="flex items-center gap-2 mb-4 text-[#d4af37]"><MapPin size={14}/> <span className="text-[10px] font-black uppercase tracking-widest">Endereço</span></div>
+                <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+                  <div className="md:col-span-4"><label className={labelClass}>Rua / Logradouro</label><input className={inputClass} value={data.contract.street} onChange={(e) => handleChange('contract.street', e.target.value)} /></div>
+                  <div className="md:col-span-2"><label className={labelClass}>Número</label><input className={inputClass} value={data.contract.number} onChange={(e) => handleChange('contract.number', e.target.value)} /></div>
+                  <div className="md:col-span-2"><label className={labelClass}>Bairro</label><input className={inputClass} value={data.contract.neighborhood} onChange={(e) => handleChange('contract.neighborhood', e.target.value)} /></div>
+                  <div className="md:col-span-3"><label className={labelClass}>Cidade</label><input className={inputClass} value={data.contract.city} onChange={(e) => handleChange('contract.city', e.target.value)} placeholder="Cidade" /></div>
+                  <div className="md:col-span-1">
+                    <label className={labelClass}>UF</label>
+                    <select className={selectClass} value={data.contract.state} onChange={(e) => handleChange('contract.state', e.target.value)}>
+                      <option value="">--</option>
+                      {["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"].map(uf => (
+                        <option key={uf} value={uf}>{uf}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Contrato & Financeiro */}
+          <section>
+            <div className={sectionHeaderClass}>
+              <ShieldCheck className="text-[#d4af37]" size={20} />
+              <h2 className="text-xl font-black text-white uppercase tracking-tighter">Detalhes do Contrato e Pagamento</h2>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="col-span-2">
+                <label className={labelClass}>Tipo de Plano</label>
+                <select className={selectClass} value={data.contract.planType} onChange={(e) => handleChange('contract.planType', e.target.value)}>
+                  <option value="Avulso">Avulso (1 Dia)</option>
+                  <option value="Trimestral">Trimestral (3 Meses)</option>
+                  <option value="Semestral">Semestral (6 Meses)</option>
+                </select>
+              </div>
+              <div className="col-span-2 hidden md:block"></div>
+
+              <div>
+                <label className={labelClass}>Início</label>
+                <input className={inputClass} value={data.contract.startDate} onChange={(e) => handleDateInput('contract.startDate', e.target.value)} placeholder="DD/MM/AAAA" maxLength={10} />
+              </div>
+              <div>
+                <label className={labelClass}>Término (Automático)</label>
+                <input className={inputClass + " opacity-60"} value={data.contract.endDate} readOnly />
+              </div>
+              
+              <div className="col-span-2"><label className={labelClass}>Valor do Plano (R$)</label><input className={inputClass} value={data.contract.planValue} onChange={(e) => handleChange('contract.planValue', e.target.value)} placeholder="0,00" /></div>
+              <div className="md:col-span-4"><label className={labelClass}>Valor por Extenso (Automático)</label><input className={inputClass + " opacity-60 italic bg-transparent border-none"} value={data.contract.planValueWords} readOnly /></div>
+              
+              <div className="col-span-2">
+                <label className={labelClass}>Método de Pagamento</label>
+                <select className={selectClass} value={data.contract.paymentMethod} onChange={(e) => handleChange('contract.paymentMethod', e.target.value)}>
+                  <option value="Pix">Pix (À vista)</option>
+                  <option value="Cartão de Crédito">Cartão de Crédito</option>
                 </select>
               </div>
             </div>
-          </div>
+          </section>
         </div>
-      </section>
+      )}
 
-      {/* BLOCO 2: CONTRATO & FINANCEIRO */}
-      <section>
-        <div className={sectionHeaderClass}>
-          <ShieldCheck className="text-[#d4af37]" size={20} />
-          <h2 className="text-xl font-black text-white uppercase tracking-tighter">Contrato & Financeiro</h2>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="col-span-2">
-            <label className={labelClass}>Tipo de Plano</label>
-            <select className={selectClass} value={data.contract.planType} onChange={(e) => handleChange('contract.planType', e.target.value)}>
-              <option value="Avulso">Avulso (1 Dia)</option>
-              <option value="Trimestral">Trimestral (3 Meses)</option>
-              <option value="Semestral">Semestral (6 Meses)</option>
-            </select>
-          </div>
-          <div className="col-span-2 hidden md:block"></div>
-
-          <div>
-             <label className={labelClass}>Início</label>
-             <input className={inputClass} value={data.contract.startDate} onChange={(e) => handleDateInput('contract.startDate', e.target.value)} placeholder="DD/MM/AAAA" maxLength={10} />
-          </div>
-          <div>
-             <label className={labelClass}>Término (Automático)</label>
-             <input className={inputClass + " opacity-60"} value={data.contract.endDate} readOnly />
-          </div>
-          
-          <div className="col-span-2"><label className={labelClass}>Valor do Plano (R$)</label><input className={inputClass} value={data.contract.planValue} onChange={(e) => handleChange('contract.planValue', e.target.value)} placeholder="0,00" /></div>
-          <div className="md:col-span-4"><label className={labelClass}>Valor por Extenso (Automático)</label><input className={inputClass + " opacity-60 italic bg-transparent border-none"} value={data.contract.planValueWords} readOnly /></div>
-          
-          <div className="col-span-2">
-            <label className={labelClass}>Método de Pagamento</label>
-            <select className={selectClass} value={data.contract.paymentMethod} onChange={(e) => handleChange('contract.paymentMethod', e.target.value)}>
-              <option value="Pix">Pix (À vista)</option>
-              <option value="Cartão de Crédito">Cartão de Crédito</option>
-            </select>
-          </div>
-        </div>
-      </section>
-
-      {/* BLOCO 3: BIOIMPEDÂNCIA & COMPOSIÇÃO */}
-      <section>
-        <div className={sectionHeaderClass}>
-          <Activity className="text-[#d4af37]" size={20} />
-          <h2 className="text-xl font-black text-white uppercase tracking-tighter">Bioimpedância & Composição</h2>
-        </div>
-        
-        {/* Linha 1: Dados Pessoais Básicos */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-           <div className="md:col-span-2">
-             <label className={labelClass}>Objetivo do Protocolo</label>
-             <input className={inputClass} value={data.protocolTitle} onChange={(e) => handleChange('protocolTitle', e.target.value)} placeholder="Ex: Hipertrofia, Emagrecimento" />
-           </div>
-           <div>
-             <label className={labelClass}>Data Avaliação</label>
-             <input className={inputClass} value={data.physicalData.date} onChange={(e) => handleDateInput('physicalData.date', e.target.value)} placeholder="DD/MM/AAAA" maxLength={10} />
-           </div>
-           <div>
-             <label className={labelClass}>Idade</label>
-             <input className={inputClass} value={data.physicalData.age} onChange={(e) => handleChange('physicalData.age', e.target.value)} />
-           </div>
-        </div>
-
-        {/* Linha 2: Antropometria */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-           <div>
-             <label className={labelClass}>Gênero</label>
-             <select className={selectClass} value={data.physicalData.gender} onChange={(e) => handleChange('physicalData.gender', e.target.value)}>
-               <option value="Masculino">Masculino</option>
-               <option value="Feminino">Feminino</option>
-             </select>
-           </div>
-           <div>
-             <label className={labelClass}>Peso Atual (kg)</label>
-             <input className={inputClass} value={data.physicalData.weight} onChange={(e) => handleChange('physicalData.weight', e.target.value)} placeholder="0.0" />
-           </div>
-           <div>
-             <label className={labelClass}>Altura (m)</label>
-             <input className={inputClass} value={data.physicalData.height} onChange={(e) => handleChange('physicalData.height', e.target.value)} placeholder="0.00" />
-           </div>
-           <div>
-             <label className={labelClass}>IMC (Calc. Auto)</label>
-             <input className={inputClass + " opacity-60"} value={data.physicalData.imc} readOnly />
-           </div>
-        </div>
-
-        {/* Linha 3: Composição Corporal */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-           <div>
-             <label className={labelClass}>Gordura Corporal (%)</label>
-             <input className={inputClass} value={data.physicalData.bodyFat} onChange={(e) => handleChange('physicalData.bodyFat', e.target.value)} />
-           </div>
-           <div>
-             <label className={labelClass}>Massa Muscular (kg)</label>
-             <input className={inputClass} value={data.physicalData.muscleMass} onChange={(e) => handleChange('physicalData.muscleMass', e.target.value)} />
-           </div>
-           <div>
-             <label className={labelClass}>Gordura Visceral</label>
-             <input className={inputClass} value={data.physicalData.visceralFat} onChange={(e) => handleChange('physicalData.visceralFat', e.target.value)} />
-           </div>
-           <div>
-             <label className={labelClass}>Água Corporal (%)</label>
-             <input className={inputClass} value={data.physicalData.waterPercentage || ''} onChange={(e) => handleChange('physicalData.waterPercentage', e.target.value)} />
-           </div>
-        </div>
-
-        {/* NOVAS MEDIDAS CORPORAIS */}
-        <div className="bg-white/5 p-6 rounded-2xl border border-white/5">
-          <div className="flex items-center gap-2 mb-6">
-             <Ruler className="text-[#d4af37]" size={16} />
-             <h3 className="text-sm font-black text-white uppercase tracking-widest">Medidas Corporais (cm)</h3>
-          </div>
-          
-          {/* Parte Superior */}
-          <div className="mb-6">
-            <h4 className="text-[10px] font-black text-[#d4af37] uppercase tracking-widest mb-3 border-b border-white/5 pb-1">Parte Superior</h4>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div><label className={labelClass}>Tórax / Peitoral</label><input className={inputClass} value={data.physicalData.measurements?.thorax} onChange={(e) => handleChange('physicalData.measurements.thorax', e.target.value)} /></div>
-              <div><label className={labelClass}>Cintura</label><input className={inputClass} value={data.physicalData.measurements?.waist} onChange={(e) => handleChange('physicalData.measurements.waist', e.target.value)} /></div>
-              <div><label className={labelClass}>Abdômen</label><input className={inputClass} value={data.physicalData.measurements?.abdomen} onChange={(e) => handleChange('physicalData.measurements.abdomen', e.target.value)} /></div>
-              <div><label className={labelClass}>Glúteo</label><input className={inputClass} value={data.physicalData.measurements?.glutes} onChange={(e) => handleChange('physicalData.measurements.glutes', e.target.value)} /></div>
-              
-              <div><label className={labelClass}>Braço Dir. Relaxado</label><input className={inputClass} value={data.physicalData.measurements?.rightArmRelaxed} onChange={(e) => handleChange('physicalData.measurements.rightArmRelaxed', e.target.value)} /></div>
-              <div><label className={labelClass}>Braço Esq. Relaxado</label><input className={inputClass} value={data.physicalData.measurements?.leftArmRelaxed} onChange={(e) => handleChange('physicalData.measurements.leftArmRelaxed', e.target.value)} /></div>
-              <div><label className={labelClass}>Braço Dir. Contraído</label><input className={inputClass} value={data.physicalData.measurements?.rightArmContracted} onChange={(e) => handleChange('physicalData.measurements.rightArmContracted', e.target.value)} /></div>
-              <div><label className={labelClass}>Braço Esq. Contraído</label><input className={inputClass} value={data.physicalData.measurements?.leftArmContracted} onChange={(e) => handleChange('physicalData.measurements.leftArmContracted', e.target.value)} /></div>
-            </div>
-          </div>
-
-          {/* Parte Inferior */}
-          <div>
-            <h4 className="text-[10px] font-black text-[#d4af37] uppercase tracking-widest mb-3 border-b border-white/5 pb-1">Parte Inferior</h4>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div><label className={labelClass}>Coxa Direita</label><input className={inputClass} value={data.physicalData.measurements?.rightThigh} onChange={(e) => handleChange('physicalData.measurements.rightThigh', e.target.value)} /></div>
-              <div><label className={labelClass}>Coxa Esquerda</label><input className={inputClass} value={data.physicalData.measurements?.leftThigh} onChange={(e) => handleChange('physicalData.measurements.leftThigh', e.target.value)} /></div>
-              <div><label className={labelClass}>Panturrilha Direita</label><input className={inputClass} value={data.physicalData.measurements?.rightCalf} onChange={(e) => handleChange('physicalData.measurements.rightCalf', e.target.value)} /></div>
-              <div><label className={labelClass}>Panturrilha Esquerda</label><input className={inputClass} value={data.physicalData.measurements?.leftCalf} onChange={(e) => handleChange('physicalData.measurements.leftCalf', e.target.value)} /></div>
-            </div>
-          </div>
-        </div>
-
-      </section>
-
-      {/* BLOCO 4: ESTRATÉGIA NUTRICIONAL (AGORA ANTES DA IA) */}
-      <section>
-        <div className={sectionHeaderClass}>
-           <Utensils className="text-[#d4af37]" size={20} />
-           <h2 className="text-xl font-black text-white uppercase tracking-tighter">Estratégia Nutricional</h2>
-        </div>
-        <div>
-           <label className={labelClass}>Descreva a linha de raciocínio da dieta (Use isso para guiar a IA)...</label>
-           <textarea 
-             className={textAreaClass}
-             value={data.nutritionalStrategy}
-             onChange={(e) => handleChange('nutritionalStrategy', e.target.value)}
-             placeholder="Ex: Dieta Cetogênica, Ciclo de Carboidratos, Jejum Intermitente..."
-           />
-        </div>
-        <div className="grid grid-cols-2 gap-4 mt-4">
-           <div>
-              <label className={labelClass}>Meta Calórica (Kcal)</label>
-              <input className={inputClass} value={data.kcalGoal} onChange={(e) => handleChange('kcalGoal', e.target.value)} placeholder="Ex: 2500 (Deixe vazio para IA calcular)" />
-           </div>
-           <div>
-              <label className={labelClass}>Subtexto da Meta</label>
-              <input className={inputClass} value={data.kcalSubtext} onChange={(e) => handleChange('kcalSubtext', e.target.value)} placeholder="Ex: Déficit Moderado" />
-           </div>
-        </div>
-      </section>
-
-      {/* BLOCO IA: GERADOR AUTOMÁTICO */}
-      <section className="bg-gradient-to-r from-[#d4af37]/10 to-transparent p-6 rounded-2xl border border-[#d4af37]/20 relative overflow-hidden group">
-         <div className="absolute top-0 right-0 w-32 h-32 bg-[#d4af37] blur-[80px] opacity-10"></div>
-         
-         <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
-            <div className="flex items-start gap-4">
-               <div className="p-3 bg-[#d4af37] text-black rounded-xl">
-                 <Sparkles size={24} />
-               </div>
-               <div>
-                  <h3 className="text-xl font-black text-white uppercase tracking-tighter">Gerador de Protocolo IA</h3>
-                  <p className="text-sm text-white/60 max-w-lg">
-                    A IA usará seus dados de bioimpedância e a estratégia nutricional definida acima para criar um plano completo.
-                  </p>
-               </div>
+      {/* ABA: MEDIDAS (Bioimpedância + Medidas Corporais) */}
+      {activeTab === 'medidas' && (
+        <div className="animate-in fade-in slide-in-from-right-4 duration-300 space-y-8">
+          {/* Bioimpedância & Composição */}
+          <section>
+            <div className={sectionHeaderClass}>
+              <Activity className="text-[#d4af37]" size={20} />
+              <h2 className="text-xl font-black text-white uppercase tracking-tighter">Bioimpedância & Composição</h2>
             </div>
             
-            <button 
-              onClick={handleGenerateAI} 
-              disabled={isGenerating}
-              className="px-8 py-4 bg-[#d4af37] text-black rounded-xl font-black uppercase text-xs tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto justify-center"
-            >
-              {isGenerating ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
-              {isGenerating ? 'Gerando...' : 'Gerar Protocolo Agora'}
-            </button>
-         </div>
-      </section>
+            {/* Linha 1: Dados Pessoais Básicos */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+              <div className="md:col-span-2">
+                <label className={labelClass}>Objetivo do Protocolo</label>
+                <input className={inputClass} value={data.protocolTitle} onChange={(e) => handleChange('protocolTitle', e.target.value)} placeholder="Ex: Hipertrofia, Emagrecimento" />
+              </div>
+              <div>
+                <label className={labelClass}>Data Avaliação</label>
+                <input className={inputClass} value={data.physicalData.date} onChange={(e) => handleDateInput('physicalData.date', e.target.value)} placeholder="DD/MM/AAAA" maxLength={10} />
+              </div>
+              <div>
+                <label className={labelClass}>Idade</label>
+                <input className={inputClass} value={data.physicalData.age} onChange={(e) => handleChange('physicalData.age', e.target.value)} />
+              </div>
+            </div>
 
-      {/* BLOCO 5: DISTRIBUIÇÃO DE REFEIÇÕES */}
-      <section>
-        <div className={sectionHeaderClass}>
-           <Activity className="text-[#d4af37]" size={20} />
-           <h2 className="text-xl font-black text-white uppercase tracking-tighter">Distribuição de Refeições</h2>
-        </div>
-        <div className="space-y-4">
-           {data.meals.map((meal, index) => (
-             <div key={meal.id} className="bg-white/5 p-4 rounded-xl border border-white/5 flex flex-col md:flex-row gap-4 items-start group">
-                <div className="w-full md:w-1/4">
-                   <label className={labelClass}>Horário</label>
-                   <input className={inputClass} value={meal.time} onChange={(e) => updateMeal(index, 'time', e.target.value)} placeholder="08:00" />
-                </div>
-                <div className="flex-1 w-full">
-                   <label className={labelClass}>Nome da Refeição</label>
-                   <input className={inputClass + " mb-2"} value={meal.name} onChange={(e) => updateMeal(index, 'name', e.target.value)} placeholder="Café da Manhã" />
-                   <textarea className={inputClass + " min-h-[60px]"} value={meal.details} onChange={(e) => updateMeal(index, 'details', e.target.value)} placeholder="Detalhes dos alimentos..." />
-                </div>
-                <button onClick={() => removeMeal(index)} className="mt-0 md:mt-6 w-full md:w-auto p-2 bg-red-500/10 text-red-500 rounded-lg md:bg-transparent md:text-white/20 hover:text-red-500 transition-colors flex justify-center items-center"><Trash2 size={18} /></button>
-             </div>
-           ))}
-           <button onClick={addMeal} className={addButtonClass}>
-              <Plus size={16} /> Adicionar Refeição
-           </button>
-        </div>
-      </section>
+            {/* Linha 2: Antropometria */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+              <div>
+                <label className={labelClass}>Gênero</label>
+                <select className={selectClass} value={data.physicalData.gender} onChange={(e) => handleChange('physicalData.gender', e.target.value)}>
+                  <option value="Masculino">Masculino</option>
+                  <option value="Feminino">Feminino</option>
+                </select>
+              </div>
+              <div>
+                <label className={labelClass}>Peso Atual (kg)</label>
+                <input className={inputClass} value={data.physicalData.weight} onChange={(e) => handleChange('physicalData.weight', e.target.value)} placeholder="0.0" />
+              </div>
+              <div>
+                <label className={labelClass}>Altura (m)</label>
+                <input className={inputClass} value={data.physicalData.height} onChange={(e) => handleChange('physicalData.height', e.target.value)} placeholder="0.00" />
+              </div>
+              <div>
+                <label className={labelClass}>IMC (Calc. Auto)</label>
+                <input className={inputClass + " opacity-60"} value={data.physicalData.imc} readOnly />
+              </div>
+            </div>
 
-      {/* BLOCO 6: SUPLEMENTAÇÃO */}
-      <section>
-        <div className={sectionHeaderClass}>
-          <Pill className="text-[#d4af37]" size={20} />
-          <h2 className="text-xl font-black text-white uppercase tracking-tighter">Suplementação</h2>
-        </div>
-        <div className="space-y-4">
-           {data.supplements.map((supp, index) => (
-             <div key={supp.id} className="bg-white/5 p-4 rounded-xl border border-white/5 flex flex-col md:flex-row gap-4 items-end group">
-                <div className="flex-1 w-full">
-                   <label className={labelClass}>Nome</label>
-                   <input className={inputClass} value={supp.name} onChange={(e) => updateSupplement(index, 'name', e.target.value)} placeholder="Creatina" />
-                </div>
-                <div className="w-full md:w-1/4">
-                   <label className={labelClass}>Dose</label>
-                   <input className={inputClass} value={supp.dosage} onChange={(e) => updateSupplement(index, 'dosage', e.target.value)} placeholder="5g" />
-                </div>
-                <div className="w-full md:w-1/3">
-                   <label className={labelClass}>Horário</label>
-                   <input className={inputClass} value={supp.timing} onChange={(e) => updateSupplement(index, 'timing', e.target.value)} placeholder="Pós-treino" />
-                </div>
-                <button onClick={() => removeSupplement(index)} className="w-full md:w-auto p-3 bg-red-500/10 rounded-lg md:bg-transparent md:p-3 text-red-500 md:text-white/20 hover:text-red-500 transition-colors flex justify-center"><Trash2 size={18} /></button>
-             </div>
-           ))}
-           <button onClick={addSupplement} className={addButtonClass}>
-              <Plus size={16} /> Adicionar Suplementação
-           </button>
-        </div>
-      </section>
+            {/* Linha 3: Composição Corporal */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              <div>
+                <label className={labelClass}>Gordura Corporal (%)</label>
+                <input className={inputClass} value={data.physicalData.bodyFat} onChange={(e) => handleChange('physicalData.bodyFat', e.target.value)} />
+              </div>
+              <div>
+                <label className={labelClass}>Massa Muscular (kg)</label>
+                <input className={inputClass} value={data.physicalData.muscleMass} onChange={(e) => handleChange('physicalData.muscleMass', e.target.value)} />
+              </div>
+              <div>
+                <label className={labelClass}>Gordura Visceral</label>
+                <input className={inputClass} value={data.physicalData.visceralFat} onChange={(e) => handleChange('physicalData.visceralFat', e.target.value)} />
+              </div>
+              <div>
+                <label className={labelClass}>Água Corporal (%)</label>
+                <input className={inputClass} value={data.physicalData.waterPercentage || ''} onChange={(e) => handleChange('physicalData.waterPercentage', e.target.value)} />
+              </div>
+            </div>
 
-      {/* BLOCO 7: DIVISÃO DE TREINOS */}
-      <section>
-        <div className={sectionHeaderClass}>
-          <Dumbbell className="text-[#d4af37]" size={20} />
-          <h2 className="text-xl font-black text-white uppercase tracking-tighter">Divisão de Treinos</h2>
+            {/* NOVAS MEDIDAS CORPORAIS */}
+            <div className="bg-white/5 p-6 rounded-2xl border border-white/5">
+              <div className="flex items-center gap-2 mb-6">
+                <Ruler className="text-[#d4af37]" size={16} />
+                <h3 className="text-sm font-black text-white uppercase tracking-widest">Medidas Corporais (cm)</h3>
+              </div>
+              
+              {/* Parte Superior */}
+              <div className="mb-6">
+                <h4 className="text-[10px] font-black text-[#d4af37] uppercase tracking-widest mb-3 border-b border-white/5 pb-1">Parte Superior</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div><label className={labelClass}>Tórax / Peitoral</label><input className={inputClass} value={data.physicalData.measurements?.thorax} onChange={(e) => handleChange('physicalData.measurements.thorax', e.target.value)} /></div>
+                  <div><label className={labelClass}>Cintura</label><input className={inputClass} value={data.physicalData.measurements?.waist} onChange={(e) => handleChange('physicalData.measurements.waist', e.target.value)} /></div>
+                  <div><label className={labelClass}>Abdômen</label><input className={inputClass} value={data.physicalData.measurements?.abdomen} onChange={(e) => handleChange('physicalData.measurements.abdomen', e.target.value)} /></div>
+                  <div><label className={labelClass}>Glúteo</label><input className={inputClass} value={data.physicalData.measurements?.glutes} onChange={(e) => handleChange('physicalData.measurements.glutes', e.target.value)} /></div>
+                  
+                  <div><label className={labelClass}>Braço Dir. Relaxado</label><input className={inputClass} value={data.physicalData.measurements?.rightArmRelaxed} onChange={(e) => handleChange('physicalData.measurements.rightArmRelaxed', e.target.value)} /></div>
+                  <div><label className={labelClass}>Braço Esq. Relaxado</label><input className={inputClass} value={data.physicalData.measurements?.leftArmRelaxed} onChange={(e) => handleChange('physicalData.measurements.leftArmRelaxed', e.target.value)} /></div>
+                  <div><label className={labelClass}>Braço Dir. Contraído</label><input className={inputClass} value={data.physicalData.measurements?.rightArmContracted} onChange={(e) => handleChange('physicalData.measurements.rightArmContracted', e.target.value)} /></div>
+                  <div><label className={labelClass}>Braço Esq. Contraído</label><input className={inputClass} value={data.physicalData.measurements?.leftArmContracted} onChange={(e) => handleChange('physicalData.measurements.leftArmContracted', e.target.value)} /></div>
+                </div>
+              </div>
+
+              {/* Parte Inferior */}
+              <div>
+                <h4 className="text-[10px] font-black text-[#d4af37] uppercase tracking-widest mb-3 border-b border-white/5 pb-1">Parte Inferior</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div><label className={labelClass}>Coxa Direita</label><input className={inputClass} value={data.physicalData.measurements?.rightThigh} onChange={(e) => handleChange('physicalData.measurements.rightThigh', e.target.value)} /></div>
+                  <div><label className={labelClass}>Coxa Esquerda</label><input className={inputClass} value={data.physicalData.measurements?.leftThigh} onChange={(e) => handleChange('physicalData.measurements.leftThigh', e.target.value)} /></div>
+                  <div><label className={labelClass}>Panturrilha Direita</label><input className={inputClass} value={data.physicalData.measurements?.rightCalf} onChange={(e) => handleChange('physicalData.measurements.rightCalf', e.target.value)} /></div>
+                  <div><label className={labelClass}>Panturrilha Esquerda</label><input className={inputClass} value={data.physicalData.measurements?.leftCalf} onChange={(e) => handleChange('physicalData.measurements.leftCalf', e.target.value)} /></div>
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
-        <div className="mb-6">
-           <label className={labelClass}>Frequência Semanal</label>
-           <input className={inputClass} value={data.trainingFrequency} onChange={(e) => handleChange('trainingFrequency', e.target.value)} placeholder="Ex: 5x na semana" />
+      )}
+
+      {/* ABA: NUTRIÇÃO */}
+      {activeTab === 'nutricao' && (
+        <div className="animate-in fade-in slide-in-from-right-4 duration-300 space-y-8">
+           {/* ESTRATÉGIA NUTRICIONAL */}
+          <section>
+            <div className={sectionHeaderClass}>
+              <Utensils className="text-[#d4af37]" size={20} />
+              <h2 className="text-xl font-black text-white uppercase tracking-tighter">Estratégia Nutricional</h2>
+            </div>
+            <div>
+              <label className={labelClass}>Descreva a linha de raciocínio da dieta (Use isso para guiar a IA)...</label>
+              <textarea 
+                className={textAreaClass}
+                value={data.nutritionalStrategy}
+                onChange={(e) => handleChange('nutritionalStrategy', e.target.value)}
+                placeholder="Ex: Dieta Cetogênica, Ciclo de Carboidratos, Jejum Intermitente..."
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4 mt-4">
+              <div>
+                  <label className={labelClass}>Meta Calórica (Kcal)</label>
+                  <input className={inputClass} value={data.kcalGoal} onChange={(e) => handleChange('kcalGoal', e.target.value)} placeholder="Ex: 2500 (Deixe vazio para IA calcular)" />
+              </div>
+              <div>
+                  <label className={labelClass}>Subtexto da Meta</label>
+                  <input className={inputClass} value={data.kcalSubtext} onChange={(e) => handleChange('kcalSubtext', e.target.value)} placeholder="Ex: Déficit Moderado" />
+              </div>
+            </div>
+          </section>
+
+          {/* GERADOR AUTOMÁTICO IA */}
+          <section className="bg-gradient-to-r from-[#d4af37]/10 to-transparent p-6 rounded-2xl border border-[#d4af37]/20 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[#d4af37] blur-[80px] opacity-10"></div>
+            
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-[#d4af37] text-black rounded-xl">
+                    <Sparkles size={24} />
+                  </div>
+                  <div>
+                      <h3 className="text-xl font-black text-white uppercase tracking-tighter">Gerador de Protocolo IA</h3>
+                      <p className="text-sm text-white/60 max-w-lg">
+                        A IA usará seus dados de bioimpedância e a estratégia nutricional definida acima para criar um plano completo.
+                      </p>
+                  </div>
+                </div>
+                
+                <button 
+                  onClick={handleGenerateAI} 
+                  disabled={isGenerating}
+                  className="px-8 py-4 bg-[#d4af37] text-black rounded-xl font-black uppercase text-xs tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto justify-center"
+                >
+                  {isGenerating ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
+                  {isGenerating ? 'Gerando...' : 'Gerar Protocolo Agora'}
+                </button>
+            </div>
+          </section>
+
+          {/* DISTRIBUIÇÃO DE REFEIÇÕES */}
+          <section>
+            <div className={sectionHeaderClass}>
+              <Activity className="text-[#d4af37]" size={20} />
+              <h2 className="text-xl font-black text-white uppercase tracking-tighter">Distribuição de Refeições</h2>
+            </div>
+            <div className="space-y-4">
+              {data.meals.map((meal, index) => (
+                <div key={meal.id} className="bg-white/5 p-4 rounded-xl border border-white/5 flex flex-col md:flex-row gap-4 items-start group">
+                    <div className="w-full md:w-1/4">
+                      <label className={labelClass}>Horário</label>
+                      <input className={inputClass} value={meal.time} onChange={(e) => updateMeal(index, 'time', e.target.value)} placeholder="08:00" />
+                    </div>
+                    <div className="flex-1 w-full">
+                      <label className={labelClass}>Nome da Refeição</label>
+                      <input className={inputClass + " mb-2"} value={meal.name} onChange={(e) => updateMeal(index, 'name', e.target.value)} placeholder="Café da Manhã" />
+                      <textarea className={inputClass + " min-h-[60px]"} value={meal.details} onChange={(e) => updateMeal(index, 'details', e.target.value)} placeholder="Detalhes dos alimentos..." />
+                    </div>
+                    <button onClick={() => removeMeal(index)} className="mt-0 md:mt-6 w-full md:w-auto p-2 bg-red-500/10 text-red-500 rounded-lg md:bg-transparent md:text-white/20 hover:text-red-500 transition-colors flex justify-center items-center"><Trash2 size={18} /></button>
+                </div>
+              ))}
+              <button onClick={addMeal} className={addButtonClass}>
+                  <Plus size={16} /> Adicionar Refeição
+              </button>
+            </div>
+          </section>
+
+          {/* SUPLEMENTAÇÃO */}
+          <section>
+            <div className={sectionHeaderClass}>
+              <Pill className="text-[#d4af37]" size={20} />
+              <h2 className="text-xl font-black text-white uppercase tracking-tighter">Suplementação</h2>
+            </div>
+            <div className="space-y-4">
+              {data.supplements.map((supp, index) => (
+                <div key={supp.id} className="bg-white/5 p-4 rounded-xl border border-white/5 flex flex-col md:flex-row gap-4 items-end group">
+                    <div className="flex-1 w-full">
+                      <label className={labelClass}>Nome</label>
+                      <input className={inputClass} value={supp.name} onChange={(e) => updateSupplement(index, 'name', e.target.value)} placeholder="Creatina" />
+                    </div>
+                    <div className="w-full md:w-1/4">
+                      <label className={labelClass}>Dose</label>
+                      <input className={inputClass} value={supp.dosage} onChange={(e) => updateSupplement(index, 'dosage', e.target.value)} placeholder="5g" />
+                    </div>
+                    <div className="w-full md:w-1/3">
+                      <label className={labelClass}>Horário</label>
+                      <input className={inputClass} value={supp.timing} onChange={(e) => updateSupplement(index, 'timing', e.target.value)} placeholder="Pós-treino" />
+                    </div>
+                    <button onClick={() => removeSupplement(index)} className="w-full md:w-auto p-3 bg-red-500/10 rounded-lg md:bg-transparent md:p-3 text-red-500 md:text-white/20 hover:text-red-500 transition-colors flex justify-center"><Trash2 size={18} /></button>
+                </div>
+              ))}
+              <button onClick={addSupplement} className={addButtonClass}>
+                  <Plus size={16} /> Adicionar Suplementação
+              </button>
+            </div>
+          </section>
         </div>
-        <div className="space-y-8">
-           {data.trainingDays.map((day, dIndex) => (
-             <div key={day.id} className="bg-white/5 p-6 rounded-2xl border border-white/10">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 border-b border-white/5 pb-4 gap-4 md:gap-0">
-                   <div className="flex flex-col md:flex-row gap-4 flex-1 w-full">
-                      <div className="w-full md:w-1/3">
-                        <label className={labelClass}>Título do Treino</label>
-                        <input className={inputClass} value={day.title} onChange={(e) => updateTrainingDay(dIndex, 'title', e.target.value)} placeholder="Treino A" />
+      )}
+
+      {/* ABA: TREINO */}
+      {activeTab === 'treino' && (
+        <div className="animate-in fade-in slide-in-from-right-4 duration-300 space-y-8">
+           {/* DIVISÃO DE TREINOS */}
+          <section>
+            <div className={sectionHeaderClass}>
+              <Dumbbell className="text-[#d4af37]" size={20} />
+              <h2 className="text-xl font-black text-white uppercase tracking-tighter">Divisão de Treinos</h2>
+            </div>
+            <div className="mb-6">
+              <label className={labelClass}>Frequência Semanal</label>
+              <input className={inputClass} value={data.trainingFrequency} onChange={(e) => handleChange('trainingFrequency', e.target.value)} placeholder="Ex: 5x na semana" />
+            </div>
+            <div className="space-y-8">
+              {data.trainingDays.map((day, dIndex) => (
+                <div key={day.id} className="bg-white/5 p-6 rounded-2xl border border-white/10">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 border-b border-white/5 pb-4 gap-4 md:gap-0">
+                      <div className="flex flex-col md:flex-row gap-4 flex-1 w-full">
+                          <div className="w-full md:w-1/3">
+                            <label className={labelClass}>Título do Treino</label>
+                            <input className={inputClass} value={day.title} onChange={(e) => updateTrainingDay(dIndex, 'title', e.target.value)} placeholder="Treino A" />
+                          </div>
+                          <div className="flex-1 w-full">
+                            <label className={labelClass}>Foco Muscular</label>
+                            <input className={inputClass} value={day.focus} onChange={(e) => updateTrainingDay(dIndex, 'focus', e.target.value)} placeholder="Peito e Tríceps" />
+                          </div>
                       </div>
-                      <div className="flex-1 w-full">
-                        <label className={labelClass}>Foco Muscular</label>
-                        <input className={inputClass} value={day.focus} onChange={(e) => updateTrainingDay(dIndex, 'focus', e.target.value)} placeholder="Peito e Tríceps" />
-                      </div>
-                   </div>
-                   <button onClick={() => removeTrainingDay(dIndex)} className="ml-0 md:ml-4 p-2 bg-red-500/10 rounded-lg md:bg-transparent text-red-500 md:text-white/20 hover:text-red-500 w-full md:w-auto flex justify-center"><Trash2 size={20} /></button>
-                </div>
+                      <button onClick={() => removeTrainingDay(dIndex)} className="ml-0 md:ml-4 p-2 bg-red-500/10 rounded-lg md:bg-transparent text-red-500 md:text-white/20 hover:text-red-500 w-full md:w-auto flex justify-center"><Trash2 size={20} /></button>
+                    </div>
 
-                <div className="space-y-2 pl-0 md:pl-4 border-l-0 md:border-l-2 border-white/5">
-                   {day.exercises.map((ex, exIndex) => (
-                     <div key={ex.id} className="flex gap-2 md:gap-4 items-center">
-                        <input className={inputClass + " py-2 text-xs"} value={ex.name} onChange={(e) => updateExercise(dIndex, exIndex, 'name', e.target.value)} placeholder="Nome do Exercício" />
-                        <input className={inputClass + " py-2 text-xs w-20 md:w-32"} value={ex.sets} onChange={(e) => updateExercise(dIndex, exIndex, 'sets', e.target.value)} placeholder="Séries" />
-                        <button onClick={() => removeExercise(dIndex, exIndex)} className="text-white/20 hover:text-red-500 p-2"><Trash2 size={14} /></button>
-                     </div>
-                   ))}
-                   <button onClick={() => addExercise(dIndex)} className="mt-2 text-[10px] font-bold text-[#d4af37] uppercase tracking-widest hover:underline flex items-center gap-1">
-                      <Plus size={10} /> Add Exercício
-                   </button>
+                    <div className="space-y-2 pl-0 md:pl-4 border-l-0 md:border-l-2 border-white/5">
+                      {day.exercises.map((ex, exIndex) => (
+                        <div key={ex.id} className="flex gap-2 md:gap-4 items-center">
+                            <input className={inputClass + " py-2 text-xs"} value={ex.name} onChange={(e) => updateExercise(dIndex, exIndex, 'name', e.target.value)} placeholder="Nome do Exercício" />
+                            <input className={inputClass + " py-2 text-xs w-20 md:w-32"} value={ex.sets} onChange={(e) => updateExercise(dIndex, exIndex, 'sets', e.target.value)} placeholder="Séries" />
+                            <button onClick={() => removeExercise(dIndex, exIndex)} className="text-white/20 hover:text-red-500 p-2"><Trash2 size={14} /></button>
+                        </div>
+                      ))}
+                      <button onClick={() => addExercise(dIndex)} className="mt-2 text-[10px] font-bold text-[#d4af37] uppercase tracking-widest hover:underline flex items-center gap-1">
+                          <Plus size={10} /> Add Exercício
+                      </button>
+                    </div>
                 </div>
-             </div>
-           ))}
-           <button onClick={addTrainingDay} className={addButtonClass}>
-              <Plus size={16} /> Novo Bloco de Treino
-           </button>
+              ))}
+              <button onClick={addTrainingDay} className={addButtonClass}>
+                  <Plus size={16} /> Novo Bloco de Treino
+              </button>
+            </div>
+          </section>
         </div>
-      </section>
+      )}
 
-      {/* BLOCO 8: OBSERVAÇÕES */}
-      <section>
-        <div className={sectionHeaderClass}>
-          <AlertCircle className="text-[#d4af37]" size={20} />
-          <h2 className="text-xl font-black text-white uppercase tracking-tighter">Observação</h2>
+      {/* ABA: OBS */}
+      {activeTab === 'obs' && (
+        <div className="animate-in fade-in slide-in-from-right-4 duration-300 space-y-8">
+          {/* OBSERVAÇÕES */}
+          <section>
+            <div className={sectionHeaderClass}>
+              <AlertCircle className="text-[#d4af37]" size={20} />
+              <h2 className="text-xl font-black text-white uppercase tracking-tighter">Observação</h2>
+            </div>
+            <textarea 
+                className={textAreaClass}
+                value={data.generalObservations}
+                onChange={(e) => handleChange('generalObservations', e.target.value)}
+                placeholder="Recomendações finais para o aluno..."
+              />
+          </section>
         </div>
-        <textarea 
-             className={textAreaClass}
-             value={data.generalObservations}
-             onChange={(e) => handleChange('generalObservations', e.target.value)}
-             placeholder="Recomendações finais para o aluno..."
-           />
-      </section>
+      )}
 
     </div>
   );

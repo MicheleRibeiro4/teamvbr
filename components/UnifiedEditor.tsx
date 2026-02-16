@@ -4,7 +4,7 @@ import { ProtocolData } from '../types';
 import ProtocolForm from './ProtocolForm';
 import ProtocolPreview, { ProtocolPreviewHandle } from './ProtocolPreview';
 import ContractPreview, { ContractPreviewHandle } from './ContractPreview';
-import { FileText, ScrollText, ChevronLeft, Settings2, Download, Eye } from 'lucide-react';
+import { ChevronLeft, Settings2, Download } from 'lucide-react';
 
 interface Props {
   data: ProtocolData;
@@ -13,16 +13,20 @@ interface Props {
 }
 
 const UnifiedEditor: React.FC<Props> = ({ data, onChange, onBack }) => {
-  const [previewMode, setPreviewMode] = useState<'protocol' | 'contract'>('protocol');
+  // Estado elevado para controlar qual aba está ativa no formulário
+  const [activeTab, setActiveTab] = useState<'identificacao' | 'medidas' | 'nutricao' | 'treino' | 'obs'>('identificacao');
   
   // Refs para acionar os downloads dentro dos componentes filhos
   const protocolRef = useRef<ProtocolPreviewHandle>(null);
   const contractRef = useRef<ContractPreviewHandle>(null);
 
+  // Determina qual modo de visualização usar baseado na aba ativa
+  const isContractView = activeTab === 'identificacao';
+
   const handleDownloadCurrent = () => {
-    if (previewMode === 'protocol' && protocolRef.current) {
+    if (!isContractView && protocolRef.current) {
       protocolRef.current.download();
-    } else if (previewMode === 'contract' && contractRef.current) {
+    } else if (isContractView && contractRef.current) {
       contractRef.current.download();
     }
   };
@@ -47,7 +51,12 @@ const UnifiedEditor: React.FC<Props> = ({ data, onChange, onBack }) => {
         {/* LADO DO FORMULÁRIO ÚNICO (INTEGRADO) */}
         <div className="w-full xl:w-2/5 no-print">
           <div className="bg-white/5 p-4 md:p-10 rounded-[3rem] border border-white/10 shadow-2xl">
-            <ProtocolForm data={data} onChange={onChange} />
+            <ProtocolForm 
+              data={data} 
+              onChange={onChange} 
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            />
           </div>
         </div>
 
@@ -57,20 +66,9 @@ const UnifiedEditor: React.FC<Props> = ({ data, onChange, onBack }) => {
            {/* BARRA DE FERRAMENTAS DO PREVIEW */}
            <div className="no-print w-full bg-[#111] p-4 rounded-[2rem] border border-white/10 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4">
               
-              {/* Botões de Visualização */}
-              <div className="flex gap-2 bg-black/50 p-1.5 rounded-xl border border-white/5">
-                <button 
-                  onClick={() => setPreviewMode('protocol')}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${previewMode === 'protocol' ? 'bg-[#d4af37] text-black shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
-                >
-                  <Eye size={14} /> Visualizar Protocolo
-                </button>
-                <button 
-                  onClick={() => setPreviewMode('contract')}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${previewMode === 'contract' ? 'bg-[#d4af37] text-black shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
-                >
-                  <Eye size={14} /> Visualizar Contrato
-                </button>
+              {/* Indicador do que está sendo visualizado */}
+              <div className="flex gap-2 bg-black/50 p-3 px-6 rounded-xl border border-white/5 text-white/60 text-[10px] font-black uppercase tracking-widest">
+                Visualizando: <span className="text-[#d4af37]">{isContractView ? 'Contrato' : 'Protocolo Completo'}</span>
               </div>
 
               {/* Botão de Salvar/Download */}
@@ -79,17 +77,18 @@ const UnifiedEditor: React.FC<Props> = ({ data, onChange, onBack }) => {
                 className="w-full md:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-white/5 hover:bg-[#d4af37] hover:text-black text-white border border-white/10 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all shadow-lg active:scale-95 group"
               >
                 <Download size={16} className="group-hover:animate-bounce" />
-                Salvar PDF {previewMode === 'protocol' ? 'do Protocolo' : 'do Contrato'}
+                Salvar PDF {!isContractView ? 'do Protocolo' : 'do Contrato'}
               </button>
            </div>
            
            {/* ÁREA DE PREVIEW */}
            <div className="w-full flex justify-center bg-white/5 p-4 md:p-10 rounded-[2rem] md:rounded-[4rem] border-2 border-dashed border-white/10 relative overflow-hidden min-h-[500px] md:min-h-[900px]">
               <div className="transform scale-[0.45] md:scale-[0.7] xl:scale-[0.75] origin-top">
-                <div style={{ display: previewMode === 'protocol' ? 'block' : 'none' }}>
+                {/* Renderização Condicional Baseada na Aba */}
+                <div style={{ display: !isContractView ? 'block' : 'none' }}>
                   <ProtocolPreview ref={protocolRef} data={data} hideFloatingButton={true} />
                 </div>
-                <div style={{ display: previewMode === 'contract' ? 'block' : 'none' }}>
+                <div style={{ display: isContractView ? 'block' : 'none' }}>
                   <ContractPreview ref={contractRef} data={data} hideFloatingButton={true} />
                 </div>
               </div>
