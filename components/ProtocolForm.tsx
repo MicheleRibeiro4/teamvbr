@@ -719,6 +719,51 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
             </div>
           </section>
 
+          {/* DISTRIBUIÇÃO DE MACRONUTRIENTES */}
+          <section>
+            <div className={sectionHeaderClass}>
+              <Activity className="text-[#d4af37]" size={20} />
+              <h2 className="text-xl font-black text-white uppercase tracking-tighter">Distribuição de Macronutrientes</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Proteínas */}
+              <div className="bg-white/5 p-4 rounded-xl border border-white/5">
+                <div className="flex items-center justify-between mb-2">
+                  <label className={labelClass}>Proteínas</label>
+                  <span className="text-[9px] text-[#d4af37] font-black uppercase tracking-widest">g/kg</span>
+                </div>
+                <div className="flex gap-2">
+                  <input className={inputClass} value={data.macros.protein.value} onChange={(e) => handleChange('macros.protein.value', e.target.value)} placeholder="Ex: 180" />
+                  <input className={inputClass} value={data.macros.protein.ratio} onChange={(e) => handleChange('macros.protein.ratio', e.target.value)} placeholder="2.0" />
+                </div>
+              </div>
+
+              {/* Carboidratos */}
+              <div className="bg-white/5 p-4 rounded-xl border border-white/5">
+                <div className="flex items-center justify-between mb-2">
+                  <label className={labelClass}>Carboidratos</label>
+                  <span className="text-[9px] text-[#d4af37] font-black uppercase tracking-widest">g/kg</span>
+                </div>
+                <div className="flex gap-2">
+                  <input className={inputClass} value={data.macros.carbs.value} onChange={(e) => handleChange('macros.carbs.value', e.target.value)} placeholder="Ex: 250" />
+                  <input className={inputClass} value={data.macros.carbs.ratio} onChange={(e) => handleChange('macros.carbs.ratio', e.target.value)} placeholder="3.0" />
+                </div>
+              </div>
+
+              {/* Gorduras */}
+              <div className="bg-white/5 p-4 rounded-xl border border-white/5">
+                <div className="flex items-center justify-between mb-2">
+                  <label className={labelClass}>Gorduras</label>
+                  <span className="text-[9px] text-[#d4af37] font-black uppercase tracking-widest">g/kg</span>
+                </div>
+                <div className="flex gap-2">
+                  <input className={inputClass} value={data.macros.fats.value} onChange={(e) => handleChange('macros.fats.value', e.target.value)} placeholder="Ex: 60" />
+                  <input className={inputClass} value={data.macros.fats.ratio} onChange={(e) => handleChange('macros.fats.ratio', e.target.value)} placeholder="0.8" />
+                </div>
+              </div>
+            </div>
+          </section>
+
           {/* DISTRIBUIÇÃO DE REFEIÇÕES */}
           <section>
             <div className={sectionHeaderClass}>
