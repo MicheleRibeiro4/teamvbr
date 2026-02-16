@@ -15,8 +15,8 @@ const VBRChatbot: React.FC = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const initChat = () => {
-    // API Key inserida manualmente conforme solicitação
-    const apiKey = 'AIzaSyCdc2gt-S321N9qjNU3ZK4vHxPuTeOrVbA';
+    // API Key inserida via process.env para evitar vazamentos
+    const apiKey = process.env.API_KEY;
     if (!apiKey) return;
 
     if (!chatInstance.current) {
