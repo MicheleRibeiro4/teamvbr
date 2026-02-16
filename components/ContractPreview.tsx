@@ -141,14 +141,23 @@ const ContractPreview = forwardRef<ContractPreviewHandle, Props>(({ data, onBack
           {getCleanContractText().split('\n').map((line, i) => {
             if (line.trim() === '') return <div key={i} className="h-3"></div>;
             
-            // Verifica se a linha é o título da Cláusula 3 ou 7 para forçar quebra
+            // Verifica se a linha é o título de uma Cláusula
             const upperLine = line.toUpperCase();
-            const shouldBreak = upperLine.includes('CLÁUSULA 3') || upperLine.includes('CLÁUSULA 7');
+            const isTitle = upperLine.startsWith('CLÁUSULA') || upperLine.startsWith('CLAUSULA');
+            
+            // Quebras forçadas para melhor diagramação
+            // Adicionado CLÁUSULA 11 para evitar orfãs no final da página
+            const shouldBreak = upperLine.includes('CLÁUSULA 3') || 
+                              upperLine.includes('CLÁUSULA 7') || 
+                              upperLine.includes('CLÁUSULA 11');
 
             return (
               <React.Fragment key={i}>
                 {shouldBreak && <div className="html2pdf__page-break"></div>}
-                <p className="mb-1 break-inside-avoid">
+                <p 
+                  className={`mb-1 break-inside-avoid ${isTitle ? 'font-bold' : ''}`}
+                  style={isTitle ? { pageBreakAfter: 'avoid' } : {}}
+                >
                   {line}
                 </p>
               </React.Fragment>
