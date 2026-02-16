@@ -15,9 +15,12 @@ const VBRChatbot: React.FC = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const initChat = () => {
-    // Usando a chave fornecida pelo usuário
-    const apiKey = "AIzaSyCdc2gt-S321N9qjNU3ZK4vHxPuTeOrVbA";
-    if (!apiKey) return;
+    // Usando a chave de API fornecida explicitamente
+    const apiKey = "AIzaSyCm_GznTM26hn_353yq_F0CsCOxDRNAZM8";
+    if (!apiKey) {
+      console.warn("API Key não encontrada.");
+      return;
+    }
 
     if (!chatInstance.current) {
       const ai = new GoogleGenAI({ apiKey });
@@ -52,7 +55,10 @@ const VBRChatbot: React.FC = () => {
 
     try {
       if (!chatInstance.current) initChat();
-      if (!chatInstance.current) throw new Error("IA não inicializada");
+      
+      if (!chatInstance.current) {
+        throw new Error("Não foi possível inicializar a IA. Verifique a API Key.");
+      }
       
       const responseStream = await chatInstance.current.sendMessageStream({ message: userMessage });
       
@@ -72,9 +78,15 @@ const VBRChatbot: React.FC = () => {
           });
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro Chatbot:", error);
-      setMessages(prev => [...prev, { role: 'model', text: 'Desculpe, tive um problema de conexão. Poderia tentar novamente?' }]);
+      let errorMessage = 'Desculpe, tive um problema de conexão. Poderia tentar novamente?';
+      
+      if (error.message?.includes('API key')) {
+        errorMessage = 'Erro de configuração da API Key. Por favor, verifique as configurações do sistema.';
+      }
+      
+      setMessages(prev => [...prev, { role: 'model', text: errorMessage }]);
     } finally {
       setIsLoading(false);
     }

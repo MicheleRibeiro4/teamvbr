@@ -41,7 +41,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
 
     setIsGenerating(true);
     try {
-      const apiKey = "AIzaSyCdc2gt-S321N9qjNU3ZK4vHxPuTeOrVbA";
+      const apiKey = "AIzaSyCm_GznTM26hn_353yq_F0CsCOxDRNAZM8";
       
       const ai = new GoogleGenAI({ apiKey });
       
