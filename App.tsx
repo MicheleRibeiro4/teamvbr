@@ -6,7 +6,7 @@ import { db } from './services/db';
 import UnifiedEditor from './components/UnifiedEditor';
 import MainDashboard from './components/MainDashboard';
 import StudentSearch from './components/StudentSearch';
-import StudentDashboard from './components/StudentDashboard'; // Mantido caso queira reverter, mas não usado no fluxo principal
+import StudentDashboard from './components/StudentDashboard';
 import EvolutionTracker from './components/EvolutionTracker';
 import StudentEntryForm from './components/StudentEntryForm';
 import { 
@@ -77,42 +77,10 @@ const App: React.FC = () => {
     }
   }, [isStudentPage]);
 
-  // Função para garantir que o objeto tenha todos os campos necessários
-  const sanitizeProtocol = (p: ProtocolData): ProtocolData => {
-    return {
-      ...EMPTY_DATA,
-      ...p,
-      // Garante que createdAt exista. Se não existir (legado), usa updatedAt ou agora.
-      createdAt: p.createdAt || p.updatedAt || new Date().toISOString(),
-      contract: {
-        ...EMPTY_DATA.contract,
-        ...(p.contract || {})
-      },
-      physicalData: {
-        ...EMPTY_DATA.physicalData,
-        ...(p.physicalData || {}),
-        measurements: {
-          ...EMPTY_DATA.physicalData.measurements,
-          ...(p.physicalData?.measurements || {})
-        }
-      },
-      anamnesis: {
-        ...EMPTY_DATA.anamnesis,
-        ...(p.anamnesis || {})
-      },
-      macros: {
-        ...EMPTY_DATA.macros,
-        ...(p.macros || {})
-      }
-    };
-  };
-
   const loadData = async () => {
     setIsSyncing(true);
     try {
-      const rawProtocols = await db.getAll();
-      // Sanitiza todos os protocolos carregados
-      const protocols = rawProtocols.map(sanitizeProtocol);
+      const protocols = await db.getAll();
       setSavedProtocols(protocols);
       setCloudStatus('online');
     } catch (e: any) {
@@ -130,9 +98,6 @@ const App: React.FC = () => {
       return;
     }
     
-    // IMPORTANTE: Trim no nome para evitar duplicações por espaço
-    dataToSave.clientName = dataToSave.clientName.trim();
-
     setIsSyncing(true);
     try {
       const currentId = (forceNewId) 
@@ -141,9 +106,7 @@ const App: React.FC = () => {
       
       const protocolToSave = { 
         ...JSON.parse(JSON.stringify(dataToSave)), 
-        id: currentId,
-        // PRESERVA O createdAt EXISTENTE se já houver.
-        createdAt: dataToSave.createdAt || new Date().toISOString(),
+        id: currentId, 
         updatedAt: new Date().toISOString()
       };
       
@@ -181,42 +144,6 @@ const App: React.FC = () => {
     }
   };
 
-  // Nova função para deletar histórico específico
-  const handleDeleteHistory = async (id: string) => {
-    if (!confirm("Tem certeza que deseja excluir este registro de evolução?")) return;
-    
-    setIsSyncing(true);
-    try {
-      await db.deleteProtocol(id);
-      
-      // Atualiza lista local
-      const newSavedProtocols = savedProtocols.filter(p => p.id !== id);
-      setSavedProtocols(newSavedProtocols);
-      
-      // Se deletamos o protocolo que estava sendo visualizado
-      if (data.id === id) {
-         // Busca outros registros deste aluno para carregar o mais recente
-         const studentHistory = newSavedProtocols
-             .filter(p => p.clientName === data.clientName)
-             .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-         
-         if (studentHistory.length > 0) {
-             // Carrega o próximo mais recente (snapshot)
-             setData(sanitizeProtocol(studentHistory[0]));
-         } else {
-             // Se não sobrou nenhum, volta para a busca
-             setActiveView('search');
-             alert("Todos os registros deste aluno foram excluídos.");
-         }
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Erro ao excluir registro.");
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
   useEffect(() => {
     if (activeView === 'manage' && data.id && data.clientName && isAuthenticated && !isStudentPage) {
       if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
@@ -229,31 +156,23 @@ const App: React.FC = () => {
 
   const handleNew = () => {
     const newId = "vbr-" + Math.random().toString(36).substr(2, 9);
-    setData({ 
-      ...EMPTY_DATA, 
-      id: newId, 
-      createdAt: new Date().toISOString(), 
-      updatedAt: new Date().toISOString() 
-    });
+    setData({ ...EMPTY_DATA, id: newId, updatedAt: new Date().toISOString() });
     setActiveView('manage');
   };
 
-  const loadStudent = (student: ProtocolData, view: ViewMode = 'manage') => { // Padrão agora é 'manage'
-    // Aplica sanitização ao carregar um estudante específico para garantir integridade
-    const safeStudent = sanitizeProtocol(student);
-    setData(safeStudent);
+  const loadStudent = (student: ProtocolData, view: ViewMode = 'student-dashboard') => {
+    setData(student);
     setActiveView(view);
   };
 
   const deleteStudent = async (id: string) => {
-    if(confirm('Excluir este aluno permanentemente?')) {
-      try {
+    try {
         await db.deleteProtocol(id);
         setSavedProtocols(prev => prev.filter(p => p.id !== id));
         if (activeView !== 'home') setActiveView('home');
-      } catch (err) {
+    } catch (err) {
         alert('Erro ao excluir.');
-      }
+        throw err;
     }
   };
 
@@ -294,6 +213,7 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
                 <button type="submit" className="w-full bg-[#d4af37] text-black py-4 rounded-xl font-black uppercase text-xs tracking-[0.2em] hover:scale-105 transition-all">Entrar</button>
               </form>
             </div>
+            
           </div>
 
           <p className="mt-8 text-white/20 text-[10px] uppercase font-bold tracking-widest">Team VBR System © 2026</p>
@@ -330,7 +250,7 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
           
           {activeView !== 'home' && (
             <button 
-              onClick={() => setActiveView('home')}
+              onClick={() => setActiveView(data.id && activeView !== 'student-dashboard' ? 'student-dashboard' : 'home')}
               className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-[#d4af37] transition-colors"
             >
               <ChevronLeft size={16} /> Voltar
@@ -376,23 +296,40 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
         )}
 
         {activeView === 'home' && (
-          <MainDashboard protocols={savedProtocols} onNew={handleNew} onList={() => setActiveView('search')} onLoadStudent={(p) => loadStudent(p, 'manage')} />
+          <MainDashboard 
+            protocols={savedProtocols} 
+            onNew={handleNew} 
+            onList={() => setActiveView('search')} 
+            onLoadStudent={(p) => loadStudent(p, 'student-dashboard')}
+            onUpdateStudent={(data) => handleSave(false, data)}
+            onDeleteStudent={(id) => deleteStudent(id)}
+          />
         )}
 
         {activeView === 'search' && (
-          <StudentSearch protocols={savedProtocols} onLoad={(p) => loadStudent(p, 'manage')} onDelete={deleteStudent} />
+          <StudentSearch protocols={savedProtocols} onLoad={(p) => loadStudent(p, 'student-dashboard')} onDelete={(id) => { if(confirm('Excluir?')) deleteStudent(id); }} />
+        )}
+
+        {activeView === 'student-dashboard' && (
+          <StudentDashboard data={data} setView={(v) => setActiveView(v as ViewMode)} />
         )}
 
         {activeView === 'manage' && (
           <UnifiedEditor 
             data={data} 
             onChange={setData} 
-            onBack={() => setActiveView('search')}
-            // Props para a aba de Evolução
-            history={savedProtocols.filter(p => p.clientName === data.clientName)}
-            onUpdateData={(newData, createHistory, forceNewId) => handleSave(false, newData, forceNewId || createHistory)}
-            onSelectHistory={(hist) => setData(hist)}
-            onDeleteHistory={(id) => handleDeleteHistory(id)}
+            onBack={() => setActiveView('student-dashboard')} 
+          />
+        )}
+
+        {activeView === 'evolution' && (
+          <EvolutionTracker 
+              currentProtocol={data} 
+              history={savedProtocols.filter(p => p.clientName === data.clientName)} 
+              onNotesChange={(n) => setData({...data, privateNotes: n})} 
+              onUpdateData={(newData, createHistory) => handleSave(false, newData, createHistory)}
+              onSelectHistory={(hist) => setData(hist)}
+              onOpenEditor={() => setActiveView('manage')}
           />
         )}
 

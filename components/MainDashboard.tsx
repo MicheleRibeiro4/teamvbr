@@ -1,5 +1,5 @@
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ProtocolData } from '../types';
 import { LOGO_VBR_BLACK, ICON_MAN, ICON_WOMAN } from '../constants';
 import { 
@@ -14,7 +14,11 @@ import {
   CalendarClock,
   CheckCircle2,
   Link as LinkIcon,
-  Bell
+  Bell,
+  XCircle,
+  Check,
+  X,
+  Loader2
 } from 'lucide-react';
 
 interface Props {
@@ -22,12 +26,16 @@ interface Props {
   onNew: () => void;
   onList: () => void;
   onLoadStudent: (student: ProtocolData, view: 'manage' | 'student-dashboard' | 'evolution') => void;
+  onUpdateStudent: (student: ProtocolData) => Promise<void>;
+  onDeleteStudent: (id: string) => Promise<void>;
 }
 
-const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStudent }) => {
+const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStudent, onUpdateStudent, onDeleteStudent }) => {
   
+  const [processingId, setProcessingId] = useState<string | null>(null);
+
   const activeProtocolsCount = protocols.filter(p => p.contract.status === 'Ativo').length;
-  // Filtra alunos pendentes (cadastros novos que ainda não foram ativados)
+  // Filtra alunos pendentes
   const pendingStudents = protocols.filter(p => p.contract.status === 'Aguardando');
   
   const totalRevenue = protocols.reduce((acc, curr) => acc + (parseFloat(curr.contract.planValue.replace(',', '.')) || 0), 0);
@@ -52,14 +60,17 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
   
   const totalStudents = uniqueStudents.length;
 
-  // Alunos recentes agora baseados na lista única para evitar duplicidade visual
-  const recentStudents = uniqueStudents.slice(0, 5);
+  // Alunos recentes (apenas ativos ou já processados)
+  const recentStudents = uniqueStudents
+    .filter((p: any) => p.contract.status !== 'Aguardando')
+    .slice(0, 5);
 
   // --- LÓGICA DE AGENDA QUINZENAL ---
   const scheduledUpdates = useMemo(() => {
     return uniqueStudents.map((student: any) => {
-      // FILTRO: Ignora alunos com plano Avulso
+      // FILTRO: Ignora alunos com plano Avulso E alunos pendentes (Aguardando)
       if (student.contract.planType === 'Avulso') return null;
+      if (student.contract.status !== 'Ativo') return null;
 
       const startDateStr = student.contract.startDate;
       if (!startDateStr || startDateStr.length !== 10) return null;
@@ -99,16 +110,52 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
         }
       };
     })
-    .filter(Boolean) // Remove nulos e avulsos
+    .filter(Boolean) // Remove nulos
     .sort((a: any, b: any) => a.schedule.daysLeft - b.schedule.daysLeft); // Ordena por urgência
   }, [uniqueStudents]);
 
   const handleCopyLink = () => {
-     // URL Específica para a Página do Aluno (#student)
      const origin = typeof window !== 'undefined' ? window.location.origin : '';
      const link = `${origin}/#student`;
      navigator.clipboard.writeText(link);
      alert("Link de Cadastro do Aluno copiado!\n\nEnvie este link para o aluno preencher seus dados:\n" + link);
+  };
+
+  const handleAcceptStudent = async (student: ProtocolData) => {
+    if (confirm(`Aceitar o cadastro de ${student.clientName}? Ele será ativado e movido para a agenda.`)) {
+        setProcessingId(student.id);
+        try {
+            const updatedStudent = {
+                ...student,
+                contract: {
+                    ...student.contract,
+                    status: 'Ativo' as const, // Força status Ativo
+                    // Opcional: Atualizar data de início para hoje se necessário, 
+                    // mas manter o que o aluno preencheu geralmente é melhor.
+                }
+            };
+            await onUpdateStudent(updatedStudent);
+        } catch (error) {
+            console.error(error);
+            alert("Erro ao aceitar aluno.");
+        } finally {
+            setProcessingId(null);
+        }
+    }
+  };
+
+  const handleRejectStudent = async (id: string, name: string) => {
+      if (confirm(`Recusar e excluir a solicitação de ${name}? Esta ação não pode ser desfeita.`)) {
+          setProcessingId(id);
+          try {
+              await onDeleteStudent(id);
+          } catch (error) {
+              console.error(error);
+              alert("Erro ao recusar aluno.");
+          } finally {
+              setProcessingId(null);
+          }
+      }
   };
 
   const metrics = [
@@ -120,32 +167,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
   return (
     <div className="animate-in fade-in slide-in-from-bottom-6 duration-700 space-y-6 pb-20">
       
-      {/* NOTIFICAÇÃO DE NOVOS CADASTROS PENDENTES */}
-      {pendingStudents.length > 0 && (
-        <div className="bg-[#d4af37] text-black p-4 rounded-[1.5rem] mb-2 flex flex-col md:flex-row items-center justify-between gap-6 shadow-[0_0_40px_rgba(212,175,55,0.2)] animate-in slide-in-from-top-4">
-            <div className="flex items-center gap-4">
-                <div className="bg-black/10 p-3 rounded-xl shrink-0">
-                    <Bell size={20} className="animate-pulse" />
-                </div>
-                <div>
-                    <h3 className="font-black uppercase text-sm leading-none mb-1">Solicitações de Cadastro</h3>
-                    <p className="text-xs font-bold opacity-70">
-                        Você tem {pendingStudents.length} novos alunos aguardando.
-                    </p>
-                </div>
-            </div>
-            <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
-               <button 
-                  onClick={onList} 
-                  className="bg-black text-[#d4af37] px-4 py-2 rounded-xl font-black uppercase text-[10px] tracking-widest hover:scale-105 transition-all shadow-lg whitespace-nowrap"
-               >
-                  Ver Agora
-               </button>
-            </div>
-        </div>
-      )}
-
-      {/* HEADER DO DASHBOARD - VERSÃO COMPACTA */}
+      {/* HEADER DO DASHBOARD */}
       <div className="bg-[#0a0a0a] rounded-[2rem] p-4 md:p-6 border-b-4 border-[#d4af37] relative overflow-hidden shadow-2xl flex flex-col md:flex-row justify-between items-center gap-4 min-h-[100px]">
         <div className="absolute top-0 right-0 p-10 opacity-[0.03] pointer-events-none">
           <img src={LOGO_VBR_BLACK} alt="" className="w-64" />
@@ -181,7 +203,54 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
         </div>
       </div>
 
-      {/* GRID PRINCIPAL: MÉTICAS (ESQ) + AGENDA (DIR) */}
+      {/* ÁREA DE SOLICITAÇÕES DE CADASTRO (LISTA EXPANDIDA) */}
+      {pendingStudents.length > 0 && (
+        <div className="bg-[#d4af37]/10 border border-[#d4af37]/30 rounded-[2rem] p-6 animate-in slide-in-from-top-4">
+            <div className="flex items-center gap-3 mb-4">
+                <div className="bg-[#d4af37] text-black p-2 rounded-lg">
+                    <Bell size={18} className="animate-pulse" />
+                </div>
+                <h3 className="font-black uppercase text-sm text-[#d4af37] tracking-widest">Solicitações de Cadastro ({pendingStudents.length})</h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {pendingStudents.map((student) => (
+                    <div key={student.id} className="bg-[#111] p-4 rounded-2xl border border-white/10 flex items-center justify-between gap-4 shadow-lg group hover:border-[#d4af37]/50 transition-colors">
+                        <div className="flex items-center gap-3 overflow-hidden">
+                             <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center border border-white/10 shrink-0">
+                                <UserPlus size={18} className="text-white/40" />
+                             </div>
+                             <div className="min-w-0">
+                                 <h4 className="text-sm font-bold text-white truncate">{student.clientName}</h4>
+                                 <p className="text-[10px] text-white/40 uppercase font-bold tracking-wider">{new Date(student.createdAt).toLocaleDateString('pt-BR')}</p>
+                             </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                            <button 
+                                onClick={() => handleRejectStudent(student.id, student.clientName)}
+                                disabled={processingId === student.id}
+                                className="p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all disabled:opacity-50"
+                                title="Recusar"
+                            >
+                                {processingId === student.id ? <Loader2 size={16} className="animate-spin" /> : <X size={16} />}
+                            </button>
+                            <button 
+                                onClick={() => handleAcceptStudent(student)}
+                                disabled={processingId === student.id}
+                                className="p-2 bg-green-500/10 text-green-500 rounded-lg hover:bg-green-500 hover:text-white transition-all disabled:opacity-50"
+                                title="Aceitar"
+                            >
+                                {processingId === student.id ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
+                            </button>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+      )}
+
+      {/* GRID PRINCIPAL: MÉTRICAS (ESQ) + AGENDA (DIR) */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         
         {/* COLUNA ESQUERDA: MÉTRICAS VERTICAIS */}
@@ -261,7 +330,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                     </div>
                     <div className="flex items-center gap-3">
                         <span className="hidden md:inline-block text-[9px] font-black uppercase tracking-widest text-white/20">
-                            {isToday ? 'Check-in Necessário' : 'Aguardando ajuste quinzenal'}
+                            {isToday ? 'Check-in Necessário' : 'Aguardando ajuste'}
                         </span>
                         <ChevronRight size={14} className={`opacity-50 group-hover:opacity-100 ${iconColor}`} />
                     </div>
@@ -271,7 +340,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
             ) : (
               <div className="h-full flex flex-col items-center justify-center text-white/20">
                  <CheckCircle2 size={32} className="mb-2" />
-                 <p className="text-[10px] font-black uppercase tracking-widest">Todos em dia</p>
+                 <p className="text-[10px] font-black uppercase tracking-widest">Nenhuma atualização pendente</p>
               </div>
             )}
           </div>
@@ -299,11 +368,8 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
               
               const userIconSrc = isFemale ? ICON_WOMAN : ICON_MAN;
 
-              // Se for status Aguardando, destaca
-              const isPending = p.contract.status === 'Aguardando';
-
               return (
-                <div key={p.id} className={`bg-white/5 p-3 rounded-xl border ${isPending ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-white/5'} flex flex-col justify-between gap-3 hover:border-white/20 transition-all group`}>
+                <div key={p.id} className="bg-white/5 p-3 rounded-xl border border-white/5 flex flex-col justify-between gap-3 hover:border-white/20 transition-all group">
                   <div className="flex items-center gap-3 overflow-hidden">
                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center border transition-all shrink-0 ${iconColorClass} overflow-hidden`}>
                         <img src={userIconSrc} alt="Icon" className="w-full h-full object-cover" />
