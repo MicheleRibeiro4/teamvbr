@@ -31,24 +31,19 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
 
   // Inicialização segura do estado
   const [data, setData] = useState<ProtocolData>(() => {
-    // Garante que measurements exista mesmo que EMPTY_DATA falhe
-    const initialMeasurements = EMPTY_DATA.physicalData?.measurements || {
-        thorax: "", waist: "", abdomen: "", glutes: "",
-        rightArmRelaxed: "", leftArmRelaxed: "", rightArmContracted: "", leftArmContracted: "",
-        rightThigh: "", leftThigh: "", rightCalf: "", leftCalf: ""
-    };
-
     return {
         ...EMPTY_DATA,
         id: "vbr-student-" + Date.now().toString(36), 
         updatedAt: new Date().toISOString(),
         contract: {
-            ...(EMPTY_DATA.contract || {}),
+            ...EMPTY_DATA.contract,
             status: 'Aguardando'
         },
         physicalData: {
-            ...(EMPTY_DATA.physicalData || {}),
-            measurements: initialMeasurements
+            ...EMPTY_DATA.physicalData,
+            measurements: {
+                ...EMPTY_DATA.physicalData.measurements
+            }
         }
     };
   });

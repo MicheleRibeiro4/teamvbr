@@ -317,4 +317,18 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
 
         {activeView === 'evolution' && (
           <EvolutionTracker 
-              current
+              currentProtocol={data} 
+              history={savedProtocols.filter(p => p.clientName === data.clientName)} 
+              onNotesChange={(n) => setData({...data, privateNotes: n})} 
+              onUpdateData={(newData, createHistory) => handleSave(false, newData, createHistory)}
+              onSelectHistory={(hist) => setData(hist)}
+              onOpenEditor={() => setActiveView('manage')}
+          />
+        )}
+
+      </main>
+    </div>
+  );
+};
+
+export default App;

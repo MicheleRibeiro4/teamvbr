@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, X, Send, Loader2, Bot, User, Maximize2, Minimize2 } from 'lucide-react';
-import OpenAI from "openai";
+import { GoogleGenAI } from "@google/genai";
 
 const VBRChatbot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -13,30 +13,13 @@ const VBRChatbot: React.FC = () => {
     { role: 'model', text: 'Olá! Sou o Assistente IA do Team VBR. Como posso ajudar na sua evolução hoje?' }
   ]);
   
-  // Histórico para a API (OpenAI format)
+  // Histórico para a API (Mantendo formato original para compatibilidade local, mas convertido no envio)
   const historyRef = useRef<{ role: "system" | "user" | "assistant"; content: string }[]>([
     { role: 'system', content: 'Você é o Assistente Virtual Oficial do Team VBR Rhino. Seu tom é profissional, motivador e técnico. Você é um expert em musculação, nutrição esportiva e fisiologia. Ajude o usuário com dúvidas sobre seus protocolos, exercícios e dieta. Sempre incentive a disciplina e a constância.' }
   ]);
 
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const openaiRef = useRef<OpenAI | null>(null);
-
-  const initChat = () => {
-    const apiKey = "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";
-    if (!openaiRef.current) {
-       openaiRef.current = new OpenAI({ 
-         apiKey: apiKey,
-         dangerouslyAllowBrowser: true 
-       });
-    }
-  };
-
-  useEffect(() => {
-    if (isOpen) {
-      initChat();
-    }
-  }, [isOpen]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -52,37 +35,38 @@ const VBRChatbot: React.FC = () => {
     
     // Atualiza UI
     setMessages(prev => [...prev, { role: 'user', text: userMessage }]);
-    // Atualiza histórico da API
+    // Atualiza histórico local
     historyRef.current.push({ role: 'user', content: userMessage });
 
     setIsLoading(true);
 
     try {
-      if (!openaiRef.current) initChat();
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       
-      const stream = await openaiRef.current!.chat.completions.create({
-        model: 'gpt-4o',
-        messages: historyRef.current,
-        stream: true,
+      // Converte histórico para formato Gemini (user/model) e extrai system instruction
+      const systemInstruction = historyRef.current.find(m => m.role === 'system')?.content || '';
+      
+      const historyForGemini = historyRef.current
+        .filter(m => m.role !== 'system' && m.content !== userMessage) // Filtra system e a mensagem atual que será enviada pelo sendMessage
+        .map(m => ({
+            role: m.role === 'assistant' ? 'model' : 'user',
+            parts: [{ text: m.content }]
+        }));
+
+      const chat = ai.chats.create({
+        model: 'gemini-2.5-flash',
+        history: historyForGemini,
+        config: {
+            systemInstruction: systemInstruction
+        }
       });
       
-      let fullText = '';
-      setMessages(prev => [...prev, { role: 'model', text: '' }]);
-
-      for await (const chunk of stream) {
-        const textChunk = chunk.choices[0]?.delta?.content || '';
-        if (textChunk) {
-          fullText += textChunk;
-          setMessages(prev => {
-            const last = prev[prev.length - 1];
-            const updated = [...prev];
-            updated[updated.length - 1] = { ...last, text: fullText };
-            return updated;
-          });
-        }
-      }
+      const result = await chat.sendMessage(userMessage);
+      const fullText = result.text;
       
-      // Salva a resposta completa no histórico
+      setMessages(prev => [...prev, { role: 'model', text: fullText }]);
+      
+      // Salva a resposta completa no histórico local
       historyRef.current.push({ role: 'assistant', content: fullText });
 
     } catch (error: any) {
