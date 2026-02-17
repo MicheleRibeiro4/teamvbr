@@ -61,7 +61,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
     const tips = safeData.tips || [];
     const trainingDays = safeData.trainingDays || [];
     
-    // Chunk training days into groups of 2 for strict page breaking and visual consistency
+    // Chunk training days into groups of 2 for better page flow
     const trainingChunks = [];
     if (trainingDays.length === 0) {
         trainingChunks.push([]);
@@ -72,7 +72,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
     }
     
     const kcalSubtext = safeData.kcalSubtext || "Manutenção";
-    const protocolTitle = safeData.protocolTitle || "Personalizado";
+    const protocolTitle = safeData.protocolTitle || "Geral";
     const clientName = safeData.clientName || "Aluno";
 
     const pageStyle: React.CSSProperties = { 
@@ -88,196 +88,232 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
         boxShadow: isPdfMode ? 'none' : '0 10px 30px rgba(0,0,0,0.1)'
     };
 
-    const sectionTitle = "text-xl font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-1 mb-6 uppercase";
-    const dataCardStyle = "bg-gray-50 border border-gray-100 p-4 rounded-lg break-inside-avoid";
-    const labelStyle = "text-xs font-bold text-gray-500 uppercase block mb-1";
-    const valueStyle = "text-xl font-bold text-gray-900";
+    const sectionTitle = "text-xl font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-1 mb-8 uppercase";
+    const dataCardStyle = "bg-white border border-gray-100 p-6 rounded-xl shadow-sm break-inside-avoid text-left";
+    const labelStyle = "text-[10px] font-bold text-gray-400 uppercase block mb-1 tracking-widest";
+    const valueStyle = "text-2xl font-black text-gray-900";
 
     return (
         <div className="bg-gray-100 text-black flex flex-col items-center print:bg-transparent">
-            {/* PÁGINA 1: CAPA */}
-            <div style={{ ...pageStyle, padding: 0, backgroundColor: '#111' }} className="relative h-[296mm] flex flex-col justify-between text-white text-center bg-[#111]">
-                <div className="flex-1 flex flex-col items-center justify-center w-full px-10 relative z-10 pb-10">
-                    <img src={LOGO_VBR_GOLD} alt="Team VBR" className="w-80 h-auto mb-12 relative z-10" />
-                    <h1 className="text-5xl font-black text-[#d4af37] uppercase tracking-wider leading-tight mb-16">PROTOCOLO<br/>COMPLETO DE<br/>{protocolTitle}</h1>
-                    <div className="border-t border-b border-white/20 py-8 w-full max-w-2xl"><h2 className="text-6xl font-black uppercase tracking-tight text-white">{clientName}</h2></div>
-                    <div className="mt-16 bg-[#d4af37]/10 px-8 py-4 rounded-full border border-[#d4af37]/30"><p className="text-2xl font-bold text-white uppercase tracking-widest">Período: {contract.startDate || '...'} — {contract.endDate || '...'}</p></div>
+            {/* PÁGINA 1: CAPA (Matching Screenshot 1) */}
+            <div style={{ ...pageStyle, padding: 0, backgroundColor: '#0a0a0a' }} className="relative h-[296mm] flex flex-col justify-between text-white text-center bg-[#0a0a0a]">
+                <div className="flex-1 flex flex-col items-center justify-center w-full px-10 relative z-10">
+                    <img src={LOGO_VBR_GOLD} alt="Team VBR" className="w-80 h-auto mb-16 relative z-10" />
+                    
+                    <h1 className="text-4xl font-black text-[#d4af37] uppercase tracking-wider leading-tight mb-20 max-w-2xl mx-auto">
+                        PROTOCOLO<br/>COMPLETO DE<br/>{protocolTitle}
+                    </h1>
+                    
+                    <div className="border-t border-b border-white/10 py-10 w-full max-w-2xl bg-white/[0.02]">
+                        <h2 className="text-6xl font-black uppercase tracking-tight text-white leading-none">
+                            {clientName}
+                        </h2>
+                    </div>
+                    
+                    <div className="mt-20 bg-[#d4af37]/10 px-10 py-5 rounded-full border border-[#d4af37]/30">
+                        <p className="text-xl font-bold text-white uppercase tracking-widest">
+                            Período: {contract.startDate || '...'} — {contract.endDate || '...'}
+                        </p>
+                    </div>
                 </div>
-                <div className="absolute bottom-0 left-0 w-full h-8 bg-[#d4af37]"></div>
+                {/* Gold bar at the very bottom */}
+                <div className="h-4 bg-[#d4af37] w-full"></div>
             </div>
 
             <div className="html2pdf__page-break"></div>
 
-            {/* PÁGINA 2: DADOS E NUTRIÇÃO */}
+            {/* PÁGINA 2: DADOS FÍSICOS E ESTRATÉGIA (Matching Screenshot 2) */}
             <div style={pageStyle} className="h-auto">
                 <h3 className={sectionTitle}>1. Dados Físicos - {physical.date || new Date().toLocaleDateString('pt-BR')}</h3>
-                <div className="grid grid-cols-3 gap-4 mb-8">
+                
+                <div className="grid grid-cols-3 gap-6 mb-10">
                     <div className={dataCardStyle}><span className={labelStyle}>Peso Atual</span><span className={valueStyle}>{physical.weight || '-'} kg</span></div>
                     <div className={dataCardStyle}><span className={labelStyle}>Altura</span><span className={valueStyle}>{physical.height || '-'} m</span></div>
                     <div className={dataCardStyle}><span className={labelStyle}>Idade</span><span className={valueStyle}>{physical.age || '-'} anos</span></div>
                 </div>
                 
-                <h4 className="text-sm font-bold uppercase text-black mb-3">Medidas Corporais</h4>
-                <div className="mb-10 bg-gray-50 p-4 rounded-lg border border-gray-100">
-                    <div className="grid grid-cols-4 gap-4 mb-4 border-b border-gray-200 pb-4">
-                        <div className="col-span-4 text-xs font-black text-[#d4af37] uppercase tracking-widest">Superior</div>
-                        <div><span className={labelStyle}>Tórax</span><span className="font-bold text-gray-900">{measurements.thorax || '-'}</span></div>
-                        <div><span className={labelStyle}>Cintura</span><span className="font-bold text-gray-900">{measurements.waist || '-'}</span></div>
-                        <div><span className={labelStyle}>Abdômen</span><span className="font-bold text-gray-900">{measurements.abdomen || '-'}</span></div>
-                        <div><span className={labelStyle}>Glúteo</span><span className="font-bold text-gray-900">{measurements.glutes || '-'}</span></div>
-                    </div>
-                    <div className="grid grid-cols-4 gap-4">
-                        <div className="col-span-4 text-xs font-black text-[#d4af37] uppercase tracking-widest">Inferior</div>
-                        <div><span className={labelStyle}>Coxa Dir</span><span className="font-bold text-gray-900">{measurements.rightThigh || '-'}</span></div>
-                        <div><span className={labelStyle}>Coxa Esq</span><span className="font-bold text-gray-900">{measurements.leftThigh || '-'}</span></div>
-                        <div><span className={labelStyle}>Panturrilha Dir</span><span className="font-bold text-gray-900">{measurements.rightCalf || '-'}</span></div>
-                        <div><span className={labelStyle}>Panturrilha Esq</span><span className="font-bold text-gray-900">{measurements.leftCalf || '-'}</span></div>
-                    </div>
+                <h4 className="text-[12px] font-black uppercase text-black mb-6 tracking-widest">Bioimpedância</h4>
+                <div className="grid grid-cols-4 gap-4 mb-12">
+                    <div className={dataCardStyle}><span className={labelStyle}>Massa Musc.</span><span className="text-xl font-black text-gray-900">{physical.muscleMass || '-'} kg</span></div>
+                    <div className={dataCardStyle}><span className={labelStyle}>Gordura</span><span className="text-xl font-black text-gray-900">{physical.bodyFat || '-'}%</span></div>
+                    <div className={dataCardStyle}><span className={labelStyle}>G. Visceral</span><span className="text-xl font-black text-gray-900">{physical.visceralFat || '-'}</span></div>
+                    <div className={dataCardStyle}><span className={labelStyle}>IMC</span><span className="text-xl font-black text-gray-900">{physical.imc || '-'}</span></div>
                 </div>
 
                 <h3 className={sectionTitle}>2. Estratégia Nutricional</h3>
-                <div className="bg-gray-100 p-6 rounded-none border-l-4 border-gray-400 mb-8 text-sm text-gray-800 leading-relaxed break-inside-avoid">
-                    <span className="font-bold block mb-1">Observação:</span>
-                    <p className="whitespace-pre-wrap">{safeData.nutritionalStrategy || "Nenhuma observação definida."}</p>
+                <div className="bg-[#f8f9fa] p-8 rounded-none border-l-[12px] border-gray-400 mb-10 text-sm text-gray-800 leading-relaxed break-inside-avoid shadow-sm">
+                    <span className="font-black uppercase text-[10px] text-black block mb-4 tracking-widest">Observação:</span>
+                    <p className="whitespace-pre-wrap font-medium">{safeData.nutritionalStrategy || "Estratégia personalizada de acordo com anamnese e objetivos."}</p>
                 </div>
                 
-                <div className="bg-[#1a1a1a] text-center p-8 rounded-lg mb-8 break-inside-avoid">
-                    <p className="text-[10px] font-bold text-white uppercase tracking-widest mb-3 leading-relaxed px-4">
-                        META DIÁRIA (ESTE VALOR É O PONTO DE PARTIDA AJUSTADO PARA SUA FASE DE {kcalSubtext.toUpperCase()}. MONITORAREMOS SUA RESPOSTA E FAREMOS AJUSTES CONFORME NECESSÁRIO.)
+                <div className="bg-[#111] text-center p-12 rounded-xl mb-12 break-inside-avoid shadow-xl">
+                    <p className="text-[10px] font-black text-white uppercase tracking-[0.2em] mb-4 leading-relaxed px-10">
+                        META DIÁRIA (FOCO EM {protocolTitle.toUpperCase()})
                     </p>
-                    <p className="text-4xl font-bold text-[#d4af37]">{safeData.kcalGoal || "0"} kcal</p>
+                    <p className="text-6xl font-black text-[#d4af37]">{safeData.kcalGoal || "0"} kcal</p>
                 </div>
 
-                <h4 className="text-lg font-bold text-black mb-4">Distribuição de Macronutrientes</h4>
-                <div className="grid grid-cols-3 gap-4 mb-4 break-inside-avoid pb-10">
-                    <div className="bg-white border border-gray-200 p-4 text-center rounded-lg shadow-sm">
-                        <p className="text-[#d4af37] font-bold text-sm uppercase mb-2">Proteínas</p>
-                        <p className="text-2xl font-bold text-gray-900 mb-1">{macros.protein?.value || '0'}g</p>
-                        <p className="text-xs text-gray-400">{macros.protein?.ratio || ''}</p>
+                <h4 className="text-[14px] font-black text-black mb-6 uppercase tracking-widest">Distribuição de Macronutrientes</h4>
+                <div className="grid grid-cols-3 gap-6 mb-10 break-inside-avoid">
+                    <div className="bg-white border border-gray-100 p-8 text-center rounded-xl shadow-sm">
+                        <p className="text-[#d4af37] font-black text-xs uppercase tracking-widest mb-4">Proteínas</p>
+                        <p className="text-4xl font-black text-gray-900 mb-2">{macros.protein?.value || '0'}g</p>
+                        <p className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">{macros.protein?.ratio || ''}</p>
                     </div>
-                    <div className="bg-white border border-gray-200 p-4 text-center rounded-lg shadow-sm">
-                        <p className="text-[#d4af37] font-bold text-sm uppercase mb-2">Carboidratos</p>
-                        <p className="text-2xl font-bold text-gray-900 mb-1">{macros.carbs?.value || '0'}g</p>
-                        <p className="text-xs text-gray-400">{macros.carbs?.ratio || ''}</p>
+                    <div className="bg-white border border-gray-100 p-8 text-center rounded-xl shadow-sm">
+                        <p className="text-[#d4af37] font-black text-xs uppercase tracking-widest mb-4">Carboidratos</p>
+                        <p className="text-4xl font-black text-gray-900 mb-2">{macros.carbs?.value || '0'}g</p>
+                        <p className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">{macros.carbs?.ratio || ''}</p>
                     </div>
-                    <div className="bg-white border border-gray-200 p-4 text-center rounded-lg shadow-sm">
-                        <p className="text-[#d4af37] font-bold text-sm uppercase mb-2">Gorduras</p>
-                        <p className="text-2xl font-bold text-gray-900 mb-1">{macros.fats?.value || '0'}g</p>
-                        <p className="text-xs text-gray-400">{macros.fats?.ratio || ''}</p>
+                    <div className="bg-white border border-gray-100 p-8 text-center rounded-xl shadow-sm">
+                        <p className="text-[#d4af37] font-black text-xs uppercase tracking-widest mb-4">Gorduras</p>
+                        <p className="text-4xl font-black text-gray-900 mb-2">{macros.fats?.value || '0'}g</p>
+                        <p className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">{macros.fats?.ratio || ''}</p>
                     </div>
+                </div>
+                
+                <div className="bg-[#fff9e6] border border-[#ffecb3] p-4 rounded-lg text-center break-inside-avoid">
+                    <p className="text-xs font-bold text-gray-700">
+                        <span className="text-[#d4af37]">Nota Importante:</span> Manter a consistência na pesagem dos alimentos.
+                    </p>
                 </div>
             </div>
 
             <div className="html2pdf__page-break"></div>
 
-            {/* PÁGINA 3: DIETA */}
+            {/* PÁGINA 3: DIETA (Matching Screenshot 3) */}
             <div style={pageStyle} className="h-auto">
                 <h3 className={sectionTitle}>3. Plano Alimentar Diário</h3>
-                <table className="w-full text-left text-sm border-collapse mb-8">
-                    <thead><tr className="bg-[#d4af37] text-white"><th className="p-3 font-bold w-24">Horário</th><th className="p-3 font-bold">Refeição & Detalhes</th></tr></thead>
-                    <tbody className="divide-y divide-gray-100">
-                    {meals.map((meal, index) => (
-                        <tr key={meal.id || index} className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"} break-inside-avoid`}>
-                        <td className="p-4 font-bold text-[#d4af37] align-top">{meal.time}</td>
-                        <td className="p-4"><p className="font-bold text-gray-900 mb-1">{meal.name}</p><p className="text-gray-600 leading-relaxed whitespace-pre-wrap">{meal.details}</p></td>
+                <table className="w-full text-left text-sm border-collapse mb-10 shadow-sm rounded-xl overflow-hidden">
+                    <thead>
+                        <tr className="bg-[#d4af37] text-white">
+                            <th className="p-5 font-black uppercase text-xs tracking-widest w-32 border-b-2 border-white/20">Horário</th>
+                            <th className="p-5 font-black uppercase text-xs tracking-widest border-b-2 border-white/20">Refeição & Detalhes</th>
                         </tr>
-                    ))}
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                        {meals.map((meal, index) => (
+                            <tr key={meal.id || index} className={`${index % 2 === 0 ? "bg-white" : "bg-[#fcfcfc]"} break-inside-avoid`}>
+                                <td className="p-6 font-black text-[#d4af37] align-top text-lg">{meal.time}</td>
+                                <td className="p-6">
+                                    <p className="font-black text-gray-900 mb-3 uppercase tracking-tight text-lg">{meal.name}</p>
+                                    <p className="text-gray-600 leading-relaxed whitespace-pre-wrap font-medium">{meal.details}</p>
+                                </td>
+                            </tr>
+                        ))}
                     </tbody>
                 </table>
-                <div className="mt-10 border-2 border-dashed border-gray-300 p-6 text-center text-gray-500 italic text-sm rounded-xl break-inside-avoid">Lembre-se de manter a hidratação ao longo do dia (mínimo {safeData.waterGoal || '3,5'}L de água).</div>
+                
+                <div className="mt-20 border-2 border-dashed border-gray-200 p-10 text-center text-gray-400 italic text-lg rounded-[2rem] break-inside-avoid">
+                    Lembre-se de manter a hidratação ao longo do dia (mínimo {safeData.waterGoal || '3.5'}L de água).
+                </div>
             </div>
 
             <div className="html2pdf__page-break"></div>
 
-            {/* PÁGINA 4: SUPLEMENTAÇÃO */}
+            {/* PÁGINA 4: SUPLEMENTAÇÃO (Matching Screenshot 4) */}
             <div style={pageStyle} className="h-auto">
                 <h3 className={sectionTitle}>4. Suplementação e Recomendações</h3>
-                <div className="space-y-4 mb-12">
+                <div className="space-y-6 mb-16">
                     {supplements.map((supp) => {
-                    let bgColor = "bg-gray-800";
-                    const nameLower = (supp.name || "").toLowerCase();
-                    if (nameLower.includes('creatina')) bgColor = "bg-[#d4af37]"; 
-                    else if (nameLower.includes('whey')) bgColor = "bg-[#2563eb]"; 
-                    else if (nameLower.includes('cafeína') || nameLower.includes('cafeina') || nameLower.includes('café')) bgColor = "bg-[#5d4037]"; 
-                    return (
-                        <div key={supp.id} className={`${bgColor} text-white p-6 rounded-xl flex justify-between items-center shadow-md break-inside-avoid`}>
-                        <div><h4 className="text-xl font-bold uppercase mb-1">{supp.name}</h4><p className="text-sm opacity-90">{supp.dosage}</p></div>
-                        <div className="bg-black/20 px-4 py-2 rounded-full text-xs font-bold uppercase">{supp.timing}</div>
-                        </div>
-                    );
+                        let bgColor = "bg-[#1f2937]"; // Default Dark Gray
+                        const nameLower = (supp.name || "").toLowerCase();
+                        if (nameLower.includes('creatina')) bgColor = "bg-[#d4af37]"; 
+                        else if (nameLower.includes('whey')) bgColor = "bg-[#2563eb]"; 
+                        else if (nameLower.includes('cafeína') || nameLower.includes('cafeina') || nameLower.includes('café')) bgColor = "bg-[#5d4037]"; 
+                        
+                        return (
+                            <div key={supp.id} className={`${bgColor} text-white p-8 rounded-xl flex justify-between items-center shadow-lg break-inside-avoid relative overflow-hidden group`}>
+                                <div className="relative z-10">
+                                    <h4 className="text-2xl font-black uppercase mb-2 tracking-tighter">{supp.name}</h4>
+                                    <p className="text-sm font-bold opacity-80 uppercase tracking-widest">{supp.dosage}</p>
+                                </div>
+                                <div className="bg-black/20 px-6 py-4 rounded-xl text-xs font-black uppercase tracking-[0.1em] border border-white/10 relative z-10 max-w-[300px] text-right">
+                                    {supp.timing}
+                                </div>
+                            </div>
+                        );
                     })}
                 </div>
-                <h4 className="text-lg font-bold text-black mb-4">Dicas & Orientações:</h4>
-                <div className="space-y-3 bg-gray-50 p-6 rounded-xl border border-gray-100">
+                
+                <h4 className="text-2xl font-black text-black mb-8 uppercase tracking-tighter">Dicas:</h4>
+                <div className="space-y-6">
                     {tips.map((tip, idx) => (
-                    <div key={idx} className="flex items-start gap-3 text-sm text-gray-700 break-inside-avoid"><div className="w-1.5 h-1.5 bg-[#d4af37] mt-1.5 shrink-0 rounded-full"></div><span className="font-medium">{tip}</span></div>
+                        <div key={idx} className="flex items-start gap-5 text-lg text-gray-800 break-inside-avoid group">
+                            <div className="w-2.5 h-2.5 bg-black mt-2.5 shrink-0 rounded-none rotate-45 group-hover:bg-[#d4af37] transition-colors"></div>
+                            <span className="font-bold leading-tight">{tip}</span>
+                        </div>
                     ))}
                 </div>
             </div>
 
             <div className="html2pdf__page-break"></div>
 
-            {/* PÁGINAS DE TREINO (DINÂMICO) - SEGUINDO MODELO ENVIADO */}
+            {/* PÁGINAS DE TREINO (Matching Screenshot 5 & 6) */}
             {trainingChunks.map((chunk, index) => (
                 <React.Fragment key={`training-page-${index}`}>
                     <div style={pageStyle} className="h-auto">
-                        <h3 className="text-xl font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-1 mb-2 uppercase">
-                            5. DIVISÃO DE TREINO {trainingChunks.length > 1 ? `(PARTE ${index + 1})` : ''}
+                        <h3 className="text-xl font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-1 mb-2 uppercase tracking-tight">
+                            5. DIVISÃO DE TREINO (PARTE {index + 1})
                         </h3>
                         {index === 0 && (
-                            <p className="text-[10pt] text-gray-600 mb-8">
-                                Frequência: {safeData.trainingFrequency || 'Não definida'}
+                            <p className="text-xs font-bold text-gray-500 mb-10 uppercase tracking-widest">
+                                Frequência: {safeData.trainingFrequency || '5x na semana'}
                             </p>
                         )}
                         <div className="space-y-12">
                             {chunk.map((day) => (
-                                <div key={day.id} className="border-2 border-black rounded-none overflow-hidden break-inside-avoid">
-                                    <div className="bg-black p-3 flex justify-between items-center px-4">
-                                        <span className="font-black uppercase text-white text-lg tracking-tighter">
+                                <div key={day.id} className="border-2 border-black rounded-none overflow-hidden break-inside-avoid shadow-lg">
+                                    <div className="bg-[#111] p-4 flex justify-between items-center px-6">
+                                        <span className="font-black uppercase text-white text-xl tracking-tighter">
                                             {day.title}
                                         </span>
-                                        <span className="text-[8pt] font-black text-[#d4af37] uppercase tracking-widest">
+                                        <span className="text-[10px] font-black text-[#d4af37] uppercase tracking-[0.2em]">
                                             FOCO: {day.focus}
                                         </span>
                                     </div>
-                                    <table className="w-full text-sm text-left bg-white border-t border-black">
-                                        <tbody className="divide-y divide-gray-200">
+                                    <table className="w-full text-base text-left bg-white border-t border-black">
+                                        <tbody className="divide-y divide-gray-100">
                                             {(day.exercises || []).map((ex, idx) => (
-                                                <tr key={ex.id || idx} className="bg-white">
-                                                    <td className="p-4 font-bold text-gray-900 border-r border-gray-100">{ex.name}</td>
-                                                    <td className="p-4 font-black text-black text-right whitespace-nowrap w-24">{ex.sets}</td>
+                                                <tr key={ex.id || idx} className="bg-white hover:bg-gray-50 transition-colors">
+                                                    <td className="p-5 font-black text-gray-900 uppercase tracking-tight leading-none">{ex.name}</td>
+                                                    <td className="p-5 font-black text-black text-right whitespace-nowrap w-32 border-l border-gray-50">{ex.sets}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
                                     </table>
                                 </div>
                             ))}
-                            {chunk.length === 0 && <p className="text-gray-400 italic">Nenhum treino cadastrado.</p>}
+                            {chunk.length === 0 && <p className="text-gray-400 italic text-center py-10">Nenhum treino cadastrado.</p>}
                         </div>
                     </div>
-                    {/* Quebra de página entre os chunks de treino */}
+                    {/* Page break between training chunks */}
                     {index < trainingChunks.length - 1 && <div className="html2pdf__page-break"></div>}
                 </React.Fragment>
             ))}
 
             <div className="html2pdf__page-break"></div>
 
-            {/* PÁGINA FINAL */}
+            {/* PÁGINA FINAL (Matching Screenshot 7) */}
             <div style={{ ...pageStyle, padding: 0, minHeight: '296mm', height: '296mm' }} className="h-[296mm] page-break-before-always">
-                <div className="w-full h-full bg-[#111] flex flex-col justify-between p-12 text-center border-[20px] border-white box-border">
+                <div className="w-full h-full bg-[#0a0a0a] flex flex-col justify-between p-20 text-center border-[20px] border-white box-border">
                     <div className="flex-none"></div>
-                    <div className="flex flex-col items-center justify-center space-y-8">
-                    <AlertTriangle size={80} className="text-[#d4af37]" />
-                    <h2 className="text-5xl font-black text-white uppercase tracking-tighter">Atenção</h2>
-                    <div className="w-24 h-2 bg-[#d4af37]"></div>
-                    <div className="max-w-3xl space-y-6 text-xl text-white/80 font-medium leading-relaxed">
-                        <p>Este protocolo foi desenhado especificamente para você, {clientName.split(' ')[0]}.</p>
-                        <p>Ajustes de carga, dieta e cardio serão feitos conforme sua evolução e feedbacks.</p>
-                        <p className="text-[#d4af37]">A consistência vence a intensidade.</p>
+                    <div className="flex flex-col items-center justify-center space-y-12">
+                        <AlertTriangle size={100} className="text-[#d4af37] animate-pulse" />
+                        
+                        <div className="flex flex-col items-center">
+                            <h2 className="text-7xl font-black text-white uppercase tracking-tighter leading-none">ATENÇÃO</h2>
+                            <div className="w-24 h-2 bg-[#d4af37] mt-8"></div>
+                        </div>
+
+                        <div className="max-w-4xl space-y-10 text-2xl text-white/90 font-bold leading-relaxed px-10">
+                            <p>Este protocolo foi desenhado especificamente para você, {clientName.split(' ')[0]}.</p>
+                            <p className="opacity-70">Ajustes de carga, dieta e cardio serão feitos conforme sua evolução e feedbacks.</p>
+                            <p className="text-[#d4af37] text-3xl font-black mt-16 italic tracking-tight">A consistência vence a intensidade.</p>
+                        </div>
                     </div>
-                    </div>
-                    <div className="flex-none pt-12">
-                    <p className="text-xs font-bold text-gray-600 uppercase tracking-[0.3em]">TEAM VBR © 2026</p>
+                    <div className="flex-none pt-20">
+                        <p className="text-[12px] font-black text-white/20 uppercase tracking-[0.5em]">TEAM VBR © 2026</p>
                     </div>
                 </div>
             </div>
@@ -291,18 +327,21 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
             <>
                 <div onClick={() => setShowModal(true)} className="cursor-pointer">{customTrigger}</div>
                 {showModal && (
-                    <div className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
-                        <div className="bg-white w-full max-w-5xl h-[90vh] rounded-[2rem] flex flex-col relative overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
-                            <div className="bg-gray-100 p-4 px-8 flex justify-between items-center border-b border-gray-200 shrink-0">
-                                <h2 className="text-black font-black uppercase tracking-tighter text-lg flex items-center gap-2"><FileText size={20} className="text-[#d4af37]" /> Visualizar Protocolo</h2>
-                                <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-500"><X size={24} /></button>
+                    <div className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-300">
+                        <div className="bg-white w-full max-w-5xl h-[95vh] rounded-[2.5rem] flex flex-col relative overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.5)] animate-in zoom-in-95 duration-500">
+                            <div className="bg-gray-50 p-6 px-10 flex justify-between items-center border-b border-gray-200 shrink-0">
+                                <h2 className="text-black font-black uppercase tracking-tighter text-xl flex items-center gap-3"><FileText size={24} className="text-[#d4af37]" /> Visualizar Protocolo Completo</h2>
+                                <button onClick={() => setShowModal(false)} className="p-3 hover:bg-gray-200 rounded-full transition-all text-gray-500 hover:rotate-90"><X size={28} /></button>
                             </div>
-                            <div className="flex-1 overflow-auto bg-gray-500/20 p-8 custom-scrollbar-light flex justify-center items-start">
+                            <div className="flex-1 overflow-auto bg-[#333] p-12 custom-scrollbar flex justify-center items-start">
                                 {renderContent(false)}
                             </div>
-                            <div className="bg-white p-6 border-t border-gray-200 flex justify-end gap-4 shrink-0">
-                                <button onClick={() => setShowModal(false)} className="px-6 py-3 rounded-xl font-bold uppercase text-xs text-gray-500 hover:bg-gray-100 transition-colors">Fechar</button>
-                                <button onClick={handleDownloadPDF} disabled={isGenerating} className="px-8 py-3 bg-[#d4af37] hover:bg-[#b5952f] text-black rounded-xl font-black uppercase text-xs tracking-widest shadow-lg flex items-center gap-2 transition-all active:scale-95">{isGenerating ? <Loader2 size={16} className="animate-spin" /> : <FileDown size={16} />} Baixar PDF</button>
+                            <div className="bg-white p-8 border-t border-gray-200 flex justify-end gap-6 shrink-0">
+                                <button onClick={() => setShowModal(false)} className="px-10 py-4 rounded-2xl font-black uppercase text-xs text-gray-400 hover:bg-gray-100 transition-all tracking-widest">Fechar Prévia</button>
+                                <button onClick={handleDownloadPDF} disabled={isGenerating} className="px-12 py-5 bg-[#d4af37] hover:bg-black hover:text-[#d4af37] text-black rounded-2xl font-black uppercase text-xs tracking-[0.2em] shadow-2xl flex items-center gap-3 transition-all active:scale-95 group">
+                                    {isGenerating ? <Loader2 size={18} className="animate-spin" /> : <FileDown size={18} className="group-hover:bounce" />}
+                                    {isGenerating ? "Processando PDF..." : "Baixar Protocolo PDF"}
+                                </button>
                             </div>
                         </div>
                     </div>
