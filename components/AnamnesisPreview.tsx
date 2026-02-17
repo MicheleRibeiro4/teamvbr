@@ -198,27 +198,43 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
   return (
     <div className="w-full animate-in fade-in duration-500">
         
-        {/* CARD DE AÇÃO */}
-        <div className="bg-[#111] rounded-[2.5rem] p-8 border border-white/10 shadow-2xl relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-10 opacity-[0.03] pointer-events-none group-hover:opacity-[0.05] transition-opacity duration-700">
-                <ClipboardList size={250} />
-            </div>
+        {/* CARD DE AÇÃO COMPACTO */}
+        <div className="bg-[#111] p-5 rounded-2xl border border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 group hover:border-[#d4af37]/30 transition-all shadow-lg relative overflow-hidden">
+             
+             {/* Background Decoration */}
+             <div className="absolute right-0 top-0 opacity-[0.03] transform translate-x-1/4 -translate-y-1/4 pointer-events-none">
+                 <ClipboardList size={150} />
+             </div>
 
-            <div className="relative z-10 flex flex-col items-center justify-center text-center py-12">
-                <div className="w-20 h-20 bg-[#d4af37]/10 text-[#d4af37] rounded-3xl flex items-center justify-center mb-6 border border-[#d4af37]/20 shadow-lg">
-                    <Activity size={40} />
-                </div>
-                <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-2">Anamnese Completa</h2>
-                <p className="text-white/40 text-sm max-w-md mx-auto mb-8">
-                    Dados de saúde, histórico e objetivos do aluno prontos para visualização.
-                </p>
-                <button 
-                    onClick={() => setShowModal(true)}
-                    className="px-10 py-4 bg-[#d4af37] text-black rounded-xl font-black uppercase text-xs tracking-[0.2em] hover:scale-105 active:scale-95 transition-all shadow-[0_0_30px_rgba(212,175,55,0.3)] flex items-center gap-3"
-                >
-                    <Maximize2 size={16} /> Visualizar Anamnese
-                </button>
-            </div>
+             {/* Left Info */}
+             <div className="flex items-center gap-4 relative z-10 w-full md:w-auto">
+                 <div className="w-12 h-12 bg-[#d4af37]/10 text-[#d4af37] rounded-xl flex items-center justify-center border border-[#d4af37]/20 shrink-0">
+                     <Activity size={20} />
+                 </div>
+                 <div className="min-w-0">
+                     <h3 className="font-bold text-white text-sm uppercase tracking-wide truncate">Anamnese Completa</h3>
+                     <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest truncate">Visualizar e Exportar</p>
+                 </div>
+             </div>
+
+             {/* Right Actions */}
+             <div className="flex items-center gap-2 relative z-10 w-full md:w-auto">
+                 <button 
+                     onClick={() => setShowModal(true)} 
+                     className="flex-1 md:flex-none py-3 px-4 bg-white/5 hover:bg-white/10 rounded-xl text-white/60 hover:text-white transition-colors flex items-center justify-center gap-2" 
+                     title="Visualizar em Tela Cheia"
+                 >
+                     <Maximize2 size={16} /> <span className="md:hidden text-xs font-bold uppercase">Visualizar</span>
+                 </button>
+                 <button 
+                     onClick={handleDownloadPDF} 
+                     disabled={isGenerating}
+                     className="flex-[2] md:flex-none px-6 py-3 bg-[#d4af37] hover:bg-[#b5952f] text-black rounded-xl font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2 shadow-lg hover:scale-105 transition-all active:scale-95 whitespace-nowrap"
+                 >
+                     {isGenerating ? <Loader2 size={16} className="animate-spin" /> : <FileDown size={16} />}
+                     Baixar PDF
+                 </button>
+             </div>
         </div>
 
         {/* MODAL */}
