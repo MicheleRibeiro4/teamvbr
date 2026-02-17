@@ -16,7 +16,8 @@ import {
   CalendarCheck,
   FilePlus,
   Flag,
-  Trash2
+  Trash2,
+  Eye
 } from 'lucide-react';
 
 interface Props {
@@ -26,7 +27,7 @@ interface Props {
   // Atualizado para aceitar forceNewId
   onUpdateData: (newData: ProtocolData, createHistory?: boolean, forceNewId?: boolean) => void;
   onSelectHistory?: (data: ProtocolData) => void;
-  onDeleteHistory?: (id: string) => void; // Nova prop para deletar histórico
+  onDeleteHistory?: (id: string) => void; 
   onOpenEditor?: () => void;
 }
 
@@ -279,38 +280,55 @@ const EvolutionTracker: React.FC<Props> = ({
 
                   return (
                     <div key={p.id} className="relative group">
-                        <button
-                        onClick={() => onSelectHistory && onSelectHistory(p)}
-                        className={`w-full text-left p-4 rounded-2xl border transition-all relative z-10 ${
-                            isActive 
-                            ? 'bg-[#d4af37] border-[#d4af37] text-black shadow-lg scale-105' 
-                            : isStart 
-                                ? 'bg-blue-500/10 border-blue-500/30 text-white/80' 
-                                : 'bg-white/5 border-white/5 text-white/60 hover:bg-white/10 hover:border-white/20'
-                        }`}
+                        <div 
+                            className={`w-full rounded-2xl border transition-all relative z-10 overflow-hidden ${
+                                isActive 
+                                ? 'bg-[#d4af37] border-[#d4af37] text-black shadow-lg scale-105' 
+                                : isStart 
+                                    ? 'bg-blue-500/10 border-blue-500/30 text-white/80' 
+                                    : 'bg-white/5 border-white/5 text-white/60 hover:bg-white/10 hover:border-white/20'
+                            }`}
                         >
-                        <div className="flex justify-between items-center mb-1 pr-6">
-                            <div className="flex items-center gap-2">
-                                {isStart ? <Flag size={12} className={isActive ? 'text-black' : 'text-blue-400'} /> : <CalendarCheck size={12} className={isActive ? 'text-black' : 'text-[#d4af37]'} />}
-                                <span className="text-[10px] font-black uppercase tracking-widest">
-                                {new Date(p.updatedAt).toLocaleDateString('pt-BR')}
-                                </span>
-                            </div>
-                            {isActive && <span className="bg-black text-[#d4af37] text-[8px] font-bold px-1.5 py-0.5 rounded">ATUAL</span>}
-                            {isStart && !isActive && <span className="bg-blue-500/20 text-blue-400 border border-blue-500/30 text-[8px] font-bold px-1.5 py-0.5 rounded">INÍCIO</span>}
+                            <button
+                                onClick={() => onSelectHistory && onSelectHistory(p)}
+                                className="w-full text-left p-4 pb-2"
+                            >
+                                <div className="flex justify-between items-center mb-1">
+                                    <div className="flex items-center gap-2">
+                                        {isStart ? <Flag size={12} className={isActive ? 'text-black' : 'text-blue-400'} /> : <CalendarCheck size={12} className={isActive ? 'text-black' : 'text-[#d4af37]'} />}
+                                        <span className="text-[10px] font-black uppercase tracking-widest">
+                                        {new Date(p.updatedAt).toLocaleDateString('pt-BR')}
+                                        </span>
+                                    </div>
+                                    {isActive && <span className="bg-black text-[#d4af37] text-[8px] font-bold px-1.5 py-0.5 rounded">ATUAL</span>}
+                                    {isStart && !isActive && <span className="bg-blue-500/20 text-blue-400 border border-blue-500/30 text-[8px] font-bold px-1.5 py-0.5 rounded">INÍCIO</span>}
+                                </div>
+                                
+                                <div className="grid grid-cols-2 gap-2 mt-3">
+                                    <div className={`bg-black/10 p-2 rounded-lg text-center ${isActive ? 'text-black' : 'text-white'}`}>
+                                        <span className="block text-[8px] font-black uppercase opacity-60">Peso</span>
+                                        <span className="text-xs font-bold">{p.physicalData.weight || '-'}</span>
+                                    </div>
+                                    <div className={`bg-black/10 p-2 rounded-lg text-center ${isActive ? 'text-black' : 'text-white'}`}>
+                                        <span className="block text-[8px] font-black uppercase opacity-60">BF%</span>
+                                        <span className="text-xs font-bold">{p.physicalData.bodyFat || '-'}</span>
+                                    </div>
+                                </div>
+                            </button>
+
+                            {/* Botão de Visualizar Protocolo (Apenas aparece se ativo ou hover) */}
+                            {isActive && onOpenEditor && (
+                                <button 
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onOpenEditor();
+                                    }}
+                                    className="w-full py-2 bg-black/20 hover:bg-black/40 text-[9px] font-bold uppercase tracking-widest flex items-center justify-center gap-1 transition-colors border-t border-black/10"
+                                >
+                                    <Eye size={10} /> Ver Treino/Dieta
+                                </button>
+                            )}
                         </div>
-                        
-                        <div className="grid grid-cols-2 gap-2 mt-3">
-                            <div className={`bg-black/10 p-2 rounded-lg text-center ${isActive ? 'text-black' : 'text-white'}`}>
-                                <span className="block text-[8px] font-black uppercase opacity-60">Peso</span>
-                                <span className="text-xs font-bold">{p.physicalData.weight || '-'}</span>
-                            </div>
-                            <div className={`bg-black/10 p-2 rounded-lg text-center ${isActive ? 'text-black' : 'text-white'}`}>
-                                <span className="block text-[8px] font-black uppercase opacity-60">BF%</span>
-                                <span className="text-xs font-bold">{p.physicalData.bodyFat || '-'}</span>
-                            </div>
-                        </div>
-                        </button>
 
                         {/* BOTÃO DE EXCLUIR EVOLUÇÃO */}
                         {onDeleteHistory && (

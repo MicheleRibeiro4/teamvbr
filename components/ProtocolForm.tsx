@@ -464,7 +464,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
 
       {/* NAVEGAÇÃO POR ABAS - CENTRALIZADO e RESPONSIVO */}
       {!hideTabs && (
-        <div className="flex flex-nowrap md:flex-wrap md:justify-center gap-2 overflow-x-auto pb-4 scrollbar-hide w-full">
+        <div className="flex flex-nowrap md:justify-center gap-2 overflow-x-auto pb-4 scrollbar-hide w-full">
             <TabButton id="identificacao" label="Identificação" icon={User} />
             <TabButton id="anamnese" label="Anamnese" icon={BookOpen} />
             <TabButton id="medidas" label="Medidas" icon={Ruler} />
@@ -485,7 +485,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2"><label className={labelClass}>Nome Completo</label><input className={inputClass} value={data.clientName} onChange={(e) => handleChange('clientName', e.target.value)} /></div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 col-span-1 md:col-span-2">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 col-span-1 md:col-span-2">
                  <div>
                    <label className={labelClass}>WhatsApp / Celular</label>
                    <input 
@@ -504,6 +504,16 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                       onChange={(e) => handleCPFMask('contract.cpf', e.target.value)} 
                       placeholder="000.000.000-00" 
                       maxLength={14}
+                    />
+                 </div>
+                 {/* NOVO CAMPO DE EMAIL */}
+                 <div>
+                    <label className={labelClass}>E-mail</label>
+                    <input 
+                        className={inputClass} 
+                        value={data.contract.email} 
+                        onChange={(e) => handleChange('contract.email', e.target.value)} 
+                        placeholder="aluno@email.com"
                     />
                  </div>
               </div>
@@ -569,7 +579,8 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
           </section>
         </div>
       )}
-
+      
+      {/* ... Rest of the tabs ... */}
       {/* ABA: ANAMNESE (NOVA) */}
       {activeTab === 'anamnese' && (
         <div className="animate-in fade-in slide-in-from-right-4 duration-300 space-y-8">

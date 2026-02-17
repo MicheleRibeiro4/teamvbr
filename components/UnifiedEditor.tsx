@@ -87,6 +87,11 @@ const UnifiedEditor: React.FC<Props> = ({
      }
   };
 
+  // Função para permitir que o EvolutionTracker mude a aba para visualizar o protocolo
+  const handleViewProtocolFromHistory = () => {
+      setActiveTab('treino'); // Muda para aba de treino para ver o protocolo
+  };
+
   return (
     <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 w-full">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 no-print">
@@ -109,8 +114,8 @@ const UnifiedEditor: React.FC<Props> = ({
         <div className={`no-print ${activeTab === 'evolucao' ? 'w-full' : 'w-full xl:w-2/5'}`}>
           <div className="bg-white/5 p-4 rounded-[2rem] border border-white/10 shadow-2xl w-full">
             
-            {/* Navegação de Abas COMPACTA */}
-            <div className="flex flex-nowrap overflow-x-auto pb-2 scrollbar-hide w-full mb-6 gap-1.5">
+            {/* Navegação de Abas COMPACTA E CENTRALIZADA */}
+            <div className="flex flex-nowrap md:justify-center overflow-x-auto pb-2 scrollbar-hide w-full mb-6 gap-1.5">
                 {[
                     { id: 'identificacao', label: 'ID', fullLabel: 'Identificação', icon: FileText },
                     { id: 'anamnese', label: 'Anamnese', fullLabel: 'Anamnese', icon: Activity },
@@ -140,7 +145,7 @@ const UnifiedEditor: React.FC<Props> = ({
                     onUpdateData={onUpdateData}
                     onSelectHistory={onSelectHistory}
                     onDeleteHistory={onDeleteHistory}
-                    onOpenEditor={() => {/* Já estamos no editor */}}
+                    onOpenEditor={handleViewProtocolFromHistory} // Passa a função para trocar aba
                 />
             ) : (
                 <ProtocolForm 

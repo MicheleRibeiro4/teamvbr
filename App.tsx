@@ -160,19 +160,20 @@ const App: React.FC = () => {
     setActiveView('manage');
   };
 
-  const loadStudent = (student: ProtocolData, view: ViewMode = 'student-dashboard') => {
+  const loadStudent = (student: ProtocolData, view: ViewMode = 'manage') => {
     setData(student);
     setActiveView(view);
   };
 
   const deleteStudent = async (id: string) => {
-    try {
+    if(confirm('Excluir este aluno permanentemente?')) {
+      try {
         await db.deleteProtocol(id);
         setSavedProtocols(prev => prev.filter(p => p.id !== id));
         if (activeView !== 'home') setActiveView('home');
-    } catch (err) {
+      } catch (err) {
         alert('Erro ao excluir.');
-        throw err;
+      }
     }
   };
   
@@ -262,7 +263,7 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
           
           {activeView !== 'home' && (
             <button 
-              onClick={() => setActiveView(data.id && activeView !== 'student-dashboard' ? 'student-dashboard' : 'home')}
+              onClick={() => setActiveView(data.id && activeView !== 'manage' ? 'manage' : 'home')}
               className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-[#d4af37] transition-colors"
             >
               <ChevronLeft size={16} /> Voltar
@@ -312,25 +313,23 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
             protocols={savedProtocols} 
             onNew={handleNew} 
             onList={() => setActiveView('search')} 
-            onLoadStudent={(p) => loadStudent(p, 'student-dashboard')}
+            onLoadStudent={(p) => loadStudent(p, 'manage')}
             onUpdateStudent={(data) => handleSave(false, data)}
             onDeleteStudent={(id) => deleteStudent(id)}
           />
         )}
 
         {activeView === 'search' && (
-          <StudentSearch protocols={savedProtocols} onLoad={(p) => loadStudent(p, 'student-dashboard')} onDelete={(id) => { if(confirm('Excluir?')) deleteStudent(id); }} />
+          <StudentSearch protocols={savedProtocols} onLoad={(p) => loadStudent(p, 'manage')} onDelete={deleteStudent} />
         )}
 
-        {activeView === 'student-dashboard' && (
-          <StudentDashboard data={data} setView={(v) => setActiveView(v as ViewMode)} />
-        )}
+        {/* Removed StudentDashboard from regular flow as requested, view 'manage' is now default editor */}
 
         {activeView === 'manage' && (
           <UnifiedEditor 
             data={data} 
             onChange={setData} 
-            onBack={() => setActiveView('student-dashboard')}
+            onBack={() => setActiveView('home')}
             // Props para histórico funcionar dentro do editor
             history={savedProtocols.filter(p => p.clientName === data.clientName)}
             onUpdateData={(newData, createHistory, forceNewId) => handleSave(false, newData, createHistory || forceNewId)}
@@ -338,18 +337,6 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
             onDeleteHistory={handleDeleteHistory}
           />
         )}
-
-        {activeView === 'evolution' && (
-          <EvolutionTracker 
-              currentProtocol={data} 
-              history={savedProtocols.filter(p => p.clientName === data.clientName)} 
-              onNotesChange={(n) => setData({...data, privateNotes: n})} 
-              onUpdateData={(newData, createHistory) => handleSave(false, newData, createHistory)}
-              onSelectHistory={(hist) => setData(hist)}
-              onOpenEditor={() => setActiveView('manage')}
-          />
-        )}
-
       </main>
     </div>
   );

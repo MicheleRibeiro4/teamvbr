@@ -182,14 +182,13 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
   }
 
   return (
-    // Ajustado padding (p-4 md:p-8) e alinhamento (items-center) para garantir que as bordas apareçam no mobile
-    <div className="h-[100dvh] md:min-h-screen bg-[#0a0a0a] text-white p-4 md:p-8 flex items-center justify-center">
-      {/* Ajustado rounded (rounded-[2.5rem]) para ser igual em mobile e desktop */}
-      <div className="w-full max-w-4xl bg-[#111] border border-white/10 rounded-[2.5rem] p-5 md:p-10 shadow-2xl relative overflow-hidden flex flex-col h-[95%] md:h-[90vh] max-h-[900px]">
+    // Ajustado padding e layout para evitar cortes
+    <div className="h-[100dvh] md:min-h-screen bg-[#0a0a0a] text-white p-2 md:p-8 flex items-center justify-center">
+      <div className="w-full max-w-4xl bg-[#111] border border-white/10 rounded-[2rem] md:rounded-[2.5rem] p-4 md:p-10 shadow-2xl relative overflow-hidden flex flex-col h-[98%] md:h-[90vh] max-h-[900px]">
         
-        {/* Progress Bar */}
-        <div className="flex items-center gap-4 mb-4 md:mb-8 shrink-0">
-            <button onClick={() => setStep(step - 1)} className="p-2 bg-white/5 rounded-full hover:bg-white/10 text-white/60">
+        {/* Progress Bar Container - Shrinkable to ensure visibility */}
+        <div className="flex items-center gap-4 mb-4 md:mb-8 shrink-0 w-full pt-2 md:pt-0">
+            <button onClick={() => setStep(step - 1)} className="p-2 bg-white/5 rounded-full hover:bg-white/10 text-white/60 shrink-0">
                 <ChevronLeft size={20} />
             </button>
             <div className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
@@ -198,11 +197,11 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
                     style={{ width: `${(step / 3) * 100}%` }}
                 ></div>
             </div>
-            <span className="text-xs font-black text-[#d4af37]">{step}/3</span>
+            <span className="text-xs font-black text-[#d4af37] shrink-0">{step}/3</span>
         </div>
 
-        {/* Scrollable Content - Added huge pb to clear the fixed button on mobile */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 md:pr-4 pb-40">
+        {/* Scrollable Content - Added padding-bottom to clear fixed button */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 md:pr-4 pb-32">
             
             {/* STEP 1: IDENTIFICAÇÃO COMPLETA */}
             {step === 1 && (
