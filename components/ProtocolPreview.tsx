@@ -108,7 +108,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
 
             <div className="html2pdf__page-break"></div>
 
-            {/* PÁGINA 2 */}
+            {/* PÁGINA 2: DADOS E NUTRIÇÃO */}
             <div style={pageStyle} className="h-auto">
             <h3 className={sectionTitle}>1. Dados Físicos - {physical.date || new Date().toLocaleDateString('pt-BR')}</h3>
             <div className="grid grid-cols-3 gap-4 mb-8">
@@ -116,13 +116,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                 <div className={dataCardStyle}><span className={labelStyle}>Altura</span><span className={valueStyle}>{physical.height || '-'} m</span></div>
                 <div className={dataCardStyle}><span className={labelStyle}>Idade</span><span className={valueStyle}>{physical.age || '-'} anos</span></div>
             </div>
-            <h4 className="text-sm font-bold uppercase text-black mb-3">Bioimpedância</h4>
-            <div className="grid grid-cols-4 gap-4 mb-8">
-                <div className={dataCardStyle}><span className={labelStyle}>Massa Musc.</span><span className={valueStyle}>{physical.muscleMass || '-'} kg</span></div>
-                <div className={dataCardStyle}><span className={labelStyle}>Gordura</span><span className={valueStyle}>{physical.bodyFat || '-'}%</span></div>
-                <div className={dataCardStyle}><span className={labelStyle}>G. Visceral</span><span className={valueStyle}>{physical.visceralFat || '-'}</span></div>
-                <div className={dataCardStyle}><span className={labelStyle}>IMC</span><span className={valueStyle}>{physical.imc || '-'}</span></div>
-            </div>
+            
             <h4 className="text-sm font-bold uppercase text-black mb-3">Medidas Corporais</h4>
             <div className="mb-10 bg-gray-50 p-4 rounded-lg border border-gray-100">
                 <div className="grid grid-cols-4 gap-4 mb-4 border-b border-gray-200 pb-4">
@@ -131,10 +125,6 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                     <div><span className={labelStyle}>Cintura</span><span className="font-bold text-gray-900">{measurements.waist || '-'}</span></div>
                     <div><span className={labelStyle}>Abdômen</span><span className="font-bold text-gray-900">{measurements.abdomen || '-'}</span></div>
                     <div><span className={labelStyle}>Glúteo</span><span className="font-bold text-gray-900">{measurements.glutes || '-'}</span></div>
-                    <div><span className={labelStyle}>Braço Dir (Rel)</span><span className="font-bold text-gray-900">{measurements.rightArmRelaxed || '-'}</span></div>
-                    <div><span className={labelStyle}>Braço Esq (Rel)</span><span className="font-bold text-gray-900">{measurements.leftArmRelaxed || '-'}</span></div>
-                    <div><span className={labelStyle}>Braço Dir (Cont)</span><span className="font-bold text-gray-900">{measurements.rightArmContracted || '-'}</span></div>
-                    <div><span className={labelStyle}>Braço Esq (Cont)</span><span className="font-bold text-gray-900">{measurements.leftArmContracted || '-'}</span></div>
                 </div>
                 <div className="grid grid-cols-4 gap-4">
                     <div className="col-span-4 text-xs font-black text-[#d4af37] uppercase tracking-widest">Inferior</div>
@@ -148,12 +138,17 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
             <h3 className={sectionTitle}>2. Estratégia Nutricional</h3>
             <div className="bg-gray-100 p-6 rounded-none border-l-4 border-gray-400 mb-8 text-sm text-gray-800 leading-relaxed break-inside-avoid">
                 <span className="font-bold block mb-1">Observação:</span>
-                {safeData.nutritionalStrategy || "Nenhuma observação definida."}
+                <p className="whitespace-pre-wrap">{safeData.nutritionalStrategy || "Nenhuma observação definida."}</p>
             </div>
+            
+            {/* Bloco Meta Diária com break-inside-avoid para não quebrar no meio do texto */}
             <div className="bg-[#1a1a1a] text-center p-8 rounded-lg mb-8 break-inside-avoid">
-                <p className="text-xs font-bold text-white uppercase tracking-widest mb-2">META DIÁRIA ({kcalSubtext.toUpperCase()})</p>
+                <p className="text-[10px] font-bold text-white uppercase tracking-widest mb-3 leading-relaxed px-4">
+                    META DIÁRIA (ESTE VALOR É O PONTO DE PARTIDA AJUSTADO PARA SUA FASE DE {kcalSubtext.toUpperCase()}. MONITORAREMOS SUA RESPOSTA E FAREMOS AJUSTES CONFORME NECESSÁRIO.)
+                </p>
                 <p className="text-4xl font-bold text-[#d4af37]">{safeData.kcalGoal || "0"} kcal</p>
             </div>
+
             <h4 className="text-lg font-bold text-black mb-4">Distribuição de Macronutrientes</h4>
             <div className="grid grid-cols-3 gap-4 mb-4 break-inside-avoid pb-10">
                 <div className="bg-white border border-gray-200 p-4 text-center rounded-lg shadow-sm">
@@ -176,7 +171,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
 
             <div className="html2pdf__page-break"></div>
 
-            {/* PÁGINA 3 */}
+            {/* PÁGINA 3: DIETA */}
             <div style={pageStyle} className="h-auto">
             <h3 className={sectionTitle}>3. Plano Alimentar Diário</h3>
             <table className="w-full text-left text-sm border-collapse mb-8">
@@ -195,7 +190,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
 
             <div className="html2pdf__page-break"></div>
 
-            {/* PÁGINA 4 */}
+            {/* PÁGINA 4: SUPLEMENTAÇÃO */}
             <div style={pageStyle} className="h-auto">
             <h3 className={sectionTitle}>4. Suplementação e Recomendações</h3>
             <div className="space-y-4 mb-12">
@@ -238,18 +233,18 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                         <div className="space-y-8">
                             {chunk.map((day) => (
                                 <div key={day.id} className="border-2 border-black rounded-xl overflow-hidden break-inside-avoid">
-                                    <div className="bg-white border-b-2 border-black p-3 flex justify-between items-center">
-                                        <span className="font-black uppercase text-black text-lg">{day.title}</span>
-                                        <span className="text-xs font-bold text-[#d4af37] uppercase bg-black px-3 py-1 rounded">
-                                            Foco: {day.focus}
+                                    <div className="bg-black p-3 flex justify-between items-center">
+                                        <span className="font-black uppercase text-[#d4af37] text-lg">{day.title}</span>
+                                        <span className="text-[10px] font-black text-white uppercase tracking-widest">
+                                            FOCO: {day.focus}
                                         </span>
                                     </div>
                                     <table className="w-full text-sm text-left bg-white">
                                         <tbody className="divide-y divide-gray-200">
                                             {(day.exercises || []).map((ex, idx) => (
                                                 <tr key={ex.id || idx} className="bg-white">
-                                                    <td className="p-3 font-bold text-gray-900">{ex.name}</td>
-                                                    <td className="p-3 font-black text-black text-right whitespace-nowrap">{ex.sets}</td>
+                                                    <td className="p-4 font-bold text-gray-900 border-r border-gray-100">{ex.name}</td>
+                                                    <td className="p-4 font-black text-black text-right whitespace-nowrap">{ex.sets}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -260,7 +255,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                         </div>
                     </div>
                     {/* Add page break if it's not the last chunk */}
-                    {(index < trainingChunks.length - 1) && <div className="html2pdf__page-break"></div>}
+                    {index < trainingChunks.length - 1 && <div className="html2pdf__page-break"></div>}
                 </React.Fragment>
             ))}
 
@@ -299,7 +294,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                     <div className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
                         <div className="bg-white w-full max-w-5xl h-[90vh] rounded-[2rem] flex flex-col relative overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
                             <div className="bg-gray-100 p-4 px-8 flex justify-between items-center border-b border-gray-200 shrink-0">
-                                <h2 className="text-black font-black uppercase tracking-tighter text-lg flex items-center gap-2"><FileText size={20} className="text-[#d4af37]" /> Protocolo</h2>
+                                <h2 className="text-black font-black uppercase tracking-tighter text-lg flex items-center gap-2"><FileText size={20} className="text-[#d4af37]" /> Visualizar Protocolo</h2>
                                 <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-500"><X size={24} /></button>
                             </div>
                             <div className="flex-1 overflow-auto bg-gray-500/20 p-8 custom-scrollbar-light flex justify-center items-start">
