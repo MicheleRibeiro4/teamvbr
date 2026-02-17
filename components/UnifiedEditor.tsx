@@ -4,7 +4,8 @@ import { ProtocolData } from '../types';
 import ProtocolForm from './ProtocolForm';
 import ProtocolPreview, { ProtocolPreviewHandle } from './ProtocolPreview';
 import ContractPreview, { ContractPreviewHandle } from './ContractPreview';
-import { ChevronLeft, Settings2, Download } from 'lucide-react';
+import AnamnesisPreview, { AnamnesisPreviewHandle } from './AnamnesisPreview';
+import { ChevronLeft, Settings2, Download, FileText, Activity, Dumbbell } from 'lucide-react';
 
 interface Props {
   data: ProtocolData;
@@ -12,23 +13,44 @@ interface Props {
   onBack: () => void;
 }
 
+type PreviewMode = 'protocol' | 'contract' | 'anamnesis';
+
 const UnifiedEditor: React.FC<Props> = ({ data, onChange, onBack }) => {
   // Estado elevado para controlar qual aba está ativa no formulário
   const [activeTab, setActiveTab] = useState<'identificacao' | 'anamnese' | 'medidas' | 'nutricao' | 'treino' | 'obs'>('identificacao');
   
-  // Refs para acionar os downloads dentro dos componentes filhos
+  // Estado para controlar qual visualização está ativa
+  const [viewMode, setViewMode] = useState<PreviewMode>('protocol');
+
+  // Refs para acionar os downloads
   const protocolRef = useRef<ProtocolPreviewHandle>(null);
   const contractRef = useRef<ContractPreviewHandle>(null);
+  const anamnesisRef = useRef<AnamnesisPreviewHandle>(null);
 
-  // Determina qual modo de visualização usar baseado na aba ativa
-  const isContractView = activeTab === 'identificacao';
+  // Sincroniza a visualização com a aba do formulário (opcional, mas ajuda UX)
+  // Se usuário clicar em "Identificação", mostra contrato. Se clicar em "Anamnese", mostra anamnese.
+  React.useEffect(() => {
+    if (activeTab === 'identificacao') setViewMode('contract');
+    else if (activeTab === 'anamnese' || activeTab === 'medidas') setViewMode('anamnesis');
+    else setViewMode('protocol');
+  }, [activeTab]);
 
   const handleDownloadCurrent = () => {
-    if (!isContractView && protocolRef.current) {
+    if (viewMode === 'protocol' && protocolRef.current) {
       protocolRef.current.download();
-    } else if (isContractView && contractRef.current) {
+    } else if (viewMode === 'contract' && contractRef.current) {
       contractRef.current.download();
+    } else if (viewMode === 'anamnesis' && anamnesisRef.current) {
+      anamnesisRef.current.download();
     }
+  };
+
+  const getDownloadLabel = () => {
+     switch(viewMode) {
+         case 'protocol': return 'Salvar Protocolo PDF';
+         case 'contract': return 'Salvar Contrato PDF';
+         case 'anamnesis': return 'Salvar Anamnese PDF';
+     }
   };
 
   return (
@@ -64,33 +86,56 @@ const UnifiedEditor: React.FC<Props> = ({ data, onChange, onBack }) => {
         <div className="w-full xl:w-3/5 flex flex-col items-center gap-6">
            
            {/* BARRA DE FERRAMENTAS DO PREVIEW */}
-           <div className="no-print w-full bg-[#111] p-4 rounded-[2rem] border border-white/10 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4">
+           <div className="no-print w-full bg-[#111] p-4 rounded-[2rem] border border-white/10 shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-4">
               
-              {/* Indicador do que está sendo visualizado */}
-              <div className="flex gap-2 bg-black/50 p-3 px-6 rounded-xl border border-white/5 text-white/60 text-[10px] font-black uppercase tracking-widest w-full md:w-auto justify-center">
-                Visualizando: <span className="text-[#d4af37]">{isContractView ? 'Contrato' : 'Protocolo Completo'}</span>
+              {/* Seletor de Visualização */}
+              <div className="flex gap-1 bg-black/50 p-1 rounded-xl border border-white/5 w-full lg:w-auto overflow-x-auto">
+                 <button 
+                    onClick={() => setViewMode('contract')}
+                    className={`px-4 py-3 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-2 transition-all whitespace-nowrap ${viewMode === 'contract' ? 'bg-[#d4af37] text-black shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                 >
+                    <FileText size={14}/> Contrato
+                 </button>
+                 <button 
+                    onClick={() => setViewMode('anamnesis')}
+                    className={`px-4 py-3 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-2 transition-all whitespace-nowrap ${viewMode === 'anamnesis' ? 'bg-[#d4af37] text-black shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                 >
+                    <Activity size={14}/> Anamnese
+                 </button>
+                 <button 
+                    onClick={() => setViewMode('protocol')}
+                    className={`px-4 py-3 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-2 transition-all whitespace-nowrap ${viewMode === 'protocol' ? 'bg-[#d4af37] text-black shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                 >
+                    <Dumbbell size={14}/> Protocolo
+                 </button>
               </div>
 
               {/* Botão de Salvar/Download */}
               <button 
                 onClick={handleDownloadCurrent}
-                className="w-full md:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-white/5 hover:bg-[#d4af37] hover:text-black text-white border border-white/10 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all shadow-lg active:scale-95 group whitespace-nowrap"
+                className="w-full lg:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-white/5 hover:bg-[#d4af37] hover:text-black text-white border border-white/10 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all shadow-lg active:scale-95 group whitespace-nowrap"
               >
                 <Download size={16} className="group-hover:animate-bounce" />
-                Salvar PDF {!isContractView ? 'do Protocolo' : 'do Contrato'}
+                {getDownloadLabel()}
               </button>
            </div>
            
            {/* ÁREA DE PREVIEW */}
            <div className="w-full flex justify-center bg-white/5 p-4 md:p-10 rounded-[2rem] md:rounded-[4rem] border-2 border-dashed border-white/10 relative overflow-hidden min-h-[500px] md:min-h-[900px]">
               <div className="transform scale-[0.45] md:scale-[0.7] xl:scale-[0.75] origin-top">
-                {/* Renderização Condicional Baseada na Aba */}
-                <div style={{ display: !isContractView ? 'block' : 'none' }}>
+                
+                <div style={{ display: viewMode === 'protocol' ? 'block' : 'none' }}>
                   <ProtocolPreview ref={protocolRef} data={data} hideFloatingButton={true} />
                 </div>
-                <div style={{ display: isContractView ? 'block' : 'none' }}>
+                
+                <div style={{ display: viewMode === 'contract' ? 'block' : 'none' }}>
                   <ContractPreview ref={contractRef} data={data} hideFloatingButton={true} />
                 </div>
+
+                <div style={{ display: viewMode === 'anamnesis' ? 'block' : 'none' }}>
+                  <AnamnesisPreview ref={anamnesisRef} data={data} hideFloatingButton={true} />
+                </div>
+
               </div>
            </div>
         </div>

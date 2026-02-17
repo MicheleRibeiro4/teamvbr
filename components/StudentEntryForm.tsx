@@ -101,9 +101,9 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
   };
 
   // Styles
-  const inputBase = "w-full p-4 bg-[#1a1a1a] border border-white/10 rounded-2xl focus:ring-2 focus:ring-[#d4af37] focus:border-transparent outline-none font-bold text-white text-sm transition-all placeholder:text-white/20";
+  // text-base em mobile previne zoom automático em inputs no iOS
+  const inputBase = "w-full p-4 bg-[#1a1a1a] border border-white/10 rounded-2xl focus:ring-2 focus:ring-[#d4af37] focus:border-transparent outline-none font-bold text-white text-base md:text-sm transition-all placeholder:text-white/20";
   const inputClass = inputBase;
-  // Usamos type="text" + inputMode="decimal" para garantir teclado numérico no mobile sem as setas de spinner (spinners)
   const inputNumberClass = inputBase; 
 
   const labelClass = "block text-[10px] md:text-[11px] font-black text-white/40 mb-2 uppercase tracking-widest pl-1";
@@ -156,12 +156,12 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
   if (step === 0) {
       return (
         <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center p-6 animate-in fade-in duration-700">
-             <img src={LOGO_VBR_BLACK} alt="Team VBR" className="h-24 w-auto mb-12" />
+             <img src={LOGO_VBR_BLACK} alt="Team VBR" className="h-20 md:h-24 w-auto mb-8 md:mb-12" />
              <div className="text-center max-w-lg space-y-6">
-                 <h1 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter leading-none">
+                 <h1 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter leading-none">
                     Bem-vindo ao <span className="text-[#d4af37]">Team VBR</span>
                  </h1>
-                 <p className="text-white/60 text-lg font-medium leading-relaxed">
+                 <p className="text-white/60 text-base md:text-lg font-medium leading-relaxed">
                     Para criarmos o protocolo perfeito para você, precisamos conhecer seus hábitos, histórico e objetivos.
                  </p>
                  <div className="flex flex-col gap-4 pt-8 w-full">
@@ -181,11 +181,12 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white p-4 md:p-8 flex items-center justify-center">
-      <div className="w-full max-w-4xl bg-[#111] border border-white/10 rounded-[2rem] md:rounded-[2.5rem] p-5 md:p-10 shadow-2xl relative overflow-hidden flex flex-col h-[90vh] max-h-[900px]">
+    // Usa h-[100dvh] para mobile (dynamic viewport) para lidar melhor com barras de navegador
+    <div className="h-[100dvh] md:min-h-screen bg-[#0a0a0a] text-white p-0 md:p-8 flex items-end md:items-center justify-center">
+      <div className="w-full max-w-4xl bg-[#111] border-t md:border border-white/10 rounded-t-[2rem] md:rounded-[2.5rem] p-5 md:p-10 shadow-2xl relative overflow-hidden flex flex-col h-[95%] md:h-[90vh] max-h-[900px]">
         
         {/* Progress Bar */}
-        <div className="flex items-center gap-4 mb-8 shrink-0">
+        <div className="flex items-center gap-4 mb-4 md:mb-8 shrink-0">
             <button onClick={() => setStep(step - 1)} className="p-2 bg-white/5 rounded-full hover:bg-white/10 text-white/60">
                 <ChevronLeft size={20} />
             </button>
@@ -198,8 +199,8 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
             <span className="text-xs font-black text-[#d4af37]">{step}/3</span>
         </div>
 
-        {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 md:pr-4 pb-24">
+        {/* Scrollable Content - Added pb-32 to clear the fixed button on mobile */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 md:pr-4 pb-32">
             
             {/* STEP 1: IDENTIFICAÇÃO COMPLETA */}
             {step === 1 && (
