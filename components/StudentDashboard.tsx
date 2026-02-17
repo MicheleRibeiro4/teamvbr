@@ -31,10 +31,10 @@ const StudentDashboard: React.FC<Props> = ({ data, setView }) => {
         <div className={`absolute top-0 right-0 w-96 h-96 ${bgGlow} blur-[120px] opacity-[0.03] pointer-events-none group-hover:opacity-[0.05] transition-opacity duration-1000`}></div>
 
         <div className="flex flex-col md:flex-row items-center gap-8 text-center md:text-left relative z-10 w-full md:w-auto">
-          {/* Avatar - Agora clicável */}
+          {/* Avatar - Agora clicável - Fundo Branco */}
           <button 
             onClick={() => setView('manage')}
-            className={`w-24 h-24 rounded-3xl border-2 ${borderColor} flex items-center justify-center bg-black/50 shadow-[0_0_20px_rgba(255,255,255,0.05)] shrink-0 hover:scale-105 active:scale-95 transition-all cursor-pointer overflow-hidden`}
+            className={`w-24 h-24 rounded-3xl border-2 ${borderColor} flex items-center justify-center bg-white shadow-[0_0_20px_rgba(255,255,255,0.05)] shrink-0 hover:scale-105 active:scale-95 transition-all cursor-pointer overflow-hidden`}
           >
             <img src={userIconSrc} alt="Avatar" className="w-full h-full object-cover" />
           </button>

@@ -43,8 +43,8 @@ const StudentSearch: React.FC<Props> = ({ protocols, onLoad, onDelete }) => {
           filtered.map((p) => {
             const isFemale = p.physicalData.gender === 'Feminino';
             
-            // Cores padrão (Dourado/Preto) para todos
-            let iconBgClass = 'bg-black text-[#d4af37] border-[#d4af37]';
+            // Alterado bg-black para bg-white para dar contraste aos ícones
+            let iconBgClass = 'bg-white text-[#d4af37] border-[#d4af37]';
             let nameHoverClass = 'group-hover:text-[#d4af37]';
             let borderClass = 'hover:border-[#d4af37]/40';
             let badgeClass = 'text-[#d4af37] bg-[#d4af37]/10';

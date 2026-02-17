@@ -288,8 +288,8 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
             {recentStudents.length > 0 ? recentStudents.map((p) => {
               const isFemale = p.physicalData.gender === 'Feminino';
               
-              // Cores Padrão (Sem Rosa/Azul)
-              let iconColorClass = 'bg-black border-white/10';
+              // Alterado bg-black para bg-white para garantir contraste
+              let iconColorClass = 'bg-white border-white/10';
               let hoverTextClass = 'group-hover:text-[#d4af37]';
               let buttonHoverBg = 'hover:bg-[#d4af37]';
               
