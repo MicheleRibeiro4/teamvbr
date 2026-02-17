@@ -159,7 +159,7 @@ const App: React.FC = () => {
     setActiveView('manage');
   };
 
-  const loadStudent = (student: ProtocolData, view: ViewMode = 'student-dashboard') => {
+  const loadStudent = (student: ProtocolData, view: ViewMode = 'manage') => {
     setData(student);
     setActiveView(view);
   };
@@ -249,7 +249,7 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
           
           {activeView !== 'home' && (
             <button 
-              onClick={() => setActiveView(data.id && activeView !== 'student-dashboard' ? 'student-dashboard' : 'home')}
+              onClick={() => setActiveView('home')} // Botão Voltar agora vai para Home
               className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-[#d4af37] transition-colors"
             >
               <ChevronLeft size={16} /> Voltar
@@ -295,11 +295,11 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
         )}
 
         {activeView === 'home' && (
-          <MainDashboard protocols={savedProtocols} onNew={handleNew} onList={() => setActiveView('search')} onLoadStudent={(p) => loadStudent(p, 'student-dashboard')} />
+          <MainDashboard protocols={savedProtocols} onNew={handleNew} onList={() => setActiveView('search')} onLoadStudent={(p) => loadStudent(p, 'manage')} onUpdateStudent={(p) => handleSave(false, p)} onDeleteStudent={deleteStudent} />
         )}
 
         {activeView === 'search' && (
-          <StudentSearch protocols={savedProtocols} onLoad={(p) => loadStudent(p, 'student-dashboard')} onDelete={deleteStudent} />
+          <StudentSearch protocols={savedProtocols} onLoad={(p) => loadStudent(p, 'manage')} onDelete={deleteStudent} onUpdate={(p) => handleSave(true, p)} />
         )}
 
         {activeView === 'student-dashboard' && (
@@ -310,7 +310,7 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
           <UnifiedEditor 
             data={data} 
             onChange={setData} 
-            onBack={() => setActiveView('student-dashboard')} 
+            onBack={() => setActiveView('search')} 
           />
         )}
 

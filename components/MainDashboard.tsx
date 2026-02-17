@@ -71,11 +71,6 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
   
   const totalStudents = uniqueStudents.length;
 
-  // Alunos recentes (apenas ativos ou já processados)
-  const displayedStudents = uniqueStudents
-    .filter((p: any) => p.contract.status !== 'Aguardando')
-    .slice(0, 5); 
-
   // --- LÓGICA DE AGENDA QUINZENAL ---
   const scheduledUpdates = useMemo(() => {
     return uniqueStudents.map((student: any) => {
@@ -409,7 +404,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
 
                 {/* Modal Content */}
                 <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar space-y-8 flex-1">
-                    
+                    {/* ... (Conteúdo do Modal Mantido) ... */}
                     {/* Seção Pessoal */}
                     <div className="space-y-4">
                          <h3 className="text-sm font-black text-[#d4af37] uppercase tracking-widest border-b border-[#d4af37]/20 pb-2 flex items-center gap-2">
@@ -472,7 +467,6 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                             <div className={previewArea}>{previewStudent.anamnesis.ergogenics}</div>
                          </div>
                     </div>
-
                 </div>
 
                 {/* Modal Actions */}
@@ -596,64 +590,6 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
           </div>
         </div>
 
-      </div>
-
-      {/* RODAPÉ: ALUNOS RECENTES (LARGURA TOTAL) */}
-      <div className="w-full bg-[#111] border border-white/10 rounded-[2rem] p-6 flex flex-col">
-          <div className="flex items-center justify-between mb-4 px-2">
-            <h3 className="text-sm font-black text-white uppercase tracking-tighter flex items-center gap-2">
-              <Clock size={16} className="text-[#d4af37]" /> Alunos Recentes
-            </h3>
-            <button onClick={onList} className="text-[9px] font-black text-[#d4af37] uppercase tracking-widest hover:underline">Ver Todos</button>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
-            {displayedStudents.length > 0 ? displayedStudents.map((p: any) => {
-              const isFemale = p.physicalData.gender === 'Feminino';
-              
-              // Alterado bg-black para bg-white para garantir contraste
-              let iconColorClass = 'bg-white border-white/10';
-              let hoverTextClass = 'group-hover:text-[#d4af37]';
-              let buttonHoverBg = 'hover:bg-[#d4af37]';
-              let statusBadge = null;
-
-              if (p.contract.status === 'Ativo') {
-                  statusBadge = <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div>;
-              }
-              
-              const userIconSrc = isFemale ? ICON_WOMAN : ICON_MAN;
-
-              return (
-                <div key={p.id} className="bg-white/5 p-3 rounded-xl border border-white/5 flex flex-col justify-between gap-3 hover:border-white/20 transition-all group relative overflow-hidden">
-                  {statusBadge}
-                  <div className="flex items-center gap-3 overflow-hidden">
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center border transition-all shrink-0 ${iconColorClass} overflow-hidden`}>
-                        <img src={userIconSrc} alt="Icon" className="w-full h-full object-cover" />
-                    </div>
-                    <div className="flex flex-col min-w-0">
-                        <div className="flex items-center gap-2">
-                           <h4 className={`font-black text-[10px] uppercase tracking-tighter text-white ${hoverTextClass} transition-colors leading-none truncate`}>{p.clientName}</h4>
-                        </div>
-                        <div className="mt-0.5">
-                          <span className="text-[7px] text-white/30 font-bold uppercase tracking-widest block truncate">{p.protocolTitle || 'Sem Objetivo'}</span>
-                        </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 border-t border-white/5 pt-2 mt-1">
-                    <button onClick={() => onLoadStudent(p, 'manage')} className={`flex-1 p-1.5 bg-white/5 ${buttonHoverBg} hover:text-black rounded-lg transition-all text-white/40 flex justify-center`} title="Gerenciar"><FileText size={12} /></button>
-                    <button onClick={() => onLoadStudent(p, 'student-dashboard')} className="w-6 h-6 bg-white/5 hover:bg-white/10 rounded-lg flex items-center justify-center text-[#d4af37]"><ChevronRight size={14} /></button>
-                  </div>
-                </div>
-              );
-            }) : (
-              <div className="col-span-full text-center py-8">
-                <p className="text-white/20 font-black uppercase tracking-widest text-[10px]">
-                    Nenhum registro recente.
-                </p>
-              </div>
-            )}
-          </div>
       </div>
 
     </div>

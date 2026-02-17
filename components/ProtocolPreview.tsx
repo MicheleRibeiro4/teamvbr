@@ -272,15 +272,15 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                 {supplements.length === 0 && <p className="text-gray-400 italic">Nenhuma suplementação cadastrada.</p>}
             </div>
 
-            <h4 className="text-lg font-bold text-black mb-4">Dicas:</h4>
-            <ul className="space-y-3">
+            <h4 className="text-lg font-bold text-black mb-4">Dicas & Orientações:</h4>
+            <div className="space-y-3 bg-gray-50 p-6 rounded-xl border border-gray-100">
                 {tips.map((tip, idx) => (
-                <li key={idx} className="flex items-start gap-3 text-sm text-gray-700 break-inside-avoid">
-                    <div className="w-1.5 h-1.5 bg-black mt-1.5 shrink-0"></div>
-                    {tip}
-                </li>
+                <div key={idx} className="flex items-start gap-3 text-sm text-gray-700 break-inside-avoid">
+                    <div className="w-1.5 h-1.5 bg-[#d4af37] mt-1.5 shrink-0 rounded-full"></div>
+                    <span className="font-medium">{tip}</span>
+                </div>
                 ))}
-            </ul>
+            </div>
             </div>
 
             <div className="html2pdf__page-break"></div>
@@ -292,17 +292,19 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
             
             <div className="space-y-8">
                 {trainingDays.slice(0, 2).map((day) => (
-                <div key={day.id} className="border border-gray-200 rounded-lg overflow-hidden shadow-sm break-inside-avoid">
-                    <div className="bg-[#111] text-white p-3 flex justify-between items-center">
-                    <span className="font-bold uppercase text-[#d4af37]">{day.title}</span>
-                    <span className="text-xs font-bold text-[#d4af37] uppercase">Foco: {day.focus}</span>
+                // Alteração: Removido background e sombra pesada para evitar fundo cinza/bugado no PDF.
+                // Adicionado break-inside-avoid para evitar cortes
+                <div key={day.id} className="border-2 border-black rounded-xl overflow-hidden break-inside-avoid">
+                    <div className="bg-white border-b-2 border-black p-3 flex justify-between items-center">
+                        <span className="font-black uppercase text-black text-lg">{day.title}</span>
+                        <span className="text-xs font-bold text-[#d4af37] uppercase bg-black px-3 py-1 rounded">Foco: {day.focus}</span>
                     </div>
-                    <table className="w-full text-sm text-left">
-                    <tbody className="divide-y divide-gray-100">
+                    <table className="w-full text-sm text-left bg-white">
+                    <tbody className="divide-y divide-gray-200">
                         {(day.exercises || []).map((ex, idx) => (
-                        <tr key={ex.id || idx} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                            <td className="p-3 font-medium text-gray-800">{ex.name}</td>
-                            <td className="p-3 font-bold text-gray-900 text-right">{ex.sets}</td>
+                        <tr key={ex.id || idx} className="bg-white">
+                            <td className="p-3 font-bold text-gray-900">{ex.name}</td>
+                            <td className="p-3 font-black text-black text-right whitespace-nowrap">{ex.sets}</td>
                         </tr>
                         ))}
                     </tbody>
@@ -321,17 +323,17 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
             
             <div className="space-y-8 mt-6">
                 {trainingDays.slice(2).map((day) => (
-                <div key={day.id} className="border border-gray-200 rounded-lg overflow-hidden shadow-sm break-inside-avoid">
-                    <div className="bg-[#111] text-white p-3 flex justify-between items-center">
-                    <span className="font-bold uppercase text-[#d4af37]">{day.title}</span>
-                    <span className="text-xs font-bold text-[#d4af37] uppercase">Foco: {day.focus}</span>
+                <div key={day.id} className="border-2 border-black rounded-xl overflow-hidden break-inside-avoid">
+                    <div className="bg-white border-b-2 border-black p-3 flex justify-between items-center">
+                        <span className="font-black uppercase text-black text-lg">{day.title}</span>
+                        <span className="text-xs font-bold text-[#d4af37] uppercase bg-black px-3 py-1 rounded">Foco: {day.focus}</span>
                     </div>
-                    <table className="w-full text-sm text-left">
-                    <tbody className="divide-y divide-gray-100">
+                    <table className="w-full text-sm text-left bg-white">
+                    <tbody className="divide-y divide-gray-200">
                         {(day.exercises || []).map((ex, idx) => (
-                        <tr key={ex.id || idx} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                            <td className="p-3 font-medium text-gray-800">{ex.name}</td>
-                            <td className="p-3 font-bold text-gray-900 text-right">{ex.sets}</td>
+                        <tr key={ex.id || idx} className="bg-white">
+                            <td className="p-3 font-bold text-gray-900">{ex.name}</td>
+                            <td className="p-3 font-black text-black text-right whitespace-nowrap">{ex.sets}</td>
                         </tr>
                         ))}
                     </tbody>
