@@ -17,17 +17,18 @@ import {
   Lock,
   AlertTriangle,
   Loader2,
-  UserPlus
+  UserPlus,
+  Copy
 } from 'lucide-react';
 
 type ViewMode = 'home' | 'search' | 'manage' | 'settings' | 'student-dashboard' | 'evolution';
 
 const App: React.FC = () => {
-  // --- LÓGICA DE ROTEAMENTO (Vercel Friendly) ---
-  // Inicializa o estado verificando a URL IMEDIATAMENTE, antes da primeira renderização.
-  const [isStudentView, setIsStudentView] = useState(() => {
+  // --- ROTEAMENTO ESTRITO (SPA) ---
+  // Verifica se é a "Página do Aluno" baseada no Hash da URL
+  const [isStudentPage, setIsStudentPage] = useState(() => {
     if (typeof window !== 'undefined') {
-      return window.location.hash.includes('cadastro');
+      return window.location.hash === '#student';
     }
     return false;
   });
@@ -45,18 +46,16 @@ const App: React.FC = () => {
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const MASTER_PASSWORD = "vbr-master-2025";
 
-  // Listener para mudanças de hash (navegação via link ou botões do navegador)
+  // Listener para detectar mudança na URL (ex: usuário clicou em voltar ou digitou o link)
   useEffect(() => {
     const handleHashChange = () => {
-      const isCadastro = window.location.hash.includes('cadastro');
-      setIsStudentView(isCadastro);
+      setIsStudentPage(window.location.hash === '#student');
     };
-
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  // Login handler
+  // --- LÓGICA DE LOGIN (CONSULTOR) ---
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (loginPassword === MASTER_PASSWORD) {
@@ -69,19 +68,18 @@ const App: React.FC = () => {
     }
   };
 
-  // Auth & Data Load
+  // Verifica Auth apenas se NÃO for página de aluno
   useEffect(() => {
-    // Se estiver no modo aluno, ignora autenticação
-    if (isStudentView) return;
+    if (isStudentPage) return; // Se for aluno, não checa auth
 
     const auth = localStorage.getItem('vbr_auth');
     if (auth === 'true') {
       setIsAuthenticated(true);
       loadData();
     }
-  }, [isStudentView]);
+  }, [isStudentPage]);
 
-  // Load saved data
+  // Carrega dados do Supabase
   const loadData = async () => {
     setIsSyncing(true);
     try {
@@ -96,7 +94,7 @@ const App: React.FC = () => {
     }
   };
 
-  // Save changes
+  // Salva dados no Supabase
   const handleSave = async (silent = false, specificData?: ProtocolData, forceNewId = false) => {
     const dataToSave = specificData || data;
 
@@ -151,9 +149,9 @@ const App: React.FC = () => {
     }
   };
 
-  // Auto-Save Effect
+  // Auto-Save no editor
   useEffect(() => {
-    if (activeView === 'manage' && data.id && data.clientName && isAuthenticated && !isStudentView) {
+    if (activeView === 'manage' && data.id && data.clientName && isAuthenticated && !isStudentPage) {
       if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
       autoSaveTimerRef.current = setTimeout(() => {
         handleSave(true);
@@ -197,16 +195,19 @@ GRANT ALL ON TABLE public.protocols TO anon;
 GRANT ALL ON TABLE public.protocols TO authenticated;
 GRANT ALL ON TABLE public.protocols TO service_role;`;
 
-  // --- RENDERIZAÇÃO: MODO ALUNO (PRIORIDADE ABSOLUTA) ---
-  if (isStudentView) {
+  // =================================================================================
+  // 1. RENDERIZAÇÃO: PÁGINA DO ALUNO (SEPARADA)
+  // =================================================================================
+  if (isStudentPage) {
      return <StudentEntryForm onCancel={() => {
-        // Remove o hash da URL para voltar ao login
-        window.location.hash = '';
-        setIsStudentView(false);
+        // Remove o hash para voltar ao "modo normal" (login)
+        window.location.hash = ''; 
      }} />;
   }
 
-  // --- RENDERIZAÇÃO: TELA DE LOGIN ---
+  // =================================================================================
+  // 2. RENDERIZAÇÃO: TELA DE LOGIN (CONSULTOR)
+  // =================================================================================
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-6 text-center">
@@ -221,15 +222,17 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
               <button type="submit" className="w-full bg-[#d4af37] text-black py-4 rounded-2xl font-black uppercase text-xs tracking-[0.2em] mb-4">Entrar</button>
             </form>
             
+            {/* Atalho Opcional para Teste (Pode ser removido se quiser total isolamento) */}
             <div className="mt-8 pt-8 border-t border-white/5">
                 <button 
                   onClick={() => {
-                     // Adiciona o hash na URL. O useEffect vai capturar e mudar o estado.
-                     window.location.hash = 'cadastro';
+                     const link = `${window.location.origin}/#student`;
+                     navigator.clipboard.writeText(link);
+                     alert(`Link do Aluno Copiado:\n${link}\n\nAbra em outra aba para testar.`);
                   }} 
-                  className="w-full py-3 rounded-xl border border-white/10 text-white/60 hover:text-[#d4af37] hover:border-[#d4af37] transition-all text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2"
+                  className="w-full py-3 rounded-xl border border-white/10 text-white/40 hover:text-white hover:bg-white/5 transition-all text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2"
                 >
-                   <UserPlus size={14} /> Sou Aluno (Fazer Cadastro)
+                   <Copy size={14} /> Copiar Link do Aluno
                 </button>
             </div>
           </div>
@@ -238,7 +241,9 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
     );
   }
 
-  // --- RENDERIZAÇÃO: SISTEMA PRINCIPAL (Consultor) ---
+  // =================================================================================
+  // 3. RENDERIZAÇÃO: SISTEMA PRINCIPAL (DASHBOARD DO CONSULTOR)
+  // =================================================================================
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white font-sans selection:bg-[#d4af37] selection:text-black">
       

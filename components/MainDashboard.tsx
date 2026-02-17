@@ -100,11 +100,11 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
   }, [uniqueStudents]);
 
   const handleCopyLink = () => {
-     // Geração do link compatível com Vercel usando Hash (#cadastro)
+     // URL Específica para a Página do Aluno (#student)
      const origin = typeof window !== 'undefined' ? window.location.origin : '';
-     const link = `${origin}/#cadastro`;
+     const link = `${origin}/#student`;
      navigator.clipboard.writeText(link);
-     alert("Link de Cadastro copiado!\n\nEnvie para o aluno: " + link);
+     alert("Link de Cadastro do Aluno copiado!\n\nEnvie este link para o aluno preencher seus dados:\n" + link);
   };
 
   const metrics = [
@@ -169,7 +169,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
           </button>
           <button 
             onClick={handleCopyLink}
-            className="bg-[#111] border border-white/10 text-[#d4af37] px-4 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-[0.2em] hover:bg-white/5 transition-all flex items-center justify-center gap-2"
+            className="bg-[#111] border border-white/10 text-[#d4af37] px-4 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-[0.2em] hover:bg-white/5 transition-all flex items-center justify-center gap-2 shadow-lg"
             title="Copiar Link de Cadastro para Alunos"
           >
             <LinkIcon size={14}/> Link Aluno
