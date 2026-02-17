@@ -14,9 +14,10 @@ interface Props {
   // Novas props para controle externo das abas
   activeTab: 'identificacao' | 'anamnese' | 'medidas' | 'nutricao' | 'treino' | 'obs';
   onTabChange: (tab: 'identificacao' | 'anamnese' | 'medidas' | 'nutricao' | 'treino' | 'obs') => void;
+  hideTabs?: boolean; // Nova prop para esconder as abas internas
 }
 
-const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTabChange }) => {
+const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTabChange, hideTabs }) => {
   const [isGenerating, setIsGenerating] = useState(false);
 
   // --- MÁSCARAS E HANDLERS ---
@@ -443,6 +444,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
   const addButtonClass = "w-full py-4 border border-dashed border-white/20 rounded-xl text-white/40 font-black uppercase text-[10px] tracking-widest hover:border-[#d4af37] hover:text-[#d4af37] hover:bg-[#d4af37]/5 transition-all flex items-center justify-center gap-2";
 
   // --- COMPONENTE DE TABS ---
+  // MODIFICAÇÃO: Se hideTabs for true, não renderiza as abas
   const TabButton = ({ id, label, icon: Icon }: { id: typeof activeTab, label: string, icon: any }) => (
     <button 
       onClick={() => onTabChange(id)}
@@ -461,14 +463,16 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
       )}
 
       {/* NAVEGAÇÃO POR ABAS - CENTRALIZADO e RESPONSIVO */}
-      <div className="flex flex-nowrap md:flex-wrap md:justify-center gap-2 overflow-x-auto pb-4 scrollbar-hide w-full">
-        <TabButton id="identificacao" label="Identificação" icon={User} />
-        <TabButton id="anamnese" label="Anamnese" icon={BookOpen} />
-        <TabButton id="medidas" label="Medidas" icon={Ruler} />
-        <TabButton id="nutricao" label="Nutrição" icon={Utensils} />
-        <TabButton id="treino" label="Treino" icon={Dumbbell} />
-        <TabButton id="obs" label="Observações" icon={FileText} />
-      </div>
+      {!hideTabs && (
+        <div className="flex flex-nowrap md:flex-wrap md:justify-center gap-2 overflow-x-auto pb-4 scrollbar-hide w-full">
+            <TabButton id="identificacao" label="Identificação" icon={User} />
+            <TabButton id="anamnese" label="Anamnese" icon={BookOpen} />
+            <TabButton id="medidas" label="Medidas" icon={Ruler} />
+            <TabButton id="nutricao" label="Nutrição" icon={Utensils} />
+            <TabButton id="treino" label="Treino" icon={Dumbbell} />
+            <TabButton id="obs" label="Observações" icon={FileText} />
+        </div>
+      )}
 
       {/* ABA: IDENTIFICAÇÃO E CONTRATO */}
       {activeTab === 'identificacao' && (

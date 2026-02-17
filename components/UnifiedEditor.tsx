@@ -5,19 +5,34 @@ import ProtocolForm from './ProtocolForm';
 import ProtocolPreview, { ProtocolPreviewHandle } from './ProtocolPreview';
 import ContractPreview, { ContractPreviewHandle } from './ContractPreview';
 import AnamnesisPreview, { AnamnesisPreviewHandle } from './AnamnesisPreview';
-import { ChevronLeft, Settings2, Download, FileText, Activity, Dumbbell } from 'lucide-react';
+import EvolutionTracker from './EvolutionTracker'; // Importando EvolutionTracker
+import { ChevronLeft, Settings2, Download, FileText, Activity, Dumbbell, TrendingUp } from 'lucide-react';
 
 interface Props {
   data: ProtocolData;
   onChange: (data: ProtocolData) => void;
   onBack: () => void;
+  // Novas props para suportar Evolução
+  history?: ProtocolData[];
+  onUpdateData?: (newData: ProtocolData, createHistory?: boolean, forceNewId?: boolean) => void;
+  onSelectHistory?: (data: ProtocolData) => void;
+  onDeleteHistory?: (id: string) => void;
 }
 
 type PreviewMode = 'protocol' | 'contract' | 'anamnesis';
 
-const UnifiedEditor: React.FC<Props> = ({ data, onChange, onBack }) => {
+const UnifiedEditor: React.FC<Props> = ({ 
+  data, 
+  onChange, 
+  onBack,
+  history = [],
+  onUpdateData = () => {},
+  onSelectHistory = () => {},
+  onDeleteHistory = () => {}
+}) => {
   // Estado elevado para controlar qual aba está ativa no formulário
-  const [activeTab, setActiveTab] = useState<'identificacao' | 'anamnese' | 'medidas' | 'nutricao' | 'treino' | 'obs'>('identificacao');
+  // Adicionado 'evolucao'
+  const [activeTab, setActiveTab] = useState<'identificacao' | 'anamnese' | 'medidas' | 'nutricao' | 'treino' | 'obs' | 'evolucao'>('identificacao');
   
   // Estado para controlar qual visualização está ativa
   const [viewMode, setViewMode] = useState<PreviewMode>('contract');
@@ -43,6 +58,11 @@ const UnifiedEditor: React.FC<Props> = ({ data, onChange, onBack }) => {
         case 'nutricao':
         case 'treino':
         case 'obs':
+            setViewMode('protocol');
+            break;
+        case 'evolucao':
+            // Quando em evolução, o preview pode ser o protocolo ou anamnese,
+            // mas o foco visual é o gráfico. Mantemos o preview atual ou default protocol.
             setViewMode('protocol');
             break;
         default:
@@ -86,75 +106,114 @@ const UnifiedEditor: React.FC<Props> = ({ data, onChange, onBack }) => {
 
       <div className="flex flex-col xl:flex-row gap-8 xl:gap-12 items-start w-full">
         {/* LADO DO FORMULÁRIO ÚNICO (INTEGRADO) */}
-        <div className="w-full xl:w-2/5 no-print">
+        {/* Se a aba for evolução, ocupamos a largura total */}
+        <div className={`no-print ${activeTab === 'evolucao' ? 'w-full' : 'w-full xl:w-2/5'}`}>
           <div className="bg-white/5 p-4 md:p-8 lg:p-10 rounded-[2rem] md:rounded-[3rem] border border-white/10 shadow-2xl w-full">
-            <ProtocolForm 
-              data={data} 
-              onChange={onChange} 
-              activeTab={activeTab}
-              onTabChange={setActiveTab}
-            />
+            
+            {/* Navegação de Abas Personalizada para incluir Evolução */}
+            <div className="flex flex-nowrap md:flex-wrap md:justify-center gap-2 overflow-x-auto pb-4 scrollbar-hide w-full mb-8">
+                {[
+                    { id: 'identificacao', label: 'Identificação', icon: FileText },
+                    { id: 'anamnese', label: 'Anamnese', icon: Activity },
+                    { id: 'medidas', label: 'Medidas', icon: Dumbbell },
+                    { id: 'evolucao', label: 'Evolução', icon: TrendingUp }, // Nova Aba
+                    { id: 'nutricao', label: 'Nutrição', icon: Activity },
+                    { id: 'treino', label: 'Treino', icon: Dumbbell },
+                    { id: 'obs', label: 'Obs', icon: FileText },
+                ].map((tab) => (
+                    <button 
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id as any)}
+                        className={`flex flex-1 md:flex-none justify-center items-center gap-2 px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap min-w-[100px] ${activeTab === tab.id ? 'bg-[#d4af37] text-black shadow-lg scale-105' : 'bg-white/5 text-white/40 hover:text-white'}`}
+                    >
+                        <tab.icon size={14} className="shrink-0" /> {tab.label}
+                    </button>
+                ))}
+            </div>
+
+            {activeTab === 'evolucao' ? (
+                <EvolutionTracker 
+                    currentProtocol={data}
+                    history={history}
+                    onNotesChange={(n) => onChange({...data, privateNotes: n})}
+                    onUpdateData={onUpdateData}
+                    onSelectHistory={onSelectHistory}
+                    onDeleteHistory={onDeleteHistory}
+                    onOpenEditor={() => {/* Já estamos no editor */}}
+                />
+            ) : (
+                <ProtocolForm 
+                    data={data} 
+                    onChange={onChange} 
+                    activeTab={activeTab as any}
+                    onTabChange={(t) => setActiveTab(t)}
+                    // Esconde a navegação interna do ProtocolForm pois já desenhamos acima
+                    hideTabs={true} 
+                />
+            )}
           </div>
         </div>
 
-        {/* LADO DO PREVIEW E BOTÕES DE AÇÃO */}
-        <div className="w-full xl:w-3/5 flex flex-col items-center gap-6">
-           
-           {/* BARRA DE FERRAMENTAS DO PREVIEW */}
-           <div className="no-print w-full bg-[#111] p-4 rounded-[2rem] border border-white/10 shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-4">
-              
-              {/* Seletor de Visualização (Manual override) */}
-              <div className="flex gap-1 bg-black/50 p-1 rounded-xl border border-white/5 w-full lg:w-auto overflow-x-auto">
-                 <button 
-                    onClick={() => setViewMode('contract')}
-                    className={`px-4 py-3 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-2 transition-all whitespace-nowrap ${viewMode === 'contract' ? 'bg-[#d4af37] text-black shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
-                 >
-                    <FileText size={14}/> Contrato
-                 </button>
-                 <button 
-                    onClick={() => setViewMode('anamnesis')}
-                    className={`px-4 py-3 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-2 transition-all whitespace-nowrap ${viewMode === 'anamnesis' ? 'bg-[#d4af37] text-black shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
-                 >
-                    <Activity size={14}/> Anamnese
-                 </button>
-                 <button 
-                    onClick={() => setViewMode('protocol')}
-                    className={`px-4 py-3 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-2 transition-all whitespace-nowrap ${viewMode === 'protocol' ? 'bg-[#d4af37] text-black shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
-                 >
-                    <Dumbbell size={14}/> Protocolo
-                 </button>
-              </div>
-
-              {/* Botão de Salvar/Download */}
-              <button 
-                onClick={handleDownloadCurrent}
-                className="w-full lg:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-white/5 hover:bg-[#d4af37] hover:text-black text-white border border-white/10 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all shadow-lg active:scale-95 group whitespace-nowrap"
-              >
-                <Download size={16} className="group-hover:animate-bounce" />
-                {getDownloadLabel()}
-              </button>
-           </div>
-           
-           {/* ÁREA DE PREVIEW */}
-           <div className="w-full flex justify-center bg-white/5 p-4 md:p-10 rounded-[2rem] md:rounded-[4rem] border-2 border-dashed border-white/10 relative overflow-hidden min-h-[500px] md:min-h-[900px]">
-              <div className="transform scale-[0.45] md:scale-[0.7] xl:scale-[0.75] origin-top">
+        {/* LADO DO PREVIEW E BOTÕES DE AÇÃO - ESCONDIDO SE ABA FOR EVOLUÇÃO */}
+        {activeTab !== 'evolucao' && (
+            <div className="w-full xl:w-3/5 flex flex-col items-center gap-6">
+            
+            {/* BARRA DE FERRAMENTAS DO PREVIEW */}
+            <div className="no-print w-full bg-[#111] p-4 rounded-[2rem] border border-white/10 shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-4">
                 
-                {/* Renderização Condicional Estrita para evitar sobreposição */}
-                {viewMode === 'protocol' && (
-                  <ProtocolPreview ref={protocolRef} data={data} hideFloatingButton={true} />
-                )}
-                
-                {viewMode === 'contract' && (
-                  <ContractPreview ref={contractRef} data={data} hideFloatingButton={true} />
-                )}
+                {/* Seletor de Visualização (Manual override) */}
+                <div className="flex gap-1 bg-black/50 p-1 rounded-xl border border-white/5 w-full lg:w-auto overflow-x-auto">
+                    <button 
+                        onClick={() => setViewMode('contract')}
+                        className={`px-4 py-3 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-2 transition-all whitespace-nowrap ${viewMode === 'contract' ? 'bg-[#d4af37] text-black shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                    >
+                        <FileText size={14}/> Contrato
+                    </button>
+                    <button 
+                        onClick={() => setViewMode('anamnesis')}
+                        className={`px-4 py-3 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-2 transition-all whitespace-nowrap ${viewMode === 'anamnesis' ? 'bg-[#d4af37] text-black shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                    >
+                        <Activity size={14}/> Anamnese
+                    </button>
+                    <button 
+                        onClick={() => setViewMode('protocol')}
+                        className={`px-4 py-3 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-2 transition-all whitespace-nowrap ${viewMode === 'protocol' ? 'bg-[#d4af37] text-black shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                    >
+                        <Dumbbell size={14}/> Protocolo
+                    </button>
+                </div>
 
-                {viewMode === 'anamnesis' && (
-                  <AnamnesisPreview ref={anamnesisRef} data={data} hideFloatingButton={true} />
-                )}
+                {/* Botão de Salvar/Download */}
+                <button 
+                    onClick={handleDownloadCurrent}
+                    className="w-full lg:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-white/5 hover:bg-[#d4af37] hover:text-black text-white border border-white/10 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all shadow-lg active:scale-95 group whitespace-nowrap"
+                >
+                    <Download size={16} className="group-hover:animate-bounce" />
+                    {getDownloadLabel()}
+                </button>
+            </div>
+            
+            {/* ÁREA DE PREVIEW */}
+            <div className="w-full flex justify-center bg-white/5 p-4 md:p-10 rounded-[2rem] md:rounded-[4rem] border-2 border-dashed border-white/10 relative overflow-hidden min-h-[500px] md:min-h-[900px]">
+                <div className="transform scale-[0.45] md:scale-[0.7] xl:scale-[0.75] origin-top">
+                    
+                    {/* Renderização Condicional Estrita para evitar sobreposição */}
+                    {viewMode === 'protocol' && (
+                    <ProtocolPreview ref={protocolRef} data={data} hideFloatingButton={true} />
+                    )}
+                    
+                    {viewMode === 'contract' && (
+                    <ContractPreview ref={contractRef} data={data} hideFloatingButton={true} />
+                    )}
 
-              </div>
-           </div>
-        </div>
+                    {viewMode === 'anamnesis' && (
+                    <AnamnesisPreview ref={anamnesisRef} data={data} hideFloatingButton={true} />
+                    )}
+
+                </div>
+            </div>
+            </div>
+        )}
       </div>
     </div>
   );

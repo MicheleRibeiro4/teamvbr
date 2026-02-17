@@ -102,8 +102,8 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
   };
 
   // Styles
-  // text-base em mobile previne zoom automático em inputs no iOS
-  const inputBase = "w-full p-4 bg-[#1a1a1a] border border-white/10 rounded-2xl focus:ring-2 focus:ring-[#d4af37] focus:border-transparent outline-none font-bold text-white text-base md:text-sm transition-all placeholder:text-white/20";
+  // text-base em mobile previne zoom automático em inputs no iOS (input font-size must be at least 16px)
+  const inputBase = "w-full p-4 bg-[#1a1a1a] border border-white/10 rounded-2xl focus:ring-2 focus:ring-[#d4af37] focus:border-transparent outline-none font-bold text-white text-base transition-all placeholder:text-white/20";
   const inputClass = inputBase;
   const inputNumberClass = inputBase; 
 
@@ -182,7 +182,7 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
   }
 
   return (
-    // Usa h-[100dvh] para mobile (dynamic viewport) para lidar melhor com barras de navegador
+    // Usa h-[100dvh] para mobile (dynamic viewport) para lidar melhor com barras de navegador e teclado virtual
     <div className="h-[100dvh] md:min-h-screen bg-[#0a0a0a] text-white p-0 md:p-8 flex items-end md:items-center justify-center">
       <div className="w-full max-w-4xl bg-[#111] border-t md:border border-white/10 rounded-t-[2rem] md:rounded-[2.5rem] p-5 md:p-10 shadow-2xl relative overflow-hidden flex flex-col h-[95%] md:h-[90vh] max-h-[900px]">
         
@@ -200,8 +200,8 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
             <span className="text-xs font-black text-[#d4af37]">{step}/3</span>
         </div>
 
-        {/* Scrollable Content - Added pb-32 to clear the fixed button on mobile */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 md:pr-4 pb-32">
+        {/* Scrollable Content - Added huge pb to clear the fixed button on mobile */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 md:pr-4 pb-40">
             
             {/* STEP 1: IDENTIFICAÇÃO COMPLETA */}
             {step === 1 && (

@@ -6,7 +6,7 @@ import { db } from './services/db';
 import UnifiedEditor from './components/UnifiedEditor';
 import MainDashboard from './components/MainDashboard';
 import StudentSearch from './components/StudentSearch';
-import StudentDashboard from './components/StudentDashboard';
+import StudentDashboard from './components/StudentDashboard'; // Mantido caso queira reverter, mas não usado no fluxo principal
 import EvolutionTracker from './components/EvolutionTracker';
 import StudentEntryForm from './components/StudentEntryForm';
 import { 
@@ -142,9 +142,7 @@ const App: React.FC = () => {
       const protocolToSave = { 
         ...JSON.parse(JSON.stringify(dataToSave)), 
         id: currentId,
-        // PRESERVA O createdAt EXISTENTE se já houver. Se for um novo ID (forceNewId) mas baseado em dados existentes,
-        // queremos manter o 'createdAt' original do aluno, pois representa "Data do Cadastro".
-        // Se for um registro TOTALMENTE novo (sem createdAt), define agora.
+        // PRESERVA O createdAt EXISTENTE se já houver.
         createdAt: dataToSave.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
@@ -234,13 +232,13 @@ const App: React.FC = () => {
     setData({ 
       ...EMPTY_DATA, 
       id: newId, 
-      createdAt: new Date().toISOString(), // Define data de criação
+      createdAt: new Date().toISOString(), 
       updatedAt: new Date().toISOString() 
     });
     setActiveView('manage');
   };
 
-  const loadStudent = (student: ProtocolData, view: ViewMode = 'student-dashboard') => {
+  const loadStudent = (student: ProtocolData, view: ViewMode = 'manage') => { // Padrão agora é 'manage'
     // Aplica sanitização ao carregar um estudante específico para garantir integridade
     const safeStudent = sanitizeProtocol(student);
     setData(safeStudent);
@@ -332,7 +330,7 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
           
           {activeView !== 'home' && (
             <button 
-              onClick={() => setActiveView(data.id && activeView !== 'student-dashboard' ? 'student-dashboard' : 'home')}
+              onClick={() => setActiveView('home')}
               className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-[#d4af37] transition-colors"
             >
               <ChevronLeft size={16} /> Voltar
@@ -378,34 +376,23 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
         )}
 
         {activeView === 'home' && (
-          <MainDashboard protocols={savedProtocols} onNew={handleNew} onList={() => setActiveView('search')} onLoadStudent={(p) => loadStudent(p, 'student-dashboard')} />
+          <MainDashboard protocols={savedProtocols} onNew={handleNew} onList={() => setActiveView('search')} onLoadStudent={(p) => loadStudent(p, 'manage')} />
         )}
 
         {activeView === 'search' && (
-          <StudentSearch protocols={savedProtocols} onLoad={(p) => loadStudent(p, 'student-dashboard')} onDelete={deleteStudent} />
-        )}
-
-        {activeView === 'student-dashboard' && (
-          <StudentDashboard data={data} setView={(v) => setActiveView(v as ViewMode)} />
+          <StudentSearch protocols={savedProtocols} onLoad={(p) => loadStudent(p, 'manage')} onDelete={deleteStudent} />
         )}
 
         {activeView === 'manage' && (
           <UnifiedEditor 
             data={data} 
             onChange={setData} 
-            onBack={() => setActiveView('student-dashboard')} 
-          />
-        )}
-
-        {activeView === 'evolution' && (
-          <EvolutionTracker 
-              currentProtocol={data} 
-              history={savedProtocols.filter(p => p.clientName === data.clientName)} 
-              onNotesChange={(n) => setData({...data, privateNotes: n})} 
-              onUpdateData={(newData, createHistory, forceNewId) => handleSave(false, newData, forceNewId || createHistory)}
-              onSelectHistory={(hist) => setData(hist)}
-              onDeleteHistory={(id) => handleDeleteHistory(id)} // Passando a nova função
-              onOpenEditor={() => setActiveView('manage')}
+            onBack={() => setActiveView('search')}
+            // Props para a aba de Evolução
+            history={savedProtocols.filter(p => p.clientName === data.clientName)}
+            onUpdateData={(newData, createHistory, forceNewId) => handleSave(false, newData, forceNewId || createHistory)}
+            onSelectHistory={(hist) => setData(hist)}
+            onDeleteHistory={(id) => handleDeleteHistory(id)}
           />
         )}
 
