@@ -31,7 +31,6 @@ const UnifiedEditor: React.FC<Props> = ({
   onDeleteHistory = () => {}
 }) => {
   // Estado elevado para controlar qual aba está ativa no formulário
-  // Adicionado 'evolucao'
   const [activeTab, setActiveTab] = useState<'identificacao' | 'anamnese' | 'medidas' | 'nutricao' | 'treino' | 'obs' | 'evolucao'>('identificacao');
   
   // Estado para controlar qual visualização está ativa
@@ -89,8 +88,8 @@ const UnifiedEditor: React.FC<Props> = ({
   };
 
   return (
-    <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500 w-full">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 no-print">
+    <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 w-full">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 no-print">
         <button 
           onClick={onBack}
           className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-[#d4af37] transition-colors"
@@ -98,35 +97,37 @@ const UnifiedEditor: React.FC<Props> = ({
           <ChevronLeft size={16} /> Voltar ao Painel
         </button>
 
-        <div className="flex items-center gap-3 bg-white/5 px-6 py-3 rounded-2xl border border-white/10 self-start md:self-auto">
-          <Settings2 size={16} className="text-[#d4af37]" />
-          <span className="text-[10px] font-black uppercase tracking-widest text-white/60">Editor de Protocolo & Contrato</span>
+        <div className="flex items-center gap-3 bg-white/5 px-4 py-2 rounded-xl border border-white/10 self-start md:self-auto">
+          <Settings2 size={14} className="text-[#d4af37]" />
+          <span className="text-[9px] font-black uppercase tracking-widest text-white/60">Editor de Protocolo</span>
         </div>
       </div>
 
-      <div className="flex flex-col xl:flex-row gap-8 xl:gap-12 items-start w-full">
+      <div className="flex flex-col xl:flex-row gap-6 items-start w-full">
         {/* LADO DO FORMULÁRIO ÚNICO (INTEGRADO) */}
         {/* Se a aba for evolução, ocupamos a largura total */}
         <div className={`no-print ${activeTab === 'evolucao' ? 'w-full' : 'w-full xl:w-2/5'}`}>
-          <div className="bg-white/5 p-4 md:p-8 lg:p-10 rounded-[2rem] md:rounded-[3rem] border border-white/10 shadow-2xl w-full">
+          <div className="bg-white/5 p-4 rounded-[2rem] border border-white/10 shadow-2xl w-full">
             
-            {/* Navegação de Abas Personalizada para incluir Evolução */}
-            <div className="flex flex-nowrap md:flex-wrap md:justify-center gap-2 overflow-x-auto pb-4 scrollbar-hide w-full mb-8">
+            {/* Navegação de Abas COMPACTA */}
+            <div className="flex flex-nowrap overflow-x-auto pb-2 scrollbar-hide w-full mb-6 gap-1.5">
                 {[
-                    { id: 'identificacao', label: 'Identificação', icon: FileText },
-                    { id: 'anamnese', label: 'Anamnese', icon: Activity },
-                    { id: 'medidas', label: 'Medidas', icon: Dumbbell },
-                    { id: 'nutricao', label: 'Nutrição', icon: Activity },
-                    { id: 'treino', label: 'Treino', icon: Dumbbell },
-                    { id: 'obs', label: 'Obs', icon: FileText },
-                    { id: 'evolucao', label: 'Evolução', icon: TrendingUp }, // Nova Aba (Movida para o final)
+                    { id: 'identificacao', label: 'ID', fullLabel: 'Identificação', icon: FileText },
+                    { id: 'anamnese', label: 'Anamnese', fullLabel: 'Anamnese', icon: Activity },
+                    { id: 'medidas', label: 'Medidas', fullLabel: 'Medidas', icon: Dumbbell },
+                    { id: 'nutricao', label: 'Dieta', fullLabel: 'Nutrição', icon: Activity },
+                    { id: 'treino', label: 'Treino', fullLabel: 'Treino', icon: Dumbbell },
+                    { id: 'obs', label: 'Obs', fullLabel: 'Observações', icon: FileText },
+                    { id: 'evolucao', label: 'Evolução', fullLabel: 'Evolução', icon: TrendingUp },
                 ].map((tab) => (
                     <button 
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as any)}
-                        className={`flex flex-1 md:flex-none justify-center items-center gap-2 px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap min-w-[100px] ${activeTab === tab.id ? 'bg-[#d4af37] text-black shadow-lg scale-105' : 'bg-white/5 text-white/40 hover:text-white'}`}
+                        className={`flex-none flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all border ${activeTab === tab.id ? 'bg-[#d4af37] text-black border-[#d4af37]' : 'bg-black/20 text-white/40 border-white/5 hover:bg-white/5 hover:text-white'}`}
                     >
-                        <tab.icon size={14} className="shrink-0" /> {tab.label}
+                        <tab.icon size={12} className="hidden md:block" /> 
+                        <span className="md:hidden">{tab.label}</span>
+                        <span className="hidden md:inline">{tab.fullLabel}</span>
                     </button>
                 ))}
             </div>
@@ -147,7 +148,6 @@ const UnifiedEditor: React.FC<Props> = ({
                     onChange={onChange} 
                     activeTab={activeTab as any}
                     onTabChange={(t) => setActiveTab(t)}
-                    // Esconde a navegação interna do ProtocolForm pois já desenhamos acima
                     hideTabs={true} 
                 />
             )}
@@ -156,48 +156,47 @@ const UnifiedEditor: React.FC<Props> = ({
 
         {/* LADO DO PREVIEW E BOTÕES DE AÇÃO - ESCONDIDO SE ABA FOR EVOLUÇÃO */}
         {activeTab !== 'evolucao' && (
-            <div className="w-full xl:w-3/5 flex flex-col items-center gap-6">
+            <div className="w-full xl:w-3/5 flex flex-col items-center gap-4">
             
             {/* BARRA DE FERRAMENTAS DO PREVIEW */}
-            <div className="no-print w-full bg-[#111] p-4 rounded-[2rem] border border-white/10 shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-4">
+            <div className="no-print w-full bg-[#111] p-3 rounded-2xl border border-white/10 shadow-lg flex flex-col lg:flex-row items-center justify-between gap-3">
                 
                 {/* Seletor de Visualização (Manual override) */}
-                <div className="flex gap-1 bg-black/50 p-1 rounded-xl border border-white/5 w-full lg:w-auto overflow-x-auto">
+                <div className="flex gap-1 bg-black/50 p-1 rounded-lg border border-white/5 w-full lg:w-auto overflow-x-auto">
                     <button 
                         onClick={() => setViewMode('contract')}
-                        className={`px-4 py-3 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-2 transition-all whitespace-nowrap ${viewMode === 'contract' ? 'bg-[#d4af37] text-black shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                        className={`px-3 py-2 rounded text-[8px] font-black uppercase tracking-widest flex items-center gap-2 transition-all whitespace-nowrap ${viewMode === 'contract' ? 'bg-[#d4af37] text-black shadow' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
                     >
-                        <FileText size={14}/> Contrato
+                        <FileText size={12}/> Contrato
                     </button>
                     <button 
                         onClick={() => setViewMode('anamnesis')}
-                        className={`px-4 py-3 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-2 transition-all whitespace-nowrap ${viewMode === 'anamnesis' ? 'bg-[#d4af37] text-black shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                        className={`px-3 py-2 rounded text-[8px] font-black uppercase tracking-widest flex items-center gap-2 transition-all whitespace-nowrap ${viewMode === 'anamnesis' ? 'bg-[#d4af37] text-black shadow' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
                     >
-                        <Activity size={14}/> Anamnese
+                        <Activity size={12}/> Anamnese
                     </button>
                     <button 
                         onClick={() => setViewMode('protocol')}
-                        className={`px-4 py-3 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-2 transition-all whitespace-nowrap ${viewMode === 'protocol' ? 'bg-[#d4af37] text-black shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                        className={`px-3 py-2 rounded text-[8px] font-black uppercase tracking-widest flex items-center gap-2 transition-all whitespace-nowrap ${viewMode === 'protocol' ? 'bg-[#d4af37] text-black shadow' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
                     >
-                        <Dumbbell size={14}/> Protocolo
+                        <Dumbbell size={12}/> Protocolo
                     </button>
                 </div>
 
                 {/* Botão de Salvar/Download */}
                 <button 
                     onClick={handleDownloadCurrent}
-                    className="w-full lg:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-white/5 hover:bg-[#d4af37] hover:text-black text-white border border-white/10 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all shadow-lg active:scale-95 group whitespace-nowrap"
+                    className="w-full lg:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-white/5 hover:bg-[#d4af37] hover:text-black text-white border border-white/10 rounded-lg font-black uppercase text-[9px] tracking-widest transition-all shadow active:scale-95 group whitespace-nowrap"
                 >
-                    <Download size={16} className="group-hover:animate-bounce" />
+                    <Download size={14} className="group-hover:animate-bounce" />
                     {getDownloadLabel()}
                 </button>
             </div>
             
             {/* ÁREA DE PREVIEW */}
-            <div className="w-full flex justify-center bg-white/5 p-4 md:p-10 rounded-[2rem] md:rounded-[4rem] border-2 border-dashed border-white/10 relative overflow-hidden min-h-[500px] md:min-h-[900px]">
+            <div className="w-full flex justify-center bg-white/5 p-4 rounded-[2rem] border-2 border-dashed border-white/10 relative overflow-hidden min-h-[500px] md:min-h-[900px]">
                 <div className="transform scale-[0.45] md:scale-[0.7] xl:scale-[0.75] origin-top">
                     
-                    {/* Renderização Condicional Estrita para evitar sobreposição */}
                     {viewMode === 'protocol' && (
                     <ProtocolPreview ref={protocolRef} data={data} hideFloatingButton={true} />
                     )}

@@ -175,6 +175,18 @@ const App: React.FC = () => {
         throw err;
     }
   };
+  
+  // Função específica para deletar histórico sem mudar de view
+  const handleDeleteHistory = async (id: string) => {
+    if (confirm('Tem certeza que deseja excluir este registro do histórico?')) {
+        try {
+            await db.deleteProtocol(id);
+            setSavedProtocols(prev => prev.filter(p => p.id !== id));
+        } catch (err) {
+            alert('Erro ao excluir histórico.');
+        }
+    }
+  };
 
   const sqlRepairScript = `-- SCRIPT DE REPARO
 CREATE TABLE IF NOT EXISTS public.protocols (
@@ -318,7 +330,12 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
           <UnifiedEditor 
             data={data} 
             onChange={setData} 
-            onBack={() => setActiveView('student-dashboard')} 
+            onBack={() => setActiveView('student-dashboard')}
+            // Props para histórico funcionar dentro do editor
+            history={savedProtocols.filter(p => p.clientName === data.clientName)}
+            onUpdateData={(newData, createHistory, forceNewId) => handleSave(false, newData, createHistory || forceNewId)}
+            onSelectHistory={(hist) => setData(hist)}
+            onDeleteHistory={handleDeleteHistory}
           />
         )}
 
