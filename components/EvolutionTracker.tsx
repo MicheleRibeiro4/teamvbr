@@ -23,6 +23,8 @@ import {
 } from 'lucide-react';
 import { LOGO_VBR_BLACK } from '../constants';
 
+const LOGO_VBR_GOLD = "https://xqwzmvzfemjkvaquxedz.supabase.co/storage/v1/object/public/LOGO/DOURADO.png";
+
 interface Props {
   currentProtocol: ProtocolData;
   history: ProtocolData[];
@@ -108,7 +110,7 @@ const EvolutionTracker: React.FC<Props> = ({
   onNotesChange, 
   onUpdateData, 
   onSelectHistory,
-  onDeleteHistory,
+  onDeleteHistory, 
   onOpenEditor 
 }) => {
   const [mode, setMode] = useState<'view' | 'new_checkin' | 'new_protocol'>('view');
@@ -214,7 +216,7 @@ const EvolutionTracker: React.FC<Props> = ({
   const renderReportContent = (isPdfMode = false) => (
     <div className={`bg-white text-black p-10 ${isPdfMode ? 'w-[297mm]' : 'w-full max-w-[297mm] mx-auto shadow-2xl rounded-xl'}`}>
         <div className="flex justify-between items-center border-b-4 border-black pb-6 mb-8">
-            <img src={LOGO_VBR_BLACK} className="h-20" alt="Logo" />
+            <img src={LOGO_VBR_GOLD} className="h-20" alt="Logo" />
             <div className="text-right">
                 <h1 className="text-4xl font-black uppercase tracking-tighter mb-1">Relatório de Evolução</h1>
                 <p className="text-xl font-medium text-gray-600">{currentProtocol.clientName}</p>
