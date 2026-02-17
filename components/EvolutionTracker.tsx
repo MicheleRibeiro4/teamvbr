@@ -15,7 +15,8 @@ import {
   Scale,
   CalendarCheck,
   FilePlus,
-  Flag
+  Flag,
+  Trash2
 } from 'lucide-react';
 
 interface Props {
@@ -25,6 +26,7 @@ interface Props {
   // Atualizado para aceitar forceNewId
   onUpdateData: (newData: ProtocolData, createHistory?: boolean, forceNewId?: boolean) => void;
   onSelectHistory?: (data: ProtocolData) => void;
+  onDeleteHistory?: (id: string) => void; // Nova prop para deletar histórico
   onOpenEditor?: () => void;
 }
 
@@ -76,7 +78,8 @@ const EvolutionTracker: React.FC<Props> = ({
   history, 
   onNotesChange, 
   onUpdateData, 
-  onSelectHistory, 
+  onSelectHistory,
+  onDeleteHistory,
   onOpenEditor 
 }) => {
   const [isSaving, setIsSaving] = useState(false);
@@ -181,7 +184,7 @@ const EvolutionTracker: React.FC<Props> = ({
   };
 
   const handleCreateNextProtocol = async () => {
-    if (confirm("Isso criará um NOVO PROTOCOLO (novo contrato) usando a evolução atual como ponto de partida.\n\nUse isso quando um ciclo termina e você deseja iniciar um novo planejamento.\n\nDeseja continuar?")) {
+    if (confirm("Isso criará um NOVO PROTOCOLO (novo protocolo) usando a evolução atual como ponto de partida.\n\nUse isso quando um ciclo termina e você deseja iniciar um novo planejamento.\n\nDeseja continuar?")) {
         setIsCreatingProtocol(true);
         try {
             const today = new Date().toLocaleDateString('pt-BR');
@@ -273,39 +276,54 @@ const EvolutionTracker: React.FC<Props> = ({
                   const isStart = idx === sortedHistoryList.length - 1; // Último item da lista ordenada decrescente é o primeiro registro
 
                   return (
-                    <button
-                      key={p.id}
-                      onClick={() => onSelectHistory && onSelectHistory(p)}
-                      className={`w-full text-left p-4 rounded-2xl border transition-all relative group ${
-                        isActive 
-                        ? 'bg-[#d4af37] border-[#d4af37] text-black shadow-lg scale-105 z-10' 
-                        : isStart 
-                            ? 'bg-blue-500/10 border-blue-500/30 text-white/80' 
-                            : 'bg-white/5 border-white/5 text-white/60 hover:bg-white/10 hover:border-white/20'
-                      }`}
-                    >
-                      <div className="flex justify-between items-center mb-1">
-                         <div className="flex items-center gap-2">
-                            {isStart ? <Flag size={12} className="text-blue-400" /> : <CalendarCheck size={12} className={isActive ? 'text-black' : 'text-[#d4af37]'} />}
-                            <span className="text-[10px] font-black uppercase tracking-widest">
-                               {new Date(p.updatedAt).toLocaleDateString('pt-BR')}
-                            </span>
-                         </div>
-                         {isActive && <span className="bg-black text-[#d4af37] text-[8px] font-bold px-1.5 py-0.5 rounded">ATUAL</span>}
-                         {isStart && !isActive && <span className="bg-blue-500/20 text-blue-400 border border-blue-500/30 text-[8px] font-bold px-1.5 py-0.5 rounded">INÍCIO</span>}
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-2 mt-3">
-                         <div className={`bg-black/10 p-2 rounded-lg text-center ${isActive ? 'text-black' : 'text-white'}`}>
-                            <span className="block text-[8px] font-black uppercase opacity-60">Peso</span>
-                            <span className="text-xs font-bold">{p.physicalData.weight || '-'}</span>
-                         </div>
-                         <div className={`bg-black/10 p-2 rounded-lg text-center ${isActive ? 'text-black' : 'text-white'}`}>
-                            <span className="block text-[8px] font-black uppercase opacity-60">BF%</span>
-                            <span className="text-xs font-bold">{p.physicalData.bodyFat || '-'}</span>
-                         </div>
-                      </div>
-                    </button>
+                    <div key={p.id} className="relative group">
+                        <button
+                        onClick={() => onSelectHistory && onSelectHistory(p)}
+                        className={`w-full text-left p-4 rounded-2xl border transition-all relative z-10 ${
+                            isActive 
+                            ? 'bg-[#d4af37] border-[#d4af37] text-black shadow-lg scale-105' 
+                            : isStart 
+                                ? 'bg-blue-500/10 border-blue-500/30 text-white/80' 
+                                : 'bg-white/5 border-white/5 text-white/60 hover:bg-white/10 hover:border-white/20'
+                        }`}
+                        >
+                        <div className="flex justify-between items-center mb-1 pr-6">
+                            <div className="flex items-center gap-2">
+                                {isStart ? <Flag size={12} className={isActive ? 'text-black' : 'text-blue-400'} /> : <CalendarCheck size={12} className={isActive ? 'text-black' : 'text-[#d4af37]'} />}
+                                <span className="text-[10px] font-black uppercase tracking-widest">
+                                {new Date(p.updatedAt).toLocaleDateString('pt-BR')}
+                                </span>
+                            </div>
+                            {isActive && <span className="bg-black text-[#d4af37] text-[8px] font-bold px-1.5 py-0.5 rounded">ATUAL</span>}
+                            {isStart && !isActive && <span className="bg-blue-500/20 text-blue-400 border border-blue-500/30 text-[8px] font-bold px-1.5 py-0.5 rounded">INÍCIO</span>}
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-2 mt-3">
+                            <div className={`bg-black/10 p-2 rounded-lg text-center ${isActive ? 'text-black' : 'text-white'}`}>
+                                <span className="block text-[8px] font-black uppercase opacity-60">Peso</span>
+                                <span className="text-xs font-bold">{p.physicalData.weight || '-'}</span>
+                            </div>
+                            <div className={`bg-black/10 p-2 rounded-lg text-center ${isActive ? 'text-black' : 'text-white'}`}>
+                                <span className="block text-[8px] font-black uppercase opacity-60">BF%</span>
+                                <span className="text-xs font-bold">{p.physicalData.bodyFat || '-'}</span>
+                            </div>
+                        </div>
+                        </button>
+
+                        {/* BOTÃO DE EXCLUIR EVOLUÇÃO */}
+                        {onDeleteHistory && (
+                            <button 
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDeleteHistory(p.id);
+                                }}
+                                className="absolute top-2 right-2 p-1.5 bg-black/50 text-white/40 hover:text-red-500 hover:bg-black rounded-lg transition-all z-20 opacity-0 group-hover:opacity-100"
+                                title="Excluir este registro"
+                            >
+                                <Trash2 size={12} />
+                            </button>
+                        )}
+                    </div>
                   );
                 })}
               </div>

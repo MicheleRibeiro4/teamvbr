@@ -128,6 +128,9 @@ const App: React.FC = () => {
       return;
     }
     
+    // IMPORTANTE: Trim no nome para evitar duplicações por espaço
+    dataToSave.clientName = dataToSave.clientName.trim();
+
     setIsSyncing(true);
     try {
       const currentId = (forceNewId) 
@@ -169,6 +172,42 @@ const App: React.FC = () => {
       console.error(err);
       setCloudStatus('error');
       if (!silent) alert(`⚠️ ERRO NO SUPABASE: ${err.message}`);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  // Nova função para deletar histórico específico
+  const handleDeleteHistory = async (id: string) => {
+    if (!confirm("Tem certeza que deseja excluir este registro de evolução?")) return;
+    
+    setIsSyncing(true);
+    try {
+      await db.deleteProtocol(id);
+      
+      // Atualiza lista local
+      const newSavedProtocols = savedProtocols.filter(p => p.id !== id);
+      setSavedProtocols(newSavedProtocols);
+      
+      // Se deletamos o protocolo que estava sendo visualizado
+      if (data.id === id) {
+         // Busca outros registros deste aluno para carregar o mais recente
+         const studentHistory = newSavedProtocols
+             .filter(p => p.clientName === data.clientName)
+             .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+         
+         if (studentHistory.length > 0) {
+             // Carrega o próximo mais recente (snapshot)
+             setData(sanitizeProtocol(studentHistory[0]));
+         } else {
+             // Se não sobrou nenhum, volta para a busca
+             setActiveView('search');
+             alert("Todos os registros deste aluno foram excluídos.");
+         }
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao excluir registro.");
     } finally {
       setIsSyncing(false);
     }
@@ -354,6 +393,7 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
               onNotesChange={(n) => setData({...data, privateNotes: n})} 
               onUpdateData={(newData, createHistory, forceNewId) => handleSave(false, newData, forceNewId || createHistory)}
               onSelectHistory={(hist) => setData(hist)}
+              onDeleteHistory={(id) => handleDeleteHistory(id)} // Passando a nova função
               onOpenEditor={() => setActiveView('manage')}
           />
         )}
