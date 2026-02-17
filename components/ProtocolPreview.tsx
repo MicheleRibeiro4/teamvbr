@@ -14,7 +14,7 @@ interface Props {
   data: ProtocolData;
   onBack?: () => void;
   hideFloatingButton?: boolean;
-  customTrigger?: React.ReactNode; // Nova prop para customizar o botão de abertura
+  customTrigger?: React.ReactNode; 
 }
 
 const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack, hideFloatingButton, customTrigger }, ref) => {
@@ -23,15 +23,16 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
   const pdfRef = useRef<HTMLDivElement>(null);
 
   const handleDownloadPDF = async () => {
-    // Usa a referência oculta para garantir formatação correta
     const targetRef = pdfRef.current;
     if (!targetRef) return;
     
     setIsGenerating(true);
     
+    const clientName = data?.clientName || "Aluno";
+    
     const opt = {
       margin: [0, 0, 0, 0],
-      filename: `Protocolo_VBR_${data.clientName.replace(/\s+/g, '_')}.pdf`,
+      filename: `Protocolo_VBR_${clientName.replace(/\s+/g, '_')}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { 
         scale: 2, 
@@ -48,7 +49,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
       // @ts-ignore
       await html2pdf().set(opt).from(targetRef).save();
     } catch (err) { 
-      alert("Erro ao gerar PDF."); 
+      alert("Erro ao gerar PDF. Verifique se as imagens foram carregadas."); 
       console.error(err);
     } finally { 
       setIsGenerating(false); 
@@ -59,8 +60,32 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
     download: handleDownloadPDF
   }));
 
-  // --- RENDER CONTENT FUNCTION ---
   const renderContent = (isPdfMode = false) => {
+    // --- SAFEGUARDS (Proteção contra dados nulos) ---
+    const safeData = data || {};
+    const physical = safeData.physicalData || {};
+    const contract = safeData.contract || {};
+    const measurements = physical.measurements || {
+        thorax: "-", waist: "-", abdomen: "-", glutes: "-",
+        rightArmRelaxed: "-", leftArmRelaxed: "-",
+        rightArmContracted: "-", leftArmContracted: "-",
+        rightThigh: "-", leftThigh: "-",
+        rightCalf: "-", leftCalf: "-"
+    };
+    const macros = safeData.macros || { 
+        protein: { value: '0', ratio: '' }, 
+        carbs: { value: '0', ratio: '' }, 
+        fats: { value: '0', ratio: '' } 
+    };
+    const meals = safeData.meals || [];
+    const supplements = safeData.supplements || [];
+    const tips = safeData.tips || [];
+    const trainingDays = safeData.trainingDays || [];
+    
+    const kcalSubtext = safeData.kcalSubtext || "Manutenção";
+    const protocolTitle = safeData.protocolTitle || "Personalizado";
+    const clientName = safeData.clientName || "Aluno";
+
     const pageStyle: React.CSSProperties = { 
         width: '210mm', 
         minHeight: '296mm', 
@@ -85,20 +110,6 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
     const labelStyle = "text-xs font-bold text-gray-500 uppercase block mb-1";
     const valueStyle = "text-xl font-bold text-gray-900";
 
-    const safeMacros = data.macros || { 
-        protein: { value: '0', ratio: '' }, 
-        carbs: { value: '0', ratio: '' }, 
-        fats: { value: '0', ratio: '' } 
-    };
-    
-    const measurements = data.physicalData.measurements || {
-        thorax: "-", waist: "-", abdomen: "-", glutes: "-",
-        rightArmRelaxed: "-", leftArmRelaxed: "-",
-        rightArmContracted: "-", leftArmContracted: "-",
-        rightThigh: "-", leftThigh: "-",
-        rightCalf: "-", leftCalf: "-"
-    };
-
     return (
         <div className="bg-gray-100 text-black flex flex-col items-center print:bg-transparent">
             
@@ -107,14 +118,14 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
             <div className="flex-1 flex flex-col items-center justify-center w-full px-10 relative z-10 pb-10">
                 <img src={LOGO_VBR_GOLD} alt="Team VBR" className="w-80 h-auto mb-12 relative z-10" />
                 <h1 className="text-5xl font-black text-[#d4af37] uppercase tracking-wider leading-tight mb-16">
-                PROTOCOLO<br/>COMPLETO DE<br/>{data.protocolTitle || 'HIPERTROFIA'}
+                PROTOCOLO<br/>COMPLETO DE<br/>{protocolTitle}
                 </h1>
                 <div className="border-t border-b border-white/20 py-8 w-full max-w-2xl">
-                <h2 className="text-6xl font-black uppercase tracking-tight text-white">{data.clientName || 'NOME DO ALUNO'}</h2>
+                <h2 className="text-6xl font-black uppercase tracking-tight text-white">{clientName}</h2>
                 </div>
                 <div className="mt-16 bg-[#d4af37]/10 px-8 py-4 rounded-full border border-[#d4af37]/30">
                 <p className="text-2xl font-bold text-white uppercase tracking-widest">
-                    Período: {data.contract.startDate} — {data.contract.endDate}
+                    Período: {contract.startDate || '...'} — {contract.endDate || '...'}
                 </p>
                 </div>
             </div>
@@ -125,42 +136,42 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
 
             {/* PÁGINA 2: DADOS & ESTRATÉGIA */}
             <div style={pageStyle}>
-            <h3 className={sectionTitle}>1. Dados Físicos - {data.physicalData.date}</h3>
+            <h3 className={sectionTitle}>1. Dados Físicos - {physical.date || new Date().toLocaleDateString('pt-BR')}</h3>
             
             <div className="grid grid-cols-3 gap-4 mb-8">
-                <div className={dataCardStyle}><span className={labelStyle}>Peso Atual</span><span className={valueStyle}>{data.physicalData.weight} kg</span></div>
-                <div className={dataCardStyle}><span className={labelStyle}>Altura</span><span className={valueStyle}>{data.physicalData.height} m</span></div>
-                <div className={dataCardStyle}><span className={labelStyle}>Idade</span><span className={valueStyle}>{data.physicalData.age} anos</span></div>
+                <div className={dataCardStyle}><span className={labelStyle}>Peso Atual</span><span className={valueStyle}>{physical.weight || '-'} kg</span></div>
+                <div className={dataCardStyle}><span className={labelStyle}>Altura</span><span className={valueStyle}>{physical.height || '-'} m</span></div>
+                <div className={dataCardStyle}><span className={labelStyle}>Idade</span><span className={valueStyle}>{physical.age || '-'} anos</span></div>
             </div>
 
             <h4 className="text-sm font-bold uppercase text-black mb-3">Bioimpedância</h4>
             <div className="grid grid-cols-4 gap-4 mb-8">
-                <div className={dataCardStyle}><span className={labelStyle}>Massa Musc.</span><span className={valueStyle}>{data.physicalData.muscleMass} kg</span></div>
-                <div className={dataCardStyle}><span className={labelStyle}>Gordura</span><span className={valueStyle}>{data.physicalData.bodyFat}%</span></div>
-                <div className={dataCardStyle}><span className={labelStyle}>G. Visceral</span><span className={valueStyle}>{data.physicalData.visceralFat}</span></div>
-                <div className={dataCardStyle}><span className={labelStyle}>IMC</span><span className={valueStyle}>{data.physicalData.imc}</span></div>
+                <div className={dataCardStyle}><span className={labelStyle}>Massa Musc.</span><span className={valueStyle}>{physical.muscleMass || '-'} kg</span></div>
+                <div className={dataCardStyle}><span className={labelStyle}>Gordura</span><span className={valueStyle}>{physical.bodyFat || '-'}%</span></div>
+                <div className={dataCardStyle}><span className={labelStyle}>G. Visceral</span><span className={valueStyle}>{physical.visceralFat || '-'}</span></div>
+                <div className={dataCardStyle}><span className={labelStyle}>IMC</span><span className={valueStyle}>{physical.imc || '-'}</span></div>
             </div>
             
             <h4 className="text-sm font-bold uppercase text-black mb-3">Medidas Corporais</h4>
             <div className="mb-10 bg-gray-50 p-4 rounded-lg border border-gray-100">
                 <div className="grid grid-cols-4 gap-4 mb-4 border-b border-gray-200 pb-4">
                     <div className="col-span-4 text-xs font-black text-[#d4af37] uppercase tracking-widest">Superior</div>
-                    <div><span className={labelStyle}>Tórax</span><span className="font-bold text-gray-900">{measurements.thorax}</span></div>
-                    <div><span className={labelStyle}>Cintura</span><span className="font-bold text-gray-900">{measurements.waist}</span></div>
-                    <div><span className={labelStyle}>Abdômen</span><span className="font-bold text-gray-900">{measurements.abdomen}</span></div>
-                    <div><span className={labelStyle}>Glúteo</span><span className="font-bold text-gray-900">{measurements.glutes}</span></div>
+                    <div><span className={labelStyle}>Tórax</span><span className="font-bold text-gray-900">{measurements.thorax || '-'}</span></div>
+                    <div><span className={labelStyle}>Cintura</span><span className="font-bold text-gray-900">{measurements.waist || '-'}</span></div>
+                    <div><span className={labelStyle}>Abdômen</span><span className="font-bold text-gray-900">{measurements.abdomen || '-'}</span></div>
+                    <div><span className={labelStyle}>Glúteo</span><span className="font-bold text-gray-900">{measurements.glutes || '-'}</span></div>
                     
-                    <div><span className={labelStyle}>Braço Dir (Rel)</span><span className="font-bold text-gray-900">{measurements.rightArmRelaxed}</span></div>
-                    <div><span className={labelStyle}>Braço Esq (Rel)</span><span className="font-bold text-gray-900">{measurements.leftArmRelaxed}</span></div>
-                    <div><span className={labelStyle}>Braço Dir (Cont)</span><span className="font-bold text-gray-900">{measurements.rightArmContracted}</span></div>
-                    <div><span className={labelStyle}>Braço Esq (Cont)</span><span className="font-bold text-gray-900">{measurements.leftArmContracted}</span></div>
+                    <div><span className={labelStyle}>Braço Dir (Rel)</span><span className="font-bold text-gray-900">{measurements.rightArmRelaxed || '-'}</span></div>
+                    <div><span className={labelStyle}>Braço Esq (Rel)</span><span className="font-bold text-gray-900">{measurements.leftArmRelaxed || '-'}</span></div>
+                    <div><span className={labelStyle}>Braço Dir (Cont)</span><span className="font-bold text-gray-900">{measurements.rightArmContracted || '-'}</span></div>
+                    <div><span className={labelStyle}>Braço Esq (Cont)</span><span className="font-bold text-gray-900">{measurements.leftArmContracted || '-'}</span></div>
                 </div>
                 <div className="grid grid-cols-4 gap-4">
                     <div className="col-span-4 text-xs font-black text-[#d4af37] uppercase tracking-widest">Inferior</div>
-                    <div><span className={labelStyle}>Coxa Dir</span><span className="font-bold text-gray-900">{measurements.rightThigh}</span></div>
-                    <div><span className={labelStyle}>Coxa Esq</span><span className="font-bold text-gray-900">{measurements.leftThigh}</span></div>
-                    <div><span className={labelStyle}>Panturrilha Dir</span><span className="font-bold text-gray-900">{measurements.rightCalf}</span></div>
-                    <div><span className={labelStyle}>Panturrilha Esq</span><span className="font-bold text-gray-900">{measurements.leftCalf}</span></div>
+                    <div><span className={labelStyle}>Coxa Dir</span><span className="font-bold text-gray-900">{measurements.rightThigh || '-'}</span></div>
+                    <div><span className={labelStyle}>Coxa Esq</span><span className="font-bold text-gray-900">{measurements.leftThigh || '-'}</span></div>
+                    <div><span className={labelStyle}>Panturrilha Dir</span><span className="font-bold text-gray-900">{measurements.rightCalf || '-'}</span></div>
+                    <div><span className={labelStyle}>Panturrilha Esq</span><span className="font-bold text-gray-900">{measurements.leftCalf || '-'}</span></div>
                 </div>
             </div>
 
@@ -168,30 +179,30 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
             
             <div className="bg-gray-100 p-6 rounded-none border-l-4 border-gray-400 mb-8 text-sm text-gray-800 leading-relaxed break-inside-avoid">
                 <span className="font-bold block mb-1">Observação:</span>
-                {data.nutritionalStrategy}
+                {safeData.nutritionalStrategy || "Nenhuma observação definida."}
             </div>
 
             <div className="bg-[#1a1a1a] text-center p-8 rounded-lg mb-8 break-inside-avoid">
-                <p className="text-xs font-bold text-white uppercase tracking-widest mb-2">META DIÁRIA ({data.kcalSubtext.toUpperCase()})</p>
-                <p className="text-4xl font-bold text-[#d4af37]">{data.kcalGoal} kcal</p>
+                <p className="text-xs font-bold text-white uppercase tracking-widest mb-2">META DIÁRIA ({kcalSubtext.toUpperCase()})</p>
+                <p className="text-4xl font-bold text-[#d4af37]">{safeData.kcalGoal || "0"} kcal</p>
             </div>
 
             <h4 className="text-lg font-bold text-black mb-4">Distribuição de Macronutrientes</h4>
             <div className="grid grid-cols-3 gap-4">
                 <div className="bg-white border border-gray-200 p-6 text-center rounded-lg shadow-sm break-inside-avoid">
                     <p className="text-[#d4af37] font-bold text-sm uppercase mb-2">Proteínas</p>
-                    <p className="text-3xl font-bold text-gray-900 mb-1">{safeMacros.protein?.value || '0'}g</p>
-                    <p className="text-xs text-gray-400">{safeMacros.protein?.ratio || ''}</p>
+                    <p className="text-3xl font-bold text-gray-900 mb-1">{macros.protein?.value || '0'}g</p>
+                    <p className="text-xs text-gray-400">{macros.protein?.ratio || ''}</p>
                 </div>
                 <div className="bg-white border border-gray-200 p-6 text-center rounded-lg shadow-sm break-inside-avoid">
                     <p className="text-[#d4af37] font-bold text-sm uppercase mb-2">Carboidratos</p>
-                    <p className="text-3xl font-bold text-gray-900 mb-1">{safeMacros.carbs?.value || '0'}g</p>
-                    <p className="text-xs text-gray-400">{safeMacros.carbs?.ratio || ''}</p>
+                    <p className="text-3xl font-bold text-gray-900 mb-1">{macros.carbs?.value || '0'}g</p>
+                    <p className="text-xs text-gray-400">{macros.carbs?.ratio || ''}</p>
                 </div>
                 <div className="bg-white border border-gray-200 p-6 text-center rounded-lg shadow-sm break-inside-avoid">
                     <p className="text-[#d4af37] font-bold text-sm uppercase mb-2">Gorduras</p>
-                    <p className="text-3xl font-bold text-gray-900 mb-1">{safeMacros.fats?.value || '0'}g</p>
-                    <p className="text-xs text-gray-400">{safeMacros.fats?.ratio || ''}</p>
+                    <p className="text-3xl font-bold text-gray-900 mb-1">{macros.fats?.value || '0'}g</p>
+                    <p className="text-xs text-gray-400">{macros.fats?.ratio || ''}</p>
                 </div>
             </div>
 
@@ -213,8 +224,8 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                 </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                {data.meals.map((meal, index) => (
-                    <tr key={meal.id} className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"} break-inside-avoid`}>
+                {meals.map((meal, index) => (
+                    <tr key={meal.id || index} className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"} break-inside-avoid`}>
                     <td className="p-4 font-bold text-[#d4af37] align-top">{meal.time}</td>
                     <td className="p-4">
                         <p className="font-bold text-gray-900 mb-1">{meal.name}</p>
@@ -222,11 +233,14 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                     </td>
                     </tr>
                 ))}
+                {meals.length === 0 && (
+                    <tr><td colSpan={2} className="p-8 text-center text-gray-400 italic">Nenhuma refeição cadastrada.</td></tr>
+                )}
                 </tbody>
             </table>
 
             <div className="mt-10 border-2 border-dashed border-gray-300 p-6 text-center text-gray-500 italic text-sm rounded-xl break-inside-avoid">
-                Lembre-se de manter a hidratação ao longo do dia (mínimo {data.waterGoal || '3,5'}L de água).
+                Lembre-se de manter a hidratação ao longo do dia (mínimo {safeData.waterGoal || '3,5'}L de água).
             </div>
             </div>
 
@@ -236,9 +250,9 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
             <div style={pageStyle}>
             <h3 className={sectionTitle}>4. Suplementação e Recomendações</h3>
             <div className="space-y-4 mb-12">
-                {data.supplements.map((supp) => {
+                {supplements.map((supp) => {
                 let bgColor = "bg-gray-800";
-                const nameLower = supp.name.toLowerCase();
+                const nameLower = (supp.name || "").toLowerCase();
                 if (nameLower.includes('creatina')) bgColor = "bg-[#d4af37]"; 
                 else if (nameLower.includes('whey')) bgColor = "bg-[#2563eb]"; 
                 else if (nameLower.includes('cafeína') || nameLower.includes('cafeina') || nameLower.includes('café')) bgColor = "bg-[#5d4037]"; 
@@ -255,11 +269,12 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                     </div>
                 );
                 })}
+                {supplements.length === 0 && <p className="text-gray-400 italic">Nenhuma suplementação cadastrada.</p>}
             </div>
 
             <h4 className="text-lg font-bold text-black mb-4">Dicas:</h4>
             <ul className="space-y-3">
-                {data.tips.map((tip, idx) => (
+                {tips.map((tip, idx) => (
                 <li key={idx} className="flex items-start gap-3 text-sm text-gray-700 break-inside-avoid">
                     <div className="w-1.5 h-1.5 bg-black mt-1.5 shrink-0"></div>
                     {tip}
@@ -273,10 +288,10 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
             {/* PÁGINA 5: TREINO PARTE 1 */}
             <div style={pageStyle}>
             <h3 className={sectionTitle}>5. Divisão de Treino (Parte 1)</h3>
-            <p className="text-sm text-gray-600 mb-6">Frequência: {data.trainingFrequency}</p>
+            <p className="text-sm text-gray-600 mb-6">Frequência: {safeData.trainingFrequency || 'Não definida'}</p>
             
             <div className="space-y-8">
-                {data.trainingDays.slice(0, 2).map((day) => (
+                {trainingDays.slice(0, 2).map((day) => (
                 <div key={day.id} className="border border-gray-200 rounded-lg overflow-hidden shadow-sm break-inside-avoid">
                     <div className="bg-[#111] text-white p-3 flex justify-between items-center">
                     <span className="font-bold uppercase text-[#d4af37]">{day.title}</span>
@@ -284,8 +299,8 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                     </div>
                     <table className="w-full text-sm text-left">
                     <tbody className="divide-y divide-gray-100">
-                        {day.exercises.map((ex, idx) => (
-                        <tr key={ex.id} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                        {(day.exercises || []).map((ex, idx) => (
+                        <tr key={ex.id || idx} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                             <td className="p-3 font-medium text-gray-800">{ex.name}</td>
                             <td className="p-3 font-bold text-gray-900 text-right">{ex.sets}</td>
                         </tr>
@@ -294,6 +309,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                     </table>
                 </div>
                 ))}
+                {trainingDays.length === 0 && <p className="text-gray-400 italic">Nenhum treino cadastrado.</p>}
             </div>
             </div>
 
@@ -304,7 +320,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
             <h3 className={sectionTitle}>5. Divisão de Treino (Parte 2)</h3>
             
             <div className="space-y-8 mt-6">
-                {data.trainingDays.slice(2).map((day) => (
+                {trainingDays.slice(2).map((day) => (
                 <div key={day.id} className="border border-gray-200 rounded-lg overflow-hidden shadow-sm break-inside-avoid">
                     <div className="bg-[#111] text-white p-3 flex justify-between items-center">
                     <span className="font-bold uppercase text-[#d4af37]">{day.title}</span>
@@ -312,8 +328,8 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                     </div>
                     <table className="w-full text-sm text-left">
                     <tbody className="divide-y divide-gray-100">
-                        {day.exercises.map((ex, idx) => (
-                        <tr key={ex.id} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                        {(day.exercises || []).map((ex, idx) => (
+                        <tr key={ex.id || idx} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                             <td className="p-3 font-medium text-gray-800">{ex.name}</td>
                             <td className="p-3 font-bold text-gray-900 text-right">{ex.sets}</td>
                         </tr>
@@ -334,7 +350,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                 <h2 className="text-5xl font-black text-white uppercase tracking-tighter">Atenção</h2>
                 <div className="w-24 h-2 bg-[#d4af37]"></div>
                 <div className="max-w-3xl space-y-6 text-xl text-white/80 font-medium leading-relaxed">
-                    <p>Este protocolo foi desenhado especificamente para você, {data.clientName.split(' ')[0]}.</p>
+                    <p>Este protocolo foi desenhado especificamente para você, {clientName.split(' ')[0]}.</p>
                     <p>Ajustes de carga, dieta e cardio serão feitos conforme sua evolução e feedbacks.</p>
                     <p className="text-[#d4af37]">A consistência vence a intensidade.</p>
                 </div>
@@ -352,14 +368,12 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
   return (
     <div className="w-full animate-in fade-in duration-500">
         
-        {/* LÓGICA DE RENDERIZAÇÃO CUSTOMIZADA OU PADRÃO */}
         {customTrigger ? (
             <>
                 <div onClick={() => setShowModal(true)} className="cursor-pointer">
                     {customTrigger}
                 </div>
                 
-                {/* MODAL (REUTILIZADO) */}
                 {showModal && (
                     <div className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
                         <div className="bg-white w-full max-w-5xl h-[90vh] rounded-[2rem] flex flex-col relative overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
@@ -384,8 +398,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                     </div>
                 )}
                 
-                {/* PDF HIDDEN CONTAINER */}
-                <div className="fixed left-[-9999px]">
+                <div className="fixed left-[-9999px] top-0">
                     <div ref={pdfRef} className="bg-white">
                         {renderContent(true)}
                     </div>
@@ -417,7 +430,6 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                     </div>
                 </div>
 
-                {/* MODAL PADRÃO */}
                 {showModal && (
                     <div className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
                         <div className="bg-white w-full max-w-5xl h-[90vh] rounded-[2rem] flex flex-col relative overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
@@ -442,8 +454,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                     </div>
                 )}
 
-                {/* PDF HIDDEN PADRÃO */}
-                <div className="fixed left-[-9999px]">
+                <div className="fixed left-[-9999px] top-0">
                     <div ref={pdfRef} className="bg-white">
                         {renderContent(true)}
                     </div>

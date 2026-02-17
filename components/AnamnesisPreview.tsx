@@ -26,9 +26,11 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
     if (!targetRef) return;
     setIsGenerating(true);
     
+    const clientName = data?.clientName || "Aluno";
+
     const opt = {
       margin: [0, 0, 0, 0],
-      filename: `Anamnese_${data.clientName.replace(/\s+/g, '_')}.pdf`,
+      filename: `Anamnese_${clientName.replace(/\s+/g, '_')}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { 
         scale: 2, 
@@ -57,6 +59,24 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
   }));
 
   const renderContent = (isPdfMode = false) => {
+    // --- SAFEGUARDS ---
+    const safeData = data || {};
+    const physical = safeData.physicalData || {};
+    const measurements = physical.measurements || {
+        thorax: "-", waist: "-", abdomen: "-", glutes: "-",
+        rightArmRelaxed: "-", leftArmRelaxed: "-",
+        rightArmContracted: "-", leftArmContracted: "-",
+        rightThigh: "-", leftThigh: "-",
+        rightCalf: "-", leftCalf: "-"
+    };
+    const anamnesis = safeData.anamnesis || {
+        mainObjective: "", routine: "", trainingHistory: "", 
+        foodPreferences: "", ergogenics: ""
+    };
+    
+    const registrationDate = new Date(safeData.createdAt || safeData.updatedAt || Date.now()).toLocaleDateString('pt-BR');
+    const clientName = safeData.clientName || "Aluno";
+
     const pageStyle: React.CSSProperties = { 
         width: '210mm', 
         minHeight: '296mm', 
@@ -75,21 +95,6 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
     const valueStyle = "text-sm font-medium text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100 block";
     const gridItemStyle = "break-inside-avoid";
 
-    const measurements = data.physicalData?.measurements || {
-        thorax: "-", waist: "-", abdomen: "-", glutes: "-",
-        rightArmRelaxed: "-", leftArmRelaxed: "-",
-        rightArmContracted: "-", leftArmContracted: "-",
-        rightThigh: "-", leftThigh: "-",
-        rightCalf: "-", leftCalf: "-"
-    };
-
-    const anamnesis = data.anamnesis || {
-        mainObjective: "", routine: "", trainingHistory: "", 
-        foodPreferences: "", ergogenics: ""
-    };
-
-    const registrationDate = new Date(data.createdAt || data.updatedAt || Date.now()).toLocaleDateString('pt-BR');
-
     return (
         <div className="bg-white flex flex-col items-center print:bg-transparent w-full">
             <div style={pageStyle}>
@@ -104,7 +109,7 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                         <span className="text-xs font-bold text-gray-400 uppercase">Aluno</span>
-                        <h2 className="text-2xl font-black text-gray-900 uppercase">{data.clientName}</h2>
+                        <h2 className="text-2xl font-black text-gray-900 uppercase">{clientName}</h2>
                     </div>
                     <div className="text-right">
                         <span className="text-xs font-bold text-gray-400 uppercase">Data do Cadastro</span>
@@ -115,19 +120,19 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
                 <div className="grid grid-cols-4 gap-4 mb-6">
                     <div className="col-span-1">
                         <span className={labelStyle}>Idade</span>
-                        <span className={valueStyle}>{data.physicalData?.age || '-'} anos</span>
+                        <span className={valueStyle}>{physical.age || '-'} anos</span>
                     </div>
                     <div className="col-span-1">
                         <span className={labelStyle}>Gênero</span>
-                        <span className={valueStyle}>{data.physicalData?.gender || '-'}</span>
+                        <span className={valueStyle}>{physical.gender || '-'}</span>
                     </div>
                     <div className="col-span-1">
                         <span className={labelStyle}>Peso</span>
-                        <span className={valueStyle}>{data.physicalData?.weight || '-'} kg</span>
+                        <span className={valueStyle}>{physical.weight || '-'} kg</span>
                     </div>
                     <div className="col-span-1">
                         <span className={labelStyle}>Altura</span>
-                        <span className={valueStyle}>{data.physicalData?.height || '-'} m</span>
+                        <span className={valueStyle}>{physical.height || '-'} m</span>
                     </div>
                 </div>
 
@@ -160,10 +165,10 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
                 <h3 className={sectionTitle}>Medidas Corporais</h3>
                 
                 <div className="grid grid-cols-4 gap-4 mb-8">
-                    <div className={gridItemStyle}><span className={labelStyle}>Gordura (BF)</span><span className={valueStyle}>{data.physicalData?.bodyFat || '-'} %</span></div>
-                    <div className={gridItemStyle}><span className={labelStyle}>Massa Muscular</span><span className={valueStyle}>{data.physicalData?.muscleMass || '-'} kg</span></div>
-                    <div className={gridItemStyle}><span className={labelStyle}>G. Visceral</span><span className={valueStyle}>{data.physicalData?.visceralFat || '-'}</span></div>
-                    <div className={gridItemStyle}><span className={labelStyle}>IMC</span><span className={valueStyle}>{data.physicalData?.imc || '-'}</span></div>
+                    <div className={gridItemStyle}><span className={labelStyle}>Gordura (BF)</span><span className={valueStyle}>{physical.bodyFat || '-'} %</span></div>
+                    <div className={gridItemStyle}><span className={labelStyle}>Massa Muscular</span><span className={valueStyle}>{physical.muscleMass || '-'} kg</span></div>
+                    <div className={gridItemStyle}><span className={labelStyle}>G. Visceral</span><span className={valueStyle}>{physical.visceralFat || '-'}</span></div>
+                    <div className={gridItemStyle}><span className={labelStyle}>IMC</span><span className={valueStyle}>{physical.imc || '-'}</span></div>
                 </div>
 
                 <div className="border border-gray-200 rounded-lg overflow-hidden">
@@ -229,7 +234,7 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
                     </div>
                 )}
 
-                <div className="fixed left-[-9999px]">
+                <div className="fixed left-[-9999px] top-0">
                     <div ref={pdfRef} className="bg-white">
                         {renderContent(true)}
                     </div>
@@ -285,7 +290,7 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
                     </div>
                 )}
 
-                <div className="fixed left-[-9999px]">
+                <div className="fixed left-[-9999px] top-0">
                     <div ref={pdfRef} className="bg-white">
                         {renderContent(true)}
                     </div>

@@ -2,6 +2,7 @@
 import React, { useMemo, useState } from 'react';
 import { ProtocolData } from '../types';
 import { LOGO_VBR_BLACK, ICON_MAN, ICON_WOMAN } from '../constants';
+import ProtocolPreview from './ProtocolPreview';
 import { 
   Users, 
   DollarSign, 
@@ -24,14 +25,15 @@ import {
   Activity,
   Phone,
   Mail,
-  User
+  User,
+  ChevronLeft
 } from 'lucide-react';
 
 interface Props {
   protocols: ProtocolData[];
   onNew: () => void;
   onList: () => void;
-  onLoadStudent: (student: ProtocolData, view: 'manage' | 'student-dashboard' | 'evolution') => void;
+  onLoadStudent: (student: ProtocolData, view: 'manage' | 'student-dashboard') => void;
   onUpdateStudent: (student: ProtocolData) => Promise<void>;
   onDeleteStudent: (id: string) => Promise<void>;
 }
@@ -40,9 +42,10 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
   
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [previewStudent, setPreviewStudent] = useState<ProtocolData | null>(null);
-  const [showOnlyActive, setShowOnlyActive] = useState(false); // New state for filtering
+  const [dashboardView, setDashboardView] = useState<'default' | 'active_protocols' | 'financial'>('default');
 
-  const activeProtocolsCount = protocols.filter(p => p.contract.status === 'Ativo').length;
+  const activeProtocols = protocols.filter(p => p.contract.status === 'Ativo');
+  const activeProtocolsCount = activeProtocols.length;
   // Filtra alunos pendentes
   const pendingStudents = protocols.filter(p => p.contract.status === 'Aguardando');
   
@@ -69,14 +72,9 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
   const totalStudents = uniqueStudents.length;
 
   // Alunos recentes (apenas ativos ou já processados)
-  // Modified to support filtering based on `showOnlyActive`
   const displayedStudents = uniqueStudents
-    .filter((p: any) => {
-        if (p.contract.status === 'Aguardando') return false; // Never show pending in recent list
-        if (showOnlyActive) return p.contract.status === 'Ativo'; // Filter active if requested
-        return true;
-    })
-    .slice(0, showOnlyActive ? 100 : 5); // Show more if filtering, else limit to 5
+    .filter((p: any) => p.contract.status !== 'Aguardando')
+    .slice(0, 5); 
 
   // --- LÓGICA DE AGENDA QUINZENAL ---
   const scheduledUpdates = useMemo(() => {
@@ -142,9 +140,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                 ...student,
                 contract: {
                     ...student.contract,
-                    status: 'Ativo' as const, // Força status Ativo
-                    // Opcional: Atualizar data de início para hoje se necessário, 
-                    // mas manter o que o aluno preencheu geralmente é melhor.
+                    status: 'Ativo' as const, 
                 }
             };
             await onUpdateStudent(updatedStudent);
@@ -174,15 +170,128 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
   };
 
   const metrics = [
-    { label: 'Alunos Cadastrados', val: totalStudents, icon: <Users size={20}/>, color: 'text-blue-400', border: 'border-blue-400/20', bg: 'bg-blue-400/10', action: () => setShowOnlyActive(false) },
-    { label: 'Protocolos Ativos', val: activeProtocolsCount, icon: <Target size={20}/>, color: 'text-[#d4af37]', border: 'border-[#d4af37]/20', bg: 'bg-[#d4af37]/10', action: () => setShowOnlyActive(true) },
-    { label: 'Faturamento', val: 'R$ ' + totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 }), icon: <DollarSign size={20}/>, color: 'text-green-500', border: 'border-green-500/20', bg: 'bg-green-500/10', action: () => {} },
+    { label: 'Alunos Cadastrados', val: totalStudents, icon: <Users size={20}/>, color: 'text-blue-400', border: 'border-blue-400/20', bg: 'bg-blue-400/10', action: onList },
+    { label: 'Protocolos Ativos', val: activeProtocolsCount, icon: <Target size={20}/>, color: 'text-[#d4af37]', border: 'border-[#d4af37]/20', bg: 'bg-[#d4af37]/10', action: () => setDashboardView('active_protocols') },
+    { label: 'Faturamento', val: 'R$ ' + totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 }), icon: <DollarSign size={20}/>, color: 'text-green-500', border: 'border-green-500/20', bg: 'bg-green-500/10', action: () => setDashboardView('financial') },
   ];
 
   // Styles for Preview Modal
   const previewLabel = "text-[10px] font-black text-white/40 uppercase tracking-widest mb-1";
   const previewValue = "text-sm font-bold text-white bg-white/5 p-3 rounded-xl border border-white/5 min-h-[46px] flex items-center";
   const previewArea = "text-sm font-medium text-white/80 bg-white/5 p-3 rounded-xl border border-white/5 min-h-[80px] whitespace-pre-wrap";
+
+  // --- SUB-VIEWS RENDERERS ---
+
+  // 1. ACTIVE PROTOCOLS VIEW
+  const renderActiveProtocols = () => (
+    <div className="animate-in fade-in slide-in-from-right-10 duration-500">
+        <div className="flex items-center gap-4 mb-8">
+            <button onClick={() => setDashboardView('default')} className="p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors">
+                <ChevronLeft size={20} />
+            </button>
+            <h2 className="text-2xl font-black uppercase text-white tracking-tighter">Protocolos Ativos</h2>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {activeProtocols.map(student => {
+                const isFemale = student.physicalData.gender === 'Feminino';
+                const icon = isFemale ? ICON_WOMAN : ICON_MAN;
+                return (
+                    <div key={student.id} className="bg-[#111] p-6 rounded-[2rem] border border-white/10 flex flex-col justify-between hover:border-[#d4af37]/30 transition-all shadow-lg group">
+                        <div className="flex items-center gap-4 mb-6">
+                            <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center border-b-4 border-[#d4af37] overflow-hidden shrink-0">
+                                <img src={icon} alt="" className="w-full h-full object-cover" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-black text-white uppercase tracking-tighter leading-tight mb-1">{student.clientName}</h3>
+                                <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest flex items-center gap-1">
+                                    <Target size={10} className="text-[#d4af37]" /> {student.protocolTitle || 'Sem Objetivo'}
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div className="mt-auto pt-4 border-t border-white/5">
+                            <ProtocolPreview 
+                                data={student} 
+                                customTrigger={
+                                    <button className="w-full py-3 bg-[#d4af37] text-black rounded-xl font-black uppercase text-xs tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg flex items-center justify-center gap-2">
+                                        <FileText size={16} /> Visualizar Protocolo
+                                    </button>
+                                }
+                            />
+                        </div>
+                    </div>
+                );
+            })}
+            {activeProtocols.length === 0 && (
+                <div className="col-span-full text-center py-20 bg-white/5 rounded-[2rem]">
+                    <p className="text-white/20 font-black uppercase tracking-widest">Nenhum protocolo ativo encontrado</p>
+                </div>
+            )}
+        </div>
+    </div>
+  );
+
+  // 2. FINANCIAL VIEW
+  const renderFinancial = () => (
+    <div className="animate-in fade-in slide-in-from-right-10 duration-500">
+        <div className="flex items-center gap-4 mb-8">
+            <button onClick={() => setDashboardView('default')} className="p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors">
+                <ChevronLeft size={20} />
+            </button>
+            <h2 className="text-2xl font-black uppercase text-white tracking-tighter">Relatório Financeiro</h2>
+        </div>
+
+        <div className="bg-[#111] rounded-[2rem] border border-white/10 overflow-hidden shadow-2xl">
+            <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                    <thead>
+                        <tr className="bg-[#d4af37] text-black">
+                            <th className="p-5 font-black uppercase text-xs tracking-widest">Aluno</th>
+                            <th className="p-5 font-black uppercase text-xs tracking-widest">Plano</th>
+                            <th className="p-5 font-black uppercase text-xs tracking-widest">Vigência</th>
+                            <th className="p-5 font-black uppercase text-xs tracking-widest text-right">Valor Pago</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                        {protocols.map((p) => (
+                            <tr key={p.id} className="hover:bg-white/5 transition-colors group">
+                                <td className="p-5">
+                                    <p className="font-bold text-white text-sm">{p.clientName}</p>
+                                </td>
+                                <td className="p-5">
+                                    <span className="px-3 py-1 bg-white/10 rounded-lg text-[10px] font-black uppercase text-white/60 group-hover:text-white group-hover:bg-white/20 transition-all">
+                                        {p.contract.planType}
+                                    </span>
+                                </td>
+                                <td className="p-5 text-xs font-medium text-white/60 font-mono">
+                                    {p.contract.startDate} — {p.contract.endDate}
+                                </td>
+                                <td className="p-5 text-right">
+                                    <p className="font-black text-[#d4af37] text-sm">
+                                        R$ {p.contract.planValue || '0,00'}
+                                    </p>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                    <tfoot className="bg-white/5 border-t border-white/10">
+                        <tr>
+                            <td colSpan={3} className="p-5 text-right font-black uppercase text-xs tracking-widest text-white/40">Total Arrecadado</td>
+                            <td className="p-5 text-right font-black text-xl text-green-500">
+                                R$ {totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+  );
+
+  // --- DEFAULT DASHBOARD RENDER ---
+  if (dashboardView === 'active_protocols') return renderActiveProtocols();
+  if (dashboardView === 'financial') return renderFinancial();
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-6 duration-700 space-y-6 pb-20">
@@ -400,7 +509,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
             <button 
                 key={i} 
                 onClick={s.action}
-                className={`bg-white/5 p-4 rounded-[1.5rem] border ${showOnlyActive && i === 1 ? 'border-[#d4af37] bg-[#d4af37]/5' : 'border-white/10'} shadow-sm flex flex-col justify-between group hover:bg-white/[0.1] hover:border-[#d4af37]/30 transition-all text-left h-full min-h-[120px]`}
+                className={`bg-white/5 p-4 rounded-[1.5rem] border border-white/10 shadow-sm flex flex-col justify-between group hover:bg-white/[0.1] hover:border-[#d4af37]/30 transition-all text-left h-full min-h-[120px]`}
             >
                 <div className="flex justify-between items-start mb-3">
                     <div className={`p-2 rounded-xl ${s.bg} ${s.color} border ${s.border}`}>
@@ -493,16 +602,9 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
       <div className="w-full bg-[#111] border border-white/10 rounded-[2rem] p-6 flex flex-col">
           <div className="flex items-center justify-between mb-4 px-2">
             <h3 className="text-sm font-black text-white uppercase tracking-tighter flex items-center gap-2">
-              <Clock size={16} className="text-[#d4af37]" /> {showOnlyActive ? 'Alunos Ativos' : 'Alunos Recentes'}
+              <Clock size={16} className="text-[#d4af37]" /> Alunos Recentes
             </h3>
-            {showOnlyActive && (
-                <button onClick={() => setShowOnlyActive(false)} className="text-[9px] font-black text-white/40 uppercase tracking-widest hover:text-white flex items-center gap-1">
-                    <XCircle size={12}/> Limpar Filtro
-                </button>
-            )}
-            {!showOnlyActive && (
-                <button onClick={onList} className="text-[9px] font-black text-[#d4af37] uppercase tracking-widest hover:underline">Ver Todos</button>
-            )}
+            <button onClick={onList} className="text-[9px] font-black text-[#d4af37] uppercase tracking-widest hover:underline">Ver Todos</button>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
@@ -547,7 +649,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
             }) : (
               <div className="col-span-full text-center py-8">
                 <p className="text-white/20 font-black uppercase tracking-widest text-[10px]">
-                    {showOnlyActive ? 'Nenhum aluno ativo encontrado.' : 'Nenhum registro recente.'}
+                    Nenhum registro recente.
                 </p>
               </div>
             )}

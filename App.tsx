@@ -7,7 +7,6 @@ import UnifiedEditor from './components/UnifiedEditor';
 import MainDashboard from './components/MainDashboard';
 import StudentSearch from './components/StudentSearch';
 import StudentDashboard from './components/StudentDashboard';
-import EvolutionTracker from './components/EvolutionTracker';
 import StudentEntryForm from './components/StudentEntryForm';
 import { 
   RefreshCw,
@@ -20,7 +19,7 @@ import {
   UserPlus
 } from 'lucide-react';
 
-type ViewMode = 'home' | 'search' | 'manage' | 'settings' | 'student-dashboard' | 'evolution';
+type ViewMode = 'home' | 'search' | 'manage' | 'settings' | 'student-dashboard';
 
 const App: React.FC = () => {
   // --- ROTEAMENTO ESTRITO (SPA) ---
@@ -158,14 +157,11 @@ const App: React.FC = () => {
     const newId = "vbr-" + Math.random().toString(36).substr(2, 9);
     setData({ ...EMPTY_DATA, id: newId, updatedAt: new Date().toISOString() });
     setActiveView('manage');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const loadStudent = (student: ProtocolData, view: ViewMode = 'manage') => {
+  const loadStudent = (student: ProtocolData, view: ViewMode = 'student-dashboard') => {
     setData(student);
     setActiveView(view);
-    // Garante que a tela role para o topo ao carregar um aluno
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const deleteStudent = async (id: string) => {
@@ -253,7 +249,7 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
           
           {activeView !== 'home' && (
             <button 
-              onClick={() => setActiveView(data.id && activeView !== 'manage' ? 'manage' : 'home')}
+              onClick={() => setActiveView(data.id && activeView !== 'student-dashboard' ? 'student-dashboard' : 'home')}
               className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-[#d4af37] transition-colors"
             >
               <ChevronLeft size={16} /> Voltar
@@ -299,21 +295,11 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
         )}
 
         {activeView === 'home' && (
-          <MainDashboard 
-            protocols={savedProtocols} 
-            onNew={handleNew} 
-            onList={() => setActiveView('search')} 
-            onLoadStudent={(p, view) => loadStudent(p, view)} 
-            onUpdateStudent={async (s) => await handleSave(true, s)}
-            onDeleteStudent={async (id) => {
-               await db.deleteProtocol(id);
-               setSavedProtocols(prev => prev.filter(p => p.id !== id));
-            }}
-          />
+          <MainDashboard protocols={savedProtocols} onNew={handleNew} onList={() => setActiveView('search')} onLoadStudent={(p) => loadStudent(p, 'student-dashboard')} />
         )}
 
         {activeView === 'search' && (
-          <StudentSearch protocols={savedProtocols} onLoad={(p) => loadStudent(p, 'manage')} onDelete={deleteStudent} />
+          <StudentSearch protocols={savedProtocols} onLoad={(p) => loadStudent(p, 'student-dashboard')} onDelete={deleteStudent} />
         )}
 
         {activeView === 'student-dashboard' && (
@@ -324,35 +310,7 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
           <UnifiedEditor 
             data={data} 
             onChange={setData} 
-            onBack={() => setActiveView('home')} 
-            history={savedProtocols.filter(p => p.clientName === data.clientName)}
-            onUpdateData={(newData, createHistory, forceNewId) => handleSave(false, newData, createHistory || forceNewId)}
-            onSelectHistory={(hist) => setData(hist)}
-            onDeleteHistory={async (id) => {
-               await db.deleteProtocol(id);
-               setSavedProtocols(prev => prev.filter(p => p.id !== id));
-            }}
-          />
-        )}
-
-        {activeView === 'evolution' && (
-          <EvolutionTracker 
-              currentProtocol={data} 
-              history={savedProtocols.filter(p => p.clientName === data.clientName)} 
-              onNotesChange={(n) => setData({...data, privateNotes: n})} 
-              // ATUALIZAÇÃO AQUI: Passando os 3 argumentos corretamente para garantir criação de histórico
-              onUpdateData={(newData, createHistory, forceNewId) => handleSave(false, newData, createHistory || forceNewId)}
-              onSelectHistory={(hist) => setData(hist)}
-              onDeleteHistory={(id) => {
-                  db.deleteProtocol(id);
-                  setSavedProtocols(prev => prev.filter(p => p.id !== id));
-                  if (data.id === id) {
-                      // Se deletar o atual, tenta carregar o anterior ou reseta
-                      const remaining = savedProtocols.filter(p => p.clientName === data.clientName && p.id !== id);
-                      if (remaining.length > 0) setData(remaining[0]);
-                  }
-              }}
-              onOpenEditor={() => setActiveView('manage')}
+            onBack={() => setActiveView('student-dashboard')} 
           />
         )}
 

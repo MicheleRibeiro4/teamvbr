@@ -2,8 +2,7 @@
 import React, { useState, useRef } from 'react';
 import { ProtocolData } from '../types';
 import ProtocolForm from './ProtocolForm';
-import EvolutionTracker from './EvolutionTracker';
-import { ChevronLeft, Settings2, FileText, Activity, Dumbbell, TrendingUp } from 'lucide-react';
+import { ChevronLeft, Settings2, FileText, Activity, Dumbbell } from 'lucide-react';
 
 interface Props {
   data: ProtocolData;
@@ -24,11 +23,7 @@ const UnifiedEditor: React.FC<Props> = ({
   onSelectHistory = () => {},
   onDeleteHistory = () => {}
 }) => {
-  const [activeTab, setActiveTab] = useState<'identificacao' | 'anamnese' | 'medidas' | 'nutricao' | 'treino' | 'evolucao'>('identificacao');
-
-  const handleViewProtocolFromHistory = () => {
-      setActiveTab('treino'); 
-  };
+  const [activeTab, setActiveTab] = useState<'identificacao' | 'anamnese' | 'medidas' | 'nutricao' | 'treino'>('identificacao');
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 w-full">
@@ -58,7 +53,6 @@ const UnifiedEditor: React.FC<Props> = ({
                     { id: 'medidas', label: 'Medidas', fullLabel: 'Medidas', icon: Dumbbell },
                     { id: 'nutricao', label: 'Dieta', fullLabel: 'Nutrição', icon: Activity },
                     { id: 'treino', label: 'Treino', fullLabel: 'Treino', icon: Dumbbell },
-                    { id: 'evolucao', label: 'Evolução', fullLabel: 'Evolução', icon: TrendingUp },
                 ].map((tab) => (
                     <button 
                         key={tab.id}
@@ -72,25 +66,13 @@ const UnifiedEditor: React.FC<Props> = ({
                 ))}
             </div>
 
-            {activeTab === 'evolucao' ? (
-                <EvolutionTracker 
-                    currentProtocol={data}
-                    history={history}
-                    onNotesChange={(n) => onChange({...data, privateNotes: n})}
-                    onUpdateData={onUpdateData}
-                    onSelectHistory={onSelectHistory}
-                    onDeleteHistory={onDeleteHistory}
-                    onOpenEditor={handleViewProtocolFromHistory}
-                />
-            ) : (
-                <ProtocolForm 
-                    data={data} 
-                    onChange={onChange} 
-                    activeTab={activeTab as any}
-                    onTabChange={(t) => setActiveTab(t)}
-                    hideTabs={true} 
-                />
-            )}
+            <ProtocolForm 
+                data={data} 
+                onChange={onChange} 
+                activeTab={activeTab as any}
+                onTabChange={(t) => setActiveTab(t)}
+                hideTabs={true} 
+            />
           </div>
         </div>
       </div>

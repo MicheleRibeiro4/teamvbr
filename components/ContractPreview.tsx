@@ -20,21 +20,26 @@ const ContractPreview = forwardRef<ContractPreviewHandle, Props>(({ data, onBack
   const [showModal, setShowModal] = useState(false);
   const contractRef = useRef<HTMLDivElement>(null);
 
+  // SAFEGUARDS
+  const safeData = data || {};
+  const contract = safeData.contract || {};
+  const clientName = safeData.clientName || '____________________';
+
   const getCleanContractText = () => {
-    let text = data.contract.contractBody;
+    let text = contract.contractBody;
     
     if (!text || text.trim() === '') {
        text = EMPTY_DATA.contract.contractBody || '';
     }
 
-    const paymentMethodDisplay = data.contract.paymentMethod === 'Pix' ? 'Pix (à vista)' : data.contract.paymentMethod;
+    const paymentMethodDisplay = contract.paymentMethod === 'Pix' ? 'Pix (à vista)' : (contract.paymentMethod || '__________');
 
     const map = {
-      '[START_DATE]': data.contract.startDate,
-      '[END_DATE]': data.contract.endDate,
-      '[VALUE]': data.contract.planValue,
-      '[VALUE_WORDS]': data.contract.planValueWords,
-      '[DURATION]': data.contract.durationDays,
+      '[START_DATE]': contract.startDate || '__________',
+      '[END_DATE]': contract.endDate || '__________',
+      '[VALUE]': contract.planValue || '0,00',
+      '[VALUE_WORDS]': contract.planValueWords || '__________',
+      '[DURATION]': contract.durationDays || '0',
       '[PAYMENT_METHOD]': paymentMethodDisplay,
       '[PAYMENT_OPTIONS_PLACEHOLDER]': paymentMethodDisplay
     };
@@ -60,7 +65,7 @@ const ContractPreview = forwardRef<ContractPreviewHandle, Props>(({ data, onBack
     
     const opt = {
       margin: [15, 15, 15, 15], 
-      filename: `Contrato_VBR_${data.clientName.replace(/\s+/g, '_')}.pdf`,
+      filename: `Contrato_VBR_${clientName.replace(/\s+/g, '_')}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { 
         scale: 2, 
@@ -88,14 +93,14 @@ const ContractPreview = forwardRef<ContractPreviewHandle, Props>(({ data, onBack
   }));
 
   const renderContent = () => {
-      const street = data.contract.street || '';
-      const number = data.contract.number || 'SN';
-      const neighbor = data.contract.neighborhood || '';
-      const city = data.contract.city || '';
-      const state = data.contract.state || '';
+      const street = contract.street || '';
+      const number = contract.number || 'SN';
+      const neighbor = contract.neighborhood || '';
+      const city = contract.city || '';
+      const state = contract.state || '';
       
       const detailedAddress = `${street}, ${number} - ${neighbor}, ${city}/${state}`;
-      const fullAddress = street ? detailedAddress : (data.contract.address || '__________________________________________________');
+      const fullAddress = street ? detailedAddress : (contract.address || '__________________________________________________');
 
       return (
         <div className="bg-white text-black px-[15mm] py-[10mm] w-[210mm] mx-auto font-sans leading-[1.5] text-[10pt] shadow-2xl print:shadow-none print:w-full h-auto">
@@ -104,9 +109,9 @@ const ContractPreview = forwardRef<ContractPreviewHandle, Props>(({ data, onBack
             
             <div className="mb-4 text-justify">
                 <p className="font-bold mb-1">CONTRATANTE:</p>
-                <p>Nome: {data.clientName || '____________________'}</p>
-                <p>CPF: {data.contract.cpf || '____________________'}</p>
-                <p>Telefone: {data.contract.phone || '____________________'}</p>
+                <p>Nome: {clientName}</p>
+                <p>CPF: {contract.cpf || '____________________'}</p>
+                <p>Telefone: {contract.phone || '____________________'}</p>
                 <p>Endereço: {fullAddress}</p>
             </div>
 
@@ -160,8 +165,8 @@ const ContractPreview = forwardRef<ContractPreviewHandle, Props>(({ data, onBack
                 <p className="font-bold mb-4">CONTRATANTE:</p>
                 <div className="border-b border-black w-2/3 mb-1"></div>
                 <p>Assinatura</p>
-                <p>Nome completo: {data.clientName}</p>
-                <p>CPF: {data.contract.cpf}</p>
+                <p>Nome completo: {clientName}</p>
+                <p>CPF: {contract.cpf}</p>
             </div>
             
             <div className="break-inside-avoid">
@@ -208,7 +213,7 @@ const ContractPreview = forwardRef<ContractPreviewHandle, Props>(({ data, onBack
                     </div>
                 )}
 
-                <div className="fixed left-[-9999px]">
+                <div className="fixed left-[-9999px] top-0">
                     <div ref={contractRef} className="bg-white">
                         {renderContent()}
                     </div>
@@ -264,7 +269,7 @@ const ContractPreview = forwardRef<ContractPreviewHandle, Props>(({ data, onBack
                     </div>
                 )}
 
-                <div className="fixed left-[-9999px]">
+                <div className="fixed left-[-9999px] top-0">
                     <div ref={contractRef} className="bg-white">
                         {renderContent()}
                     </div>
