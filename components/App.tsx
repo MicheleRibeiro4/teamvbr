@@ -25,13 +25,18 @@ type ViewMode = 'home' | 'search' | 'manage' | 'settings' | 'student-dashboard' 
 const App: React.FC = () => {
   const [data, setData] = useState<ProtocolData>(EMPTY_DATA);
   
-  // Inicializa o activeView verificando a URL imediatamente
-  const [activeView, setActiveView] = useState<ViewMode>(() => {
+  // Função auxiliar para verificar URL
+  const checkUrlForStudentMode = () => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
-      if (params.get('mode') === 'cadastro') return 'student-entry';
+      return params.get('mode') === 'cadastro';
     }
-    return 'home';
+    return false;
+  };
+
+  // Inicializa com verificação direta
+  const [activeView, setActiveView] = useState<ViewMode>(() => {
+    return checkUrlForStudentMode() ? 'student-entry' : 'home';
   });
 
   const [savedProtocols, setSavedProtocols] = useState<ProtocolData[]>([]);
@@ -59,16 +64,23 @@ const App: React.FC = () => {
     }
   };
 
-  // Check auth, URL params and load data
+  // Effect dedicado para forçar o modo cadastro se a URL mudar ou na montagem
+  useEffect(() => {
+    const isStudent = checkUrlForStudentMode();
+    if (isStudent && activeView !== 'student-entry') {
+      setActiveView('student-entry');
+    }
+  }, []);
+
+  // Check auth and load data
   useEffect(() => {
     // 1. Verifica autenticação do admin (Apenas se não estiver no modo cadastro)
     const auth = localStorage.getItem('vbr_auth');
     if (auth === 'true') setIsAuthenticated(true);
     
     // 2. Carrega dados
-    // Só carrega dados se estiver autenticado OU se quiser permitir carregar algo público (mas aqui protegemos)
-    // Se for modo cadastro, não precisa carregar a lista de protocolos inteira inicialmente
-    if (activeView !== 'student-entry') {
+    // Só carrega dados se NÃO estiver no modo cadastro
+    if (activeView !== 'student-entry' && !checkUrlForStudentMode()) {
         loadData();
     }
   }, [activeView]);
@@ -109,7 +121,6 @@ const App: React.FC = () => {
   };
 
   // Save changes to Supabase
-  // CORREÇÃO: specificData é usado prioritariamente para garantir que o dado salvo é o mais recente
   const handleSave = async (silent = false, specificData?: ProtocolData, forceNewId = false) => {
     const dataToSave = specificData || data;
 
@@ -203,9 +214,11 @@ GRANT ALL ON TABLE public.protocols TO anon;
 GRANT ALL ON TABLE public.protocols TO authenticated;
 GRANT ALL ON TABLE public.protocols TO service_role;`;
 
-  // MODO DE AUTO-CADASTRO (Sem autenticação master)
-  // Verifica state OU URL param (para casos onde o state ainda não atualizou mas a URL sim)
-  if (activeView === 'student-entry') {
+  // --- RENDERIZAÇÃO CONDICIONAL ---
+  
+  // 1. MODO DE AUTO-CADASTRO (Prioridade Máxima)
+  // Verifica tanto o state quanto a URL diretamente para evitar delays de renderização
+  if (activeView === 'student-entry' || checkUrlForStudentMode()) {
      return <StudentEntryForm onCancel={() => {
         // Remove o parametro da URL ao cancelar para voltar ao login limpo
         const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
@@ -214,6 +227,7 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
      }} />;
   }
 
+  // 2. TELA DE LOGIN (Se não estiver autenticado e não for cadastro)
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-6 text-center">
@@ -230,7 +244,11 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
             
             <div className="mt-8 pt-8 border-t border-white/5">
                 <button 
-                  onClick={() => setActiveView('student-entry')} 
+                  onClick={() => {
+                     const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + "?mode=cadastro";
+                     window.history.pushState({path:newUrl},'',newUrl);
+                     setActiveView('student-entry');
+                  }} 
                   className="w-full py-3 rounded-xl border border-white/10 text-white/60 hover:text-[#d4af37] hover:border-[#d4af37] transition-all text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2"
                 >
                    <UserPlus size={14} /> Sou Aluno (Novo Cadastro)
@@ -242,6 +260,7 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
     );
   }
 
+  // 3. APP PRINCIPAL (Logado)
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white font-sans selection:bg-[#d4af37] selection:text-black">
       
@@ -336,7 +355,6 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
         )}
 
         {/* VIEW DE EVOLUÇÃO */}
-        {/* CORREÇÃO AQUI: Passamos (newData, createHistory) diretamente para handleSave */}
         {activeView === 'evolution' && (
           <EvolutionTracker 
               currentProtocol={data} 
