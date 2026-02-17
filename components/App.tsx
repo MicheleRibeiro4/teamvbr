@@ -26,12 +26,16 @@ type ViewMode = 'home' | 'search' | 'manage' | 'settings' | 'student-dashboard' 
 const App: React.FC = () => {
   // --- ROTEAMENTO ESTRITO (SPA) ---
   // Verifica se é a "Página do Aluno" baseada no Hash da URL
-  const [isStudentPage, setIsStudentPage] = useState(() => {
+  // Aceita tanto #student quanto #cadastro para evitar erros
+  const checkIsStudent = () => {
     if (typeof window !== 'undefined') {
-      return window.location.hash === '#student';
+       const h = window.location.hash;
+       return h.includes('student') || h.includes('cadastro');
     }
     return false;
-  });
+  };
+
+  const [isStudentPage, setIsStudentPage] = useState(checkIsStudent);
 
   const [data, setData] = useState<ProtocolData>(EMPTY_DATA);
   const [activeView, setActiveView] = useState<ViewMode>('home');
@@ -46,12 +50,18 @@ const App: React.FC = () => {
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const MASTER_PASSWORD = "vbr-master-2025";
 
-  // Listener para detectar mudança na URL (ex: usuário clicou em voltar ou digitou o link)
+  // Listener para detectar mudança na URL
   useEffect(() => {
     const handleHashChange = () => {
-      setIsStudentPage(window.location.hash === '#student');
+      setIsStudentPage(checkIsStudent());
     };
+    
+    // Ouve navegação
     window.addEventListener('hashchange', handleHashChange);
+    
+    // Ouve carregamento inicial (garantia extra)
+    handleHashChange();
+
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
@@ -222,17 +232,17 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
               <button type="submit" className="w-full bg-[#d4af37] text-black py-4 rounded-2xl font-black uppercase text-xs tracking-[0.2em] mb-4">Entrar</button>
             </form>
             
-            {/* Atalho Opcional para Teste (Pode ser removido se quiser total isolamento) */}
-            <div className="mt-8 pt-8 border-t border-white/5">
+            {/* BOTÃO DE RESGATE PARA ALUNO */}
+            <div className="mt-8 pt-8 border-t border-white/5 space-y-4">
                 <button 
                   onClick={() => {
-                     const link = `${window.location.origin}/#student`;
-                     navigator.clipboard.writeText(link);
-                     alert(`Link do Aluno Copiado:\n${link}\n\nAbra em outra aba para testar.`);
+                     // Força a mudança de estado e URL
+                     window.location.hash = 'student';
+                     setIsStudentPage(true);
                   }} 
-                  className="w-full py-3 rounded-xl border border-white/10 text-white/40 hover:text-white hover:bg-white/5 transition-all text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2"
+                  className="w-full py-3 rounded-xl border border-white/10 text-white hover:text-[#d4af37] hover:border-[#d4af37] transition-all text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2"
                 >
-                   <Copy size={14} /> Copiar Link do Aluno
+                   <UserPlus size={14} /> Sou Aluno (Fazer Cadastro)
                 </button>
             </div>
           </div>
