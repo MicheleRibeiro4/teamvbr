@@ -13,14 +13,17 @@ import {
   ArrowDownRight, 
   Minus,
   Scale,
-  CalendarCheck
+  CalendarCheck,
+  FilePlus,
+  Flag
 } from 'lucide-react';
 
 interface Props {
   currentProtocol: ProtocolData;
   history: ProtocolData[];
   onNotesChange: (notes: string) => void;
-  onUpdateData: (newData: ProtocolData, createHistory?: boolean) => void;
+  // Atualizado para aceitar forceNewId
+  onUpdateData: (newData: ProtocolData, createHistory?: boolean, forceNewId?: boolean) => void;
   onSelectHistory?: (data: ProtocolData) => void;
   onOpenEditor?: () => void;
 }
@@ -77,6 +80,7 @@ const EvolutionTracker: React.FC<Props> = ({
   onOpenEditor 
 }) => {
   const [isSaving, setIsSaving] = useState(false);
+  const [isCreatingProtocol, setIsCreatingProtocol] = useState(false);
   
   // Garante que measurements sempre existe para evitar erros ao digitar, usando fallback seguro
   const [localPhysical, setLocalPhysical] = useState<PhysicalData>(() => ({
@@ -110,6 +114,7 @@ const EvolutionTracker: React.FC<Props> = ({
         uniqueMap.set(p.id, p);
     });
     
+    // Ordena do mais recente para o mais antigo
     return Array.from(uniqueMap.values())
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
   }, [history, currentProtocol]);
@@ -164,13 +169,44 @@ const EvolutionTracker: React.FC<Props> = ({
              ...localPhysical,
              date: new Date().toLocaleDateString('pt-BR'),
           },
-          updatedAt: new Date().toISOString()
+          updatedAt: new Date().toISOString(),
+          privateNotes: "" // LIMPA AS OBSERVAÇÕES PARA O NOVO REGISTRO
         };
         
-        await onUpdateData(newProtocolState, true); 
+        await onUpdateData(newProtocolState, true, false); 
       } finally {
         setTimeout(() => setIsSaving(false), 1000);
       }
+    }
+  };
+
+  const handleCreateNextProtocol = async () => {
+    if (confirm("Isso criará um NOVO PROTOCOLO (novo contrato) usando a evolução atual como ponto de partida.\n\nUse isso quando um ciclo termina e você deseja iniciar um novo planejamento.\n\nDeseja continuar?")) {
+        setIsCreatingProtocol(true);
+        try {
+            const today = new Date().toLocaleDateString('pt-BR');
+            const newProtocolState = {
+                ...currentProtocol,
+                // Mantém dados pessoais e treinos/dieta como base, mas atualiza datas
+                updatedAt: new Date().toISOString(),
+                contract: {
+                    ...currentProtocol.contract,
+                    startDate: today,
+                    endDate: "", // Reseta data fim para recalcular
+                    status: 'Ativo' as const
+                },
+                physicalData: {
+                    ...localPhysical,
+                    date: today
+                },
+                privateNotes: "" // Limpa notas
+            };
+
+            // ForceNewId = true
+            await onUpdateData(newProtocolState, false, true);
+        } finally {
+            setIsCreatingProtocol(false);
+        }
     }
   };
 
@@ -220,8 +256,6 @@ const EvolutionTracker: React.FC<Props> = ({
                </div>
             </div>
          </div>
-         
-         {/* BOTÃO REMOVIDO DAQUI CONFORME SOLICITADO */}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -236,6 +270,8 @@ const EvolutionTracker: React.FC<Props> = ({
               <div className="space-y-3">
                 {sortedHistoryList.map((p, idx) => {
                   const isActive = p.id === currentProtocol.id;
+                  const isStart = idx === sortedHistoryList.length - 1; // Último item da lista ordenada decrescente é o primeiro registro
+
                   return (
                     <button
                       key={p.id}
@@ -243,17 +279,20 @@ const EvolutionTracker: React.FC<Props> = ({
                       className={`w-full text-left p-4 rounded-2xl border transition-all relative group ${
                         isActive 
                         ? 'bg-[#d4af37] border-[#d4af37] text-black shadow-lg scale-105 z-10' 
-                        : 'bg-white/5 border-white/5 text-white/60 hover:bg-white/10 hover:border-white/20'
+                        : isStart 
+                            ? 'bg-blue-500/10 border-blue-500/30 text-white/80' 
+                            : 'bg-white/5 border-white/5 text-white/60 hover:bg-white/10 hover:border-white/20'
                       }`}
                     >
                       <div className="flex justify-between items-center mb-1">
                          <div className="flex items-center gap-2">
-                            <CalendarCheck size={12} className={isActive ? 'text-black' : 'text-[#d4af37]'} />
+                            {isStart ? <Flag size={12} className="text-blue-400" /> : <CalendarCheck size={12} className={isActive ? 'text-black' : 'text-[#d4af37]'} />}
                             <span className="text-[10px] font-black uppercase tracking-widest">
                                {new Date(p.updatedAt).toLocaleDateString('pt-BR')}
                             </span>
                          </div>
                          {isActive && <span className="bg-black text-[#d4af37] text-[8px] font-bold px-1.5 py-0.5 rounded">ATUAL</span>}
+                         {isStart && !isActive && <span className="bg-blue-500/20 text-blue-400 border border-blue-500/30 text-[8px] font-bold px-1.5 py-0.5 rounded">INÍCIO</span>}
                       </div>
                       
                       <div className="grid grid-cols-2 gap-2 mt-3">
@@ -410,12 +449,21 @@ const EvolutionTracker: React.FC<Props> = ({
                 />
              </div>
 
-             {/* AÇÕES: Botão atualizado para "Nova Atualização" */}
-             <div className="flex justify-end gap-4 mt-8 pt-6 border-t border-white/5">
+             {/* AÇÕES: Botão atualizado para "Nova Atualização" e "Novo Protocolo" */}
+             <div className="flex flex-col md:flex-row justify-end gap-4 mt-8 pt-6 border-t border-white/5">
+                <button 
+                  onClick={handleCreateNextProtocol}
+                  disabled={isCreatingProtocol}
+                  className="bg-white/5 text-white/60 hover:text-white border border-white/10 px-6 py-4 rounded-xl font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2 transition-all hover:bg-white/10"
+                >
+                  {isCreatingProtocol ? <Loader2 className="animate-spin" size={16} /> : <FilePlus size={16} />}
+                  Gerar Novo Protocolo Base
+                </button>
+
                 <button 
                   onClick={handleNewCheckin}
                   disabled={isSaving}
-                  className="bg-[#d4af37] text-black px-8 py-4 rounded-xl font-black uppercase text-[10px] tracking-widest flex items-center gap-2 transition-all disabled:opacity-50 hover:scale-105 shadow-lg"
+                  className="bg-[#d4af37] text-black px-8 py-4 rounded-xl font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2 transition-all disabled:opacity-50 hover:scale-105 shadow-lg"
                 >
                   {isSaving ? <Loader2 className="animate-spin" size={16} /> : <PlusCircle size={16} />}
                   Nova Atualização

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { ProtocolData } from '../types';
 import { Search, Trash2, ChevronRight, Calendar, Target, FileText, User } from 'lucide-react';
 import { ICON_MAN, ICON_WOMAN } from '../constants';
@@ -13,7 +13,32 @@ interface Props {
 const StudentSearch: React.FC<Props> = ({ protocols, onLoad, onDelete }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filtered = protocols.filter(p => 
+  // Lógica para agrupar alunos pelo nome e pegar apenas a versão mais recente
+  const uniqueStudents = useMemo(() => {
+    const map = new Map<string, ProtocolData>();
+    
+    protocols.forEach(p => {
+      // Normaliza o nome para evitar duplicatas por espaços extras
+      const name = p.clientName.trim();
+      
+      if (!map.has(name)) {
+        map.set(name, p);
+      } else {
+        const existing = map.get(name)!;
+        // Se o protocolo atual (p) for mais novo que o existente no mapa, substitui
+        if (new Date(p.updatedAt) > new Date(existing.updatedAt)) {
+          map.set(name, p);
+        }
+      }
+    });
+
+    // Retorna array ordenado por data de atualização (mais recentes primeiro)
+    return Array.from(map.values()).sort((a, b) => 
+        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    );
+  }, [protocols]);
+
+  const filtered = uniqueStudents.filter(p => 
     p.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.protocolTitle.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -30,6 +55,10 @@ const StudentSearch: React.FC<Props> = ({ protocols, onLoad, onDelete }) => {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
           <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20" size={24} />
+        </div>
+        <div className="text-right hidden md:block">
+            <p className="text-[10px] font-black uppercase text-white/30 tracking-widest">Total de Alunos</p>
+            <p className="text-2xl font-black text-[#d4af37]">{uniqueStudents.length}</p>
         </div>
       </div>
 

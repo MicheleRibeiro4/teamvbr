@@ -44,16 +44,20 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
         }
     }
   });
-  const uniqueStudents = Array.from(uniqueStudentsMap.values());
+  
+  // Lista de alunos únicos ordenada por data de atualização (mais recente primeiro)
+  const uniqueStudents = Array.from(uniqueStudentsMap.values()).sort((a: any, b: any) => 
+    new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+  );
+  
   const totalStudents = uniqueStudents.length;
 
-  const recentStudents = [...protocols].sort((a, b) => 
-    new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-  ).slice(0, 5); // Aumentei para 5 para preencher melhor a linha
+  // Alunos recentes agora baseados na lista única para evitar duplicidade visual
+  const recentStudents = uniqueStudents.slice(0, 5);
 
   // --- LÓGICA DE AGENDA QUINZENAL ---
   const scheduledUpdates = useMemo(() => {
-    return uniqueStudents.map(student => {
+    return uniqueStudents.map((student: any) => {
       // FILTRO: Ignora alunos com plano Avulso
       if (student.contract.planType === 'Avulso') return null;
 
@@ -285,7 +289,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
-            {recentStudents.length > 0 ? recentStudents.map((p) => {
+            {recentStudents.length > 0 ? recentStudents.map((p: any) => {
               const isFemale = p.physicalData.gender === 'Feminino';
               
               // Alterado bg-black para bg-white para garantir contraste
