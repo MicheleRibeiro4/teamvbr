@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { ProtocolData, Meal, Supplement, TrainingDay, Exercise } from '../types';
 import { Activity, User, ShieldCheck, ChevronLeft, MapPin, Dumbbell, Utensils, Pill, Plus, Trash2, FileText, AlertCircle, Sparkles, Loader2, Ruler, DollarSign, Droplets, BookOpen } from 'lucide-react';
-import OpenAI from "openai";
+import { GoogleGenAI } from "@google/genai";
 
 interface Props {
   data: ProtocolData;
@@ -12,9 +12,6 @@ interface Props {
   activeTab: 'identificacao' | 'anamnese' | 'medidas' | 'nutricao' | 'treino' | 'obs';
   onTabChange: (tab: 'identificacao' | 'anamnese' | 'medidas' | 'nutricao' | 'treino' | 'obs') => void;
 }
-
-// Chave fornecida explicitamente para fallback
-const API_KEY = process.env.API_KEY || "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";
 
 const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTabChange }) => {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -130,7 +127,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
     updateMeal(index, 'time', formatted);
   };
 
-  // --- LÓGICA DO GERADOR IA (OpenAI) ---
+  // --- LÓGICA DO GERADOR IA (Google Gemini) ---
   const handleGenerateAI = async () => {
     // Validação ajustada para a nova estrutura (Peso está na aba Medidas)
     if (!data.protocolTitle || !data.physicalData.weight) {
@@ -141,12 +138,12 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
 
     setIsGenerating(true);
     try {
-      const openai = new OpenAI({
-        apiKey: API_KEY,
-        dangerouslyAllowBrowser: true
-      });
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const model = "gemini-2.5-flash";
       
       const prompt = `
+        Você é um treinador de elite e nutricionista esportivo (Estilo Team VBR).
+        
         DADOS DO ALUNO:
         - Nome: ${data.clientName}
         - Objetivo: ${data.protocolTitle}
@@ -205,16 +202,15 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
         }
       `;
 
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [
-            { role: "system", content: "Você é um treinador de elite e nutricionista esportivo (Estilo Team VBR). Retorne APENAS um JSON válido." },
-            { role: "user", content: prompt }
-        ],
-        response_format: { type: "json_object" }
+      const response = await ai.models.generateContent({
+        model: model,
+        contents: prompt,
+        config: {
+            responseMimeType: "application/json"
+        }
       });
 
-      const textResponse = response.choices[0].message.content;
+      const textResponse = response.text;
       
       if (textResponse) {
         const generatedData = JSON.parse(textResponse);

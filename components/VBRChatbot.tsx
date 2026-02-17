@@ -1,10 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, X, Send, Loader2, Bot, User, Maximize2, Minimize2 } from 'lucide-react';
-import OpenAI from "openai";
-
-// Chave fornecida explicitamente para fallback
-const API_KEY = process.env.API_KEY || "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";
+import { GoogleGenAI } from "@google/genai";
 
 const VBRChatbot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -44,17 +41,28 @@ const VBRChatbot: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const openai = new OpenAI({
-        apiKey: API_KEY,
-        dangerouslyAllowBrowser: true
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      
+      // Converte histórico para formato Gemini (user/model) e extrai system instruction
+      const systemInstruction = historyRef.current.find(m => m.role === 'system')?.content || '';
+      
+      const historyForGemini = historyRef.current
+        .filter(m => m.role !== 'system' && m.content !== userMessage) // Filtra system e a mensagem atual que será enviada pelo sendMessage
+        .map(m => ({
+            role: m.role === 'assistant' ? 'model' : 'user',
+            parts: [{ text: m.content }]
+        }));
+
+      const chat = ai.chats.create({
+        model: 'gemini-2.5-flash',
+        history: historyForGemini,
+        config: {
+            systemInstruction: systemInstruction
+        }
       });
       
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: historyRef.current.map(m => ({ role: m.role as any, content: m.content })),
-      });
-      
-      const fullText = completion.choices[0].message.content || "Não consegui processar a resposta.";
+      const result = await chat.sendMessage(userMessage);
+      const fullText = result.text;
       
       setMessages(prev => [...prev, { role: 'model', text: fullText }]);
       
@@ -63,7 +71,7 @@ const VBRChatbot: React.FC = () => {
 
     } catch (error: any) {
       console.error("Erro Chatbot:", error);
-      const errorMessage = 'Desculpe, tive um problema de conexão. Verifique sua chave API.';
+      const errorMessage = 'Desculpe, tive um problema de conexão. Poderia tentar novamente?';
       setMessages(prev => [...prev, { role: 'model', text: errorMessage }]);
     } finally {
       setIsLoading(false);
