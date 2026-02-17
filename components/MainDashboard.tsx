@@ -13,7 +13,8 @@ import {
   ChevronRight,
   CalendarClock,
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
+  Link as LinkIcon
 } from 'lucide-react';
 
 interface Props {
@@ -95,6 +96,11 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
     .sort((a: any, b: any) => a.schedule.daysLeft - b.schedule.daysLeft); // Ordena por urgência
   }, [uniqueStudents]);
 
+  const handleCopyLink = () => {
+     const link = `${window.location.protocol}//${window.location.host}/?mode=cadastro`;
+     navigator.clipboard.writeText(link);
+     alert("Link de Cadastro copiado!\n\nEnvie para o aluno: " + link);
+  };
 
   const metrics = [
     { label: 'Alunos Ativos', val: totalStudents, icon: <Users/>, color: 'text-blue-400' },
@@ -118,18 +124,25 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
           </h1>
         </div>
 
-        <div className="relative z-10 flex flex-col gap-3 w-full md:w-auto">
+        <div className="relative z-10 flex flex-wrap justify-center gap-3 w-full md:w-auto">
           <button 
             onClick={onNew} 
-            className="bg-[#d4af37] text-black px-8 py-3 rounded-xl font-black uppercase text-xs tracking-[0.2em] hover:scale-105 transition-all shadow-[0_0_30px_rgba(212,175,55,0.2)] flex items-center justify-center gap-3 group"
+            className="bg-[#d4af37] text-black px-6 py-3 rounded-xl font-black uppercase text-xs tracking-[0.2em] hover:scale-105 transition-all shadow-[0_0_30px_rgba(212,175,55,0.2)] flex items-center justify-center gap-2 group"
           >
-            <UserPlus size={16}/> Novo Aluno
+            <UserPlus size={16}/> Novo
           </button>
           <button 
             onClick={onList}
-            className="bg-white/5 border border-white/10 text-white px-8 py-3 rounded-xl font-black uppercase text-xs tracking-[0.2em] hover:bg-white/10 transition-all flex items-center justify-center gap-3"
+            className="bg-white/5 border border-white/10 text-white px-6 py-3 rounded-xl font-black uppercase text-xs tracking-[0.2em] hover:bg-white/10 transition-all flex items-center justify-center gap-2"
           >
-            <Search size={16}/> Buscar Aluno
+            <Search size={16}/> Buscar
+          </button>
+          <button 
+            onClick={handleCopyLink}
+            className="bg-[#111] border border-white/10 text-[#d4af37] px-6 py-3 rounded-xl font-black uppercase text-xs tracking-[0.2em] hover:bg-white/5 transition-all flex items-center justify-center gap-2"
+            title="Copiar Link de Cadastro para Alunos"
+          >
+            <LinkIcon size={16}/> Link Aluno
           </button>
         </div>
       </div>
