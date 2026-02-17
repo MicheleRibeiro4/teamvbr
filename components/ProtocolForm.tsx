@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { ProtocolData, Meal, Supplement, TrainingDay, Exercise } from '../types';
 import { Activity, User, ShieldCheck, ChevronLeft, MapPin, Dumbbell, Utensils, Pill, Plus, Trash2, FileText, AlertCircle, Sparkles, Loader2, Ruler, DollarSign, Droplets, BookOpen } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
+import OpenAI from "openai";
 
 interface Props {
   data: ProtocolData;
@@ -50,7 +50,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
     let v = value.replace(/\D/g, '');
     if (v.length > 4) v = v.substr(0, 4);
     if (v.length > 2) {
-      v = v.replace(/^(\d{2})(\d)/, '$1:$2');
+      v = v.replace(/^(\d{2})(\d)/, '$1.$2');
     }
     return v;
   };
@@ -127,7 +127,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
     updateMeal(index, 'time', formatted);
   };
 
-  // --- LÓGICA DO GERADOR IA (Google Gemini) ---
+  // --- LÓGICA DO GERADOR IA (OpenAI) ---
   const handleGenerateAI = async () => {
     // Validação ajustada para a nova estrutura (Peso está na aba Medidas)
     if (!data.protocolTitle || !data.physicalData.weight) {
@@ -138,12 +138,12 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
 
     setIsGenerating(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const model = "gemini-2.5-flash";
+      const openai = new OpenAI({
+        apiKey: process.env.API_KEY,
+        dangerouslyAllowBrowser: true
+      });
       
       const prompt = `
-        Você é um treinador de elite e nutricionista esportivo (Estilo Team VBR).
-        
         DADOS DO ALUNO:
         - Nome: ${data.clientName}
         - Objetivo: ${data.protocolTitle}
@@ -202,15 +202,16 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
         }
       `;
 
-      const response = await ai.models.generateContent({
-        model: model,
-        contents: prompt,
-        config: {
-            responseMimeType: "application/json"
-        }
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+            { role: "system", content: "Você é um treinador de elite e nutricionista esportivo (Estilo Team VBR). Retorne APENAS um JSON válido." },
+            { role: "user", content: prompt }
+        ],
+        response_format: { type: "json_object" }
       });
 
-      const textResponse = response.text;
+      const textResponse = response.choices[0].message.content;
       
       if (textResponse) {
         const generatedData = JSON.parse(textResponse);

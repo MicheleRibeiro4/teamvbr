@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, X, Send, Loader2, Bot, User, Maximize2, Minimize2 } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
+import OpenAI from "openai";
 
 const VBRChatbot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -41,28 +41,17 @@ const VBRChatbot: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      
-      // Converte histórico para formato Gemini (user/model) e extrai system instruction
-      const systemInstruction = historyRef.current.find(m => m.role === 'system')?.content || '';
-      
-      const historyForGemini = historyRef.current
-        .filter(m => m.role !== 'system' && m.content !== userMessage) // Filtra system e a mensagem atual que será enviada pelo sendMessage
-        .map(m => ({
-            role: m.role === 'assistant' ? 'model' : 'user',
-            parts: [{ text: m.content }]
-        }));
-
-      const chat = ai.chats.create({
-        model: 'gemini-2.5-flash',
-        history: historyForGemini,
-        config: {
-            systemInstruction: systemInstruction
-        }
+      const openai = new OpenAI({
+        apiKey: process.env.API_KEY,
+        dangerouslyAllowBrowser: true
       });
       
-      const result = await chat.sendMessage(userMessage);
-      const fullText = result.text;
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: historyRef.current.map(m => ({ role: m.role as any, content: m.content })),
+      });
+      
+      const fullText = completion.choices[0].message.content || "Não consegui processar a resposta.";
       
       setMessages(prev => [...prev, { role: 'model', text: fullText }]);
       
@@ -71,7 +60,7 @@ const VBRChatbot: React.FC = () => {
 
     } catch (error: any) {
       console.error("Erro Chatbot:", error);
-      const errorMessage = 'Desculpe, tive um problema de conexão. Poderia tentar novamente?';
+      const errorMessage = 'Desculpe, tive um problema de conexão. Verifique sua chave API.';
       setMessages(prev => [...prev, { role: 'model', text: errorMessage }]);
     } finally {
       setIsLoading(false);
