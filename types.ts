@@ -101,7 +101,8 @@ export interface Anamnesis {
 
 export interface ProtocolData {
   id: string;
-  updatedAt: string;
+  createdAt: string; // Data de inclusão no sistema (imutável)
+  updatedAt: string; // Data da última modificação
   privateNotes: string;
   clientName: string;
   protocolTitle: string; // Objetivo do Protocolo

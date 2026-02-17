@@ -100,6 +100,7 @@ CLÁUSULA 11 – FORO
 
 export const EMPTY_DATA: ProtocolData = {
   id: "",
+  createdAt: new Date().toISOString(), // Inicia com a data atual por padrão
   updatedAt: new Date().toISOString(),
   privateNotes: "",
   clientName: "",

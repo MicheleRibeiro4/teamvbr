@@ -190,7 +190,9 @@ const EvolutionTracker: React.FC<Props> = ({
             const today = new Date().toLocaleDateString('pt-BR');
             const newProtocolState = {
                 ...currentProtocol,
-                // Mantém dados pessoais e treinos/dieta como base, mas atualiza datas
+                // IMPORTANTE: Mantém a data de cadastro original (createdAt)
+                createdAt: currentProtocol.createdAt,
+                // Atualiza datas de modificação
                 updatedAt: new Date().toISOString(),
                 contract: {
                     ...currentProtocol.contract,

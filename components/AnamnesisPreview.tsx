@@ -111,7 +111,8 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
                 </div>
                 <div className="text-right">
                      <span className="text-xs font-bold text-gray-400 uppercase">Data do Cadastro</span>
-                     <p className="text-sm font-bold text-gray-900">{new Date(data.updatedAt).toLocaleDateString('pt-BR')}</p>
+                     {/* CORREÇÃO: Usa createdAt ou fallback para updatedAt se for legado */}
+                     <p className="text-sm font-bold text-gray-900">{new Date(data.createdAt || data.updatedAt).toLocaleDateString('pt-BR')}</p>
                 </div>
             </div>
 

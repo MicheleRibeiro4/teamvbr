@@ -33,7 +33,8 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
   const [data, setData] = useState<ProtocolData>(() => {
     return {
         ...EMPTY_DATA,
-        id: "vbr-student-" + Date.now().toString(36), 
+        id: "vbr-student-" + Date.now().toString(36),
+        createdAt: new Date().toISOString(), // Data de inclusão fixa
         updatedAt: new Date().toISOString(),
         contract: {
             ...EMPTY_DATA.contract,

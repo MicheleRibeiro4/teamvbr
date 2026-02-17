@@ -82,6 +82,8 @@ const App: React.FC = () => {
     return {
       ...EMPTY_DATA,
       ...p,
+      // Garante que createdAt exista. Se não existir (legado), usa updatedAt ou agora.
+      createdAt: p.createdAt || p.updatedAt || new Date().toISOString(),
       contract: {
         ...EMPTY_DATA.contract,
         ...(p.contract || {})
@@ -139,7 +141,11 @@ const App: React.FC = () => {
       
       const protocolToSave = { 
         ...JSON.parse(JSON.stringify(dataToSave)), 
-        id: currentId, 
+        id: currentId,
+        // PRESERVA O createdAt EXISTENTE se já houver. Se for um novo ID (forceNewId) mas baseado em dados existentes,
+        // queremos manter o 'createdAt' original do aluno, pois representa "Data do Cadastro".
+        // Se for um registro TOTALMENTE novo (sem createdAt), define agora.
+        createdAt: dataToSave.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
       
@@ -225,7 +231,12 @@ const App: React.FC = () => {
 
   const handleNew = () => {
     const newId = "vbr-" + Math.random().toString(36).substr(2, 9);
-    setData({ ...EMPTY_DATA, id: newId, updatedAt: new Date().toISOString() });
+    setData({ 
+      ...EMPTY_DATA, 
+      id: newId, 
+      createdAt: new Date().toISOString(), // Define data de criação
+      updatedAt: new Date().toISOString() 
+    });
     setActiveView('manage');
   };
 
