@@ -59,8 +59,10 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
     const meals = safeData.meals || [];
     const supplements = safeData.supplements || [];
     
-    // Garante que as dicas padrão apareçam se não houver dicas preenchidas
-    const tips = safeData.tips && safeData.tips.length > 0 ? safeData.tips : EMPTY_DATA.tips;
+    // Garante que as dicas padrão apareçam se não houver dicas preenchidas ou se estiverem vazias
+    const rawTips = safeData.tips || [];
+    const validTips = rawTips.filter(t => t && t.trim() !== "");
+    const tips = validTips.length > 0 ? validTips : EMPTY_DATA.tips;
     
     const trainingDays = safeData.trainingDays || [];
     
