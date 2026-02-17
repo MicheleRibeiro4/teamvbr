@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { ProtocolData, PhysicalData, BodyMeasurements } from '../types';
 import { 
@@ -77,13 +78,14 @@ const EvolutionTracker: React.FC<Props> = ({
 }) => {
   const [isSaving, setIsSaving] = useState(false);
   
-  // Garante que measurements sempre existe para evitar erros ao digitar
+  // Garante que measurements sempre existe para evitar erros ao digitar, usando fallback seguro
   const [localPhysical, setLocalPhysical] = useState<PhysicalData>(() => ({
       ...currentProtocol.physicalData,
-      measurements: currentProtocol.physicalData.measurements || {
+      measurements: {
           thorax: "", waist: "", abdomen: "", glutes: "",
           rightArmRelaxed: "", leftArmRelaxed: "", rightArmContracted: "", leftArmContracted: "",
-          rightThigh: "", leftThigh: "", rightCalf: "", leftCalf: ""
+          rightThigh: "", leftThigh: "", rightCalf: "", leftCalf: "",
+          ...(currentProtocol.physicalData?.measurements || {})
       }
   }));
 
@@ -91,10 +93,11 @@ const EvolutionTracker: React.FC<Props> = ({
   useEffect(() => {
     setLocalPhysical({
         ...currentProtocol.physicalData,
-        measurements: currentProtocol.physicalData.measurements || {
+        measurements: {
             thorax: "", waist: "", abdomen: "", glutes: "",
             rightArmRelaxed: "", leftArmRelaxed: "", rightArmContracted: "", leftArmContracted: "",
-            rightThigh: "", leftThigh: "", rightCalf: "", leftCalf: ""
+            rightThigh: "", leftThigh: "", rightCalf: "", leftCalf: "",
+            ...(currentProtocol.physicalData?.measurements || {})
         }
     });
   }, [currentProtocol.id, currentProtocol.updatedAt]);
@@ -145,28 +148,14 @@ const EvolutionTracker: React.FC<Props> = ({
             thorax: "", waist: "", abdomen: "", glutes: "",
             rightArmRelaxed: "", leftArmRelaxed: "", rightArmContracted: "", leftArmContracted: "",
             rightThigh: "", leftThigh: "", rightCalf: "", leftCalf: ""
-        }), // Prevenção contra undefined e fallback completo
+        }),
         [key]: value
       } as BodyMeasurements
     }));
   };
 
-  const handleSaveCurrent = async () => {
-    setIsSaving(true);
-    try {
-      const updatedProtocol = {
-        ...currentProtocol,
-        physicalData: localPhysical,
-        updatedAt: new Date().toISOString()
-      };
-      await onUpdateData(updatedProtocol, false);
-    } finally {
-      setTimeout(() => setIsSaving(false), 500);
-    }
-  };
-
   const handleNewCheckin = async () => {
-    if (confirm("Iniciar nova atualização?\n\nIsso salvará os dados atuais no histórico e criará uma nova avaliação com a data de hoje.")) {
+    if (confirm("Deseja criar uma nova atualização na linha do tempo com os dados inseridos?")) {
       setIsSaving(true);
       try {
         const newProtocolState = {
@@ -232,15 +221,7 @@ const EvolutionTracker: React.FC<Props> = ({
             </div>
          </div>
          
-         <div className="flex gap-3">
-             <button 
-                onClick={handleNewCheckin}
-                disabled={isSaving}
-                className="bg-[#d4af37] text-black px-6 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest hover:scale-105 transition-all shadow-lg flex items-center gap-2"
-             >
-                <PlusCircle size={16} /> Atualização
-             </button>
-         </div>
+         {/* BOTÃO REMOVIDO DAQUI CONFORME SOLICITADO */}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -429,15 +410,15 @@ const EvolutionTracker: React.FC<Props> = ({
                 />
              </div>
 
-             {/* AÇÕES */}
+             {/* AÇÕES: Botão atualizado para "Nova Atualização" */}
              <div className="flex justify-end gap-4 mt-8 pt-6 border-t border-white/5">
                 <button 
-                  onClick={handleSaveCurrent}
+                  onClick={handleNewCheckin}
                   disabled={isSaving}
-                  className="bg-white/10 hover:bg-white/20 text-white px-8 py-4 rounded-xl font-black uppercase text-[10px] tracking-widest flex items-center gap-2 transition-all disabled:opacity-50"
+                  className="bg-[#d4af37] text-black px-8 py-4 rounded-xl font-black uppercase text-[10px] tracking-widest flex items-center gap-2 transition-all disabled:opacity-50 hover:scale-105 shadow-lg"
                 >
-                  {isSaving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
-                  Salvar Alterações
+                  {isSaving ? <Loader2 className="animate-spin" size={16} /> : <PlusCircle size={16} />}
+                  Nova Atualização
                 </button>
              </div>
           </div>

@@ -158,10 +158,10 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
         - Massa Muscular: ${data.physicalData.muscleMass}kg
         
         ANAMNESE (LEVAR EM CONTA):
-        - Rotina: ${data.anamnesis.routine}
-        - Histórico: ${data.anamnesis.trainingHistory}
-        - Ergogênicos: ${data.anamnesis.ergogenics}
-        - Preferências: ${data.anamnesis.foodPreferences}
+        - Rotina: ${data.anamnesis?.routine || ''}
+        - Histórico: ${data.anamnesis?.trainingHistory || ''}
+        - Ergogênicos: ${data.anamnesis?.ergogenics || ''}
+        - Preferências: ${data.anamnesis?.foodPreferences || ''}
 
         DIRETRIZES DO TREINADOR (Obrigatório Seguir):
         - Estratégia Nutricional: ${data.nutritionalStrategy || "Definir automaticamente baseada no objetivo"}
@@ -578,25 +578,25 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                 <div className="space-y-6">
                     <div>
                         <label className={labelClass}>Objetivo Principal do Aluno</label>
-                        <input className={inputClass} value={data.anamnesis.mainObjective} onChange={(e) => handleChange('anamnesis.mainObjective', e.target.value)} />
+                        <input className={inputClass} value={data.anamnesis?.mainObjective || ''} onChange={(e) => handleChange('anamnesis.mainObjective', e.target.value)} />
                     </div>
                     <div>
                         <label className={labelClass}>Rotina Diária (Trabalho, Sono, Horários)</label>
-                        <textarea className={textAreaClass} value={data.anamnesis.routine} onChange={(e) => handleChange('anamnesis.routine', e.target.value)} />
+                        <textarea className={textAreaClass} value={data.anamnesis?.routine || ''} onChange={(e) => handleChange('anamnesis.routine', e.target.value)} />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label className={labelClass}>Histórico de Treino/Dieta</label>
-                            <textarea className={textAreaClass} value={data.anamnesis.trainingHistory} onChange={(e) => handleChange('anamnesis.trainingHistory', e.target.value)} />
+                            <textarea className={textAreaClass} value={data.anamnesis?.trainingHistory || ''} onChange={(e) => handleChange('anamnesis.trainingHistory', e.target.value)} />
                         </div>
                         <div>
                             <label className={labelClass}>Preferências Alimentares</label>
-                            <textarea className={textAreaClass} value={data.anamnesis.foodPreferences} onChange={(e) => handleChange('anamnesis.foodPreferences', e.target.value)} />
+                            <textarea className={textAreaClass} value={data.anamnesis?.foodPreferences || ''} onChange={(e) => handleChange('anamnesis.foodPreferences', e.target.value)} />
                         </div>
                     </div>
                     <div>
                         <label className={labelClass}>Uso de Ergogênicos / Medicamentos</label>
-                        <textarea className={textAreaClass + " min-h-[80px]"} value={data.anamnesis.ergogenics} onChange={(e) => handleChange('anamnesis.ergogenics', e.target.value)} />
+                        <textarea className={textAreaClass + " min-h-[80px]"} value={data.anamnesis?.ergogenics || ''} onChange={(e) => handleChange('anamnesis.ergogenics', e.target.value)} />
                     </div>
                 </div>
             </section>
@@ -701,15 +701,15 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
               <div className="mb-6">
                 <h4 className="text-[10px] font-black text-[#d4af37] uppercase tracking-widest mb-3 border-b border-white/5 pb-1">Parte Superior</h4>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div><label className={labelClass}>Tórax / Peitoral</label><input className={inputClass} value={data.physicalData.measurements?.thorax} onChange={(e) => handleChange('physicalData.measurements.thorax', e.target.value)} /></div>
-                  <div><label className={labelClass}>Cintura</label><input className={inputClass} value={data.physicalData.measurements?.waist} onChange={(e) => handleChange('physicalData.measurements.waist', e.target.value)} /></div>
-                  <div><label className={labelClass}>Abdômen</label><input className={inputClass} value={data.physicalData.measurements?.abdomen} onChange={(e) => handleChange('physicalData.measurements.abdomen', e.target.value)} /></div>
-                  <div><label className={labelClass}>Glúteo</label><input className={inputClass} value={data.physicalData.measurements?.glutes} onChange={(e) => handleChange('physicalData.measurements.glutes', e.target.value)} /></div>
+                  <div><label className={labelClass}>Tórax / Peitoral</label><input className={inputClass} value={data.physicalData.measurements?.thorax || ''} onChange={(e) => handleChange('physicalData.measurements.thorax', e.target.value)} /></div>
+                  <div><label className={labelClass}>Cintura</label><input className={inputClass} value={data.physicalData.measurements?.waist || ''} onChange={(e) => handleChange('physicalData.measurements.waist', e.target.value)} /></div>
+                  <div><label className={labelClass}>Abdômen</label><input className={inputClass} value={data.physicalData.measurements?.abdomen || ''} onChange={(e) => handleChange('physicalData.measurements.abdomen', e.target.value)} /></div>
+                  <div><label className={labelClass}>Glúteo</label><input className={inputClass} value={data.physicalData.measurements?.glutes || ''} onChange={(e) => handleChange('physicalData.measurements.glutes', e.target.value)} /></div>
                   
-                  <div><label className={labelClass}>Braço Dir. Relaxado</label><input className={inputClass} value={data.physicalData.measurements?.rightArmRelaxed} onChange={(e) => handleChange('physicalData.measurements.rightArmRelaxed', e.target.value)} /></div>
-                  <div><label className={labelClass}>Braço Esq. Relaxado</label><input className={inputClass} value={data.physicalData.measurements?.leftArmRelaxed} onChange={(e) => handleChange('physicalData.measurements.leftArmRelaxed', e.target.value)} /></div>
-                  <div><label className={labelClass}>Braço Dir. Contraído</label><input className={inputClass} value={data.physicalData.measurements?.rightArmContracted} onChange={(e) => handleChange('physicalData.measurements.rightArmContracted', e.target.value)} /></div>
-                  <div><label className={labelClass}>Braço Esq. Contraído</label><input className={inputClass} value={data.physicalData.measurements?.leftArmContracted} onChange={(e) => handleChange('physicalData.measurements.leftArmContracted', e.target.value)} /></div>
+                  <div><label className={labelClass}>Braço Dir. Relaxado</label><input className={inputClass} value={data.physicalData.measurements?.rightArmRelaxed || ''} onChange={(e) => handleChange('physicalData.measurements.rightArmRelaxed', e.target.value)} /></div>
+                  <div><label className={labelClass}>Braço Esq. Relaxado</label><input className={inputClass} value={data.physicalData.measurements?.leftArmRelaxed || ''} onChange={(e) => handleChange('physicalData.measurements.leftArmRelaxed', e.target.value)} /></div>
+                  <div><label className={labelClass}>Braço Dir. Contraído</label><input className={inputClass} value={data.physicalData.measurements?.rightArmContracted || ''} onChange={(e) => handleChange('physicalData.measurements.rightArmContracted', e.target.value)} /></div>
+                  <div><label className={labelClass}>Braço Esq. Contraído</label><input className={inputClass} value={data.physicalData.measurements?.leftArmContracted || ''} onChange={(e) => handleChange('physicalData.measurements.leftArmContracted', e.target.value)} /></div>
                 </div>
               </div>
 
@@ -717,10 +717,10 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
               <div>
                 <h4 className="text-[10px] font-black text-[#d4af37] uppercase tracking-widest mb-3 border-b border-white/5 pb-1">Parte Inferior</h4>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div><label className={labelClass}>Coxa Direita</label><input className={inputClass} value={data.physicalData.measurements?.rightThigh} onChange={(e) => handleChange('physicalData.measurements.rightThigh', e.target.value)} /></div>
-                  <div><label className={labelClass}>Coxa Esquerda</label><input className={inputClass} value={data.physicalData.measurements?.leftThigh} onChange={(e) => handleChange('physicalData.measurements.leftThigh', e.target.value)} /></div>
-                  <div><label className={labelClass}>Panturrilha Direita</label><input className={inputClass} value={data.physicalData.measurements?.rightCalf} onChange={(e) => handleChange('physicalData.measurements.rightCalf', e.target.value)} /></div>
-                  <div><label className={labelClass}>Panturrilha Esquerda</label><input className={inputClass} value={data.physicalData.measurements?.leftCalf} onChange={(e) => handleChange('physicalData.measurements.leftCalf', e.target.value)} /></div>
+                  <div><label className={labelClass}>Coxa Direita</label><input className={inputClass} value={data.physicalData.measurements?.rightThigh || ''} onChange={(e) => handleChange('physicalData.measurements.rightThigh', e.target.value)} /></div>
+                  <div><label className={labelClass}>Coxa Esquerda</label><input className={inputClass} value={data.physicalData.measurements?.leftThigh || ''} onChange={(e) => handleChange('physicalData.measurements.leftThigh', e.target.value)} /></div>
+                  <div><label className={labelClass}>Panturrilha Direita</label><input className={inputClass} value={data.physicalData.measurements?.rightCalf || ''} onChange={(e) => handleChange('physicalData.measurements.rightCalf', e.target.value)} /></div>
+                  <div><label className={labelClass}>Panturrilha Esquerda</label><input className={inputClass} value={data.physicalData.measurements?.leftCalf || ''} onChange={(e) => handleChange('physicalData.measurements.leftCalf', e.target.value)} /></div>
                 </div>
               </div>
             </div>

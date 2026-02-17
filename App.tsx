@@ -77,10 +77,40 @@ const App: React.FC = () => {
     }
   }, [isStudentPage]);
 
+  // Função para garantir que o objeto tenha todos os campos necessários
+  const sanitizeProtocol = (p: ProtocolData): ProtocolData => {
+    return {
+      ...EMPTY_DATA,
+      ...p,
+      contract: {
+        ...EMPTY_DATA.contract,
+        ...(p.contract || {})
+      },
+      physicalData: {
+        ...EMPTY_DATA.physicalData,
+        ...(p.physicalData || {}),
+        measurements: {
+          ...EMPTY_DATA.physicalData.measurements,
+          ...(p.physicalData?.measurements || {})
+        }
+      },
+      anamnesis: {
+        ...EMPTY_DATA.anamnesis,
+        ...(p.anamnesis || {})
+      },
+      macros: {
+        ...EMPTY_DATA.macros,
+        ...(p.macros || {})
+      }
+    };
+  };
+
   const loadData = async () => {
     setIsSyncing(true);
     try {
-      const protocols = await db.getAll();
+      const rawProtocols = await db.getAll();
+      // Sanitiza todos os protocolos carregados
+      const protocols = rawProtocols.map(sanitizeProtocol);
       setSavedProtocols(protocols);
       setCloudStatus('online');
     } catch (e: any) {
@@ -161,7 +191,9 @@ const App: React.FC = () => {
   };
 
   const loadStudent = (student: ProtocolData, view: ViewMode = 'student-dashboard') => {
-    setData(student);
+    // Aplica sanitização ao carregar um estudante específico para garantir integridade
+    const safeStudent = sanitizeProtocol(student);
+    setData(safeStudent);
     setActiveView(view);
   };
 
