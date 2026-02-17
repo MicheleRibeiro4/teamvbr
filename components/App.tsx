@@ -23,20 +23,19 @@ import {
 type ViewMode = 'home' | 'search' | 'manage' | 'settings' | 'student-dashboard' | 'evolution' | 'student-entry';
 
 const App: React.FC = () => {
-  const [data, setData] = useState<ProtocolData>(EMPTY_DATA);
-  
-  // Função auxiliar para verificar URL
-  const checkUrlForStudentMode = () => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('mode') === 'cadastro';
-    }
-    return false;
+  // --- LÓGICA DE DETECÇÃO DE URL ---
+  // Verifica se estamos no modo de cadastro via URL (Funciona com query param ou hash)
+  const isStudentModeUrl = () => {
+    if (typeof window === 'undefined') return false;
+    const href = window.location.href;
+    return href.includes('mode=cadastro');
   };
 
-  // Inicializa com verificação direta
+  const [data, setData] = useState<ProtocolData>(EMPTY_DATA);
+  
+  // Inicializa o activeView com base na URL
   const [activeView, setActiveView] = useState<ViewMode>(() => {
-    return checkUrlForStudentMode() ? 'student-entry' : 'home';
+    return isStudentModeUrl() ? 'student-entry' : 'home';
   });
 
   const [savedProtocols, setSavedProtocols] = useState<ProtocolData[]>([]);
@@ -64,23 +63,35 @@ const App: React.FC = () => {
     }
   };
 
-  // Effect dedicado para forçar o modo cadastro se a URL mudar ou na montagem
+  // Garante que se a URL mudar (ex: navegação manual), o view atualiza
   useEffect(() => {
-    const isStudent = checkUrlForStudentMode();
-    if (isStudent && activeView !== 'student-entry') {
-      setActiveView('student-entry');
+    const handlePopState = () => {
+      if (isStudentModeUrl()) {
+        setActiveView('student-entry');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    
+    // Verificação inicial extra após montagem
+    if (isStudentModeUrl() && activeView !== 'student-entry') {
+        setActiveView('student-entry');
     }
+
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
   // Check auth and load data
   useEffect(() => {
-    // 1. Verifica autenticação do admin (Apenas se não estiver no modo cadastro)
+    // 1. Verifica autenticação do admin
     const auth = localStorage.getItem('vbr_auth');
     if (auth === 'true') setIsAuthenticated(true);
     
-    // 2. Carrega dados
-    // Só carrega dados se NÃO estiver no modo cadastro
-    if (activeView !== 'student-entry' && !checkUrlForStudentMode()) {
+    // 2. Carrega dados APENAS se não estivermos no modo cadastro
+    // Usamos uma verificação dupla aqui para não carregar dados desnecessários para o aluno
+    const currentlyStudentMode = activeView === 'student-entry' || isStudentModeUrl();
+
+    if (!currentlyStudentMode) {
         loadData();
     }
   }, [activeView]);
@@ -216,18 +227,18 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
 
   // --- RENDERIZAÇÃO CONDICIONAL ---
   
-  // 1. MODO DE AUTO-CADASTRO (Prioridade Máxima)
-  // Verifica tanto o state quanto a URL diretamente para evitar delays de renderização
-  if (activeView === 'student-entry' || checkUrlForStudentMode()) {
+  // 1. MODO DE AUTO-CADASTRO (Prioridade Máxima Absoluta)
+  // Se a URL contiver 'mode=cadastro', renderiza o form e ignora o resto.
+  if (isStudentModeUrl() || activeView === 'student-entry') {
      return <StudentEntryForm onCancel={() => {
-        // Remove o parametro da URL ao cancelar para voltar ao login limpo
-        const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-        window.history.pushState({path:newUrl},'',newUrl);
+        // Limpa a URL ao cancelar
+        const newUrl = window.location.pathname;
+        window.history.pushState({}, '', newUrl);
         setActiveView('home');
      }} />;
   }
 
-  // 2. TELA DE LOGIN (Se não estiver autenticado e não for cadastro)
+  // 2. TELA DE LOGIN (Se não estiver autenticado)
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-6 text-center">
@@ -245,6 +256,7 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
             <div className="mt-8 pt-8 border-t border-white/5">
                 <button 
                   onClick={() => {
+                     // Adiciona o param na URL e muda a view
                      const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + "?mode=cadastro";
                      window.history.pushState({path:newUrl},'',newUrl);
                      setActiveView('student-entry');
