@@ -2,6 +2,8 @@
 import { ProtocolData } from './types';
 
 export const LOGO_VBR_BLACK = "https://xqwzmvzfemjkvaquxedz.supabase.co/storage/v1/object/public/LOGO/logo.png"; 
+export const ICON_MAN = "https://xqwzmvzfemjkvaquxedz.supabase.co/storage/v1/object/public/LOGO/icone%20homem.png";
+export const ICON_WOMAN = "https://xqwzmvzfemjkvaquxedz.supabase.co/storage/v1/object/public/LOGO/icone%20mulher.png";
 
 export const CONSULTANT_DEFAULT = {
   consultantName: "Vinicius Brasil dos Santos Otero",

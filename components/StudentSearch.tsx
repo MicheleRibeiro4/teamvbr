@@ -1,7 +1,8 @@
 
 import React, { useState } from 'react';
 import { ProtocolData } from '../types';
-import { Search, Trash2, ChevronRight, Calendar, User, Target, FileText } from 'lucide-react';
+import { Search, Trash2, ChevronRight, Calendar, Target, FileText, User } from 'lucide-react';
+import { ICON_MAN, ICON_WOMAN } from '../constants';
 
 interface Props {
   protocols: ProtocolData[];
@@ -41,27 +42,15 @@ const StudentSearch: React.FC<Props> = ({ protocols, onLoad, onDelete }) => {
         ) : (
           filtered.map((p) => {
             const isFemale = p.physicalData.gender === 'Feminino';
-            const isMale = p.physicalData.gender === 'Masculino';
             
+            // Cores padrão (Dourado/Preto) para todos
             let iconBgClass = 'bg-black text-[#d4af37] border-[#d4af37]';
             let nameHoverClass = 'group-hover:text-[#d4af37]';
             let borderClass = 'hover:border-[#d4af37]/40';
             let badgeClass = 'text-[#d4af37] bg-[#d4af37]/10';
             let buttonClass = 'bg-[#d4af37]/10 hover:bg-[#d4af37] hover:text-black text-[#d4af37] border-[#d4af37]/20';
 
-            if (isFemale) {
-              iconBgClass = 'bg-pink-500/10 text-pink-500 border-pink-500';
-              nameHoverClass = 'group-hover:text-pink-500';
-              borderClass = 'hover:border-pink-500/40';
-              badgeClass = 'text-pink-500 bg-pink-500/10';
-              buttonClass = 'bg-pink-500/10 hover:bg-pink-500 hover:text-white text-pink-500 border-pink-500/20';
-            } else if (isMale) {
-              iconBgClass = 'bg-blue-500/10 text-blue-500 border-blue-500';
-              nameHoverClass = 'group-hover:text-blue-500';
-              borderClass = 'hover:border-blue-500/40';
-              badgeClass = 'text-blue-500 bg-blue-500/10';
-              buttonClass = 'bg-blue-500/10 hover:bg-blue-500 hover:text-white text-blue-500 border-blue-500/20';
-            }
+            const userIconSrc = isFemale ? ICON_WOMAN : ICON_MAN;
 
             return (
               <div 
@@ -69,8 +58,8 @@ const StudentSearch: React.FC<Props> = ({ protocols, onLoad, onDelete }) => {
                 className={`bg-white/5 p-6 rounded-[1.5rem] border shadow-sm hover:shadow-2xl transition-all flex flex-col md:flex-row md:items-center justify-between group gap-6 border-white/5 ${borderClass}`}
               >
                 <div className="flex items-center gap-6">
-                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center border-b-4 shadow-xl group-hover:scale-105 transition-transform shrink-0 relative ${iconBgClass}`}>
-                    <User size={30} />
+                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center border-b-4 shadow-xl group-hover:scale-105 transition-transform shrink-0 relative ${iconBgClass} overflow-hidden`}>
+                    <img src={userIconSrc} alt="Avatar" className="w-full h-full object-cover" />
                   </div>
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2">

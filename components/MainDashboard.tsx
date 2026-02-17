@@ -1,7 +1,7 @@
 
 import React, { useMemo } from 'react';
 import { ProtocolData } from '../types';
-import { LOGO_VBR_BLACK } from '../constants';
+import { LOGO_VBR_BLACK, ICON_MAN, ICON_WOMAN } from '../constants';
 import { 
   Users, 
   DollarSign, 
@@ -287,21 +287,13 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
             {recentStudents.length > 0 ? recentStudents.map((p) => {
               const isFemale = p.physicalData.gender === 'Feminino';
-              const isMale = p.physicalData.gender === 'Masculino';
               
-              let iconColorClass = 'bg-black text-[#d4af37] border-white/10 group-hover:bg-[#d4af37]';
+              // Cores Padrão (Sem Rosa/Azul)
+              let iconColorClass = 'bg-black border-white/10';
               let hoverTextClass = 'group-hover:text-[#d4af37]';
               let buttonHoverBg = 'hover:bg-[#d4af37]';
-
-              if (isFemale) {
-                iconColorClass = 'bg-pink-500/20 text-pink-500 border-pink-500/20 group-hover:bg-pink-500';
-                hoverTextClass = 'group-hover:text-pink-500';
-                buttonHoverBg = 'hover:bg-pink-500';
-              } else if (isMale) {
-                iconColorClass = 'bg-blue-500/20 text-blue-500 border-blue-500/20 group-hover:bg-blue-500';
-                hoverTextClass = 'group-hover:text-blue-500';
-                buttonHoverBg = 'hover:bg-blue-500';
-              }
+              
+              const userIconSrc = isFemale ? ICON_WOMAN : ICON_MAN;
 
               // Se for status Aguardando, destaca
               const isPending = p.contract.status === 'Aguardando';
@@ -309,8 +301,8 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
               return (
                 <div key={p.id} className={`bg-white/5 p-3 rounded-xl border ${isPending ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-white/5'} flex flex-col justify-between gap-3 hover:border-white/20 transition-all group`}>
                   <div className="flex items-center gap-3 overflow-hidden">
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center border transition-all shrink-0 ${iconColorClass} group-hover:text-black`}>
-                        <Users size={14} />
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center border transition-all shrink-0 ${iconColorClass} overflow-hidden`}>
+                        <img src={userIconSrc} alt="Icon" className="w-full h-full object-cover" />
                     </div>
                     <div className="flex flex-col min-w-0">
                         <div className="flex items-center gap-2">

@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { ProtocolData } from '../types';
-import { Calendar, User, ArrowRight, Settings2, TrendingUp, Activity } from 'lucide-react';
+import { Calendar, ArrowRight, Settings2, TrendingUp, Activity } from 'lucide-react';
+import { ICON_MAN, ICON_WOMAN } from '../constants';
 
 interface Props {
   data: ProtocolData;
@@ -10,9 +11,8 @@ interface Props {
 
 const StudentDashboard: React.FC<Props> = ({ data, setView }) => {
   const isFemale = data.physicalData.gender === 'Feminino';
-  const isMale = data.physicalData.gender === 'Masculino';
   
-  // Cores dinâmicas baseadas no gênero
+  // Cores padronizadas (Dourado/Preto) para todos
   let accentColor = 'text-[#d4af37]';
   let borderColor = 'border-[#d4af37]';
   let bgGlow = 'bg-[#d4af37]';
@@ -20,21 +20,7 @@ const StudentDashboard: React.FC<Props> = ({ data, setView }) => {
   let iconBg = 'bg-[#d4af37]';
   let badgeBg = 'bg-[#d4af37]';
 
-  if (isFemale) {
-    accentColor = 'text-pink-500';
-    borderColor = 'border-pink-500';
-    bgGlow = 'bg-pink-500';
-    hoverBorder = 'hover:border-pink-500/30';
-    iconBg = 'bg-pink-500';
-    badgeBg = 'bg-pink-500';
-  } else if (isMale) {
-    accentColor = 'text-blue-500';
-    borderColor = 'border-blue-500';
-    bgGlow = 'bg-blue-500';
-    hoverBorder = 'hover:border-blue-500/30';
-    iconBg = 'bg-blue-500';
-    badgeBg = 'bg-blue-500';
-  }
+  const userIconSrc = isFemale ? ICON_WOMAN : ICON_MAN;
 
   return (
     <div className="max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-6 duration-700 px-4 md:px-0">
@@ -48,9 +34,9 @@ const StudentDashboard: React.FC<Props> = ({ data, setView }) => {
           {/* Avatar - Agora clicável */}
           <button 
             onClick={() => setView('manage')}
-            className={`w-24 h-24 rounded-3xl border-2 ${borderColor} flex items-center justify-center bg-black/50 shadow-[0_0_20px_rgba(255,255,255,0.05)] shrink-0 hover:scale-105 active:scale-95 transition-all cursor-pointer`}
+            className={`w-24 h-24 rounded-3xl border-2 ${borderColor} flex items-center justify-center bg-black/50 shadow-[0_0_20px_rgba(255,255,255,0.05)] shrink-0 hover:scale-105 active:scale-95 transition-all cursor-pointer overflow-hidden`}
           >
-            <User size={40} className={accentColor} strokeWidth={1.5} />
+            <img src={userIconSrc} alt="Avatar" className="w-full h-full object-cover" />
           </button>
           
           {/* Info - Nome agora clicável e menor */}
