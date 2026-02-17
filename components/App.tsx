@@ -91,7 +91,7 @@ const App: React.FC = () => {
   };
 
   // Save changes to Supabase
-  // forceNewId: Se true, cria um novo registro (Check-in histórico) em vez de atualizar
+  // CORREÇÃO: specificData é usado prioritariamente para garantir que o dado salvo é o mais recente
   const handleSave = async (silent = false, specificData?: ProtocolData, forceNewId = false) => {
     const dataToSave = specificData || data;
 
@@ -244,7 +244,7 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
           <button onClick={() => { localStorage.removeItem('vbr_auth'); setIsAuthenticated(false); }} className="text-[9px] font-black uppercase text-white/20 hover:text-red-500">Sair</button>
           {data.id && activeView !== 'home' && activeView !== 'search' && (
             <button 
-              onClick={() => handleSave(false)} 
+              onClick={() => handleSave()} 
               disabled={isSyncing}
               className="flex items-center gap-2 bg-[#d4af37] text-black px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all shadow-lg disabled:opacity-50"
             >
@@ -298,6 +298,7 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
         )}
 
         {/* VIEW DE EVOLUÇÃO */}
+        {/* CORREÇÃO AQUI: Passamos (newData, createHistory) diretamente para handleSave */}
         {activeView === 'evolution' && (
           <EvolutionTracker 
               currentProtocol={data} 

@@ -13,8 +13,6 @@ import {
   ArrowDownRight, 
   Minus,
   Scale,
-  ChevronRight,
-  Camera,
   CalendarCheck
 } from 'lucide-react';
 
@@ -27,6 +25,49 @@ interface Props {
   onOpenEditor?: () => void;
 }
 
+// Componente isolado para evitar re-render desnecessário e perda de foco
+const InputField = ({ label, value, onChange, prevValue, inverse = false }: any) => {
+    
+    const DiffBadge = ({ current, prev, inverse = false }: { current: string, prev?: string, inverse?: boolean }) => {
+        if (!current || !prev) return null;
+        const c = parseFloat(current.replace(',', '.'));
+        const p = parseFloat(prev.replace(',', '.'));
+        if (isNaN(c) || isNaN(p)) return null;
+        
+        const diff = c - p;
+        if (Math.abs(diff) < 0.1) return <div className="text-[9px] text-white/30 font-bold bg-white/5 px-2 py-0.5 rounded-md flex items-center gap-1"><Minus size={10}/> Estável</div>;
+
+        const isPositive = diff > 0;
+        const isGood = inverse ? !isPositive : isPositive;
+        const colorClass = isGood ? 'text-green-400 bg-green-400/10 border-green-400/20' : 'text-red-400 bg-red-400/10 border-red-400/20';
+        const Icon = isPositive ? ArrowUpRight : ArrowDownRight;
+
+        return (
+        <div className={`flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded-md border ${colorClass}`}>
+            <Icon size={10} />
+            {Math.abs(diff).toFixed(1).replace('.', ',')}
+        </div>
+        );
+    };
+
+    return (
+        <div className="bg-[#1a1a1a] p-4 rounded-2xl border border-white/5 hover:border-[#d4af37]/50 transition-colors group relative">
+        <div className="flex justify-between items-start mb-2">
+            <label className="text-[9px] font-black text-white/40 uppercase tracking-widest">{label}</label>
+            <DiffBadge current={value} prev={prevValue} inverse={inverse} />
+        </div>
+        <div className="flex items-end gap-1">
+            <input 
+            className="w-full bg-transparent text-white font-black text-2xl outline-none placeholder:text-white/5"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder="0,0"
+            />
+        </div>
+        </div>
+    );
+};
+
 const EvolutionTracker: React.FC<Props> = ({ 
   currentProtocol, 
   history, 
@@ -37,22 +78,31 @@ const EvolutionTracker: React.FC<Props> = ({
 }) => {
   const [isSaving, setIsSaving] = useState(false);
   
-  // Estado local para edição dos dados físicos (Check-in atual)
-  const [localPhysical, setLocalPhysical] = useState<PhysicalData>(currentProtocol.physicalData);
-  
-  // Aba ativa do dashboard
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'measures'>('dashboard');
+  // Garante que measurements sempre existe para evitar erros ao digitar
+  const [localPhysical, setLocalPhysical] = useState<PhysicalData>(() => ({
+      ...currentProtocol.physicalData,
+      measurements: currentProtocol.physicalData.measurements || {
+          thorax: "", waist: "", abdomen: "", glutes: "",
+          rightArmRelaxed: "", leftArmRelaxed: "", rightArmContracted: "", leftArmContracted: "",
+          rightThigh: "", leftThigh: "", rightCalf: "", leftCalf: ""
+      }
+  }));
 
-  // Sincroniza o estado local
+  // Sincroniza o estado local apenas se o ID ou data de atualização mudar
   useEffect(() => {
-    setLocalPhysical(currentProtocol.physicalData);
+    setLocalPhysical({
+        ...currentProtocol.physicalData,
+        measurements: currentProtocol.physicalData.measurements || {
+            thorax: "", waist: "", abdomen: "", glutes: "",
+            rightArmRelaxed: "", leftArmRelaxed: "", rightArmContracted: "", leftArmContracted: "",
+            rightThigh: "", leftThigh: "", rightCalf: "", leftCalf: ""
+        }
+    });
   }, [currentProtocol.id, currentProtocol.updatedAt]);
 
   // --- PREPARAÇÃO DE DADOS ---
 
-  // Lista de histórico ordenada
   const sortedHistoryList = useMemo(() => {
-    // Cria um mapa para remover duplicatas baseadas no ID
     const uniqueMap = new Map();
     [currentProtocol, ...history].forEach(p => {
         uniqueMap.set(p.id, p);
@@ -62,7 +112,6 @@ const EvolutionTracker: React.FC<Props> = ({
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
   }, [history, currentProtocol]);
 
-  // Protocolo anterior para comparação (o índice 1 da lista, já que o 0 é o atual)
   const previousProtocol = useMemo(() => {
     if (sortedHistoryList.length > 1) {
       return sortedHistoryList[1];
@@ -70,7 +119,6 @@ const EvolutionTracker: React.FC<Props> = ({
     return null;
   }, [sortedHistoryList]);
 
-  // Dados para os gráficos (cronológico)
   const chartData = useMemo(() => {
     const data = sortedHistoryList
       .map(p => ({
@@ -94,13 +142,12 @@ const EvolutionTracker: React.FC<Props> = ({
     setLocalPhysical(prev => ({
       ...prev,
       measurements: {
-        ...prev.measurements,
+        ...(prev.measurements || {}), // Prevenção contra undefined
         [key]: value
       }
     }));
   };
 
-  // Salva apenas alterações no registro atual
   const handleSaveCurrent = async () => {
     setIsSaving(true);
     try {
@@ -115,25 +162,19 @@ const EvolutionTracker: React.FC<Props> = ({
     }
   };
 
-  // Cria um novo Check-in (Novo registro no histórico)
   const handleNewCheckin = async () => {
     if (confirm("Iniciar nova atualização?\n\nIsso salvará os dados atuais no histórico e criará uma nova avaliação com a data de hoje.")) {
       setIsSaving(true);
       try {
-        // 1. O registro atual será salvo automaticamente como histórico pois criaremos um novo ID
-        // 2. Preparamos o objeto para o novo registro
         const newProtocolState = {
           ...currentProtocol,
           physicalData: {
              ...localPhysical,
-             date: new Date().toLocaleDateString('pt-BR'), // Data de hoje
-             // Opcional: Limpar medidas para forçar nova medição? 
-             // Por enquanto mantemos para facilitar ajustes pequenos.
+             date: new Date().toLocaleDateString('pt-BR'),
           },
           updatedAt: new Date().toISOString()
         };
         
-        // true indica para o App.tsx gerar um novo ID
         await onUpdateData(newProtocolState, true); 
       } finally {
         setTimeout(() => setIsSaving(false), 1000);
@@ -141,8 +182,8 @@ const EvolutionTracker: React.FC<Props> = ({
     }
   };
 
-  // --- COMPONENTES VISUAIS ---
-
+  // --- COMPONENTES VISUAIS AUXILIARES ---
+  
   const DiffBadge = ({ current, prev, inverse = false }: { current: string, prev?: string, inverse?: boolean }) => {
     if (!current || !prev) return null;
     const c = parseFloat(current.replace(',', '.'));
@@ -164,23 +205,6 @@ const EvolutionTracker: React.FC<Props> = ({
       </div>
     );
   };
-
-  const InputField = ({ label, value, onChange, prevValue, inverse = false }: any) => (
-    <div className="bg-[#1a1a1a] p-4 rounded-2xl border border-white/5 hover:border-[#d4af37]/50 transition-colors group relative">
-      <div className="flex justify-between items-start mb-2">
-        <label className="text-[9px] font-black text-white/40 uppercase tracking-widest">{label}</label>
-        <DiffBadge current={value} prev={prevValue} inverse={inverse} />
-      </div>
-      <div className="flex items-end gap-1">
-        <input 
-          className="w-full bg-transparent text-white font-black text-2xl outline-none placeholder:text-white/5"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder="0,0"
-        />
-      </div>
-    </div>
-  );
 
   return (
     <div className="max-w-[1600px] mx-auto animate-in fade-in duration-500 pb-20">
