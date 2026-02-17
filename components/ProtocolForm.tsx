@@ -221,8 +221,9 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
         // Mesclar dados gerados com os dados atuais
         const newData = {
           ...data,
-          // Prioriza o que a IA gerou/refinou, mas mantém o input do usuário se a IA falhar
-          nutritionalStrategy: generatedData.nutritionalStrategy || data.nutritionalStrategy,
+          // PRESERVA ESTRITAMENTE a estratégia se já existir, senão usa a da IA
+          nutritionalStrategy: data.nutritionalStrategy || generatedData.nutritionalStrategy,
+          
           kcalGoal: generatedData.kcalGoal || data.kcalGoal,
           kcalSubtext: generatedData.kcalSubtext || data.kcalSubtext, // A IA gera o contexto agora (déficit/superávit)
           
@@ -766,6 +767,14 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
           <section className="bg-gradient-to-r from-[#d4af37]/10 to-transparent p-6 rounded-2xl border border-[#d4af37]/20 relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-32 h-32 bg-[#d4af37] blur-[80px] opacity-10"></div>
             
+            {/* OVERLAY DE CARREGAMENTO */}
+            {isGenerating && (
+               <div className="absolute inset-0 bg-black/80 z-20 flex flex-col items-center justify-center rounded-2xl backdrop-blur-sm">
+                  <Loader2 size={40} className="text-[#d4af37] animate-spin mb-2" />
+                  <p className="text-[#d4af37] font-black uppercase tracking-widest text-xs animate-pulse">CRIANDO PROTOCOLO...</p>
+               </div>
+            )}
+
             <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
                 <div className="flex items-start gap-4">
                   <div className="p-3 bg-[#d4af37] text-black rounded-xl shrink-0">

@@ -132,7 +132,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
             </div>
             <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
                <button 
-                  onClick={() => onLoadStudent(pendingStudents[0], 'manage')} 
+                  onClick={onList} 
                   className="bg-black text-[#d4af37] px-4 py-2 rounded-xl font-black uppercase text-[10px] tracking-widest hover:scale-105 transition-all shadow-lg whitespace-nowrap"
                >
                   Ver Agora
@@ -257,7 +257,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                     </div>
                     <div className="flex items-center gap-3">
                         <span className="hidden md:inline-block text-[9px] font-black uppercase tracking-widest text-white/20">
-                            {isToday ? 'Check-in Necessário' : 'Aguardando'}
+                            {isToday ? 'Check-in Necessário' : 'Aguardando ajuste quinzenal'}
                         </span>
                         <ChevronRight size={14} className={`opacity-50 group-hover:opacity-100 ${iconColor}`} />
                     </div>
