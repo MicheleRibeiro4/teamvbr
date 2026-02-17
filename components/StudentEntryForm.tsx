@@ -159,11 +159,14 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
         <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center p-6 animate-in fade-in duration-700">
              <img src={LOGO_VBR_BLACK} alt="Team VBR" className="h-20 md:h-24 w-auto mb-8 md:mb-12" />
              <div className="text-center max-w-lg space-y-6">
+                 {/* Ajustado tamanho do texto e whitespace-nowrap para garantir que Team VBR fique junto */}
                  <h1 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter leading-none">
-                    Bem-vindo ao <span className="text-[#d4af37]">Team VBR</span>
+                    Bem-vindo ao <span className="text-[#d4af37] whitespace-nowrap">Team VBR</span>
                  </h1>
-                 <p className="text-white/60 text-base md:text-lg font-medium leading-relaxed">
-                    Para criarmos o protocolo perfeito para você, precisamos conhecer seus hábitos, histórico e objetivos.
+                 <p className="text-white/60 text-sm md:text-lg font-medium leading-relaxed max-w-sm md:max-w-none mx-auto">
+                    Para criar seu protocolo ideal, preciso conhecer seus hábitos, histórico e objetivos.
+                    <br/><br/>
+                    Quanto mais informações você me passar, mais estratégico e personalizado será o seu protocolo! 💪
                  </p>
                  <div className="flex flex-col gap-4 pt-8 w-full">
                      <button 
@@ -172,9 +175,6 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
                      >
                         Iniciar Cadastro <ChevronRight size={20} />
                      </button>
-                     <p className="text-[10px] text-white/20 uppercase tracking-widest font-black mt-4">
-                        Tempo estimado: 5 minutos
-                     </p>
                  </div>
              </div>
         </div>
@@ -182,9 +182,10 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
   }
 
   return (
-    // Usa h-[100dvh] para mobile (dynamic viewport) para lidar melhor com barras de navegador e teclado virtual
-    <div className="h-[100dvh] md:min-h-screen bg-[#0a0a0a] text-white p-0 md:p-8 flex items-end md:items-center justify-center">
-      <div className="w-full max-w-4xl bg-[#111] border-t md:border border-white/10 rounded-t-[2rem] md:rounded-[2.5rem] p-5 md:p-10 shadow-2xl relative overflow-hidden flex flex-col h-[95%] md:h-[90vh] max-h-[900px]">
+    // Ajustado padding (p-4 md:p-8) e alinhamento (items-center) para garantir que as bordas apareçam no mobile
+    <div className="h-[100dvh] md:min-h-screen bg-[#0a0a0a] text-white p-4 md:p-8 flex items-center justify-center">
+      {/* Ajustado rounded (rounded-[2.5rem]) para ser igual em mobile e desktop */}
+      <div className="w-full max-w-4xl bg-[#111] border border-white/10 rounded-[2.5rem] p-5 md:p-10 shadow-2xl relative overflow-hidden flex flex-col h-[95%] md:h-[90vh] max-h-[900px]">
         
         {/* Progress Bar */}
         <div className="flex items-center gap-4 mb-4 md:mb-8 shrink-0">
