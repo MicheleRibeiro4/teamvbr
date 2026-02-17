@@ -61,6 +61,16 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
     const tips = safeData.tips || [];
     const trainingDays = safeData.trainingDays || [];
     
+    // Chunk training days into groups of 2 for better page breaking
+    const trainingChunks = [];
+    if (trainingDays.length === 0) {
+        trainingChunks.push([]);
+    } else {
+        for (let i = 0; i < trainingDays.length; i += 2) {
+            trainingChunks.push(trainingDays.slice(i, i + 2));
+        }
+    }
+    
     const kcalSubtext = safeData.kcalSubtext || "Manutenção";
     const protocolTitle = safeData.protocolTitle || "Personalizado";
     const clientName = safeData.clientName || "Aluno";
@@ -213,31 +223,49 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
 
             <div className="html2pdf__page-break"></div>
 
-            {/* PÁGINA 5 (TREINOS) */}
-            <div style={pageStyle} className="h-auto">
-            <h3 className={sectionTitle}>5. Divisão de Treino</h3>
-            <p className="text-sm text-gray-600 mb-6">Frequência: {safeData.trainingFrequency || 'Não definida'}</p>
-            <div className="space-y-8">
-                {trainingDays.map((day) => (
-                <div key={day.id} className="border-2 border-black rounded-xl overflow-hidden break-inside-avoid">
-                    <div className="bg-white border-b-2 border-black p-3 flex justify-between items-center">
-                        <span className="font-black uppercase text-black text-lg">{day.title}</span>
-                        <span className="text-xs font-bold text-[#d4af37] uppercase bg-black px-3 py-1 rounded">Foco: {day.focus}</span>
+            {/* PÁGINAS DE TREINO (Dinâmico) */}
+            {trainingChunks.map((chunk, index) => (
+                <React.Fragment key={`training-page-${index}`}>
+                    <div style={pageStyle} className="h-auto">
+                        <h3 className={sectionTitle}>
+                            5. Divisão de Treino {trainingChunks.length > 1 ? `(Parte ${index + 1})` : ''}
+                        </h3>
+                        {index === 0 && (
+                            <p className="text-sm text-gray-600 mb-6">
+                                Frequência: {safeData.trainingFrequency || 'Não definida'}
+                            </p>
+                        )}
+                        <div className="space-y-8">
+                            {chunk.map((day) => (
+                                <div key={day.id} className="border-2 border-black rounded-xl overflow-hidden break-inside-avoid">
+                                    <div className="bg-white border-b-2 border-black p-3 flex justify-between items-center">
+                                        <span className="font-black uppercase text-black text-lg">{day.title}</span>
+                                        <span className="text-xs font-bold text-[#d4af37] uppercase bg-black px-3 py-1 rounded">
+                                            Foco: {day.focus}
+                                        </span>
+                                    </div>
+                                    <table className="w-full text-sm text-left bg-white">
+                                        <tbody className="divide-y divide-gray-200">
+                                            {(day.exercises || []).map((ex, idx) => (
+                                                <tr key={ex.id || idx} className="bg-white">
+                                                    <td className="p-3 font-bold text-gray-900">{ex.name}</td>
+                                                    <td className="p-3 font-black text-black text-right whitespace-nowrap">{ex.sets}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            ))}
+                            {chunk.length === 0 && <p className="text-gray-400 italic">Nenhum treino cadastrado.</p>}
+                        </div>
                     </div>
-                    <table className="w-full text-sm text-left bg-white">
-                    <tbody className="divide-y divide-gray-200">
-                        {(day.exercises || []).map((ex, idx) => (
-                        <tr key={ex.id || idx} className="bg-white">
-                            <td className="p-3 font-bold text-gray-900">{ex.name}</td>
-                            <td className="p-3 font-black text-black text-right whitespace-nowrap">{ex.sets}</td>
-                        </tr>
-                        ))}
-                    </tbody>
-                    </table>
-                </div>
-                ))}
-            </div>
-            </div>
+                    {/* Add page break if it's not the last chunk */}
+                    {(index < trainingChunks.length - 1) && <div className="html2pdf__page-break"></div>}
+                </React.Fragment>
+            ))}
+
+            {/* PAGE BREAK BEFORE FINAL PAGE */}
+            <div className="html2pdf__page-break"></div>
 
             {/* PÁGINA FINAL */}
             <div style={{ ...pageStyle, padding: 0, minHeight: '296mm', height: '296mm' }} className="h-[296mm] page-break-before-always">
