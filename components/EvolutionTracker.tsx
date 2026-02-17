@@ -17,59 +17,85 @@ import {
   FilePlus,
   Flag,
   Trash2,
-  Eye
+  Eye,
+  ChevronRight
 } from 'lucide-react';
 
 interface Props {
   currentProtocol: ProtocolData;
   history: ProtocolData[];
   onNotesChange: (notes: string) => void;
-  // Atualizado para aceitar forceNewId
   onUpdateData: (newData: ProtocolData, createHistory?: boolean, forceNewId?: boolean) => void;
   onSelectHistory?: (data: ProtocolData) => void;
   onDeleteHistory?: (id: string) => void; 
   onOpenEditor?: () => void;
 }
 
-// Componente isolado para evitar re-render desnecessário e perda de foco
-const InputField = ({ label, value, onChange, prevValue, inverse = false }: any) => {
+// Componente de Campo de Comparação Renovado
+const ComparisonField = ({ label, value, onChange, prevValue, inverse = false }: any) => {
     
-    const DiffBadge = ({ current, prev, inverse = false }: { current: string, prev?: string, inverse?: boolean }) => {
-        if (!current || !prev) return null;
-        const c = parseFloat(current.replace(',', '.'));
-        const p = parseFloat(prev.replace(',', '.'));
-        if (isNaN(c) || isNaN(p)) return null;
-        
-        const diff = c - p;
-        if (Math.abs(diff) < 0.1) return <div className="text-[9px] text-white/30 font-bold bg-white/5 px-2 py-0.5 rounded-md flex items-center gap-1"><Minus size={10}/> Estável</div>;
+    // Cálculo da diferença
+    let diff = 0;
+    let hasPrev = false;
+    let diffLabel = "";
+    
+    if (value && prevValue) {
+        const c = parseFloat(value.replace(',', '.'));
+        const p = parseFloat(prevValue.replace(',', '.'));
+        if (!isNaN(c) && !isNaN(p)) {
+            diff = c - p;
+            hasPrev = true;
+            diffLabel = Math.abs(diff).toFixed(1).replace('.', ',');
+        }
+    }
 
-        const isPositive = diff > 0;
-        const isGood = inverse ? !isPositive : isPositive;
-        const colorClass = isGood ? 'text-green-400 bg-green-400/10 border-green-400/20' : 'text-red-400 bg-red-400/10 border-red-400/20';
-        const Icon = isPositive ? ArrowUpRight : ArrowDownRight;
-
-        return (
-        <div className={`flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded-md border ${colorClass}`}>
-            <Icon size={10} />
-            {Math.abs(diff).toFixed(1).replace('.', ',')}
-        </div>
-        );
-    };
+    const isPositive = diff > 0;
+    const isStable = Math.abs(diff) < 0.1;
+    
+    // Define cor baseado se "aumentar" é bom (ex: massa) ou ruim (ex: gordura)
+    // inverse = true -> aumentar é ruim (vermelho)
+    // inverse = false -> aumentar é bom (verde)
+    let colorClass = 'text-gray-400';
+    if (!isStable && hasPrev) {
+        if (inverse) {
+            colorClass = isPositive ? 'text-red-400' : 'text-green-400';
+        } else {
+            colorClass = isPositive ? 'text-green-400' : 'text-red-400';
+        }
+    }
 
     return (
-        <div className="bg-[#1a1a1a] p-4 rounded-2xl border border-white/5 hover:border-[#d4af37]/50 transition-colors group relative">
-        <div className="flex justify-between items-start mb-2">
-            <label className="text-[9px] font-black text-white/40 uppercase tracking-widest">{label}</label>
-            <DiffBadge current={value} prev={prevValue} inverse={inverse} />
-        </div>
-        <div className="flex items-end gap-1">
-            <input 
-            className="w-full bg-transparent text-white font-black text-2xl outline-none placeholder:text-white/5"
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder="0,0"
-            />
-        </div>
+        <div className="bg-[#1a1a1a] p-3 rounded-xl border border-white/5 hover:border-[#d4af37]/30 transition-all group">
+            <div className="flex justify-between items-center mb-2">
+                <label className="text-[10px] font-black text-white/40 uppercase tracking-widest">{label}</label>
+                {hasPrev && (
+                    <div className={`flex items-center gap-1 text-[9px] font-bold ${colorClass} bg-white/5 px-1.5 py-0.5 rounded`}>
+                        {!isStable && (isPositive ? <ArrowUpRight size={10} /> : <ArrowDownRight size={10} />)}
+                        {isStable ? <Minus size={10} /> : diffLabel}
+                    </div>
+                )}
+            </div>
+            
+            <div className="flex items-center gap-3">
+                {/* Valor Anterior (se existir) */}
+                {prevValue && (
+                    <div className="flex flex-col items-end border-r border-white/10 pr-3">
+                        <span className="text-[8px] font-bold text-white/20 uppercase">Anterior</span>
+                        <span className="text-sm font-bold text-white/40">{prevValue}</span>
+                    </div>
+                )}
+
+                {/* Input Atual */}
+                <div className="flex-1">
+                    <span className="text-[8px] font-bold text-[#d4af37] uppercase block mb-0.5">Atual</span>
+                    <input 
+                        className="w-full bg-transparent text-white font-black text-xl outline-none placeholder:text-white/10 focus:placeholder:text-transparent"
+                        value={value}
+                        onChange={(e) => onChange(e.target.value)}
+                        placeholder="-"
+                    />
+                </div>
+            </div>
         </div>
     );
 };
@@ -86,7 +112,7 @@ const EvolutionTracker: React.FC<Props> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [isCreatingProtocol, setIsCreatingProtocol] = useState(false);
   
-  // Garante que measurements sempre existe para evitar erros ao digitar, usando fallback seguro
+  // Garante que measurements sempre existe
   const [localPhysical, setLocalPhysical] = useState<PhysicalData>(() => ({
       ...currentProtocol.physicalData,
       measurements: {
@@ -97,7 +123,7 @@ const EvolutionTracker: React.FC<Props> = ({
       }
   }));
 
-  // Sincroniza o estado local apenas se o ID ou data de atualização mudar
+  // Sincroniza o estado local
   useEffect(() => {
     setLocalPhysical({
         ...currentProtocol.physicalData,
@@ -117,18 +143,20 @@ const EvolutionTracker: React.FC<Props> = ({
     [currentProtocol, ...history].forEach(p => {
         uniqueMap.set(p.id, p);
     });
-    
     // Ordena do mais recente para o mais antigo
     return Array.from(uniqueMap.values())
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
   }, [history, currentProtocol]);
 
+  // Encontra o protocolo imediatamente anterior ao atual na lista temporal
   const previousProtocol = useMemo(() => {
-    if (sortedHistoryList.length > 1) {
-      return sortedHistoryList[1];
+    // Como a lista já está ordenada (Recent -> Old), o "próximo" item no array é o anterior no tempo
+    const currentIndex = sortedHistoryList.findIndex(p => p.id === currentProtocol.id);
+    if (currentIndex !== -1 && currentIndex < sortedHistoryList.length - 1) {
+        return sortedHistoryList[currentIndex + 1];
     }
     return null;
-  }, [sortedHistoryList]);
+  }, [sortedHistoryList, currentProtocol.id]);
 
   const chartData = useMemo(() => {
     const data = sortedHistoryList
@@ -174,9 +202,8 @@ const EvolutionTracker: React.FC<Props> = ({
              date: new Date().toLocaleDateString('pt-BR'),
           },
           updatedAt: new Date().toISOString(),
-          privateNotes: "" // LIMPA AS OBSERVAÇÕES PARA O NOVO REGISTRO
+          privateNotes: ""
         };
-        
         await onUpdateData(newProtocolState, true, false); 
       } finally {
         setTimeout(() => setIsSaving(false), 1000);
@@ -185,30 +212,26 @@ const EvolutionTracker: React.FC<Props> = ({
   };
 
   const handleCreateNextProtocol = async () => {
-    if (confirm("Isso criará um NOVO PROTOCOLO (novo protocolo) usando a evolução atual como ponto de partida.\n\nUse isso quando um ciclo termina e você deseja iniciar um novo planejamento.\n\nDeseja continuar?")) {
+    if (confirm("Isso criará um NOVO PROTOCOLO (novo ciclo) usando a evolução atual como base.\nDeseja continuar?")) {
         setIsCreatingProtocol(true);
         try {
             const today = new Date().toLocaleDateString('pt-BR');
             const newProtocolState = {
                 ...currentProtocol,
-                // IMPORTANTE: Mantém a data de cadastro original (createdAt)
                 createdAt: currentProtocol.createdAt,
-                // Atualiza datas de modificação
                 updatedAt: new Date().toISOString(),
                 contract: {
                     ...currentProtocol.contract,
                     startDate: today,
-                    endDate: "", // Reseta data fim para recalcular
+                    endDate: "",
                     status: 'Ativo' as const
                 },
                 physicalData: {
                     ...localPhysical,
                     date: today
                 },
-                privateNotes: "" // Limpa notas
+                privateNotes: "" 
             };
-
-            // ForceNewId = true
             await onUpdateData(newProtocolState, false, true);
         } finally {
             setIsCreatingProtocol(false);
@@ -216,46 +239,22 @@ const EvolutionTracker: React.FC<Props> = ({
     }
   };
 
-  // --- COMPONENTES VISUAIS AUXILIARES ---
-  
-  const DiffBadge = ({ current, prev, inverse = false }: { current: string, prev?: string, inverse?: boolean }) => {
-    if (!current || !prev) return null;
-    const c = parseFloat(current.replace(',', '.'));
-    const p = parseFloat(prev.replace(',', '.'));
-    if (isNaN(c) || isNaN(p)) return null;
-    
-    const diff = c - p;
-    if (Math.abs(diff) < 0.1) return <div className="text-[9px] text-white/30 font-bold bg-white/5 px-2 py-0.5 rounded-md flex items-center gap-1"><Minus size={10}/> Estável</div>;
-
-    const isPositive = diff > 0;
-    const isGood = inverse ? !isPositive : isPositive;
-    const colorClass = isGood ? 'text-green-400 bg-green-400/10 border-green-400/20' : 'text-red-400 bg-red-400/10 border-red-400/20';
-    const Icon = isPositive ? ArrowUpRight : ArrowDownRight;
-
-    return (
-      <div className={`flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded-md border ${colorClass}`}>
-        <Icon size={10} />
-        {Math.abs(diff).toFixed(1).replace('.', ',')}
-      </div>
-    );
-  };
-
   return (
     <div className="max-w-[1600px] mx-auto animate-in fade-in duration-500 pb-20">
       
       {/* HEADER DO ALUNO */}
-      <div className="bg-[#111] p-6 md:p-8 rounded-[2.5rem] border border-white/10 mb-8 flex flex-col md:flex-row justify-between items-center gap-6 shadow-2xl">
+      <div className="bg-[#111] p-6 rounded-[2.5rem] border border-white/10 mb-8 flex flex-col md:flex-row justify-between items-center gap-6 shadow-2xl">
          <div className="flex items-center gap-6">
-            <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10 text-[#d4af37]">
-               <Activity size={32} />
+            <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10 text-[#d4af37]">
+               <Activity size={28} />
             </div>
             <div>
-               <h1 className="text-2xl font-black text-white uppercase tracking-tighter mb-1">
+               <h1 className="text-xl md:text-2xl font-black text-white uppercase tracking-tighter mb-1">
                  Evolução: {currentProtocol.clientName}
                </h1>
                <div className="flex items-center gap-3 text-[10px] font-bold text-white/40 uppercase tracking-widest">
                   <span className="bg-white/5 px-2 py-1 rounded-md text-white/60">
-                    {sortedHistoryList.length} Avaliações
+                    {sortedHistoryList.length} Registros
                   </span>
                   <span>•</span>
                   <span>Último: {new Date(currentProtocol.updatedAt).toLocaleDateString('pt-BR')}</span>
@@ -270,13 +269,13 @@ const EvolutionTracker: React.FC<Props> = ({
         <div className="lg:col-span-3 space-y-4">
            <div className="bg-[#111] border border-white/10 rounded-[2rem] p-6 sticky top-24 max-h-[80vh] overflow-y-auto custom-scrollbar">
               <h3 className="text-xs font-black text-white/40 uppercase tracking-widest mb-6 flex items-center gap-2">
-                <History size={14} className="text-[#d4af37]" /> Linha do Tempo
+                <History size={14} className="text-[#d4af37]" /> Histórico
               </h3>
               
               <div className="space-y-3">
                 {sortedHistoryList.map((p, idx) => {
                   const isActive = p.id === currentProtocol.id;
-                  const isStart = idx === sortedHistoryList.length - 1; // Último item da lista ordenada decrescente é o primeiro registro
+                  const isStart = idx === sortedHistoryList.length - 1;
 
                   return (
                     <div key={p.id} className="relative group">
@@ -284,9 +283,7 @@ const EvolutionTracker: React.FC<Props> = ({
                             className={`w-full rounded-2xl border transition-all relative z-10 overflow-hidden ${
                                 isActive 
                                 ? 'bg-[#d4af37] border-[#d4af37] text-black shadow-lg scale-105' 
-                                : isStart 
-                                    ? 'bg-blue-500/10 border-blue-500/30 text-white/80' 
-                                    : 'bg-white/5 border-white/5 text-white/60 hover:bg-white/10 hover:border-white/20'
+                                : 'bg-white/5 border-white/5 text-white/60 hover:bg-white/10 hover:border-white/20'
                             }`}
                         >
                             <button
@@ -301,7 +298,6 @@ const EvolutionTracker: React.FC<Props> = ({
                                         </span>
                                     </div>
                                     {isActive && <span className="bg-black text-[#d4af37] text-[8px] font-bold px-1.5 py-0.5 rounded">ATUAL</span>}
-                                    {isStart && !isActive && <span className="bg-blue-500/20 text-blue-400 border border-blue-500/30 text-[8px] font-bold px-1.5 py-0.5 rounded">INÍCIO</span>}
                                 </div>
                                 
                                 <div className="grid grid-cols-2 gap-2 mt-3">
@@ -330,7 +326,6 @@ const EvolutionTracker: React.FC<Props> = ({
                             )}
                         </div>
 
-                        {/* BOTÃO DE EXCLUIR EVOLUÇÃO */}
                         {onDeleteHistory && (
                             <button 
                                 onClick={(e) => {
@@ -408,33 +403,33 @@ const EvolutionTracker: React.FC<Props> = ({
                    <Activity size={20} className="text-[#d4af37]" /> Bioimpedância & Composição
                 </h2>
                 <span className="text-[10px] font-black bg-white/5 px-3 py-1 rounded text-white/40">
-                   EDITANDO: {new Date(currentProtocol.updatedAt).toLocaleDateString('pt-BR')}
+                   {new Date(currentProtocol.updatedAt).toLocaleDateString('pt-BR')}
                 </span>
              </div>
 
-             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                 <InputField 
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                 <ComparisonField 
                     label="Peso (kg)" 
                     value={localPhysical.weight} 
                     onChange={(v: string) => handleInputChange('weight', v)}
                     prevValue={previousProtocol?.physicalData.weight}
                     inverse={true}
                  />
-                 <InputField 
+                 <ComparisonField 
                     label="Gordura (%)" 
                     value={localPhysical.bodyFat} 
                     onChange={(v: string) => handleInputChange('bodyFat', v)}
                     prevValue={previousProtocol?.physicalData.bodyFat}
                     inverse={true}
                  />
-                 <InputField 
+                 <ComparisonField 
                     label="Massa Musc. (kg)" 
                     value={localPhysical.muscleMass} 
                     onChange={(v: string) => handleInputChange('muscleMass', v)}
                     prevValue={previousProtocol?.physicalData.muscleMass}
                     inverse={false}
                  />
-                 <InputField 
+                 <ComparisonField 
                     label="Visceral" 
                     value={localPhysical.visceralFat} 
                     onChange={(v: string) => handleInputChange('visceralFat', v)}
@@ -448,28 +443,20 @@ const EvolutionTracker: React.FC<Props> = ({
                 <h4 className="text-[10px] font-black text-[#d4af37] uppercase tracking-widest mb-6 flex items-center gap-2">
                    <Ruler size={14} /> Medidas Corporais (cm)
                 </h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-4 gap-y-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
                   {[
                     { k: 'thorax', l: 'Tórax' }, { k: 'waist', l: 'Cintura' }, { k: 'abdomen', l: 'Abdômen' }, 
                     { k: 'glutes', l: 'Glúteo' }, { k: 'rightArmContracted', l: 'Braço Dir.' }, { k: 'leftArmContracted', l: 'Braço Esq.' },
                     { k: 'rightThigh', l: 'Coxa Dir.' }, { k: 'leftThigh', l: 'Coxa Esq.' }, { k: 'rightCalf', l: 'Pantur. Dir' }, { k: 'leftCalf', l: 'Pantur. Esq' }
                   ].map((m) => (
-                    <div key={m.k} className="relative">
-                       <label className="text-[8px] font-bold text-white/30 uppercase block mb-1">{m.l}</label>
-                       <input 
-                         className="w-full bg-[#111] border border-white/10 rounded-xl p-3 text-sm font-bold text-white focus:border-[#d4af37] outline-none transition-colors"
-                         value={(localPhysical.measurements as any)?.[m.k] || ''}
-                         onChange={(e) => handleMeasurementChange(m.k, e.target.value)}
-                         placeholder="-"
-                       />
-                       <div className="absolute top-0 right-0">
-                          <DiffBadge 
-                            current={(localPhysical.measurements as any)?.[m.k]} 
-                            prev={(previousProtocol?.physicalData.measurements as any)?.[m.k]} 
-                            inverse={false}
-                          />
-                       </div>
-                    </div>
+                    <ComparisonField 
+                        key={m.k}
+                        label={m.l}
+                        value={(localPhysical.measurements as any)?.[m.k] || ''}
+                        onChange={(val: string) => handleMeasurementChange(m.k, val)}
+                        prevValue={(previousProtocol?.physicalData.measurements as any)?.[m.k]}
+                        inverse={false}
+                    />
                   ))}
                 </div>
              </div>
@@ -480,7 +467,7 @@ const EvolutionTracker: React.FC<Props> = ({
                    Observações
                 </h4>
                 <textarea
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-xs font-medium text-white/80 focus:border-[#d4af37] outline-none min-h-[120px] resize-y"
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-xs font-medium text-white/80 focus:border-[#d4af37] outline-none min-h-[100px] resize-y"
                   placeholder="Feedback sobre a adesão, pontos de melhoria, queixas..."
                   value={currentProtocol.privateNotes}
                   onChange={(e) => onNotesChange(e.target.value)}

@@ -114,8 +114,8 @@ const UnifiedEditor: React.FC<Props> = ({
         <div className={`no-print ${activeTab === 'evolucao' ? 'w-full' : 'w-full xl:w-2/5'}`}>
           <div className="bg-white/5 p-4 rounded-[2rem] border border-white/10 shadow-2xl w-full">
             
-            {/* Navegação de Abas COMPACTA E CENTRALIZADA */}
-            <div className="flex flex-nowrap md:justify-center overflow-x-auto pb-2 scrollbar-hide w-full mb-6 gap-1.5">
+            {/* Navegação de Abas COMPACTA E CENTRALIZADA - FONTES AUMENTADAS */}
+            <div className="flex flex-nowrap md:justify-center overflow-x-auto pb-2 scrollbar-hide w-full mb-6 gap-2">
                 {[
                     { id: 'identificacao', label: 'ID', fullLabel: 'Identificação', icon: FileText },
                     { id: 'anamnese', label: 'Anamnese', fullLabel: 'Anamnese', icon: Activity },
@@ -128,9 +128,9 @@ const UnifiedEditor: React.FC<Props> = ({
                     <button 
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as any)}
-                        className={`flex-none flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all border ${activeTab === tab.id ? 'bg-[#d4af37] text-black border-[#d4af37]' : 'bg-black/20 text-white/40 border-white/5 hover:bg-white/5 hover:text-white'}`}
+                        className={`flex-none flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-wider transition-all border ${activeTab === tab.id ? 'bg-[#d4af37] text-black border-[#d4af37] scale-105 shadow-lg' : 'bg-black/20 text-white/40 border-white/5 hover:bg-white/5 hover:text-white'}`}
                     >
-                        <tab.icon size={12} className="hidden md:block" /> 
+                        <tab.icon size={14} className="hidden md:block" /> 
                         <span className="md:hidden">{tab.label}</span>
                         <span className="hidden md:inline">{tab.fullLabel}</span>
                     </button>

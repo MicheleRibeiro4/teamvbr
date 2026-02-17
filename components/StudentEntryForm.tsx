@@ -102,8 +102,15 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
   };
 
   // Styles
-  // text-base em mobile previne zoom automático em inputs no iOS (input font-size must be at least 16px)
-  const inputBase = "w-full p-4 bg-[#1a1a1a] border border-white/10 rounded-2xl focus:ring-2 focus:ring-[#d4af37] focus:border-transparent outline-none font-bold text-white text-base transition-all placeholder:text-white/20";
+  // Removido focus:ring-2 que cria o anel amarelo. Usando focus:border.
+  // Adicionado estilo inline para evitar fundo amarelo de autofill
+  const autofillStyle = {
+      WebkitBoxShadow: "0 0 0 30px #1a1a1a inset",
+      WebkitTextFillColor: "white",
+      caretColor: "white"
+  };
+
+  const inputBase = "w-full p-4 bg-[#1a1a1a] border border-white/10 rounded-2xl focus:border-[#d4af37] focus:outline-none font-bold text-white text-base transition-all placeholder:text-white/20";
   const inputClass = inputBase;
   const inputNumberClass = inputBase; 
 
@@ -186,8 +193,8 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
     <div className="h-[100dvh] md:min-h-screen bg-[#0a0a0a] text-white p-2 md:p-8 flex items-center justify-center">
       <div className="w-full max-w-4xl bg-[#111] border border-white/10 rounded-[2rem] md:rounded-[2.5rem] p-4 md:p-10 shadow-2xl relative overflow-hidden flex flex-col h-[98%] md:h-[90vh] max-h-[900px]">
         
-        {/* Progress Bar Container - Shrinkable to ensure visibility */}
-        <div className="flex items-center gap-4 mb-4 md:mb-8 shrink-0 w-full pt-2 md:pt-0">
+        {/* Progress Bar Container - Ajustado para evitar cortes */}
+        <div className="flex items-center gap-4 mb-4 md:mb-8 shrink-0 w-full pt-2 md:pt-0 px-1">
             <button onClick={() => setStep(step - 1)} className="p-2 bg-white/5 rounded-full hover:bg-white/10 text-white/60 shrink-0">
                 <ChevronLeft size={20} />
             </button>
@@ -217,24 +224,25 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="md:col-span-2">
                                     <label className={labelClass}>Nome Completo</label>
-                                    <input className={inputClass} value={data.clientName} onChange={(e) => handleChange('clientName', e.target.value)} placeholder="Seu nome completo" autoFocus />
+                                    <input className={inputClass} style={autofillStyle} value={data.clientName} onChange={(e) => handleChange('clientName', e.target.value)} placeholder="Seu nome completo" autoFocus />
                                 </div>
                                 <div>
                                     <label className={labelClass}>CPF</label>
-                                    <input className={inputClass} value={data.contract.cpf} onChange={(e) => handleCPFMask(e.target.value)} placeholder="000.000.000-00" maxLength={14} inputMode="numeric" />
+                                    <input className={inputClass} style={autofillStyle} value={data.contract.cpf} onChange={(e) => handleCPFMask(e.target.value)} placeholder="000.000.000-00" maxLength={14} inputMode="numeric" />
                                 </div>
                                 <div>
                                     <label className={labelClass}>Celular (WhatsApp)</label>
-                                    <input className={inputClass} value={data.contract.phone} onChange={(e) => handlePhoneMask(e.target.value)} placeholder="(00) 00000-0000" type="tel" maxLength={15} inputMode="tel" />
+                                    <input className={inputClass} style={autofillStyle} value={data.contract.phone} onChange={(e) => handlePhoneMask(e.target.value)} placeholder="(00) 00000-0000" type="tel" maxLength={15} inputMode="tel" />
                                 </div>
                                 <div className="md:col-span-2">
                                     <label className={labelClass}>E-mail (Opcional)</label>
-                                    <input className={inputClass} value={data.contract.email} onChange={(e) => handleChange('contract.email', e.target.value)} type="email" />
+                                    <input className={inputClass} style={autofillStyle} value={data.contract.email} onChange={(e) => handleChange('contract.email', e.target.value)} type="email" />
                                 </div>
                                 <div>
                                     <label className={labelClass}>Idade</label>
                                     <input 
                                         className={inputNumberClass} 
+                                        style={autofillStyle}
                                         value={data.physicalData.age} 
                                         onChange={(e) => handleChange('physicalData.age', e.target.value)} 
                                         type="text"
@@ -244,7 +252,7 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
                                 </div>
                                 <div>
                                     <label className={labelClass}>Gênero</label>
-                                    <select className={inputClass} value={data.physicalData.gender} onChange={(e) => handleChange('physicalData.gender', e.target.value)}>
+                                    <select className={inputClass} style={autofillStyle} value={data.physicalData.gender} onChange={(e) => handleChange('physicalData.gender', e.target.value)}>
                                         <option value="">Selecione</option>
                                         <option value="Masculino">Masculino</option>
                                         <option value="Feminino">Feminino</option>
@@ -258,24 +266,25 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                 <div className="md:col-span-3">
                                     <label className={labelClass}>Rua / Logradouro</label>
-                                    <input className={inputClass} value={data.contract.street} onChange={(e) => handleChange('contract.street', e.target.value)} placeholder="Av. Principal" />
+                                    <input className={inputClass} style={autofillStyle} value={data.contract.street} onChange={(e) => handleChange('contract.street', e.target.value)} placeholder="Av. Principal" />
                                 </div>
                                 <div>
                                     <label className={labelClass}>Número</label>
-                                    <input className={inputClass} value={data.contract.number} onChange={(e) => handleChange('contract.number', e.target.value)} placeholder="123" />
+                                    <input className={inputClass} style={autofillStyle} value={data.contract.number} onChange={(e) => handleChange('contract.number', e.target.value)} placeholder="123" />
                                 </div>
                                 <div className="md:col-span-2">
                                     <label className={labelClass}>Bairro</label>
-                                    <input className={inputClass} value={data.contract.neighborhood} onChange={(e) => handleChange('contract.neighborhood', e.target.value)} />
+                                    <input className={inputClass} style={autofillStyle} value={data.contract.neighborhood} onChange={(e) => handleChange('contract.neighborhood', e.target.value)} />
                                 </div>
                                 <div>
                                     <label className={labelClass}>Cidade</label>
-                                    <input className={inputClass} value={data.contract.city} onChange={(e) => handleChange('contract.city', e.target.value)} />
+                                    <input className={inputClass} style={autofillStyle} value={data.contract.city} onChange={(e) => handleChange('contract.city', e.target.value)} />
                                 </div>
                                 <div>
                                     <label className={labelClass}>Estado (UF)</label>
                                     <select 
                                         className={inputClass} 
+                                        style={autofillStyle}
                                         value={data.contract.state} 
                                         onChange={(e) => handleChange('contract.state', e.target.value)}
                                     >
@@ -304,6 +313,7 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
                             <label className={labelClass}>Qual seu principal objetivo?</label>
                             <input 
                                 className={inputClass} 
+                                style={autofillStyle}
                                 value={data.anamnesis.mainObjective} 
                                 onChange={(e) => handleChange('anamnesis.mainObjective', e.target.value)} 
                                 placeholder="Ex: Perder gordura, ganhar massa..." 
@@ -314,6 +324,7 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
                             <label className={labelClass}>Como é sua rotina diária?</label>
                             <textarea 
                                 className={textAreaClass} 
+                                style={autofillStyle}
                                 value={data.anamnesis.routine} 
                                 onChange={(e) => handleChange('anamnesis.routine', e.target.value)} 
                                 placeholder="Horário que acorda, trabalha, dorme. É sedentário no trabalho?" 
@@ -324,6 +335,7 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
                             <label className={labelClass}>Histórico de Treino e Lesões</label>
                             <textarea 
                                 className={textAreaClass} 
+                                style={autofillStyle}
                                 value={data.anamnesis.trainingHistory} 
                                 onChange={(e) => handleChange('anamnesis.trainingHistory', e.target.value)} 
                                 placeholder="Já treina? Tem alguma lesão que impeça movimentos?" 
@@ -334,6 +346,7 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
                             <label className={labelClass}>Preferências Alimentares / Alergias</label>
                             <textarea 
                                 className={textAreaClass} 
+                                style={autofillStyle}
                                 value={data.anamnesis.foodPreferences} 
                                 onChange={(e) => handleChange('anamnesis.foodPreferences', e.target.value)} 
                                 placeholder="O que você gosta de comer? O que não suporta? Tem alergias?" 
@@ -343,6 +356,7 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
                             <label className={labelClass}>Uso de Medicamentos / Suplementos</label>
                             <textarea 
                                 className={textAreaClass + " min-h-[80px]"} 
+                                style={autofillStyle}
                                 value={data.anamnesis.ergogenics} 
                                 onChange={(e) => handleChange('anamnesis.ergogenics', e.target.value)} 
                                 placeholder="Toma algo atualmente?" 
@@ -366,6 +380,7 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
                             <label className={labelClass}>Peso (kg)</label>
                             <input 
                                 className={inputNumberClass} 
+                                style={autofillStyle}
                                 value={data.physicalData.weight} 
                                 onChange={(e) => handleChange('physicalData.weight', e.target.value)} 
                                 type="text"
@@ -377,6 +392,7 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
                             <label className={labelClass}>Altura (m)</label>
                             <input 
                                 className={inputClass} 
+                                style={autofillStyle}
                                 value={data.physicalData.height} 
                                 onChange={(e) => handleChange('physicalData.height', e.target.value)} 
                                 placeholder="1,75" 
@@ -387,6 +403,7 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
                             <label className={labelClass}>Gordura / BF (%) <span className="text-white/20 ml-1 font-normal lowercase">(opcional)</span></label>
                             <input 
                                 className={inputNumberClass} 
+                                style={autofillStyle}
                                 value={data.physicalData.bodyFat} 
                                 onChange={(e) => handleChange('physicalData.bodyFat', e.target.value)} 
                                 type="text"
@@ -399,6 +416,7 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
                             <label className={labelClass}>Massa Musc. <span className="text-white/20 ml-1 font-normal lowercase">(opcional)</span></label>
                             <input 
                                 className={inputNumberClass} 
+                                style={autofillStyle}
                                 value={data.physicalData.muscleMass} 
                                 onChange={(e) => handleChange('physicalData.muscleMass', e.target.value)} 
                                 type="text"
@@ -410,6 +428,7 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
                             <label className={labelClass}>Gordura Visceral <span className="text-white/20 ml-1 font-normal lowercase">(opcional)</span></label>
                             <input 
                                 className={inputNumberClass} 
+                                style={autofillStyle}
                                 value={data.physicalData.visceralFat} 
                                 onChange={(e) => handleChange('physicalData.visceralFat', e.target.value)} 
                                 type="text"
@@ -429,10 +448,10 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
                         <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
                             <h4 className={subSectionTitle}>Tronco</h4>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <div><label className={labelClass}>Tórax</label><input className={inputNumberClass} type="text" inputMode="decimal" value={getMeasurement('thorax')} onChange={(e) => handleChange('physicalData.measurements.thorax', e.target.value)} /></div>
-                                <div><label className={labelClass}>Cintura</label><input className={inputNumberClass} type="text" inputMode="decimal" value={getMeasurement('waist')} onChange={(e) => handleChange('physicalData.measurements.waist', e.target.value)} /></div>
-                                <div><label className={labelClass}>Abdômen</label><input className={inputNumberClass} type="text" inputMode="decimal" value={getMeasurement('abdomen')} onChange={(e) => handleChange('physicalData.measurements.abdomen', e.target.value)} /></div>
-                                <div><label className={labelClass}>Glúteo</label><input className={inputNumberClass} type="text" inputMode="decimal" value={getMeasurement('glutes')} onChange={(e) => handleChange('physicalData.measurements.glutes', e.target.value)} /></div>
+                                <div><label className={labelClass}>Tórax</label><input className={inputNumberClass} style={autofillStyle} type="text" inputMode="decimal" value={getMeasurement('thorax')} onChange={(e) => handleChange('physicalData.measurements.thorax', e.target.value)} /></div>
+                                <div><label className={labelClass}>Cintura</label><input className={inputNumberClass} style={autofillStyle} type="text" inputMode="decimal" value={getMeasurement('waist')} onChange={(e) => handleChange('physicalData.measurements.waist', e.target.value)} /></div>
+                                <div><label className={labelClass}>Abdômen</label><input className={inputNumberClass} style={autofillStyle} type="text" inputMode="decimal" value={getMeasurement('abdomen')} onChange={(e) => handleChange('physicalData.measurements.abdomen', e.target.value)} /></div>
+                                <div><label className={labelClass}>Glúteo</label><input className={inputNumberClass} style={autofillStyle} type="text" inputMode="decimal" value={getMeasurement('glutes')} onChange={(e) => handleChange('physicalData.measurements.glutes', e.target.value)} /></div>
                             </div>
                         </div>
 
@@ -440,10 +459,10 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
                         <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
                             <h4 className={subSectionTitle}>Braços</h4>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <div><label className={labelClass}>Dir. Relaxado</label><input className={inputNumberClass} type="text" inputMode="decimal" value={getMeasurement('rightArmRelaxed')} onChange={(e) => handleChange('physicalData.measurements.rightArmRelaxed', e.target.value)} /></div>
-                                <div><label className={labelClass}>Esq. Relaxado</label><input className={inputNumberClass} type="text" inputMode="decimal" value={getMeasurement('leftArmRelaxed')} onChange={(e) => handleChange('physicalData.measurements.leftArmRelaxed', e.target.value)} /></div>
-                                <div><label className={labelClass}>Dir. Contraído</label><input className={inputNumberClass} type="text" inputMode="decimal" value={getMeasurement('rightArmContracted')} onChange={(e) => handleChange('physicalData.measurements.rightArmContracted', e.target.value)} /></div>
-                                <div><label className={labelClass}>Esq. Contraído</label><input className={inputNumberClass} type="text" inputMode="decimal" value={getMeasurement('leftArmContracted')} onChange={(e) => handleChange('physicalData.measurements.leftArmContracted', e.target.value)} /></div>
+                                <div><label className={labelClass}>Dir. Relaxado</label><input className={inputNumberClass} style={autofillStyle} type="text" inputMode="decimal" value={getMeasurement('rightArmRelaxed')} onChange={(e) => handleChange('physicalData.measurements.rightArmRelaxed', e.target.value)} /></div>
+                                <div><label className={labelClass}>Esq. Relaxado</label><input className={inputNumberClass} style={autofillStyle} type="text" inputMode="decimal" value={getMeasurement('leftArmRelaxed')} onChange={(e) => handleChange('physicalData.measurements.leftArmRelaxed', e.target.value)} /></div>
+                                <div><label className={labelClass}>Dir. Contraído</label><input className={inputNumberClass} style={autofillStyle} type="text" inputMode="decimal" value={getMeasurement('rightArmContracted')} onChange={(e) => handleChange('physicalData.measurements.rightArmContracted', e.target.value)} /></div>
+                                <div><label className={labelClass}>Esq. Contraído</label><input className={inputNumberClass} style={autofillStyle} type="text" inputMode="decimal" value={getMeasurement('leftArmContracted')} onChange={(e) => handleChange('physicalData.measurements.leftArmContracted', e.target.value)} /></div>
                             </div>
                         </div>
 
@@ -451,10 +470,10 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
                         <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
                             <h4 className={subSectionTitle}>Membros Inferiores</h4>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <div><label className={labelClass}>Coxa Dir.</label><input className={inputNumberClass} type="text" inputMode="decimal" value={getMeasurement('rightThigh')} onChange={(e) => handleChange('physicalData.measurements.rightThigh', e.target.value)} /></div>
-                                <div><label className={labelClass}>Coxa Esq.</label><input className={inputNumberClass} type="text" inputMode="decimal" value={getMeasurement('leftThigh')} onChange={(e) => handleChange('physicalData.measurements.leftThigh', e.target.value)} /></div>
-                                <div><label className={labelClass}>Panturrilha Dir.</label><input className={inputNumberClass} type="text" inputMode="decimal" value={getMeasurement('rightCalf')} onChange={(e) => handleChange('physicalData.measurements.rightCalf', e.target.value)} /></div>
-                                <div><label className={labelClass}>Panturrilha Esq.</label><input className={inputNumberClass} type="text" inputMode="decimal" value={getMeasurement('leftCalf')} onChange={(e) => handleChange('physicalData.measurements.leftCalf', e.target.value)} /></div>
+                                <div><label className={labelClass}>Coxa Dir.</label><input className={inputNumberClass} style={autofillStyle} type="text" inputMode="decimal" value={getMeasurement('rightThigh')} onChange={(e) => handleChange('physicalData.measurements.rightThigh', e.target.value)} /></div>
+                                <div><label className={labelClass}>Coxa Esq.</label><input className={inputNumberClass} style={autofillStyle} type="text" inputMode="decimal" value={getMeasurement('leftThigh')} onChange={(e) => handleChange('physicalData.measurements.leftThigh', e.target.value)} /></div>
+                                <div><label className={labelClass}>Panturrilha Dir.</label><input className={inputNumberClass} style={autofillStyle} type="text" inputMode="decimal" value={getMeasurement('rightCalf')} onChange={(e) => handleChange('physicalData.measurements.rightCalf', e.target.value)} /></div>
+                                <div><label className={labelClass}>Panturrilha Esq.</label><input className={inputNumberClass} style={autofillStyle} type="text" inputMode="decimal" value={getMeasurement('leftCalf')} onChange={(e) => handleChange('physicalData.measurements.leftCalf', e.target.value)} /></div>
                             </div>
                         </div>
                     </div>

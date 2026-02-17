@@ -255,10 +255,10 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
          </div>
       )}
 
-      <header className="h-24 border-b border-white/10 px-8 flex items-center justify-between sticky top-0 bg-[#0a0a0a]/90 backdrop-blur-xl z-50 no-print">
+      <header className="h-20 border-b border-white/10 px-4 md:px-8 flex items-center justify-between sticky top-0 bg-[#0a0a0a]/90 backdrop-blur-xl z-50 no-print">
         <div className="flex items-center gap-6">
           <button onClick={() => setActiveView('home')} className="hover:scale-105 transition-transform">
-            <img src={LOGO_VBR_BLACK} alt="Team VBR" className="h-20 w-auto" />
+            <img src={LOGO_VBR_BLACK} alt="Team VBR" className="h-16 w-auto" />
           </button>
           
           {activeView !== 'home' && (
@@ -286,7 +286,8 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
         </div>
       </header>
 
-      <main className="max-w-[1600px] mx-auto p-4 md:p-10">
+      {/* Margem superior e padding reduzidos aqui */}
+      <main className="max-w-[1600px] mx-auto p-2 md:p-6">
         
         {cloudStatus === 'error' && (
           <div className="bg-red-600/10 border border-red-600/30 p-8 rounded-[2.5rem] mb-10">
