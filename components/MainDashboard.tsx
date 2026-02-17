@@ -100,7 +100,9 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
   }, [uniqueStudents]);
 
   const handleCopyLink = () => {
-     const link = `${window.location.protocol}//${window.location.host}/?mode=cadastro`;
+     // Geração do link compatível com Vercel usando Hash (#cadastro)
+     const origin = typeof window !== 'undefined' ? window.location.origin : '';
+     const link = `${origin}/#cadastro`;
      navigator.clipboard.writeText(link);
      alert("Link de Cadastro copiado!\n\nEnvie para o aluno: " + link);
   };

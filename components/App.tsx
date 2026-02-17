@@ -20,24 +20,20 @@ import {
   UserPlus
 } from 'lucide-react';
 
-type ViewMode = 'home' | 'search' | 'manage' | 'settings' | 'student-dashboard' | 'evolution' | 'student-entry';
+type ViewMode = 'home' | 'search' | 'manage' | 'settings' | 'student-dashboard' | 'evolution';
 
 const App: React.FC = () => {
-  // --- LÓGICA DE ROTEAMENTO VIA HASH (Mais Robusta) ---
-  const checkIsStudentMode = () => {
-    if (typeof window === 'undefined') return false;
-    // Verifica se a URL termina em #cadastro (Método Principal)
-    if (window.location.hash.includes('cadastro')) return true;
-    // Mantém compatibilidade com o método antigo
-    if (window.location.href.includes('mode=cadastro')) return true;
+  // --- LÓGICA DE ROTEAMENTO (Vercel Friendly) ---
+  // Inicializa o estado verificando a URL IMEDIATAMENTE, antes da primeira renderização.
+  const [isStudentView, setIsStudentView] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.location.hash.includes('cadastro');
+    }
     return false;
-  };
+  });
 
   const [data, setData] = useState<ProtocolData>(EMPTY_DATA);
-  
-  // Inicializa a view baseada na URL
-  const [activeView, setActiveView] = useState<ViewMode>(() => checkIsStudentMode() ? 'student-entry' : 'home');
-  
+  const [activeView, setActiveView] = useState<ViewMode>('home');
   const [savedProtocols, setSavedProtocols] = useState<ProtocolData[]>([]);
   const [isSyncing, setIsSyncing] = useState(false);
   const [cloudStatus, setCloudStatus] = useState<'online' | 'error'>('online');
@@ -49,25 +45,15 @@ const App: React.FC = () => {
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const MASTER_PASSWORD = "vbr-master-2025";
 
-  // Listener para mudanças na URL (Hash ou Histórico)
+  // Listener para mudanças de hash (navegação via link ou botões do navegador)
   useEffect(() => {
-    const handleNavigation = () => {
-      if (checkIsStudentMode()) {
-        setActiveView('student-entry');
-      }
+    const handleHashChange = () => {
+      const isCadastro = window.location.hash.includes('cadastro');
+      setIsStudentView(isCadastro);
     };
 
-    // Escuta mudanças de hash (#) e navegação
-    window.addEventListener('hashchange', handleNavigation);
-    window.addEventListener('popstate', handleNavigation);
-    
-    // Verificação inicial
-    handleNavigation();
-
-    return () => {
-      window.removeEventListener('hashchange', handleNavigation);
-      window.removeEventListener('popstate', handleNavigation);
-    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
   // Login handler
@@ -85,15 +71,15 @@ const App: React.FC = () => {
 
   // Auth & Data Load
   useEffect(() => {
-    // Se for modo aluno (detectado via função), não carrega dados sensíveis
-    if (checkIsStudentMode()) return;
+    // Se estiver no modo aluno, ignora autenticação
+    if (isStudentView) return;
 
     const auth = localStorage.getItem('vbr_auth');
     if (auth === 'true') {
       setIsAuthenticated(true);
       loadData();
     }
-  }, [activeView]);
+  }, [isStudentView]);
 
   // Load saved data
   const loadData = async () => {
@@ -167,7 +153,7 @@ const App: React.FC = () => {
 
   // Auto-Save Effect
   useEffect(() => {
-    if (activeView === 'manage' && data.id && data.clientName && isAuthenticated) {
+    if (activeView === 'manage' && data.id && data.clientName && isAuthenticated && !isStudentView) {
       if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
       autoSaveTimerRef.current = setTimeout(() => {
         handleSave(true);
@@ -211,23 +197,16 @@ GRANT ALL ON TABLE public.protocols TO anon;
 GRANT ALL ON TABLE public.protocols TO authenticated;
 GRANT ALL ON TABLE public.protocols TO service_role;`;
 
-  // --- RENDERIZAÇÃO CONDICIONAL ---
-
-  // 1. TELA DE CADASTRO DO ALUNO (PRIORIDADE MÁXIMA)
-  // Verifica hash ou view ativa
-  if (checkIsStudentMode() || activeView === 'student-entry') {
+  // --- RENDERIZAÇÃO: MODO ALUNO (PRIORIDADE ABSOLUTA) ---
+  if (isStudentView) {
      return <StudentEntryForm onCancel={() => {
-        // Limpa a URL completamente
-        window.history.pushState("", document.title, window.location.pathname + window.location.search);
-        // Remove o hash manualmente se pushState não pegar
-        if (window.location.hash) window.location.hash = '';
-        
-        // Recarrega para voltar limpo
-        window.location.reload();
+        // Remove o hash da URL para voltar ao login
+        window.location.hash = '';
+        setIsStudentView(false);
      }} />;
   }
 
-  // 2. TELA DE LOGIN (Apenas se não for aluno e não estiver logado)
+  // --- RENDERIZAÇÃO: TELA DE LOGIN ---
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-6 text-center">
@@ -245,9 +224,8 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
             <div className="mt-8 pt-8 border-t border-white/5">
                 <button 
                   onClick={() => {
-                     // NOVO MÉTODO: Usa Hash (#cadastro)
+                     // Adiciona o hash na URL. O useEffect vai capturar e mudar o estado.
                      window.location.hash = 'cadastro';
-                     window.location.reload(); // Força reload para garantir a detecção limpa
                   }} 
                   className="w-full py-3 rounded-xl border border-white/10 text-white/60 hover:text-[#d4af37] hover:border-[#d4af37] transition-all text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2"
                 >
@@ -260,7 +238,7 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
     );
   }
 
-  // 3. SISTEMA PRINCIPAL (Consultor Logado)
+  // --- RENDERIZAÇÃO: SISTEMA PRINCIPAL (Consultor) ---
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white font-sans selection:bg-[#d4af37] selection:text-black">
       
