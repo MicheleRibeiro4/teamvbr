@@ -18,7 +18,8 @@ import {
   X,
   Loader2,
   Eye,
-  ChevronLeft
+  ChevronLeft,
+  Sparkles
 } from 'lucide-react';
 
 interface Props {
@@ -91,12 +92,15 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
     }
   ];
 
-  // --- LÓGICA DE AGENDA (Baseada na Última Atualização) ---
+  // --- LÓGICA DE AGENDA (Baseada na Última Atualização e Conteúdo) ---
   const scheduledUpdates = useMemo(() => {
     return uniqueStudents.map((student: any) => {
       // Ignora Avulso e Pendentes
       if (student.contract.planType === 'Avulso') return null;
       if (student.contract.status !== 'Ativo') return null;
+
+      // Verifica se o protocolo está "vazio" (sem refeições e sem treinos)
+      const isMissingProtocol = (student.meals?.length || 0) === 0 && (student.trainingDays?.length || 0) === 0;
 
       const lastUpdateStr = student.updatedAt || student.contract.startDate;
       if (!lastUpdateStr) return null;
@@ -110,36 +114,38 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
       const diffTime = today.getTime() - lastUpdate.getTime();
       const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
       
-      // Ciclo de 15 dias fixo após cada atualização
       const checkinInterval = 15;
       const daysLeft = checkinInterval - diffDays;
       
-      // Data alvo
       const nextDate = new Date(lastUpdate);
       nextDate.setDate(lastUpdate.getDate() + checkinInterval);
 
       // Estados:
-      // daysLeft > 3: "Aguardando Ajuste" (Verde)
-      // daysLeft <= 3 && daysLeft > 0: "Próximo" (Amarelo)
+      // isMissingProtocol: "Protocolo Pendente" (Roxo - Prioridade máxima)
       // daysLeft <= 0: "Check-in Necessário" (Vermelho)
+      // daysLeft <= 3 && daysLeft > 0: "Próximo" (Amarelo)
+      // daysLeft > 3: "Em Dia" (Verde)
 
-      const isOverdue = daysLeft <= 0;
-      const isUrgent = daysLeft > 0 && daysLeft <= 3;
+      const isOverdue = daysLeft <= 0 || isMissingProtocol;
+      const isUrgent = daysLeft > 0 && daysLeft <= 3 && !isMissingProtocol;
 
       return {
         ...student,
         schedule: {
-          daysLeft: isOverdue ? 0 : daysLeft,
+          daysLeft: isMissingProtocol ? 0 : (isOverdue ? 0 : daysLeft),
           nextDate: nextDate.toLocaleDateString('pt-BR'),
           isOverdue,
           isUrgent,
-          displayDays: isOverdue ? Math.abs(daysLeft) : daysLeft // Para mostrar quantos dias de atraso se necessário
+          isMissingProtocol,
+          displayDays: isMissingProtocol ? 0 : (isOverdue ? Math.abs(daysLeft) : daysLeft)
         }
       };
     })
     .filter(Boolean)
-    // Ordena: Atrasados primeiro, depois urgentes, depois os tranquilos
+    // Ordena: Novos sem protocolo primeiro, depois atrasados, depois urgentes
     .sort((a: any, b: any) => {
+        if (a.schedule.isMissingProtocol && !b.schedule.isMissingProtocol) return -1;
+        if (!a.schedule.isMissingProtocol && b.schedule.isMissingProtocol) return 1;
         if (a.schedule.isOverdue && !b.schedule.isOverdue) return -1;
         if (!a.schedule.isOverdue && b.schedule.isOverdue) return 1;
         return a.schedule.daysLeft - b.schedule.daysLeft;
@@ -395,16 +401,22 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
           <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-2">
             {scheduledUpdates.length > 0 ? (
               scheduledUpdates.map((student: any) => {
-                const { isOverdue, isUrgent, daysLeft } = student.schedule;
+                const { isOverdue, isUrgent, isMissingProtocol, daysLeft } = student.schedule;
                 
-                // Configuração padrão (Em dia = Verde)
+                // Configuração visual dinâmica
                 let containerStyle = 'bg-green-500/10 border-green-500/30 hover:bg-green-500/20';
                 let circleStyle = 'bg-green-500/20 text-green-500 border-green-500/30';
                 let dateColor = 'text-green-400';
                 let iconColor = 'text-green-500';
-                let statusText = 'Aguardando ajuste';
+                let statusText = 'Em Dia';
 
-                if (isOverdue) {
+                if (isMissingProtocol) {
+                    containerStyle = 'bg-indigo-500/10 border-indigo-500/50 hover:bg-indigo-500/20 ring-1 ring-indigo-500/20';
+                    circleStyle = 'bg-indigo-500 text-white border-indigo-500';
+                    dateColor = 'text-indigo-400';
+                    iconColor = 'text-indigo-500';
+                    statusText = 'Pendente: Criar Protocolo';
+                } else if (isOverdue) {
                     containerStyle = 'bg-red-500/10 border-red-500/50 hover:bg-red-500/20';
                     circleStyle = 'bg-red-500 text-white border-red-500';
                     dateColor = 'text-red-400';
@@ -422,19 +434,22 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                   <div key={student.id} className={`p-3 rounded-xl border flex items-center justify-between group transition-all cursor-pointer ${containerStyle}`} onClick={() => onLoadStudent(student, 'manage')}>
                     <div className="flex items-center gap-3">
                       <div className={`w-10 h-10 rounded-lg flex items-center justify-center border text-[10px] font-black shrink-0 ${circleStyle}`}>
-                          {isOverdue ? 'HOJE' : `${daysLeft}d`}
+                          {isMissingProtocol ? <Sparkles size={14} /> : (isOverdue ? 'HOJE' : `${daysLeft}d`)}
                       </div>
                       <div>
-                          <h4 className="font-bold text-xs text-white leading-none mb-1">{student.clientName}</h4>
+                          <h4 className="font-bold text-xs text-white leading-none mb-1 flex items-center gap-2">
+                            {student.clientName}
+                            {isMissingProtocol && <span className="bg-indigo-500 text-white text-[8px] font-black uppercase px-1.5 py-0.5 rounded">Novo</span>}
+                          </h4>
                           <div className="flex items-center gap-2 text-[9px] text-white/40 uppercase font-bold">
                             <span>Base: {student.updatedAt ? new Date(student.updatedAt).toLocaleDateString('pt-BR') : student.contract.startDate}</span>
                             <span>•</span>
-                            <span className={dateColor}>Próx: {student.schedule.nextDate}</span>
+                            <span className={dateColor}>{isMissingProtocol ? 'Ação: Gerar Ficha' : `Próx: ${student.schedule.nextDate}`}</span>
                           </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                        <span className={`hidden md:inline-block text-[9px] font-black uppercase tracking-widest ${isOverdue ? 'text-red-400 animate-pulse' : 'text-white/20'}`}>{statusText}</span>
+                        <span className={`hidden md:inline-block text-[9px] font-black uppercase tracking-widest ${isOverdue ? 'text-red-400 animate-pulse' : 'text-white/20'} ${isMissingProtocol ? 'text-indigo-400' : ''}`}>{statusText}</span>
                         <ChevronRight size={14} className={`opacity-50 group-hover:opacity-100 ${iconColor}`} />
                     </div>
                   </div>
