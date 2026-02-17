@@ -131,6 +131,15 @@ export const EMPTY_DATA: ProtocolData = {
     },
     observations: ""
   },
+  anamnesis: {
+    mainObjective: "",
+    routine: "",
+    trainingHistory: "",
+    ergogenics: "",
+    foodPreferences: "",
+    injuries: "",
+    medications: ""
+  },
   nutritionalStrategy: "",
   kcalGoal: "",
   kcalSubtext: "",
@@ -165,7 +174,7 @@ export const EMPTY_DATA: ProtocolData = {
     paymentMethod: 'Pix',
     installments: "1",
     contractDate: new Date().toLocaleDateString('pt-BR'),
-    status: 'Ativo',
+    status: 'Aguardando',
     contractBody: CONTRACT_TEMPLATE
   }
 };

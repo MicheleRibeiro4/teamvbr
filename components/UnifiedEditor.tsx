@@ -14,7 +14,7 @@ interface Props {
 
 const UnifiedEditor: React.FC<Props> = ({ data, onChange, onBack }) => {
   // Estado elevado para controlar qual aba está ativa no formulário
-  const [activeTab, setActiveTab] = useState<'identificacao' | 'medidas' | 'nutricao' | 'treino' | 'obs'>('identificacao');
+  const [activeTab, setActiveTab] = useState<'identificacao' | 'anamnese' | 'medidas' | 'nutricao' | 'treino' | 'obs'>('identificacao');
   
   // Refs para acionar os downloads dentro dos componentes filhos
   const protocolRef = useRef<ProtocolPreviewHandle>(null);

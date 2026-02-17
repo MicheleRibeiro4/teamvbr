@@ -89,6 +89,16 @@ export interface ContractInfo {
   address?: string; // Mantendo compatibilidade legada se necessário
 }
 
+export interface Anamnesis {
+  mainObjective: string;
+  routine: string; // Trabalho, horários, rotina diária
+  trainingHistory: string; // Histórico de treino/dieta
+  ergogenics: string; // Uso atual ou prévio
+  foodPreferences: string; // Preferências, aversões, alergias
+  injuries: string; // Lesões ou limitações
+  medications: string; // Medicamentos de uso contínuo
+}
+
 export interface ProtocolData {
   id: string;
   updatedAt: string;
@@ -101,6 +111,7 @@ export interface ProtocolData {
   consultantEmail: string;
   consultantAddress: string;
   physicalData: PhysicalData;
+  anamnesis: Anamnesis; // Novo campo de Anamnese
   nutritionalStrategy: string;
   kcalGoal: string;
   kcalSubtext: string;

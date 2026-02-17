@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { ProtocolData, Meal, Supplement, TrainingDay, Exercise } from '../types';
-import { Activity, User, ShieldCheck, ChevronLeft, MapPin, Dumbbell, Utensils, Pill, Plus, Trash2, FileText, AlertCircle, Sparkles, Loader2, Ruler, DollarSign, Droplets } from 'lucide-react';
+import { Activity, User, ShieldCheck, ChevronLeft, MapPin, Dumbbell, Utensils, Pill, Plus, Trash2, FileText, AlertCircle, Sparkles, Loader2, Ruler, DollarSign, Droplets, BookOpen } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 
 interface Props {
@@ -9,8 +9,8 @@ interface Props {
   onChange: (data: ProtocolData) => void;
   onBack?: () => void;
   // Novas props para controle externo das abas
-  activeTab: 'identificacao' | 'medidas' | 'nutricao' | 'treino' | 'obs';
-  onTabChange: (tab: 'identificacao' | 'medidas' | 'nutricao' | 'treino' | 'obs') => void;
+  activeTab: 'identificacao' | 'anamnese' | 'medidas' | 'nutricao' | 'treino' | 'obs';
+  onTabChange: (tab: 'identificacao' | 'anamnese' | 'medidas' | 'nutricao' | 'treino' | 'obs') => void;
 }
 
 const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTabChange }) => {
@@ -155,6 +155,12 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
         - Altura: ${data.physicalData.height}m
         - Gordura Corporal: ${data.physicalData.bodyFat}%
         - Massa Muscular: ${data.physicalData.muscleMass}kg
+        
+        ANAMNESE (LEVAR EM CONTA):
+        - Rotina: ${data.anamnesis.routine}
+        - Histórico: ${data.anamnesis.trainingHistory}
+        - Ergogênicos: ${data.anamnesis.ergogenics}
+        - Preferências: ${data.anamnesis.foodPreferences}
 
         DIRETRIZES DO TREINADOR (Obrigatório Seguir):
         - Estratégia Nutricional: ${data.nutritionalStrategy || "Definir automaticamente baseada no objetivo"}
@@ -457,6 +463,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
       {/* NAVEGAÇÃO POR ABAS - CENTRALIZADO e RESPONSIVO */}
       <div className="flex flex-nowrap md:flex-wrap md:justify-center gap-2 overflow-x-auto pb-4 scrollbar-hide w-full">
         <TabButton id="identificacao" label="Identificação" icon={User} />
+        <TabButton id="anamnese" label="Anamnese" icon={BookOpen} />
         <TabButton id="medidas" label="Medidas" icon={Ruler} />
         <TabButton id="nutricao" label="Nutrição" icon={Utensils} />
         <TabButton id="treino" label="Treino" icon={Dumbbell} />
@@ -556,6 +563,43 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
               </div>
             </div>
           </section>
+        </div>
+      )}
+
+      {/* ABA: ANAMNESE (NOVA) */}
+      {activeTab === 'anamnese' && (
+        <div className="animate-in fade-in slide-in-from-right-4 duration-300 space-y-8">
+            <section>
+                <div className={sectionHeaderClass}>
+                    <BookOpen className="text-[#d4af37]" size={20} />
+                    <h2 className="text-xl font-black text-white uppercase tracking-tighter">Anamnese do Aluno</h2>
+                </div>
+                
+                <div className="space-y-6">
+                    <div>
+                        <label className={labelClass}>Objetivo Principal do Aluno</label>
+                        <input className={inputClass} value={data.anamnesis.mainObjective} onChange={(e) => handleChange('anamnesis.mainObjective', e.target.value)} />
+                    </div>
+                    <div>
+                        <label className={labelClass}>Rotina Diária (Trabalho, Sono, Horários)</label>
+                        <textarea className={textAreaClass} value={data.anamnesis.routine} onChange={(e) => handleChange('anamnesis.routine', e.target.value)} />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className={labelClass}>Histórico de Treino/Dieta</label>
+                            <textarea className={textAreaClass} value={data.anamnesis.trainingHistory} onChange={(e) => handleChange('anamnesis.trainingHistory', e.target.value)} />
+                        </div>
+                        <div>
+                            <label className={labelClass}>Preferências Alimentares</label>
+                            <textarea className={textAreaClass} value={data.anamnesis.foodPreferences} onChange={(e) => handleChange('anamnesis.foodPreferences', e.target.value)} />
+                        </div>
+                    </div>
+                    <div>
+                        <label className={labelClass}>Uso de Ergogênicos / Medicamentos</label>
+                        <textarea className={textAreaClass + " min-h-[80px]"} value={data.anamnesis.ergogenics} onChange={(e) => handleChange('anamnesis.ergogenics', e.target.value)} />
+                    </div>
+                </div>
+            </section>
         </div>
       )}
 

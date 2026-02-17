@@ -8,6 +8,7 @@ import MainDashboard from '../components/MainDashboard';
 import StudentSearch from '../components/StudentSearch';
 import StudentDashboard from '../components/StudentDashboard';
 import EvolutionTracker from '../components/EvolutionTracker';
+import StudentEntryForm from '../components/StudentEntryForm';
 import { 
   RefreshCw,
   CheckCircle2,
@@ -15,10 +16,11 @@ import {
   ChevronLeft,
   Lock,
   AlertTriangle,
-  Loader2
+  Loader2,
+  UserPlus
 } from 'lucide-react';
 
-type ViewMode = 'home' | 'search' | 'manage' | 'settings' | 'student-dashboard' | 'evolution';
+type ViewMode = 'home' | 'search' | 'manage' | 'settings' | 'student-dashboard' | 'evolution' | 'student-entry';
 
 const App: React.FC = () => {
   const [data, setData] = useState<ProtocolData>(EMPTY_DATA);
@@ -48,10 +50,19 @@ const App: React.FC = () => {
     }
   };
 
-  // Check auth and load data
+  // Check auth, URL params and load data
   useEffect(() => {
+    // 1. Verifica se é um link direto de cadastro (?mode=cadastro)
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('mode') === 'cadastro') {
+      setActiveView('student-entry');
+    }
+
+    // 2. Verifica autenticação do admin
     const auth = localStorage.getItem('vbr_auth');
     if (auth === 'true') setIsAuthenticated(true);
+    
+    // 3. Carrega dados
     loadData();
   }, []);
 
@@ -185,6 +196,17 @@ GRANT ALL ON TABLE public.protocols TO anon;
 GRANT ALL ON TABLE public.protocols TO authenticated;
 GRANT ALL ON TABLE public.protocols TO service_role;`;
 
+  // MODO DE AUTO-CADASTRO (Sem autenticação master)
+  // Verifica state OU URL param (para casos onde o state ainda não atualizou mas a URL sim)
+  if (activeView === 'student-entry') {
+     return <StudentEntryForm onCancel={() => {
+        // Remove o parametro da URL ao cancelar para voltar ao login limpo
+        const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+        window.history.pushState({path:newUrl},'',newUrl);
+        setActiveView('home');
+     }} />;
+  }
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-6 text-center">
@@ -196,8 +218,17 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
             <form onSubmit={handleLogin} className="space-y-6">
               <input type="password" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} placeholder="Senha" />
               {loginError && <p className="text-xs text-red-500 font-black uppercase">Senha incorreta.</p>}
-              <button type="submit" className="w-full bg-[#d4af37] text-black py-4 rounded-2xl font-black uppercase text-xs tracking-[0.2em]">Entrar</button>
+              <button type="submit" className="w-full bg-[#d4af37] text-black py-4 rounded-2xl font-black uppercase text-xs tracking-[0.2em] mb-4">Entrar</button>
             </form>
+            
+            <div className="mt-8 pt-8 border-t border-white/5">
+                <button 
+                  onClick={() => setActiveView('student-entry')} 
+                  className="w-full py-3 rounded-xl border border-white/10 text-white/60 hover:text-[#d4af37] hover:border-[#d4af37] transition-all text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2"
+                >
+                   <UserPlus size={14} /> Sou Aluno (Novo Cadastro)
+                </button>
+            </div>
           </div>
         </div>
       </div>

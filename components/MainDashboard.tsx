@@ -20,7 +20,7 @@ interface Props {
   protocols: ProtocolData[];
   onNew: () => void;
   onList: () => void;
-  onLoadStudent: (student: ProtocolData, view: 'manage' | 'student-dashboard') => void;
+  onLoadStudent: (student: ProtocolData, view: 'manage' | 'student-dashboard' | 'evolution') => void;
 }
 
 const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStudent }) => {
@@ -50,6 +50,9 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
   // --- LÓGICA DE AGENDA QUINZENAL ---
   const scheduledUpdates = useMemo(() => {
     return uniqueStudents.map(student => {
+      // FILTRO: Ignora alunos com plano Avulso
+      if (student.contract.planType === 'Avulso') return null;
+
       const startDateStr = student.contract.startDate;
       if (!startDateStr || startDateStr.length !== 10) return null;
 
@@ -88,7 +91,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
         }
       };
     })
-    .filter(Boolean) // Remove nulos
+    .filter(Boolean) // Remove nulos e avulsos
     .sort((a: any, b: any) => a.schedule.daysLeft - b.schedule.daysLeft); // Ordena por urgência
   }, [uniqueStudents]);
 
@@ -165,42 +168,52 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
 
           <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 pr-2">
             {scheduledUpdates.length > 0 ? (
-              scheduledUpdates.map((student: any) => (
-                <div 
-                  key={student.id} 
-                  className={`p-4 rounded-2xl border flex items-center justify-between group transition-all cursor-pointer ${
-                    student.schedule.isToday 
-                      ? 'bg-red-500/10 border-red-500/50 hover:bg-red-500/20' 
-                      : student.schedule.isUrgent
-                        ? 'bg-yellow-500/10 border-yellow-500/30 hover:bg-yellow-500/20'
-                        : 'bg-white/5 border-white/5 hover:bg-white/10'
-                  }`}
-                  onClick={() => onLoadStudent(student, 'evolution')}
-                >
-                  <div className="flex items-center gap-4">
-                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center border text-xs font-black ${
-                        student.schedule.isToday 
-                          ? 'bg-red-500 text-white border-red-500' 
-                          : student.schedule.isUrgent
-                            ? 'bg-yellow-500 text-black border-yellow-500'
-                            : 'bg-[#222] text-white/40 border-white/10'
-                     }`}>
-                        {student.schedule.daysLeft === 0 ? 'HOJE' : `${student.schedule.daysLeft}d`}
-                     </div>
-                     <div>
-                        <h4 className="font-bold text-sm text-white leading-none mb-1">{student.clientName}</h4>
-                        <div className="flex items-center gap-2 text-[10px] text-white/40 uppercase font-bold">
-                           <span>Base: {student.contract.startDate}</span>
-                           <span>•</span>
-                           <span className={student.schedule.isToday ? 'text-red-400' : 'text-[#d4af37]'}>
-                              Próx: {student.schedule.nextDate}
-                           </span>
-                        </div>
-                     </div>
+              scheduledUpdates.map((student: any) => {
+                const { isToday, isUrgent } = student.schedule;
+                
+                // Configuração padrão (Em dia = Verde)
+                let containerStyle = 'bg-green-500/10 border-green-500/30 hover:bg-green-500/20';
+                let circleStyle = 'bg-green-500/20 text-green-500 border-green-500/30';
+                let dateColor = 'text-green-400';
+                let iconColor = 'text-green-500';
+
+                if (isToday) {
+                    containerStyle = 'bg-red-500/10 border-red-500/50 hover:bg-red-500/20';
+                    circleStyle = 'bg-red-500 text-white border-red-500';
+                    dateColor = 'text-red-400';
+                    iconColor = 'text-red-500';
+                } else if (isUrgent) {
+                    containerStyle = 'bg-yellow-500/10 border-yellow-500/30 hover:bg-yellow-500/20';
+                    circleStyle = 'bg-yellow-500 text-black border-yellow-500';
+                    dateColor = 'text-[#d4af37]';
+                    iconColor = 'text-[#d4af37]';
+                }
+
+                return (
+                  <div 
+                    key={student.id} 
+                    className={`p-4 rounded-2xl border flex items-center justify-between group transition-all cursor-pointer ${containerStyle}`}
+                    onClick={() => onLoadStudent(student, 'evolution')}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center border text-xs font-black ${circleStyle}`}>
+                          {student.schedule.daysLeft === 0 ? 'HOJE' : `${student.schedule.daysLeft}d`}
+                      </div>
+                      <div>
+                          <h4 className="font-bold text-sm text-white leading-none mb-1">{student.clientName}</h4>
+                          <div className="flex items-center gap-2 text-[10px] text-white/40 uppercase font-bold">
+                            <span>Base: {student.contract.startDate}</span>
+                            <span>•</span>
+                            <span className={dateColor}>
+                                Próx: {student.schedule.nextDate}
+                            </span>
+                          </div>
+                      </div>
+                    </div>
+                    <ChevronRight size={16} className={`opacity-50 group-hover:opacity-100 ${iconColor}`} />
                   </div>
-                  <ChevronRight size={16} className="text-white/20 group-hover:text-white" />
-                </div>
-              ))
+                );
+              })
             ) : (
               <div className="h-full flex flex-col items-center justify-center text-white/20">
                  <CheckCircle2 size={40} className="mb-2" />

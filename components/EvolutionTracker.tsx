@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
-import { ProtocolData, PhysicalData } from '../types';
+import { ProtocolData, PhysicalData, BodyMeasurements } from '../types';
 import { 
   TrendingUp, 
   Save, 
@@ -142,9 +141,13 @@ const EvolutionTracker: React.FC<Props> = ({
     setLocalPhysical(prev => ({
       ...prev,
       measurements: {
-        ...(prev.measurements || {}), // Prevenção contra undefined
+        ...(prev.measurements || {
+            thorax: "", waist: "", abdomen: "", glutes: "",
+            rightArmRelaxed: "", leftArmRelaxed: "", rightArmContracted: "", leftArmContracted: "",
+            rightThigh: "", leftThigh: "", rightCalf: "", leftCalf: ""
+        }), // Prevenção contra undefined e fallback completo
         [key]: value
-      }
+      } as BodyMeasurements
     }));
   };
 
