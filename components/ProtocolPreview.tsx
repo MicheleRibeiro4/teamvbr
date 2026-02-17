@@ -61,7 +61,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
     const tips = safeData.tips || [];
     const trainingDays = safeData.trainingDays || [];
     
-    // Chunk training days into groups of 2 for better page breaking
+    // Chunk training days into groups of 2 for strict page breaking and visual consistency
     const trainingChunks = [];
     if (trainingDays.length === 0) {
         trainingChunks.push([]);
@@ -97,154 +97,155 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
         <div className="bg-gray-100 text-black flex flex-col items-center print:bg-transparent">
             {/* PÁGINA 1: CAPA */}
             <div style={{ ...pageStyle, padding: 0, backgroundColor: '#111' }} className="relative h-[296mm] flex flex-col justify-between text-white text-center bg-[#111]">
-            <div className="flex-1 flex flex-col items-center justify-center w-full px-10 relative z-10 pb-10">
-                <img src={LOGO_VBR_GOLD} alt="Team VBR" className="w-80 h-auto mb-12 relative z-10" />
-                <h1 className="text-5xl font-black text-[#d4af37] uppercase tracking-wider leading-tight mb-16">PROTOCOLO<br/>COMPLETO DE<br/>{protocolTitle}</h1>
-                <div className="border-t border-b border-white/20 py-8 w-full max-w-2xl"><h2 className="text-6xl font-black uppercase tracking-tight text-white">{clientName}</h2></div>
-                <div className="mt-16 bg-[#d4af37]/10 px-8 py-4 rounded-full border border-[#d4af37]/30"><p className="text-2xl font-bold text-white uppercase tracking-widest">Período: {contract.startDate || '...'} — {contract.endDate || '...'}</p></div>
-            </div>
-            <div className="absolute bottom-0 left-0 w-full h-8 bg-[#d4af37]"></div>
+                <div className="flex-1 flex flex-col items-center justify-center w-full px-10 relative z-10 pb-10">
+                    <img src={LOGO_VBR_GOLD} alt="Team VBR" className="w-80 h-auto mb-12 relative z-10" />
+                    <h1 className="text-5xl font-black text-[#d4af37] uppercase tracking-wider leading-tight mb-16">PROTOCOLO<br/>COMPLETO DE<br/>{protocolTitle}</h1>
+                    <div className="border-t border-b border-white/20 py-8 w-full max-w-2xl"><h2 className="text-6xl font-black uppercase tracking-tight text-white">{clientName}</h2></div>
+                    <div className="mt-16 bg-[#d4af37]/10 px-8 py-4 rounded-full border border-[#d4af37]/30"><p className="text-2xl font-bold text-white uppercase tracking-widest">Período: {contract.startDate || '...'} — {contract.endDate || '...'}</p></div>
+                </div>
+                <div className="absolute bottom-0 left-0 w-full h-8 bg-[#d4af37]"></div>
             </div>
 
             <div className="html2pdf__page-break"></div>
 
             {/* PÁGINA 2: DADOS E NUTRIÇÃO */}
             <div style={pageStyle} className="h-auto">
-            <h3 className={sectionTitle}>1. Dados Físicos - {physical.date || new Date().toLocaleDateString('pt-BR')}</h3>
-            <div className="grid grid-cols-3 gap-4 mb-8">
-                <div className={dataCardStyle}><span className={labelStyle}>Peso Atual</span><span className={valueStyle}>{physical.weight || '-'} kg</span></div>
-                <div className={dataCardStyle}><span className={labelStyle}>Altura</span><span className={valueStyle}>{physical.height || '-'} m</span></div>
-                <div className={dataCardStyle}><span className={labelStyle}>Idade</span><span className={valueStyle}>{physical.age || '-'} anos</span></div>
-            </div>
-            
-            <h4 className="text-sm font-bold uppercase text-black mb-3">Medidas Corporais</h4>
-            <div className="mb-10 bg-gray-50 p-4 rounded-lg border border-gray-100">
-                <div className="grid grid-cols-4 gap-4 mb-4 border-b border-gray-200 pb-4">
-                    <div className="col-span-4 text-xs font-black text-[#d4af37] uppercase tracking-widest">Superior</div>
-                    <div><span className={labelStyle}>Tórax</span><span className="font-bold text-gray-900">{measurements.thorax || '-'}</span></div>
-                    <div><span className={labelStyle}>Cintura</span><span className="font-bold text-gray-900">{measurements.waist || '-'}</span></div>
-                    <div><span className={labelStyle}>Abdômen</span><span className="font-bold text-gray-900">{measurements.abdomen || '-'}</span></div>
-                    <div><span className={labelStyle}>Glúteo</span><span className="font-bold text-gray-900">{measurements.glutes || '-'}</span></div>
+                <h3 className={sectionTitle}>1. Dados Físicos - {physical.date || new Date().toLocaleDateString('pt-BR')}</h3>
+                <div className="grid grid-cols-3 gap-4 mb-8">
+                    <div className={dataCardStyle}><span className={labelStyle}>Peso Atual</span><span className={valueStyle}>{physical.weight || '-'} kg</span></div>
+                    <div className={dataCardStyle}><span className={labelStyle}>Altura</span><span className={valueStyle}>{physical.height || '-'} m</span></div>
+                    <div className={dataCardStyle}><span className={labelStyle}>Idade</span><span className={valueStyle}>{physical.age || '-'} anos</span></div>
                 </div>
-                <div className="grid grid-cols-4 gap-4">
-                    <div className="col-span-4 text-xs font-black text-[#d4af37] uppercase tracking-widest">Inferior</div>
-                    <div><span className={labelStyle}>Coxa Dir</span><span className="font-bold text-gray-900">{measurements.rightThigh || '-'}</span></div>
-                    <div><span className={labelStyle}>Coxa Esq</span><span className="font-bold text-gray-900">{measurements.leftThigh || '-'}</span></div>
-                    <div><span className={labelStyle}>Panturrilha Dir</span><span className="font-bold text-gray-900">{measurements.rightCalf || '-'}</span></div>
-                    <div><span className={labelStyle}>Panturrilha Esq</span><span className="font-bold text-gray-900">{measurements.leftCalf || '-'}</span></div>
+                
+                <h4 className="text-sm font-bold uppercase text-black mb-3">Medidas Corporais</h4>
+                <div className="mb-10 bg-gray-50 p-4 rounded-lg border border-gray-100">
+                    <div className="grid grid-cols-4 gap-4 mb-4 border-b border-gray-200 pb-4">
+                        <div className="col-span-4 text-xs font-black text-[#d4af37] uppercase tracking-widest">Superior</div>
+                        <div><span className={labelStyle}>Tórax</span><span className="font-bold text-gray-900">{measurements.thorax || '-'}</span></div>
+                        <div><span className={labelStyle}>Cintura</span><span className="font-bold text-gray-900">{measurements.waist || '-'}</span></div>
+                        <div><span className={labelStyle}>Abdômen</span><span className="font-bold text-gray-900">{measurements.abdomen || '-'}</span></div>
+                        <div><span className={labelStyle}>Glúteo</span><span className="font-bold text-gray-900">{measurements.glutes || '-'}</span></div>
+                    </div>
+                    <div className="grid grid-cols-4 gap-4">
+                        <div className="col-span-4 text-xs font-black text-[#d4af37] uppercase tracking-widest">Inferior</div>
+                        <div><span className={labelStyle}>Coxa Dir</span><span className="font-bold text-gray-900">{measurements.rightThigh || '-'}</span></div>
+                        <div><span className={labelStyle}>Coxa Esq</span><span className="font-bold text-gray-900">{measurements.leftThigh || '-'}</span></div>
+                        <div><span className={labelStyle}>Panturrilha Dir</span><span className="font-bold text-gray-900">{measurements.rightCalf || '-'}</span></div>
+                        <div><span className={labelStyle}>Panturrilha Esq</span><span className="font-bold text-gray-900">{measurements.leftCalf || '-'}</span></div>
+                    </div>
                 </div>
-            </div>
 
-            <h3 className={sectionTitle}>2. Estratégia Nutricional</h3>
-            <div className="bg-gray-100 p-6 rounded-none border-l-4 border-gray-400 mb-8 text-sm text-gray-800 leading-relaxed break-inside-avoid">
-                <span className="font-bold block mb-1">Observação:</span>
-                <p className="whitespace-pre-wrap">{safeData.nutritionalStrategy || "Nenhuma observação definida."}</p>
-            </div>
-            
-            {/* Bloco Meta Diária com break-inside-avoid para não quebrar no meio do texto */}
-            <div className="bg-[#1a1a1a] text-center p-8 rounded-lg mb-8 break-inside-avoid">
-                <p className="text-[10px] font-bold text-white uppercase tracking-widest mb-3 leading-relaxed px-4">
-                    META DIÁRIA (ESTE VALOR É O PONTO DE PARTIDA AJUSTADO PARA SUA FASE DE {kcalSubtext.toUpperCase()}. MONITORAREMOS SUA RESPOSTA E FAREMOS AJUSTES CONFORME NECESSÁRIO.)
-                </p>
-                <p className="text-4xl font-bold text-[#d4af37]">{safeData.kcalGoal || "0"} kcal</p>
-            </div>
+                <h3 className={sectionTitle}>2. Estratégia Nutricional</h3>
+                <div className="bg-gray-100 p-6 rounded-none border-l-4 border-gray-400 mb-8 text-sm text-gray-800 leading-relaxed break-inside-avoid">
+                    <span className="font-bold block mb-1">Observação:</span>
+                    <p className="whitespace-pre-wrap">{safeData.nutritionalStrategy || "Nenhuma observação definida."}</p>
+                </div>
+                
+                <div className="bg-[#1a1a1a] text-center p-8 rounded-lg mb-8 break-inside-avoid">
+                    <p className="text-[10px] font-bold text-white uppercase tracking-widest mb-3 leading-relaxed px-4">
+                        META DIÁRIA (ESTE VALOR É O PONTO DE PARTIDA AJUSTADO PARA SUA FASE DE {kcalSubtext.toUpperCase()}. MONITORAREMOS SUA RESPOSTA E FAREMOS AJUSTES CONFORME NECESSÁRIO.)
+                    </p>
+                    <p className="text-4xl font-bold text-[#d4af37]">{safeData.kcalGoal || "0"} kcal</p>
+                </div>
 
-            <h4 className="text-lg font-bold text-black mb-4">Distribuição de Macronutrientes</h4>
-            <div className="grid grid-cols-3 gap-4 mb-4 break-inside-avoid pb-10">
-                <div className="bg-white border border-gray-200 p-4 text-center rounded-lg shadow-sm">
-                    <p className="text-[#d4af37] font-bold text-sm uppercase mb-2">Proteínas</p>
-                    <p className="text-2xl font-bold text-gray-900 mb-1">{macros.protein?.value || '0'}g</p>
-                    <p className="text-xs text-gray-400">{macros.protein?.ratio || ''}</p>
+                <h4 className="text-lg font-bold text-black mb-4">Distribuição de Macronutrientes</h4>
+                <div className="grid grid-cols-3 gap-4 mb-4 break-inside-avoid pb-10">
+                    <div className="bg-white border border-gray-200 p-4 text-center rounded-lg shadow-sm">
+                        <p className="text-[#d4af37] font-bold text-sm uppercase mb-2">Proteínas</p>
+                        <p className="text-2xl font-bold text-gray-900 mb-1">{macros.protein?.value || '0'}g</p>
+                        <p className="text-xs text-gray-400">{macros.protein?.ratio || ''}</p>
+                    </div>
+                    <div className="bg-white border border-gray-200 p-4 text-center rounded-lg shadow-sm">
+                        <p className="text-[#d4af37] font-bold text-sm uppercase mb-2">Carboidratos</p>
+                        <p className="text-2xl font-bold text-gray-900 mb-1">{macros.carbs?.value || '0'}g</p>
+                        <p className="text-xs text-gray-400">{macros.carbs?.ratio || ''}</p>
+                    </div>
+                    <div className="bg-white border border-gray-200 p-4 text-center rounded-lg shadow-sm">
+                        <p className="text-[#d4af37] font-bold text-sm uppercase mb-2">Gorduras</p>
+                        <p className="text-2xl font-bold text-gray-900 mb-1">{macros.fats?.value || '0'}g</p>
+                        <p className="text-xs text-gray-400">{macros.fats?.ratio || ''}</p>
+                    </div>
                 </div>
-                <div className="bg-white border border-gray-200 p-4 text-center rounded-lg shadow-sm">
-                    <p className="text-[#d4af37] font-bold text-sm uppercase mb-2">Carboidratos</p>
-                    <p className="text-2xl font-bold text-gray-900 mb-1">{macros.carbs?.value || '0'}g</p>
-                    <p className="text-xs text-gray-400">{macros.carbs?.ratio || ''}</p>
-                </div>
-                <div className="bg-white border border-gray-200 p-4 text-center rounded-lg shadow-sm">
-                    <p className="text-[#d4af37] font-bold text-sm uppercase mb-2">Gorduras</p>
-                    <p className="text-2xl font-bold text-gray-900 mb-1">{macros.fats?.value || '0'}g</p>
-                    <p className="text-xs text-gray-400">{macros.fats?.ratio || ''}</p>
-                </div>
-            </div>
             </div>
 
             <div className="html2pdf__page-break"></div>
 
             {/* PÁGINA 3: DIETA */}
             <div style={pageStyle} className="h-auto">
-            <h3 className={sectionTitle}>3. Plano Alimentar Diário</h3>
-            <table className="w-full text-left text-sm border-collapse mb-8">
-                <thead><tr className="bg-[#d4af37] text-white"><th className="p-3 font-bold w-24">Horário</th><th className="p-3 font-bold">Refeição & Detalhes</th></tr></thead>
-                <tbody className="divide-y divide-gray-100">
-                {meals.map((meal, index) => (
-                    <tr key={meal.id || index} className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"} break-inside-avoid`}>
-                    <td className="p-4 font-bold text-[#d4af37] align-top">{meal.time}</td>
-                    <td className="p-4"><p className="font-bold text-gray-900 mb-1">{meal.name}</p><p className="text-gray-600 leading-relaxed whitespace-pre-wrap">{meal.details}</p></td>
-                    </tr>
-                ))}
-                </tbody>
-            </table>
-            <div className="mt-10 border-2 border-dashed border-gray-300 p-6 text-center text-gray-500 italic text-sm rounded-xl break-inside-avoid">Lembre-se de manter a hidratação ao longo do dia (mínimo {safeData.waterGoal || '3,5'}L de água).</div>
+                <h3 className={sectionTitle}>3. Plano Alimentar Diário</h3>
+                <table className="w-full text-left text-sm border-collapse mb-8">
+                    <thead><tr className="bg-[#d4af37] text-white"><th className="p-3 font-bold w-24">Horário</th><th className="p-3 font-bold">Refeição & Detalhes</th></tr></thead>
+                    <tbody className="divide-y divide-gray-100">
+                    {meals.map((meal, index) => (
+                        <tr key={meal.id || index} className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"} break-inside-avoid`}>
+                        <td className="p-4 font-bold text-[#d4af37] align-top">{meal.time}</td>
+                        <td className="p-4"><p className="font-bold text-gray-900 mb-1">{meal.name}</p><p className="text-gray-600 leading-relaxed whitespace-pre-wrap">{meal.details}</p></td>
+                        </tr>
+                    ))}
+                    </tbody>
+                </table>
+                <div className="mt-10 border-2 border-dashed border-gray-300 p-6 text-center text-gray-500 italic text-sm rounded-xl break-inside-avoid">Lembre-se de manter a hidratação ao longo do dia (mínimo {safeData.waterGoal || '3,5'}L de água).</div>
             </div>
 
             <div className="html2pdf__page-break"></div>
 
             {/* PÁGINA 4: SUPLEMENTAÇÃO */}
             <div style={pageStyle} className="h-auto">
-            <h3 className={sectionTitle}>4. Suplementação e Recomendações</h3>
-            <div className="space-y-4 mb-12">
-                {supplements.map((supp) => {
-                let bgColor = "bg-gray-800";
-                const nameLower = (supp.name || "").toLowerCase();
-                if (nameLower.includes('creatina')) bgColor = "bg-[#d4af37]"; 
-                else if (nameLower.includes('whey')) bgColor = "bg-[#2563eb]"; 
-                else if (nameLower.includes('cafeína') || nameLower.includes('cafeina') || nameLower.includes('café')) bgColor = "bg-[#5d4037]"; 
-                return (
-                    <div key={supp.id} className={`${bgColor} text-white p-6 rounded-xl flex justify-between items-center shadow-md break-inside-avoid`}>
-                    <div><h4 className="text-xl font-bold uppercase mb-1">{supp.name}</h4><p className="text-sm opacity-90">{supp.dosage}</p></div>
-                    <div className="bg-black/20 px-4 py-2 rounded-full text-xs font-bold uppercase">{supp.timing}</div>
-                    </div>
-                );
-                })}
-            </div>
-            <h4 className="text-lg font-bold text-black mb-4">Dicas & Orientações:</h4>
-            <div className="space-y-3 bg-gray-50 p-6 rounded-xl border border-gray-100">
-                {tips.map((tip, idx) => (
-                <div key={idx} className="flex items-start gap-3 text-sm text-gray-700 break-inside-avoid"><div className="w-1.5 h-1.5 bg-[#d4af37] mt-1.5 shrink-0 rounded-full"></div><span className="font-medium">{tip}</span></div>
-                ))}
-            </div>
+                <h3 className={sectionTitle}>4. Suplementação e Recomendações</h3>
+                <div className="space-y-4 mb-12">
+                    {supplements.map((supp) => {
+                    let bgColor = "bg-gray-800";
+                    const nameLower = (supp.name || "").toLowerCase();
+                    if (nameLower.includes('creatina')) bgColor = "bg-[#d4af37]"; 
+                    else if (nameLower.includes('whey')) bgColor = "bg-[#2563eb]"; 
+                    else if (nameLower.includes('cafeína') || nameLower.includes('cafeina') || nameLower.includes('café')) bgColor = "bg-[#5d4037]"; 
+                    return (
+                        <div key={supp.id} className={`${bgColor} text-white p-6 rounded-xl flex justify-between items-center shadow-md break-inside-avoid`}>
+                        <div><h4 className="text-xl font-bold uppercase mb-1">{supp.name}</h4><p className="text-sm opacity-90">{supp.dosage}</p></div>
+                        <div className="bg-black/20 px-4 py-2 rounded-full text-xs font-bold uppercase">{supp.timing}</div>
+                        </div>
+                    );
+                    })}
+                </div>
+                <h4 className="text-lg font-bold text-black mb-4">Dicas & Orientações:</h4>
+                <div className="space-y-3 bg-gray-50 p-6 rounded-xl border border-gray-100">
+                    {tips.map((tip, idx) => (
+                    <div key={idx} className="flex items-start gap-3 text-sm text-gray-700 break-inside-avoid"><div className="w-1.5 h-1.5 bg-[#d4af37] mt-1.5 shrink-0 rounded-full"></div><span className="font-medium">{tip}</span></div>
+                    ))}
+                </div>
             </div>
 
             <div className="html2pdf__page-break"></div>
 
-            {/* PÁGINAS DE TREINO (Dinâmico) */}
+            {/* PÁGINAS DE TREINO (DINÂMICO) - SEGUINDO MODELO ENVIADO */}
             {trainingChunks.map((chunk, index) => (
                 <React.Fragment key={`training-page-${index}`}>
                     <div style={pageStyle} className="h-auto">
-                        <h3 className={sectionTitle}>
-                            5. Divisão de Treino {trainingChunks.length > 1 ? `(Parte ${index + 1})` : ''}
+                        <h3 className="text-xl font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-1 mb-2 uppercase">
+                            5. DIVISÃO DE TREINO {trainingChunks.length > 1 ? `(PARTE ${index + 1})` : ''}
                         </h3>
                         {index === 0 && (
-                            <p className="text-sm text-gray-600 mb-6">
+                            <p className="text-[10pt] text-gray-600 mb-8">
                                 Frequência: {safeData.trainingFrequency || 'Não definida'}
                             </p>
                         )}
-                        <div className="space-y-8">
+                        <div className="space-y-12">
                             {chunk.map((day) => (
-                                <div key={day.id} className="border-2 border-black rounded-xl overflow-hidden break-inside-avoid">
-                                    <div className="bg-black p-3 flex justify-between items-center">
-                                        <span className="font-black uppercase text-[#d4af37] text-lg">{day.title}</span>
-                                        <span className="text-[10px] font-black text-white uppercase tracking-widest">
+                                <div key={day.id} className="border-2 border-black rounded-none overflow-hidden break-inside-avoid">
+                                    <div className="bg-black p-3 flex justify-between items-center px-4">
+                                        <span className="font-black uppercase text-white text-lg tracking-tighter">
+                                            {day.title}
+                                        </span>
+                                        <span className="text-[8pt] font-black text-[#d4af37] uppercase tracking-widest">
                                             FOCO: {day.focus}
                                         </span>
                                     </div>
-                                    <table className="w-full text-sm text-left bg-white">
+                                    <table className="w-full text-sm text-left bg-white border-t border-black">
                                         <tbody className="divide-y divide-gray-200">
                                             {(day.exercises || []).map((ex, idx) => (
                                                 <tr key={ex.id || idx} className="bg-white">
                                                     <td className="p-4 font-bold text-gray-900 border-r border-gray-100">{ex.name}</td>
-                                                    <td className="p-4 font-black text-black text-right whitespace-nowrap">{ex.sets}</td>
+                                                    <td className="p-4 font-black text-black text-right whitespace-nowrap w-24">{ex.sets}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -254,32 +255,31 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                             {chunk.length === 0 && <p className="text-gray-400 italic">Nenhum treino cadastrado.</p>}
                         </div>
                     </div>
-                    {/* Add page break if it's not the last chunk */}
+                    {/* Quebra de página entre os chunks de treino */}
                     {index < trainingChunks.length - 1 && <div className="html2pdf__page-break"></div>}
                 </React.Fragment>
             ))}
 
-            {/* PAGE BREAK BEFORE FINAL PAGE */}
             <div className="html2pdf__page-break"></div>
 
             {/* PÁGINA FINAL */}
             <div style={{ ...pageStyle, padding: 0, minHeight: '296mm', height: '296mm' }} className="h-[296mm] page-break-before-always">
-            <div className="w-full h-full bg-[#111] flex flex-col justify-between p-12 text-center border-[20px] border-white box-border">
-                <div className="flex-none"></div>
-                <div className="flex flex-col items-center justify-center space-y-8">
-                <AlertTriangle size={80} className="text-[#d4af37]" />
-                <h2 className="text-5xl font-black text-white uppercase tracking-tighter">Atenção</h2>
-                <div className="w-24 h-2 bg-[#d4af37]"></div>
-                <div className="max-w-3xl space-y-6 text-xl text-white/80 font-medium leading-relaxed">
-                    <p>Este protocolo foi desenhado especificamente para você, {clientName.split(' ')[0]}.</p>
-                    <p>Ajustes de carga, dieta e cardio serão feitos conforme sua evolução e feedbacks.</p>
-                    <p className="text-[#d4af37]">A consistência vence a intensidade.</p>
+                <div className="w-full h-full bg-[#111] flex flex-col justify-between p-12 text-center border-[20px] border-white box-border">
+                    <div className="flex-none"></div>
+                    <div className="flex flex-col items-center justify-center space-y-8">
+                    <AlertTriangle size={80} className="text-[#d4af37]" />
+                    <h2 className="text-5xl font-black text-white uppercase tracking-tighter">Atenção</h2>
+                    <div className="w-24 h-2 bg-[#d4af37]"></div>
+                    <div className="max-w-3xl space-y-6 text-xl text-white/80 font-medium leading-relaxed">
+                        <p>Este protocolo foi desenhado especificamente para você, {clientName.split(' ')[0]}.</p>
+                        <p>Ajustes de carga, dieta e cardio serão feitos conforme sua evolução e feedbacks.</p>
+                        <p className="text-[#d4af37]">A consistência vence a intensidade.</p>
+                    </div>
+                    </div>
+                    <div className="flex-none pt-12">
+                    <p className="text-xs font-bold text-gray-600 uppercase tracking-[0.3em]">TEAM VBR © 2026</p>
+                    </div>
                 </div>
-                </div>
-                <div className="flex-none pt-12">
-                <p className="text-xs font-bold text-gray-600 uppercase tracking-[0.3em]">TEAM VBR © 2026</p>
-                </div>
-            </div>
             </div>
         </div>
     );
