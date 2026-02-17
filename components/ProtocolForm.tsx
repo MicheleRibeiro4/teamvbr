@@ -1,12 +1,12 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { ProtocolData, Meal, Supplement, TrainingDay, Exercise } from '../types';
-import { Activity, User, ShieldCheck, ChevronLeft, MapPin, Dumbbell, Utensils, Pill, Plus, Trash2, FileText, AlertCircle, Sparkles, Loader2, Ruler, DollarSign, Droplets, BookOpen, Eraser } from 'lucide-react';
+import { Activity, User, ShieldCheck, ChevronLeft, MapPin, Dumbbell, Utensils, Pill, Plus, Trash2, FileText, AlertCircle, Sparkles, Loader2, Ruler, DollarSign, Droplets, BookOpen, Eraser, FileDown } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 import { EMPTY_DATA } from '../constants';
-import ContractPreview from './ContractPreview';
-import AnamnesisPreview from './AnamnesisPreview';
-import ProtocolPreview from './ProtocolPreview';
+import ContractPreview, { ContractPreviewHandle } from './ContractPreview';
+import AnamnesisPreview, { AnamnesisPreviewHandle } from './AnamnesisPreview';
+import ProtocolPreview, { ProtocolPreviewHandle } from './ProtocolPreview';
 
 const API_KEY = process.env.API_KEY || "AIzaSyCX1oRHkaPfcf4vfOruLc_rv9B-rMCOpzA";
 
@@ -21,6 +21,11 @@ interface Props {
 
 const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTabChange, hideTabs }) => {
   const [isGenerating, setIsGenerating] = useState(false);
+  
+  // Refs para download direto do PDF
+  const contractRef = useRef<ContractPreviewHandle>(null);
+  const anamnesisRef = useRef<AnamnesisPreviewHandle>(null);
+  const protocolRef = useRef<ProtocolPreviewHandle>(null);
 
   const handleChange = (path: string, value: any) => {
     const newData = JSON.parse(JSON.stringify(data));
@@ -342,10 +347,13 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                         <p className="text-xs font-bold text-[#d4af37] uppercase tracking-widest mt-1">Dados Pessoais e Jurídicos</p>
                     </div>
                 </div>
-                <div className="relative z-10">
-                    <ContractPreview data={data} customTrigger={
+                <div className="relative z-10 flex gap-2">
+                    <button onClick={() => contractRef.current?.download()} className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl flex items-center gap-2 transition-all shadow-lg font-black uppercase text-xs tracking-widest">
+                        <FileDown size={18} /> Salvar PDF
+                    </button>
+                    <ContractPreview ref={contractRef} data={data} customTrigger={
                         <button className="bg-[#d4af37] hover:bg-[#b5952f] text-black px-6 py-3 rounded-xl flex items-center gap-2 transition-all shadow-lg hover:scale-105 active:scale-95">
-                            <FileText size={18} /> <span className="text-xs font-black uppercase tracking-widest">Contrato PDF</span>
+                            <FileText size={18} /> <span className="text-xs font-black uppercase tracking-widest">Visualizar</span>
                         </button>
                     } />
                 </div>
@@ -427,10 +435,13 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                             <p className="text-xs font-bold text-[#d4af37] uppercase tracking-widest mt-1">Histórico e Objetivos</p>
                         </div>
                     </div>
-                    <div className="relative z-10">
-                        <AnamnesisPreview data={data} customTrigger={
+                    <div className="relative z-10 flex gap-2">
+                        <button onClick={() => anamnesisRef.current?.download()} className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl flex items-center gap-2 transition-all shadow-lg font-black uppercase text-xs tracking-widest">
+                            <FileDown size={18} /> Salvar PDF
+                        </button>
+                        <AnamnesisPreview ref={anamnesisRef} data={data} customTrigger={
                             <button className="bg-[#d4af37] hover:bg-[#b5952f] text-black px-6 py-3 rounded-xl flex items-center gap-2 transition-all shadow-lg hover:scale-105 active:scale-95">
-                                <FileText size={18} /> <span className="text-xs font-black uppercase tracking-widest">Ficha PDF</span>
+                                <FileText size={18} /> <span className="text-xs font-black uppercase tracking-widest">Visualizar</span>
                             </button>
                         } />
                     </div>
@@ -468,13 +479,17 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                     </div>
                 </div>
 
-                <div className="relative z-10">
+                <div className="relative z-10 flex gap-2">
+                    <button onClick={() => protocolRef.current?.download()} className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl flex items-center gap-2 transition-all shadow-lg font-black uppercase text-xs tracking-widest">
+                        <FileDown size={18} /> Salvar PDF
+                    </button>
                     <ProtocolPreview 
+                        ref={protocolRef}
                         data={data} 
                         customTrigger={
                             <button className="bg-[#d4af37] hover:bg-[#b5952f] text-black px-6 py-3 rounded-xl flex items-center gap-2 transition-all shadow-lg hover:scale-105 active:scale-95">
                                 <FileText size={18} />
-                                <span className="text-xs font-black uppercase tracking-widest">Protocolo PDF</span>
+                                <span className="text-xs font-black uppercase tracking-widest">Visualizar</span>
                             </button>
                         } 
                     />
@@ -558,10 +573,13 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                         <p className="text-xs font-bold text-[#d4af37] uppercase tracking-widest mt-1">Dieta & Suplementação</p>
                     </div>
                 </div>
-                <div className="relative z-10">
-                    <ProtocolPreview data={data} customTrigger={
+                <div className="relative z-10 flex gap-2">
+                    <button onClick={() => protocolRef.current?.download()} className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl flex items-center gap-2 transition-all shadow-lg font-black uppercase text-xs tracking-widest">
+                        <FileDown size={18} /> Salvar PDF
+                    </button>
+                    <ProtocolPreview ref={protocolRef} data={data} customTrigger={
                         <button className="bg-[#d4af37] hover:bg-[#b5952f] text-black px-6 py-3 rounded-xl flex items-center gap-2 transition-all shadow-lg hover:scale-105 active:scale-95">
-                            <FileText size={18} /> <span className="text-xs font-black uppercase tracking-widest">Protocolo PDF</span>
+                            <FileText size={18} /> <span className="text-xs font-black uppercase tracking-widest">Visualizar</span>
                         </button>
                     } />
                 </div>
@@ -666,9 +684,12 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                 </div>
                 <div className="relative z-10 flex gap-2">
                     <button onClick={handleClearTraining} className="text-[10px] font-bold text-red-500 bg-red-500/10 px-3 py-1.5 rounded-lg border border-red-500/20 hover:bg-red-500 hover:text-white transition-all flex items-center gap-1"><Eraser size={12} /> Limpar</button>
-                    <ProtocolPreview data={data} customTrigger={
+                    <button onClick={() => protocolRef.current?.download()} className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl flex items-center gap-2 transition-all shadow-lg font-black uppercase text-xs tracking-widest">
+                        <FileDown size={18} /> Salvar PDF
+                    </button>
+                    <ProtocolPreview ref={protocolRef} data={data} customTrigger={
                         <button className="bg-[#d4af37] hover:bg-[#b5952f] text-black px-6 py-3 rounded-xl flex items-center gap-2 transition-all shadow-lg hover:scale-105 active:scale-95">
-                            <FileText size={18} /> <span className="text-xs font-black uppercase tracking-widest">Protocolo PDF</span>
+                            <FileText size={18} /> <span className="text-xs font-black uppercase tracking-widest">Visualizar</span>
                         </button>
                     } />
                 </div>

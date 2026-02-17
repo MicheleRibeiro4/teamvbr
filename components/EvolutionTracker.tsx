@@ -20,12 +20,15 @@ import {
   Dumbbell,
   X,
   Maximize2,
-  Eye
+  Eye,
+  Sparkles
 } from 'lucide-react';
 import { LOGO_VBR_BLACK } from '../constants';
 import ProtocolPreview from './ProtocolPreview';
+import { GoogleGenAI } from "@google/genai";
 
 const LOGO_VBR_GOLD = "https://xqwzmvzfemjkvaquxedz.supabase.co/storage/v1/object/public/LOGO/DOURADO.png";
+const API_KEY = process.env.API_KEY || "AIzaSyCX1oRHkaPfcf4vfOruLc_rv9B-rMCOpzA";
 
 interface Props {
   currentProtocol: ProtocolData;
@@ -121,8 +124,12 @@ const EvolutionTracker: React.FC<Props> = ({
   const [mode, setMode] = useState<'view' | 'new_checkin' | 'new_protocol'>('view');
   const [isSaving, setIsSaving] = useState(false);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [historyPreview, setHistoryPreview] = useState<ProtocolData | null>(null);
+  
+  // Estado para armazenar o protocolo sugerido pela IA temporariamente antes de salvar
+  const [aiGeneratedData, setAiGeneratedData] = useState<Partial<ProtocolData> | null>(null);
   
   const reportRef = useRef<HTMLDivElement>(null);
 
@@ -152,17 +159,15 @@ const EvolutionTracker: React.FC<Props> = ({
     if (mode === 'view') {
         setEditData(currentProtocol.physicalData);
         setEditTitle(currentProtocol.protocolTitle);
+        setAiGeneratedData(null);
     }
   }, [currentProtocol.id, mode]);
 
   // --- HANDLERS ---
   const handleStartNewCheckin = () => {
-      // Mantém os dados atuais como base, mas permite editar data e peso
       setEditData({ 
           ...currentProtocol.physicalData, 
-          date: new Date().toLocaleDateString('pt-BR'),
-          // Opcional: limpar peso para forçar nova entrada ou manter o anterior
-          // weight: "" 
+          date: new Date().toLocaleDateString('pt-BR')
       });
       setMode('new_checkin');
   };
@@ -172,8 +177,65 @@ const EvolutionTracker: React.FC<Props> = ({
           ...currentProtocol.physicalData, 
           date: new Date().toLocaleDateString('pt-BR') 
       });
-      setEditTitle(currentProtocol.protocolTitle); // Inicia com o título atual para edição
+      setEditTitle(currentProtocol.protocolTitle); 
       setMode('new_protocol');
+  };
+
+  const handleGenerateProtocolAI = async () => {
+      if (!editData.weight) {
+          alert("Por favor, atualize o peso atual antes de gerar a sugestão.");
+          return;
+      }
+      
+      setIsGeneratingAI(true);
+      try {
+          const ai = new GoogleGenAI({ apiKey: API_KEY });
+          const model = "gemini-2.5-flash";
+          
+          const prompt = `
+            Você é um treinador elite do Team VBR. Crie uma NOVA ESTRUTURA de dieta e treino para uma NOVA FASE.
+            ALUNO: ${currentProtocol.clientName}, Idade: ${editData.age}, Gênero: ${editData.gender}.
+            NOVA FASE / OBJETIVO: ${editTitle}.
+            PESO ATUAL: ${editData.weight}kg (Anterior: ${startSnapshot.physicalData.weight}kg).
+            ESTRATÉGIA ANTERIOR: ${currentProtocol.nutritionalStrategy}.
+            Crie um protocolo intenso e otimizado para quebrar platôs.
+            Retorne APENAS JSON.
+            Estrutura JSON: { "nutritionalStrategy": "...", "kcalGoal": "...", "kcalSubtext": "...", "macros": { "protein": { "value": "...", "ratio": "..." }, "carbs": { "value": "...", "ratio": "..." }, "fats": { "value": "...", "ratio": "..." } }, "meals": [...], "supplements": [...], "trainingFrequency": "...", "trainingDays": [...], "generalObservations": "..." }
+          `;
+
+          const response = await ai.models.generateContent({
+            model: model,
+            contents: prompt,
+            config: { responseMimeType: "application/json" }
+          });
+
+          let textResponse = response.text;
+          if (textResponse) {
+              // Limpeza do Markdown JSON
+              textResponse = textResponse.replace(/```json/g, '').replace(/```/g, '').trim();
+              
+              const generated = JSON.parse(textResponse);
+              // Adiciona IDs únicos para evitar conflitos de renderização
+              const processed = {
+                  ...generated,
+                  meals: generated.meals ? generated.meals.map((m: any, i: number) => ({ ...m, id: Date.now().toString() + 'm' + i })) : [],
+                  supplements: generated.supplements ? generated.supplements.map((s: any, i: number) => ({ ...s, id: Date.now().toString() + 's' + i })) : [],
+                  trainingDays: generated.trainingDays ? generated.trainingDays.map((d: any, i: number) => ({
+                     ...d, 
+                     id: Date.now().toString() + 'd' + i,
+                     exercises: d.exercises ? d.exercises.map((e: any, j: number) => ({ ...e, id: Date.now().toString() + 'e' + i + j })) : []
+                  })) : [],
+              };
+              
+              setAiGeneratedData(processed);
+              alert("✨ Sugestão de Protocolo gerada com sucesso! Clique em 'Criar Protocolo' para aplicar.");
+          }
+      } catch (error: any) {
+          console.error(error);
+          alert("Erro na IA: " + error.message);
+      } finally {
+          setIsGeneratingAI(false);
+      }
   };
 
   const handleSave = async () => {
@@ -182,7 +244,7 @@ const EvolutionTracker: React.FC<Props> = ({
     try {
         const timestamp = new Date().toISOString();
         
-        const newProtocolState = {
+        let newProtocolState = {
             ...currentProtocol,
             protocolTitle: editTitle, // Atualiza o título se estiver em modo de novo protocolo
             physicalData: editData,
@@ -192,18 +254,21 @@ const EvolutionTracker: React.FC<Props> = ({
                 : (currentProtocol.privateNotes || 'Evolução registrada')
         };
 
+        // Se houve geração de IA, mescla os dados gerados
+        if (mode === 'new_protocol' && aiGeneratedData) {
+            newProtocolState = {
+                ...newProtocolState,
+                ...aiGeneratedData
+            };
+        }
+
         if (mode === 'new_checkin') {
-            // Check-in: Atualiza os dados do protocolo existente e cria um registro no histórico
-            // createHistory = true: Salva o estado ANTERIOR no histórico antes de atualizar?
-            // A lógica do UnifiedEditor/App geralmente salva o estado atual.
-            // Aqui vamos pedir para salvar e garantir que uma entrada de histórico seja criada.
             await onUpdateData(newProtocolState, true, false); 
         } else if (mode === 'new_protocol') {
-            // Novo Protocolo: Gera um novo ID para separar as fases, mas mantém histórico visualmente
-            // forceNewId = true: Cria um novo registro no banco com novo ID
             await onUpdateData(newProtocolState, false, true); 
         }
         setMode('view');
+        setAiGeneratedData(null);
     } catch (error) { console.error(error); alert("Erro ao salvar."); } 
     finally { setIsSaving(false); }
   };
@@ -212,6 +277,7 @@ const EvolutionTracker: React.FC<Props> = ({
       setMode('view');
       setEditData(currentProtocol.physicalData);
       setEditTitle(currentProtocol.protocolTitle);
+      setAiGeneratedData(null);
   };
 
   const handleGenerateReport = async () => {
@@ -237,7 +303,6 @@ const EvolutionTracker: React.FC<Props> = ({
   const displayData = isEditing ? editData : currentProtocol.physicalData;
 
   // --- CÁLCULOS FIXOS DE INÍCIO ---
-  // Usa o startSnapshot (mais antigo) como referência fixa
   const startDate = new Date(startSnapshot.createdAt || startSnapshot.updatedAt);
   const diffTime = Math.abs(new Date().getTime() - startDate.getTime());
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
@@ -374,18 +439,39 @@ const EvolutionTracker: React.FC<Props> = ({
 
           {/* ÁREA DE EDIÇÃO DO TÍTULO DO PROTOCOLO (SE FOR NOVO PROTOCOLO) */}
           {mode === 'new_protocol' && (
-              <div className="mb-6 relative z-10 bg-blue-500/10 border border-blue-500/30 p-4 rounded-xl flex flex-col md:flex-row items-center gap-4">
-                  <div className="p-3 bg-blue-500 text-white rounded-lg"><Target size={20} /></div>
-                  <div className="flex-1 w-full">
-                      <label className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1 block">Objetivo desta Nova Fase</label>
-                      <input 
-                          className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white font-bold focus:border-blue-500 outline-none"
-                          value={editTitle}
-                          onChange={(e) => setEditTitle(e.target.value)}
-                          placeholder="Ex: Cutting Radical, Bulking Limpo..."
-                      />
+              <div className="mb-6 relative z-10 bg-blue-500/10 border border-blue-500/30 p-4 rounded-xl flex flex-col gap-4">
+                  <div className="flex flex-col md:flex-row items-center gap-4">
+                      <div className="p-3 bg-blue-500 text-white rounded-lg"><Target size={20} /></div>
+                      <div className="flex-1 w-full">
+                          <label className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1 block">Objetivo desta Nova Fase</label>
+                          <input 
+                              className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white font-bold focus:border-blue-500 outline-none"
+                              value={editTitle}
+                              onChange={(e) => setEditTitle(e.target.value)}
+                              placeholder="Ex: Cutting Radical, Bulking Limpo..."
+                          />
+                      </div>
+                      
+                      {/* BOTÃO DE GERAÇÃO COM IA */}
+                      <button 
+                          onClick={handleGenerateProtocolAI}
+                          disabled={isGeneratingAI}
+                          className="px-6 py-3 rounded-xl bg-purple-600/20 hover:bg-purple-600 text-purple-400 hover:text-white border border-purple-600/30 font-black uppercase text-[10px] tracking-widest transition-all flex items-center gap-2 h-full whitespace-nowrap shadow-lg disabled:opacity-50"
+                      >
+                          {isGeneratingAI ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
+                          {aiGeneratedData ? 'Regerar Sugestão IA' : 'Gerar Estrutura com IA'}
+                      </button>
                   </div>
-                  <div className="text-xs text-white/40 max-w-xs text-center md:text-right">
+                  
+                  {aiGeneratedData && (
+                      <div className="bg-purple-600/10 border border-purple-600/30 p-3 rounded-lg text-center animate-in fade-in">
+                          <p className="text-purple-400 text-xs font-bold uppercase tracking-wide">
+                              ✅ Sugestão de Dieta e Treino gerada pela IA e pronta para ser aplicada.
+                          </p>
+                      </div>
+                  )}
+
+                  <div className="text-xs text-white/40 text-center md:text-right border-t border-white/5 pt-2 mt-1">
                       Isso criará um novo marco no histórico. Os treinos e dieta anteriores serão mantidos no histórico visualizável.
                   </div>
               </div>
@@ -661,12 +747,6 @@ const EvolutionTracker: React.FC<Props> = ({
                           </h3>
                       </div>
                       <div className="flex-1 overflow-y-auto p-4 custom-scrollbar bg-white">
-                          {/* Reutiliza o ProtocolPreview com customTrigger null para renderizar direto (precisaria adaptar o ProtocolPreview para aceitar renderização direta ou usar o modal interno dele. 
-                              Como ProtocolPreview tem estado interno, vamos instanciá-lo e forçar o modal aberto ou renderizar o conteudo) 
-                              SIMPLIFICAÇÃO: Vamos renderizar o ProtocolPreview passando um trigger que já abre clicado ou refatorar.
-                              Melhor: Criar uma instancia de ProtocolPreview com customTrigger que simula o botão já clicado, 
-                              OU melhor ainda: O ProtocolPreview já tem lógica de modal. Vamos apenas passar os dados.
-                          */}
                           <ProtocolPreview 
                               data={historyPreview} 
                               customTrigger={
@@ -676,10 +756,6 @@ const EvolutionTracker: React.FC<Props> = ({
                                   </div>
                               } 
                           />
-                          {/* 
-                             NOTA: O ideal seria o ProtocolPreview aceitar uma prop "isOpen" controlada externamente, 
-                             mas para não quebrar a estrutura existente, o usuário clica no botão acima dentro do modal para ver o PDF formatado.
-                          */}
                       </div>
                   </div>
               </div>

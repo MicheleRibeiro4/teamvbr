@@ -12,7 +12,8 @@ import {
   Save, 
   CheckCircle2, 
   Loader2,
-  Ruler
+  Ruler,
+  Lock
 } from 'lucide-react';
 
 interface Props {
@@ -178,7 +179,15 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
 
   if (step === 0) {
       return (
-        <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center p-6 animate-in fade-in duration-700">
+        <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center p-6 animate-in fade-in duration-700 relative">
+             {/* BOTÃO DE SAÍDA PARA O CONSULTOR */}
+             <button 
+                onClick={onCancel} 
+                className="absolute top-6 right-6 text-[9px] font-black uppercase text-white/10 hover:text-white/40 flex items-center gap-2 transition-colors z-50"
+             >
+                <Lock size={12} /> Sou Consultor
+             </button>
+
              <img src={LOGO_VBR_BLACK} alt="Team VBR" className="h-20 md:h-24 w-auto mb-8 md:mb-12" />
              <div className="text-center max-w-lg space-y-6">
                  {/* Ajustado tamanho do texto e whitespace-nowrap para garantir que Team VBR fique junto */}
