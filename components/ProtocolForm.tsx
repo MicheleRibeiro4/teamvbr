@@ -307,6 +307,9 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
   const sectionHeaderClass = "flex items-center gap-2 mb-8 border-b border-white/5 pb-4 mt-8 first:mt-0";
   const addButtonClass = "w-full py-4 border border-dashed border-white/20 rounded-xl text-white/40 font-black uppercase text-[10px] tracking-widest hover:border-[#d4af37] hover:text-[#d4af37] hover:bg-[#d4af37]/5 transition-all flex items-center justify-center gap-2";
 
+  // Novo estilo de botão compacto e sem quebra de linha
+  const pdfButtonClass = "bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-lg flex items-center gap-2 transition-all shadow-lg font-black uppercase text-[9px] tracking-widest whitespace-nowrap h-fit";
+
   const TabButton = ({ id, label, icon: Icon }: { id: typeof activeTab, label: string, icon: any }) => (
     <button 
       onClick={() => onTabChange(id)}
@@ -347,12 +350,12 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                         <p className="text-xs font-bold text-[#d4af37] uppercase tracking-widest mt-1">Dados Pessoais e Jurídicos</p>
                     </div>
                 </div>
-                <div className="relative z-10 flex gap-2">
-                    <button onClick={() => contractRef.current?.download()} className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl flex items-center gap-2 transition-all shadow-lg font-black uppercase text-xs tracking-widest">
-                        <FileDown size={18} /> Salvar PDF
+                <div className="relative z-10 flex gap-2 items-center">
+                    <button onClick={() => contractRef.current?.download()} className={pdfButtonClass}>
+                        <FileDown size={14} /> Salvar PDF
                     </button>
                     <ContractPreview ref={contractRef} data={data} customTrigger={
-                        <button className="bg-[#d4af37] hover:bg-[#b5952f] text-black px-6 py-3 rounded-xl flex items-center gap-2 transition-all shadow-lg hover:scale-105 active:scale-95">
+                        <button className="bg-[#d4af37] hover:bg-[#b5952f] text-black px-6 py-3 rounded-xl flex items-center gap-2 transition-all shadow-lg hover:scale-105 active:scale-95 whitespace-nowrap">
                             <FileText size={18} /> <span className="text-xs font-black uppercase tracking-widest">Visualizar</span>
                         </button>
                     } />
@@ -435,12 +438,12 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                             <p className="text-xs font-bold text-[#d4af37] uppercase tracking-widest mt-1">Histórico e Objetivos</p>
                         </div>
                     </div>
-                    <div className="relative z-10 flex gap-2">
-                        <button onClick={() => anamnesisRef.current?.download()} className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl flex items-center gap-2 transition-all shadow-lg font-black uppercase text-xs tracking-widest">
-                            <FileDown size={18} /> Salvar PDF
+                    <div className="relative z-10 flex gap-2 items-center">
+                        <button onClick={() => anamnesisRef.current?.download()} className={pdfButtonClass}>
+                            <FileDown size={14} /> Salvar PDF
                         </button>
                         <AnamnesisPreview ref={anamnesisRef} data={data} customTrigger={
-                            <button className="bg-[#d4af37] hover:bg-[#b5952f] text-black px-6 py-3 rounded-xl flex items-center gap-2 transition-all shadow-lg hover:scale-105 active:scale-95">
+                            <button className="bg-[#d4af37] hover:bg-[#b5952f] text-black px-6 py-3 rounded-xl flex items-center gap-2 transition-all shadow-lg hover:scale-105 active:scale-95 whitespace-nowrap">
                                 <FileText size={18} /> <span className="text-xs font-black uppercase tracking-widest">Visualizar</span>
                             </button>
                         } />
@@ -479,15 +482,15 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                     </div>
                 </div>
 
-                <div className="relative z-10 flex gap-2">
-                    <button onClick={() => protocolRef.current?.download()} className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl flex items-center gap-2 transition-all shadow-lg font-black uppercase text-xs tracking-widest">
-                        <FileDown size={18} /> Salvar PDF
+                <div className="relative z-10 flex gap-2 items-center">
+                    <button onClick={() => protocolRef.current?.download()} className={pdfButtonClass}>
+                        <FileDown size={14} /> Salvar PDF
                     </button>
                     <ProtocolPreview 
                         ref={protocolRef}
                         data={data} 
                         customTrigger={
-                            <button className="bg-[#d4af37] hover:bg-[#b5952f] text-black px-6 py-3 rounded-xl flex items-center gap-2 transition-all shadow-lg hover:scale-105 active:scale-95">
+                            <button className="bg-[#d4af37] hover:bg-[#b5952f] text-black px-6 py-3 rounded-xl flex items-center gap-2 transition-all shadow-lg hover:scale-105 active:scale-95 whitespace-nowrap">
                                 <FileText size={18} />
                                 <span className="text-xs font-black uppercase tracking-widest">Visualizar</span>
                             </button>
@@ -573,12 +576,12 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                         <p className="text-xs font-bold text-[#d4af37] uppercase tracking-widest mt-1">Dieta & Suplementação</p>
                     </div>
                 </div>
-                <div className="relative z-10 flex gap-2">
-                    <button onClick={() => protocolRef.current?.download()} className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl flex items-center gap-2 transition-all shadow-lg font-black uppercase text-xs tracking-widest">
-                        <FileDown size={18} /> Salvar PDF
+                <div className="relative z-10 flex gap-2 items-center">
+                    <button onClick={() => protocolRef.current?.download()} className={pdfButtonClass}>
+                        <FileDown size={14} /> Salvar PDF
                     </button>
                     <ProtocolPreview ref={protocolRef} data={data} customTrigger={
-                        <button className="bg-[#d4af37] hover:bg-[#b5952f] text-black px-6 py-3 rounded-xl flex items-center gap-2 transition-all shadow-lg hover:scale-105 active:scale-95">
+                        <button className="bg-[#d4af37] hover:bg-[#b5952f] text-black px-6 py-3 rounded-xl flex items-center gap-2 transition-all shadow-lg hover:scale-105 active:scale-95 whitespace-nowrap">
                             <FileText size={18} /> <span className="text-xs font-black uppercase tracking-widest">Visualizar</span>
                         </button>
                     } />
@@ -682,13 +685,13 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                         <p className="text-xs font-bold text-[#d4af37] uppercase tracking-widest mt-1">Periodização e Exercícios</p>
                     </div>
                 </div>
-                <div className="relative z-10 flex gap-2">
-                    <button onClick={handleClearTraining} className="text-[10px] font-bold text-red-500 bg-red-500/10 px-3 py-1.5 rounded-lg border border-red-500/20 hover:bg-red-500 hover:text-white transition-all flex items-center gap-1"><Eraser size={12} /> Limpar</button>
-                    <button onClick={() => protocolRef.current?.download()} className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl flex items-center gap-2 transition-all shadow-lg font-black uppercase text-xs tracking-widest">
-                        <FileDown size={18} /> Salvar PDF
+                <div className="relative z-10 flex gap-2 items-center">
+                    <button onClick={handleClearTraining} className="text-[10px] font-bold text-red-500 bg-red-500/10 px-3 py-1.5 rounded-lg border border-red-500/20 hover:bg-red-500 hover:text-white transition-all flex items-center gap-1 h-fit"><Eraser size={12} /> Limpar</button>
+                    <button onClick={() => protocolRef.current?.download()} className={pdfButtonClass}>
+                        <FileDown size={14} /> Salvar PDF
                     </button>
                     <ProtocolPreview ref={protocolRef} data={data} customTrigger={
-                        <button className="bg-[#d4af37] hover:bg-[#b5952f] text-black px-6 py-3 rounded-xl flex items-center gap-2 transition-all shadow-lg hover:scale-105 active:scale-95">
+                        <button className="bg-[#d4af37] hover:bg-[#b5952f] text-black px-6 py-3 rounded-xl flex items-center gap-2 transition-all shadow-lg hover:scale-105 active:scale-95 whitespace-nowrap">
                             <FileText size={18} /> <span className="text-xs font-black uppercase tracking-widest">Visualizar</span>
                         </button>
                     } />

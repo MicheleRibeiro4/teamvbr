@@ -190,17 +190,47 @@ const EvolutionTracker: React.FC<Props> = ({
       setIsGeneratingAI(true);
       try {
           const ai = new GoogleGenAI({ apiKey: API_KEY });
-          const model = "gemini-2.5-flash";
+          const model = "gemini-2.5-flash"; // Usando modelo estável que suporta JSON
           
           const prompt = `
-            Você é um treinador elite do Team VBR. Crie uma NOVA ESTRUTURA de dieta e treino para uma NOVA FASE.
-            ALUNO: ${currentProtocol.clientName}, Idade: ${editData.age}, Gênero: ${editData.gender}.
-            NOVA FASE / OBJETIVO: ${editTitle}.
-            PESO ATUAL: ${editData.weight}kg (Anterior: ${startSnapshot.physicalData.weight}kg).
-            ESTRATÉGIA ANTERIOR: ${currentProtocol.nutritionalStrategy}.
-            Crie um protocolo intenso e otimizado para quebrar platôs.
-            Retorne APENAS JSON.
-            Estrutura JSON: { "nutritionalStrategy": "...", "kcalGoal": "...", "kcalSubtext": "...", "macros": { "protein": { "value": "...", "ratio": "..." }, "carbs": { "value": "...", "ratio": "..." }, "fats": { "value": "...", "ratio": "..." } }, "meals": [...], "supplements": [...], "trainingFrequency": "...", "trainingDays": [...], "generalObservations": "..." }
+            ATUE COMO UM TREINADOR ELITE (Estilo Team VBR).
+            GERE UM PROTOCOLO DE TREINO E DIETA COMPLETO NO FORMATO JSON.
+            
+            ALUNO: ${currentProtocol.clientName}
+            IDADE: ${editData.age}
+            GÊNERO: ${editData.gender}
+            OBJETIVO ATUAL: ${editTitle}
+            PESO ATUAL: ${editData.weight}kg
+            
+            RETORNE O JSON COM ESTA ESTRUTURA EXATA (SEM MARKDOWN):
+            {
+              "nutritionalStrategy": "Texto explicativo da estratégia...",
+              "kcalGoal": "2500",
+              "kcalSubtext": "Manutenção",
+              "macros": { 
+                "protein": { "value": "180", "ratio": "2.0" }, 
+                "carbs": { "value": "250", "ratio": "3.0" }, 
+                "fats": { "value": "60", "ratio": "0.8" } 
+              },
+              "meals": [
+                { "time": "08:00", "name": "Café da Manhã", "details": "3 ovos + 1 pão..." },
+                ...
+              ],
+              "supplements": [
+                { "name": "Creatina", "dosage": "5g", "timing": "Pós-treino" }
+              ],
+              "trainingFrequency": "5x Semana",
+              "trainingDays": [
+                {
+                  "title": "Treino A",
+                  "focus": "Peito",
+                  "exercises": [
+                    { "name": "Supino Reto", "sets": "4x12" }
+                  ]
+                }
+              ],
+              "generalObservations": "Foco na progressão de carga."
+            }
           `;
 
           const response = await ai.models.generateContent({
@@ -211,11 +241,17 @@ const EvolutionTracker: React.FC<Props> = ({
 
           let textResponse = response.text;
           if (textResponse) {
-              // Limpeza do Markdown JSON
+              // Limpeza robusta do Markdown JSON se houver
               textResponse = textResponse.replace(/```json/g, '').replace(/```/g, '').trim();
               
               const generated = JSON.parse(textResponse);
-              // Adiciona IDs únicos para evitar conflitos de renderização
+              
+              // Validação básica
+              if (!generated.meals && !generated.trainingDays) {
+                  throw new Error("A IA retornou um formato inválido.");
+              }
+
+              // Adiciona IDs únicos para evitar conflitos de renderização e garantir integridade
               const processed = {
                   ...generated,
                   meals: generated.meals ? generated.meals.map((m: any, i: number) => ({ ...m, id: Date.now().toString() + 'm' + i })) : [],
