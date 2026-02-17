@@ -23,15 +23,18 @@ import {
 type ViewMode = 'home' | 'search' | 'manage' | 'settings' | 'student-dashboard' | 'evolution' | 'student-entry';
 
 const App: React.FC = () => {
-  // 1. DETECÇÃO DE MODO ALUNO (PRIORIDADE ABSOLUTA)
-  // Verifica se estamos no modo de cadastro antes de qualquer estado
-  const isStudentMode = typeof window !== 'undefined' && (
-      window.location.href.includes('mode=cadastro') || 
-      window.location.search.includes('mode=cadastro')
-  );
+  // --- LÓGICA DE ROTEAMENTO SEGURA ---
+  const checkIsStudentMode = () => {
+    if (typeof window === 'undefined') return false;
+    return window.location.href.includes('mode=cadastro') || 
+           window.location.search.includes('mode=cadastro');
+  };
 
   const [data, setData] = useState<ProtocolData>(EMPTY_DATA);
-  const [activeView, setActiveView] = useState<ViewMode>(isStudentMode ? 'student-entry' : 'home');
+  
+  // Inicializa activeView baseado na URL imediatamente para evitar flash da tela de login
+  const [activeView, setActiveView] = useState<ViewMode>(() => checkIsStudentMode() ? 'student-entry' : 'home');
+  
   const [savedProtocols, setSavedProtocols] = useState<ProtocolData[]>([]);
   const [isSyncing, setIsSyncing] = useState(false);
   const [cloudStatus, setCloudStatus] = useState<'online' | 'error'>('online');
@@ -43,35 +46,48 @@ const App: React.FC = () => {
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const MASTER_PASSWORD = "vbr-master-2025";
 
-  // Efeito Inicial
+  // Monitora a URL constantemente para garantir que o link funcione mesmo com navegação
   useEffect(() => {
-    // Se for modo aluno, NÃO carrega dados sensíveis nem verifica auth
-    if (isStudentMode) {
-      setActiveView('student-entry');
-      return;
-    }
+    const handleUrlChange = () => {
+      if (checkIsStudentMode()) {
+        setActiveView('student-entry');
+      }
+    };
 
-    // Se NÃO for modo aluno, verifica autenticação
-    const auth = localStorage.getItem('vbr_auth');
-    if (auth === 'true') {
-      setIsAuthenticated(true);
-      loadData();
-    }
-  }, [isStudentMode]);
+    // Checa na montagem
+    handleUrlChange();
 
+    // Adiciona listener para mudanças de histórico (voltar/avançar)
+    window.addEventListener('popstate', handleUrlChange);
+    return () => window.removeEventListener('popstate', handleUrlChange);
+  }, []);
+
+  // Login handler
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (loginPassword === MASTER_PASSWORD) {
       setIsAuthenticated(true);
       setLoginError(false);
       localStorage.setItem('vbr_auth', 'true');
-      loadData(); // Carrega dados após login
+      loadData();
     } else {
       setLoginError(true);
     }
   };
 
-  // Carrega dados do Supabase
+  // Auth & Data Load
+  useEffect(() => {
+    // Se for modo aluno, aborta carregamento de dados sensíveis
+    if (checkIsStudentMode()) return;
+
+    const auth = localStorage.getItem('vbr_auth');
+    if (auth === 'true') {
+      setIsAuthenticated(true);
+      loadData();
+    }
+  }, [activeView]);
+
+  // Load saved data
   const loadData = async () => {
     setIsSyncing(true);
     try {
@@ -86,7 +102,7 @@ const App: React.FC = () => {
     }
   };
 
-  // Salvar no Supabase
+  // Save changes
   const handleSave = async (silent = false, specificData?: ProtocolData, forceNewId = false) => {
     const dataToSave = specificData || data;
 
@@ -141,7 +157,7 @@ const App: React.FC = () => {
     }
   };
 
-  // Auto-Save
+  // Auto-Save Effect
   useEffect(() => {
     if (activeView === 'manage' && data.id && data.clientName && isAuthenticated) {
       if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
@@ -175,20 +191,33 @@ const App: React.FC = () => {
     }
   };
 
-  // --- RENDERIZAÇÃO ---
+  // SQL Repair Script
+  const sqlRepairScript = `-- SCRIPT DE REPARO
+CREATE TABLE IF NOT EXISTS public.protocols (
+  id text NOT NULL PRIMARY KEY,
+  client_name text NOT NULL,
+  updated_at timestamp with time zone DEFAULT now(),
+  data jsonb NOT NULL
+);
+ALTER TABLE public.protocols DISABLE ROW LEVEL SECURITY;
+GRANT ALL ON TABLE public.protocols TO anon;
+GRANT ALL ON TABLE public.protocols TO authenticated;
+GRANT ALL ON TABLE public.protocols TO service_role;`;
 
-  // 1. MODO ALUNO (Renderiza SEMPRE se o link tiver mode=cadastro)
-  if (isStudentMode || activeView === 'student-entry') {
+  // --- RENDERIZAÇÃO CONDICIONAL PRIORITÁRIA ---
+
+  // 1. TELA DE CADASTRO DO ALUNO (Prioridade Máxima)
+  // Verifica `checkIsStudentMode` diretamente na renderização para garantir que a UI correta seja mostrada
+  if (checkIsStudentMode() || activeView === 'student-entry') {
      return <StudentEntryForm onCancel={() => {
-        // Limpa URL e volta para home (que pedirá login)
         const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
         window.history.pushState({path:cleanUrl}, '', cleanUrl);
-        // Força reload para limpar estados
+        // Força reload para limpar completamente o estado e voltar ao login
         window.location.reload();
      }} />;
   }
 
-  // 2. LOGIN (Se não for aluno e não estiver logado)
+  // 2. TELA DE LOGIN (Apenas se não for aluno e não estiver autenticado)
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-6 text-center">
@@ -206,16 +235,16 @@ const App: React.FC = () => {
             <div className="mt-8 pt-8 border-t border-white/5">
                 <button 
                   onClick={() => {
+                     // Adiciona o parâmetro e força reload para garantir que a detecção de URL pegue
                      const newUrl = window.location.href.includes('?') 
                         ? window.location.href + "&mode=cadastro"
                         : window.location.href + "?mode=cadastro";
                      window.history.pushState({path:newUrl},'',newUrl);
-                     // Força reload para garantir que o 'isStudentMode' pegue true
                      window.location.reload();
                   }} 
                   className="w-full py-3 rounded-xl border border-white/10 text-white/60 hover:text-[#d4af37] hover:border-[#d4af37] transition-all text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2"
                 >
-                   <UserPlus size={14} /> Cadastro de Aluno
+                   <UserPlus size={14} /> Sou Aluno (Fazer Cadastro)
                 </button>
             </div>
           </div>
@@ -224,7 +253,7 @@ const App: React.FC = () => {
     );
   }
 
-  // 3. DASHBOARD CONSULTOR (Logado)
+  // 3. APP PRINCIPAL (Logado)
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white font-sans selection:bg-[#d4af37] selection:text-black">
       
@@ -279,7 +308,21 @@ const App: React.FC = () => {
         
         {cloudStatus === 'error' && (
           <div className="bg-red-600/10 border border-red-600/30 p-8 rounded-[2.5rem] mb-10">
-            <p className="text-red-500 font-bold">Erro de conexão com o Banco de Dados.</p>
+            <div className="flex flex-col md:flex-row items-center gap-6 justify-between">
+              <div className="flex items-center gap-4 text-left">
+                <AlertTriangle className="text-red-500 shrink-0" size={40} />
+                <div>
+                  <h4 className="font-black uppercase text-sm text-red-500">Erro de Banco de Dados</h4>
+                  <p className="text-xs text-white/60">Permissões ou tabela faltando. Copie o SQL.</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => { navigator.clipboard.writeText(sqlRepairScript); alert('SQL Copiado!'); }}
+                className="px-8 py-4 rounded-2xl font-black text-[11px] uppercase border border-white/10 hover:bg-white/5 transition-colors"
+              >
+                Copiar SQL
+              </button>
+            </div>
           </div>
         )}
 
