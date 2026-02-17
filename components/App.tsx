@@ -25,8 +25,6 @@ type ViewMode = 'home' | 'search' | 'manage' | 'settings' | 'student-dashboard' 
 
 const App: React.FC = () => {
   // --- ROTEAMENTO ESTRITO (SPA) ---
-  // Verifica se é a "Página do Aluno" baseada no Hash da URL
-  // Aceita tanto #student quanto #cadastro para evitar erros
   const checkIsStudent = () => {
     if (typeof window !== 'undefined') {
        const h = window.location.hash;
@@ -36,7 +34,6 @@ const App: React.FC = () => {
   };
 
   const [isStudentPage, setIsStudentPage] = useState(checkIsStudent);
-
   const [data, setData] = useState<ProtocolData>(EMPTY_DATA);
   const [activeView, setActiveView] = useState<ViewMode>('home');
   const [savedProtocols, setSavedProtocols] = useState<ProtocolData[]>([]);
@@ -50,22 +47,15 @@ const App: React.FC = () => {
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const MASTER_PASSWORD = "vbr-master-2025";
 
-  // Listener para detectar mudança na URL
   useEffect(() => {
     const handleHashChange = () => {
       setIsStudentPage(checkIsStudent());
     };
-    
-    // Ouve navegação
     window.addEventListener('hashchange', handleHashChange);
-    
-    // Ouve carregamento inicial (garantia extra)
     handleHashChange();
-
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  // --- LÓGICA DE LOGIN (CONSULTOR) ---
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (loginPassword === MASTER_PASSWORD) {
@@ -78,10 +68,8 @@ const App: React.FC = () => {
     }
   };
 
-  // Verifica Auth apenas se NÃO for página de aluno
   useEffect(() => {
-    if (isStudentPage) return; // Se for aluno, não checa auth
-
+    if (isStudentPage) return;
     const auth = localStorage.getItem('vbr_auth');
     if (auth === 'true') {
       setIsAuthenticated(true);
@@ -89,7 +77,6 @@ const App: React.FC = () => {
     }
   }, [isStudentPage]);
 
-  // Carrega dados do Supabase
   const loadData = async () => {
     setIsSyncing(true);
     try {
@@ -104,10 +91,8 @@ const App: React.FC = () => {
     }
   };
 
-  // Salva dados no Supabase
   const handleSave = async (silent = false, specificData?: ProtocolData, forceNewId = false) => {
     const dataToSave = specificData || data;
-
     if (!dataToSave.clientName) {
       if (!silent) alert("⚠️ Defina o nome do aluno antes de salvar.");
       return;
@@ -159,7 +144,6 @@ const App: React.FC = () => {
     }
   };
 
-  // Auto-Save no editor
   useEffect(() => {
     if (activeView === 'manage' && data.id && data.clientName && isAuthenticated && !isStudentPage) {
       if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
@@ -205,55 +189,62 @@ GRANT ALL ON TABLE public.protocols TO anon;
 GRANT ALL ON TABLE public.protocols TO authenticated;
 GRANT ALL ON TABLE public.protocols TO service_role;`;
 
-  // =================================================================================
-  // 1. RENDERIZAÇÃO: PÁGINA DO ALUNO (SEPARADA)
-  // =================================================================================
+  // --- MODO ALUNO ---
   if (isStudentPage) {
      return <StudentEntryForm onCancel={() => {
-        // Remove o hash para voltar ao "modo normal" (login)
         window.location.hash = ''; 
      }} />;
   }
 
-  // =================================================================================
-  // 2. RENDERIZAÇÃO: TELA DE LOGIN (CONSULTOR)
-  // =================================================================================
+  // --- TELA DE LOGIN ---
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center p-6 text-center">
-        <div className="w-full max-w-md animate-in fade-in zoom-in duration-700">
-          <img src={LOGO_VBR_BLACK} alt="Team VBR Logo" className="h-32 w-auto mx-auto mb-10" />
-          <div className="bg-white/5 border border-white/10 p-10 rounded-[2.5rem] shadow-2xl">
-            <div className="w-12 h-12 bg-[#d4af37] rounded-xl flex items-center justify-center text-black mx-auto mb-6"><Lock size={24} /></div>
-            <h1 className="text-xl font-black text-white uppercase tracking-tighter mb-8">Acesso Consultor</h1>
-            <form onSubmit={handleLogin} className="space-y-6">
-              <input type="password" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} placeholder="Senha" />
-              {loginError && <p className="text-xs text-red-500 font-black uppercase">Senha incorreta.</p>}
-              <button type="submit" className="w-full bg-[#d4af37] text-black py-4 rounded-2xl font-black uppercase text-xs tracking-[0.2em] mb-4">Entrar</button>
-            </form>
-            
-            {/* BOTÃO DE RESGATE PARA ALUNO */}
-            <div className="mt-8 pt-8 border-t border-white/5 space-y-4">
+      <div className="min-h-screen bg-black flex items-center justify-center p-4 text-center overflow-y-auto">
+        <div className="w-full max-w-md animate-in fade-in zoom-in duration-700 my-10">
+          <img src={LOGO_VBR_BLACK} alt="Team VBR Logo" className="h-28 w-auto mx-auto mb-8" />
+          
+          <div className="bg-white/5 border border-white/10 p-8 rounded-[2rem] shadow-2xl relative overflow-hidden">
+            {/* Login Form */}
+            <div className="relative z-10">
+              <div className="w-10 h-10 bg-[#d4af37] rounded-xl flex items-center justify-center text-black mx-auto mb-6"><Lock size={20} /></div>
+              <h1 className="text-lg font-black text-white uppercase tracking-tighter mb-6">Acesso Consultor</h1>
+              <form onSubmit={handleLogin} className="space-y-4">
+                <input type="password" className="w-full p-4 bg-black/50 border border-white/10 rounded-xl text-white outline-none focus:border-[#d4af37] transition-colors" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} placeholder="Senha Mestra" />
+                {loginError && <p className="text-xs text-red-500 font-black uppercase">Senha incorreta.</p>}
+                <button type="submit" className="w-full bg-[#d4af37] text-black py-4 rounded-xl font-black uppercase text-xs tracking-[0.2em] hover:scale-105 transition-all">Entrar</button>
+              </form>
+            </div>
+
+            {/* Divisor */}
+            <div className="my-8 flex items-center gap-4 opacity-50">
+              <div className="h-px bg-white/20 flex-1"></div>
+              <span className="text-[10px] uppercase font-black text-white/40">OU</span>
+              <div className="h-px bg-white/20 flex-1"></div>
+            </div>
+
+            {/* Botão Aluno Destacado */}
+            <div className="relative z-10">
+                <p className="text-white/40 text-[10px] uppercase tracking-widest mb-3 font-bold">Área do Aluno</p>
                 <button 
                   onClick={() => {
-                     // Força a mudança de estado e URL
                      window.location.hash = 'student';
                      setIsStudentPage(true);
                   }} 
-                  className="w-full py-3 rounded-xl border border-white/10 text-white hover:text-[#d4af37] hover:border-[#d4af37] transition-all text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2"
+                  className="w-full py-4 rounded-xl bg-white text-black hover:bg-[#d4af37] transition-all font-black uppercase text-xs tracking-widest flex items-center justify-center gap-2 shadow-lg group"
                 >
-                   <UserPlus size={14} /> Sou Aluno (Fazer Cadastro)
+                   <UserPlus size={16} className="text-[#d4af37] group-hover:text-black transition-colors" /> 
+                   Fazer Cadastro
                 </button>
             </div>
           </div>
+
+          <p className="mt-8 text-white/20 text-[10px] uppercase font-bold tracking-widest">Team VBR System © 2026</p>
         </div>
       </div>
     );
   }
 
-  // =================================================================================
-  // 3. RENDERIZAÇÃO: SISTEMA PRINCIPAL (DASHBOARD DO CONSULTOR)
-  // =================================================================================
+  // --- SISTEMA CONSULTOR ---
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white font-sans selection:bg-[#d4af37] selection:text-black">
       

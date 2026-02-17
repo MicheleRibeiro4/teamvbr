@@ -24,13 +24,13 @@ interface Props {
 }
 
 const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
-  const [step, setStep] = useState(0); // Começa no passo 0 (Intro)
+  const [step, setStep] = useState(0); 
   const [isSaving, setIsSaving] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
   const [data, setData] = useState<ProtocolData>(() => ({
     ...EMPTY_DATA,
-    id: "vbr-student-" + Date.now().toString(36), // ID único
+    id: "vbr-student-" + Date.now().toString(36), 
     updatedAt: new Date().toISOString(),
     contract: {
         ...EMPTY_DATA.contract,
@@ -85,7 +85,6 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
   const inputClass = "w-full p-5 bg-[#1a1a1a] border border-white/10 rounded-2xl focus:ring-2 focus:ring-[#d4af37] focus:border-transparent outline-none font-bold text-white text-base transition-all";
   const textAreaClass = "w-full p-5 bg-[#1a1a1a] border border-white/10 rounded-2xl focus:ring-2 focus:ring-[#d4af37] focus:border-transparent outline-none font-medium text-white text-base transition-all min-h-[140px] resize-y";
 
-  // TELA DE SUCESSO
   if (isSuccess) {
       return (
         <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-6 animate-in fade-in zoom-in duration-500">
@@ -109,7 +108,6 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
       );
   }
 
-  // TELA DE INTRODUÇÃO (PASSO 0)
   if (step === 0) {
       return (
         <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center p-6 animate-in fade-in duration-700">
@@ -139,7 +137,7 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white p-4 md:p-8 flex items-center justify-center">
-      <div className="w-full max-w-3xl bg-[#111] border border-white/10 rounded-[2.5rem] p-6 md:p-10 shadow-2xl relative overflow-hidden flex flex-col h-[90vh]">
+      <div className="w-full max-w-3xl bg-[#111] border border-white/10 rounded-[2.5rem] p-6 md:p-10 shadow-2xl relative overflow-hidden flex flex-col h-[90vh] max-h-[900px]">
         
         {/* Progress Bar */}
         <div className="flex items-center gap-4 mb-8">
@@ -156,7 +154,7 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 pb-20">
+        <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 pb-24">
             
             {/* STEP 1 */}
             {step === 1 && (
@@ -277,12 +275,12 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
 
         </div>
 
-        {/* Botão Flutuante de Ação */}
-        <div className="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-[#111] via-[#111] to-transparent">
+        {/* Botão Flutuante de Ação - FIXED Z-INDEX AND POSITION */}
+        <div className="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-[#111] via-[#111] to-transparent z-50">
             {step < 3 ? (
                 <button 
                     onClick={() => setStep(step + 1)} 
-                    className="w-full bg-white text-black py-4 rounded-xl font-black uppercase text-xs tracking-[0.2em] hover:bg-[#d4af37] transition-all flex items-center justify-center gap-2"
+                    className="w-full bg-white text-black py-4 rounded-xl font-black uppercase text-xs tracking-[0.2em] hover:bg-[#d4af37] transition-all flex items-center justify-center gap-2 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
                 >
                     Continuar <ChevronRight size={16} />
                 </button>
