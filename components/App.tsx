@@ -1,14 +1,14 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { ProtocolData } from '../types';
-import { EMPTY_DATA, LOGO_VBR_BLACK } from '../constants';
-import { db } from '../services/db';
-import UnifiedEditor from '../components/UnifiedEditor';
-import MainDashboard from '../components/MainDashboard';
-import StudentSearch from '../components/StudentSearch';
-import StudentDashboard from '../components/StudentDashboard';
-import EvolutionTracker from '../components/EvolutionTracker';
-import StudentEntryForm from '../components/StudentEntryForm';
+import { ProtocolData } from './types';
+import { EMPTY_DATA, LOGO_VBR_BLACK } from './constants';
+import { db } from './services/db';
+import UnifiedEditor from './components/UnifiedEditor';
+import MainDashboard from './components/MainDashboard';
+import StudentSearch from './components/StudentSearch';
+import StudentDashboard from './components/StudentDashboard';
+import EvolutionTracker from './components/EvolutionTracker';
+import StudentEntryForm from './components/StudentEntryForm';
 import { 
   RefreshCw,
   CheckCircle2,
@@ -17,8 +17,7 @@ import {
   Lock,
   AlertTriangle,
   Loader2,
-  UserPlus,
-  Copy
+  UserPlus
 } from 'lucide-react';
 
 type ViewMode = 'home' | 'search' | 'manage' | 'settings' | 'student-dashboard' | 'evolution';
@@ -52,6 +51,7 @@ const App: React.FC = () => {
       setIsStudentPage(checkIsStudent());
     };
     window.addEventListener('hashchange', handleHashChange);
+    // Verifica inicial
     handleHashChange();
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
@@ -214,28 +214,11 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
                 <button type="submit" className="w-full bg-[#d4af37] text-black py-4 rounded-xl font-black uppercase text-xs tracking-[0.2em] hover:scale-105 transition-all">Entrar</button>
               </form>
             </div>
-
-            {/* Divisor */}
-            <div className="my-8 flex items-center gap-4 opacity-50">
-              <div className="h-px bg-white/20 flex-1"></div>
-              <span className="text-[10px] uppercase font-black text-white/40">OU</span>
-              <div className="h-px bg-white/20 flex-1"></div>
-            </div>
-
-            {/* Botão Aluno Destacado */}
-            <div className="relative z-10">
-                <p className="text-white/40 text-[10px] uppercase tracking-widest mb-3 font-bold">Área do Aluno</p>
-                <button 
-                  onClick={() => {
-                     window.location.hash = 'student';
-                     setIsStudentPage(true);
-                  }} 
-                  className="w-full py-4 rounded-xl bg-white text-black hover:bg-[#d4af37] transition-all font-black uppercase text-xs tracking-widest flex items-center justify-center gap-2 shadow-lg group"
-                >
-                   <UserPlus size={16} className="text-[#d4af37] group-hover:text-black transition-colors" /> 
-                   Fazer Cadastro
-                </button>
-            </div>
+            
+            {/* 
+              REMOVIDO BOTÃO DE ALUNO DAQUI 
+              O aluno deve usar o link direto com hash #student ou #cadastro
+            */}
           </div>
 
           <p className="mt-8 text-white/20 text-[10px] uppercase font-bold tracking-widest">Team VBR System © 2026</p>
