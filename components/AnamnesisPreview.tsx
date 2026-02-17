@@ -32,7 +32,7 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
         scale: 2, 
         useCORS: true, 
         letterRendering: true, 
-        backgroundColor: '#ffffff', // Fundo branco
+        backgroundColor: '#ffffff', // Fundo branco explícito
         scrollY: 0,
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
@@ -71,13 +71,24 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
   const valueStyle = "text-sm font-medium text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100 block";
   const gridItemStyle = "break-inside-avoid";
 
-  const measurements = data.physicalData.measurements || {
+  // Lógica defensiva para registros antigos (Legacy Support)
+  // Se o objeto measurements não existir no DB, cria um com valores padrão
+  const measurements = data.physicalData?.measurements || {
       thorax: "-", waist: "-", abdomen: "-", glutes: "-",
       rightArmRelaxed: "-", leftArmRelaxed: "-",
       rightArmContracted: "-", leftArmContracted: "-",
       rightThigh: "-", leftThigh: "-",
       rightCalf: "-", leftCalf: "-"
   };
+
+  // Safe access para Anamnese
+  const anamnesis = data.anamnesis || {
+      mainObjective: "", routine: "", trainingHistory: "", 
+      foodPreferences: "", ergogenics: ""
+  };
+
+  // Data de Cadastro Fixa (Usa createdAt. Se não existir (legado muito antigo), usa updatedAt)
+  const registrationDate = new Date(data.createdAt || data.updatedAt || Date.now()).toLocaleDateString('pt-BR');
 
   return (
     <div className="flex flex-col items-center w-full pb-20 print:pb-0">
@@ -93,7 +104,7 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
       <div className="bg-white text-black p-4 md:p-8 rounded-lg shadow-2xl w-full max-w-[220mm] mx-auto">
           <div ref={pdfRef} className="bg-white flex flex-col items-center print:bg-transparent print:m-0 print:p-0 w-full">
             
-            {/* PÁGINA ÚNICA (Ou múltipla se estourar) */}
+            {/* PÁGINA ÚNICA */}
             <div style={pageStyle}>
                 {/* Header */}
                 <div className="flex justify-between items-center mb-8 border-b border-gray-200 pb-6">
@@ -113,27 +124,27 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
                     </div>
                     <div className="text-right">
                         <span className="text-xs font-bold text-gray-400 uppercase">Data do Cadastro</span>
-                        {/* CORREÇÃO: Usa createdAt ou fallback para updatedAt se for legado */}
-                        <p className="text-sm font-bold text-gray-900">{new Date(data.createdAt || data.updatedAt).toLocaleDateString('pt-BR')}</p>
+                        {/* DATA FIXA DE CADASTRO */}
+                        <p className="text-sm font-bold text-gray-900">{registrationDate}</p>
                     </div>
                 </div>
 
                 <div className="grid grid-cols-4 gap-4 mb-6">
                     <div className="col-span-1">
                         <span className={labelStyle}>Idade</span>
-                        <span className={valueStyle}>{data.physicalData.age || '-'} anos</span>
+                        <span className={valueStyle}>{data.physicalData?.age || '-'} anos</span>
                     </div>
                     <div className="col-span-1">
                         <span className={labelStyle}>Gênero</span>
-                        <span className={valueStyle}>{data.physicalData.gender || '-'}</span>
+                        <span className={valueStyle}>{data.physicalData?.gender || '-'}</span>
                     </div>
                     <div className="col-span-1">
                         <span className={labelStyle}>Peso</span>
-                        <span className={valueStyle}>{data.physicalData.weight || '-'} kg</span>
+                        <span className={valueStyle}>{data.physicalData?.weight || '-'} kg</span>
                     </div>
                     <div className="col-span-1">
                         <span className={labelStyle}>Altura</span>
-                        <span className={valueStyle}>{data.physicalData.height || '-'} m</span>
+                        <span className={valueStyle}>{data.physicalData?.height || '-'} m</span>
                     </div>
                 </div>
 
@@ -142,23 +153,23 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
                 <div className="space-y-4">
                     <div className={gridItemStyle}>
                         <span className={labelStyle}>Objetivo Principal</span>
-                        <p className={valueStyle}>{data.anamnesis.mainObjective || 'Não informado'}</p>
+                        <p className={valueStyle}>{anamnesis.mainObjective || 'Não informado'}</p>
                     </div>
                     <div className={gridItemStyle}>
                         <span className={labelStyle}>Rotina Diária</span>
-                        <p className={`${valueStyle} whitespace-pre-wrap`}>{data.anamnesis.routine || 'Não informado'}</p>
+                        <p className={`${valueStyle} whitespace-pre-wrap`}>{anamnesis.routine || 'Não informado'}</p>
                     </div>
                     <div className={gridItemStyle}>
                         <span className={labelStyle}>Histórico de Treino / Lesões</span>
-                        <p className={`${valueStyle} whitespace-pre-wrap`}>{data.anamnesis.trainingHistory || 'Não informado'}</p>
+                        <p className={`${valueStyle} whitespace-pre-wrap`}>{anamnesis.trainingHistory || 'Não informado'}</p>
                     </div>
                     <div className={gridItemStyle}>
                         <span className={labelStyle}>Preferências Alimentares / Alergias</span>
-                        <p className={`${valueStyle} whitespace-pre-wrap`}>{data.anamnesis.foodPreferences || 'Não informado'}</p>
+                        <p className={`${valueStyle} whitespace-pre-wrap`}>{anamnesis.foodPreferences || 'Não informado'}</p>
                     </div>
                     <div className={gridItemStyle}>
                         <span className={labelStyle}>Medicamentos / Ergogênicos</span>
-                        <p className={`${valueStyle} whitespace-pre-wrap`}>{data.anamnesis.ergogenics || 'Não informado'}</p>
+                        <p className={`${valueStyle} whitespace-pre-wrap`}>{anamnesis.ergogenics || 'Não informado'}</p>
                     </div>
                 </div>
 
@@ -168,10 +179,10 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
                 <h3 className={sectionTitle}>Medidas Corporais</h3>
                 
                 <div className="grid grid-cols-4 gap-4 mb-8">
-                    <div className={gridItemStyle}><span className={labelStyle}>Gordura (BF)</span><span className={valueStyle}>{data.physicalData.bodyFat || '-'} %</span></div>
-                    <div className={gridItemStyle}><span className={labelStyle}>Massa Muscular</span><span className={valueStyle}>{data.physicalData.muscleMass || '-'} kg</span></div>
-                    <div className={gridItemStyle}><span className={labelStyle}>G. Visceral</span><span className={valueStyle}>{data.physicalData.visceralFat || '-'}</span></div>
-                    <div className={gridItemStyle}><span className={labelStyle}>IMC</span><span className={valueStyle}>{data.physicalData.imc || '-'}</span></div>
+                    <div className={gridItemStyle}><span className={labelStyle}>Gordura (BF)</span><span className={valueStyle}>{data.physicalData?.bodyFat || '-'} %</span></div>
+                    <div className={gridItemStyle}><span className={labelStyle}>Massa Muscular</span><span className={valueStyle}>{data.physicalData?.muscleMass || '-'} kg</span></div>
+                    <div className={gridItemStyle}><span className={labelStyle}>G. Visceral</span><span className={valueStyle}>{data.physicalData?.visceralFat || '-'}</span></div>
+                    <div className={gridItemStyle}><span className={labelStyle}>IMC</span><span className={valueStyle}>{data.physicalData?.imc || '-'}</span></div>
                 </div>
 
                 <div className="border border-gray-200 rounded-lg overflow-hidden">
@@ -179,20 +190,20 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
                         Circunferências (cm)
                     </div>
                     <div className="grid grid-cols-4 divide-x divide-y divide-gray-200 text-center">
-                        <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Tórax</span><span className="font-bold text-gray-900">{measurements.thorax}</span></div>
-                        <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Cintura</span><span className="font-bold text-gray-900">{measurements.waist}</span></div>
-                        <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Abdômen</span><span className="font-bold text-gray-900">{measurements.abdomen}</span></div>
-                        <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Glúteo</span><span className="font-bold text-gray-900">{measurements.glutes}</span></div>
+                        <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Tórax</span><span className="font-bold text-gray-900">{measurements.thorax || '-'}</span></div>
+                        <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Cintura</span><span className="font-bold text-gray-900">{measurements.waist || '-'}</span></div>
+                        <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Abdômen</span><span className="font-bold text-gray-900">{measurements.abdomen || '-'}</span></div>
+                        <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Glúteo</span><span className="font-bold text-gray-900">{measurements.glutes || '-'}</span></div>
                         
-                        <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Braço Dir (R)</span><span className="font-bold text-gray-900">{measurements.rightArmRelaxed}</span></div>
-                        <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Braço Esq (R)</span><span className="font-bold text-gray-900">{measurements.leftArmRelaxed}</span></div>
-                        <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Braço Dir (C)</span><span className="font-bold text-gray-900">{measurements.rightArmContracted}</span></div>
-                        <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Braço Esq (C)</span><span className="font-bold text-gray-900">{measurements.leftArmContracted}</span></div>
+                        <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Braço Dir (R)</span><span className="font-bold text-gray-900">{measurements.rightArmRelaxed || '-'}</span></div>
+                        <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Braço Esq (R)</span><span className="font-bold text-gray-900">{measurements.leftArmRelaxed || '-'}</span></div>
+                        <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Braço Dir (C)</span><span className="font-bold text-gray-900">{measurements.rightArmContracted || '-'}</span></div>
+                        <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Braço Esq (C)</span><span className="font-bold text-gray-900">{measurements.leftArmContracted || '-'}</span></div>
                         
-                        <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Coxa Dir</span><span className="font-bold text-gray-900">{measurements.rightThigh}</span></div>
-                        <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Coxa Esq</span><span className="font-bold text-gray-900">{measurements.leftThigh}</span></div>
-                        <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Pantur. Dir</span><span className="font-bold text-gray-900">{measurements.rightCalf}</span></div>
-                        <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Pantur. Esq</span><span className="font-bold text-gray-900">{measurements.leftCalf}</span></div>
+                        <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Coxa Dir</span><span className="font-bold text-gray-900">{measurements.rightThigh || '-'}</span></div>
+                        <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Coxa Esq</span><span className="font-bold text-gray-900">{measurements.leftThigh || '-'}</span></div>
+                        <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Pantur. Dir</span><span className="font-bold text-gray-900">{measurements.rightCalf || '-'}</span></div>
+                        <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Pantur. Esq</span><span className="font-bold text-gray-900">{measurements.leftCalf || '-'}</span></div>
                     </div>
                 </div>
 

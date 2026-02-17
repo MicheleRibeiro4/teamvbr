@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { ProtocolData } from './types';
 import { EMPTY_DATA, LOGO_VBR_BLACK } from './constants';
@@ -158,11 +157,14 @@ const App: React.FC = () => {
     const newId = "vbr-" + Math.random().toString(36).substr(2, 9);
     setData({ ...EMPTY_DATA, id: newId, updatedAt: new Date().toISOString() });
     setActiveView('manage');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const loadStudent = (student: ProtocolData, view: ViewMode = 'manage') => {
+  const loadStudent = (student: ProtocolData, view: ViewMode = 'student-dashboard') => {
     setData(student);
     setActiveView(view);
+    // Garante que a tela role para o topo ao carregar um aluno
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const deleteStudent = async (id: string) => {
@@ -174,18 +176,6 @@ const App: React.FC = () => {
       } catch (err) {
         alert('Erro ao excluir.');
       }
-    }
-  };
-  
-  // Função específica para deletar histórico sem mudar de view
-  const handleDeleteHistory = async (id: string) => {
-    if (confirm('Tem certeza que deseja excluir este registro do histórico?')) {
-        try {
-            await db.deleteProtocol(id);
-            setSavedProtocols(prev => prev.filter(p => p.id !== id));
-        } catch (err) {
-            alert('Erro ao excluir histórico.');
-        }
     }
   };
 
@@ -227,6 +217,10 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
               </form>
             </div>
             
+            {/* 
+              REMOVIDO BOTÃO DE ALUNO DAQUI 
+              O aluno deve usar o link direto com hash #student ou #cadastro
+            */}
           </div>
 
           <p className="mt-8 text-white/20 text-[10px] uppercase font-bold tracking-widest">Team VBR System © 2026</p>
@@ -255,15 +249,15 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
          </div>
       )}
 
-      <header className="h-20 border-b border-white/10 px-4 md:px-8 flex items-center justify-between sticky top-0 bg-[#0a0a0a]/90 backdrop-blur-xl z-50 no-print">
+      <header className="h-24 border-b border-white/10 px-8 flex items-center justify-between sticky top-0 bg-[#0a0a0a]/90 backdrop-blur-xl z-50 no-print">
         <div className="flex items-center gap-6">
           <button onClick={() => setActiveView('home')} className="hover:scale-105 transition-transform">
-            <img src={LOGO_VBR_BLACK} alt="Team VBR" className="h-16 w-auto" />
+            <img src={LOGO_VBR_BLACK} alt="Team VBR" className="h-20 w-auto" />
           </button>
           
           {activeView !== 'home' && (
             <button 
-              onClick={() => setActiveView(data.id && activeView !== 'manage' ? 'manage' : 'home')}
+              onClick={() => setActiveView(data.id && activeView !== 'student-dashboard' ? 'student-dashboard' : 'home')}
               className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-[#d4af37] transition-colors"
             >
               <ChevronLeft size={16} /> Voltar
@@ -286,8 +280,7 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
         </div>
       </header>
 
-      {/* Margem superior e padding reduzidos aqui */}
-      <main className="max-w-[1600px] mx-auto p-2 md:p-6">
+      <main className="max-w-[1600px] mx-auto p-4 md:p-10">
         
         {cloudStatus === 'error' && (
           <div className="bg-red-600/10 border border-red-600/30 p-8 rounded-[2.5rem] mb-10">
@@ -314,30 +307,42 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
             protocols={savedProtocols} 
             onNew={handleNew} 
             onList={() => setActiveView('search')} 
-            onLoadStudent={(p) => loadStudent(p, 'manage')}
-            onUpdateStudent={(data) => handleSave(false, data)}
-            onDeleteStudent={(id) => deleteStudent(id)}
+            onLoadStudent={(p, view) => loadStudent(p, view)} 
+            onUpdateStudent={async (s) => await handleSave(true, s)}
+            onDeleteStudent={async (id) => {
+               await db.deleteProtocol(id);
+               setSavedProtocols(prev => prev.filter(p => p.id !== id));
+            }}
           />
         )}
 
         {activeView === 'search' && (
-          <StudentSearch protocols={savedProtocols} onLoad={(p) => loadStudent(p, 'manage')} onDelete={deleteStudent} />
+          <StudentSearch protocols={savedProtocols} onLoad={(p) => loadStudent(p, 'student-dashboard')} onDelete={deleteStudent} />
         )}
 
-        {/* Removed StudentDashboard from regular flow as requested, view 'manage' is now default editor */}
+        {activeView === 'student-dashboard' && (
+          <StudentDashboard data={data} setView={(v) => setActiveView(v as ViewMode)} />
+        )}
 
         {activeView === 'manage' && (
           <UnifiedEditor 
             data={data} 
             onChange={setData} 
-            onBack={() => setActiveView('home')}
-            // Props para histórico funcionar dentro do editor
-            history={savedProtocols.filter(p => p.clientName === data.clientName)}
-            onUpdateData={(newData, createHistory, forceNewId) => handleSave(false, newData, createHistory || forceNewId)}
-            onSelectHistory={(hist) => setData(hist)}
-            onDeleteHistory={handleDeleteHistory}
+            onBack={() => setActiveView('student-dashboard')} 
           />
         )}
+
+        {activeView === 'evolution' && (
+          <EvolutionTracker 
+              currentProtocol={data} 
+              history={savedProtocols.filter(p => p.clientName === data.clientName)} 
+              onNotesChange={(n) => setData({...data, privateNotes: n})} 
+              onUpdateData={(newData, createHistory) => handleSave(false, newData, createHistory)}
+              onSelectHistory={(hist) => setData(hist)}
+              onOpenEditor={() => setActiveView('manage')}
+          />
+        )}
+
       </main>
     </div>
   );

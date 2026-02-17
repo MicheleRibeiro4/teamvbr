@@ -830,10 +830,11 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                 <div className="flex gap-2 w-full md:w-auto">
                     <button 
                         onClick={handleClearNutrition}
-                        className="px-4 py-4 bg-white/5 border border-white/10 hover:bg-red-500/20 hover:text-red-500 hover:border-red-500/30 text-white/40 rounded-xl transition-all flex items-center justify-center"
+                        className="px-6 py-4 bg-white/5 border border-white/10 hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/30 text-white/40 rounded-xl transition-all flex items-center justify-center gap-2 font-black uppercase text-[10px] tracking-widest group"
                         title="Limpar Dados Gerados"
                     >
-                        <Eraser size={18} />
+                        <Eraser size={16} className="group-hover:animate-pulse" />
+                        Limpar IA
                     </button>
                     <button 
                         onClick={handleGenerateAI} 
