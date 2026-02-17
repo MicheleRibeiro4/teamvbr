@@ -202,6 +202,12 @@ const EvolutionTracker: React.FC<Props> = ({
             OBJETIVO ATUAL: ${editTitle}
             PESO ATUAL: ${editData.weight}kg
             
+            INSTRUÇÕES CRÍTICAS:
+            1. NÃO deixe os campos de alimentos vazios. Preencha "details" com alimentos específicos (ex: "150g de Arroz Branco + 100g de Frango").
+            2. NÃO deixe os campos de exercícios vazios. Preencha "exercises" com nome e séries (ex: "Supino Reto 4x10").
+            3. Gere pelo menos 4 a 6 refeições.
+            4. Gere pelo menos 3 a 5 dias de treino (ABC, ABCD, etc).
+            
             RETORNE O JSON COM ESTA ESTRUTURA EXATA (SEM MARKDOWN):
             {
               "nutritionalStrategy": "Texto explicativo da estratégia...",
@@ -213,7 +219,7 @@ const EvolutionTracker: React.FC<Props> = ({
                 "fats": { "value": "60", "ratio": "0.8" } 
               },
               "meals": [
-                { "time": "08:00", "name": "Café da Manhã", "details": "3 ovos + 1 pão..." },
+                { "time": "08:00", "name": "Café da Manhã", "details": "3 ovos inteiros + 1 pão francês + 10g manteiga" },
                 ...
               ],
               "supplements": [

@@ -116,9 +116,10 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
   };
 
   const handleClearNutrition = () => {
-    if(confirm("Tem certeza? Isso apagará a Estratégia, Metas, Macros, Refeições e Suplementos.")) {
+    // ATUALIZADO: Preserva a nutritionalStrategy (linha de raciocínio)
+    if(confirm("Tem certeza? Isso apagará as Metas, Macros, Refeições e Suplementos, mas manterá sua Estratégia.")) {
         const newData = JSON.parse(JSON.stringify(data));
-        newData.nutritionalStrategy = "";
+        // newData.nutritionalStrategy = ""; // REMOVIDO PARA PRESERVAR
         newData.kcalGoal = "";
         newData.kcalSubtext = "";
         newData.macros = JSON.parse(JSON.stringify(EMPTY_DATA.macros));
@@ -153,8 +154,14 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
         DADOS DO ALUNO: Nome: ${data.clientName}, Objetivo: ${data.protocolTitle}, Gênero: ${data.physicalData.gender}, Idade: ${data.physicalData.age}, Peso: ${data.physicalData.weight}kg, Altura: ${data.physicalData.height}m, BF: ${data.physicalData.bodyFat}%.
         ANAMNESE: Rotina: ${data.anamnesis?.routine || ''}, Histórico: ${data.anamnesis?.trainingHistory || ''}, Ergogênicos: ${data.anamnesis?.ergogenics || ''}, Preferências: ${data.anamnesis?.foodPreferences || ''}.
         DIRETRIZES: Estratégia: ${data.nutritionalStrategy || "Auto"}, Calorias: ${data.kcalGoal || "Auto"}, Frequência: ${data.trainingFrequency || "Sugerir"}.
-        INSTRUÇÕES: Se diretrizes preenchidas, use-as. Gere treinos intensos. Retorne APENAS JSON.
-        Estrutura JSON: { "nutritionalStrategy": "...", "kcalGoal": "...", "kcalSubtext": "...", "macros": { "protein": { "value": "...", "ratio": "..." }, "carbs": { "value": "...", "ratio": "..." }, "fats": { "value": "...", "ratio": "..." } }, "meals": [...], "supplements": [...], "trainingFrequency": "...", "trainingDays": [...], "generalObservations": "..." }
+        
+        INSTRUÇÕES OBRIGATÓRIAS: 
+        1. Gere treinos intensos e completos. 
+        2. GERE A DIETA COMPLETA: Preencha o campo "details" de CADA refeição com os alimentos específicos e quantidades (ex: "150g de Frango Grelhado + 100g Arroz"). NÃO DEIXE O CAMPO "details" VAZIO.
+        3. GERE O TREINO COMPLETO: Preencha o campo "exercises" com exercícios reais, séries e repetições.
+        
+        Retorne APENAS JSON.
+        Estrutura JSON: { "nutritionalStrategy": "...", "kcalGoal": "...", "kcalSubtext": "...", "macros": { "protein": { "value": "...", "ratio": "..." }, "carbs": { "value": "...", "ratio": "..." }, "fats": { "value": "...", "ratio": "..." } }, "meals": [{ "time": "08:00", "name": "Café", "details": "2 ovos, 1 pão..." }], "supplements": [...], "trainingFrequency": "...", "trainingDays": [{ "title": "A", "focus": "Peito", "exercises": [{ "name": "Supino", "sets": "4x12" }] }], "generalObservations": "..." }
       `;
 
       const response = await ai.models.generateContent({
