@@ -24,7 +24,16 @@ type ViewMode = 'home' | 'search' | 'manage' | 'settings' | 'student-dashboard' 
 
 const App: React.FC = () => {
   const [data, setData] = useState<ProtocolData>(EMPTY_DATA);
-  const [activeView, setActiveView] = useState<ViewMode>('home');
+  
+  // Inicializa o activeView verificando a URL imediatamente
+  const [activeView, setActiveView] = useState<ViewMode>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('mode') === 'cadastro') return 'student-entry';
+    }
+    return 'home';
+  });
+
   const [savedProtocols, setSavedProtocols] = useState<ProtocolData[]>([]);
   const [isSyncing, setIsSyncing] = useState(false);
   const [cloudStatus, setCloudStatus] = useState<'online' | 'error'>('online');
@@ -52,19 +61,17 @@ const App: React.FC = () => {
 
   // Check auth, URL params and load data
   useEffect(() => {
-    // 1. Verifica se é um link direto de cadastro (?mode=cadastro)
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('mode') === 'cadastro') {
-      setActiveView('student-entry');
-    }
-
-    // 2. Verifica autenticação do admin
+    // 1. Verifica autenticação do admin (Apenas se não estiver no modo cadastro)
     const auth = localStorage.getItem('vbr_auth');
     if (auth === 'true') setIsAuthenticated(true);
     
-    // 3. Carrega dados
-    loadData();
-  }, []);
+    // 2. Carrega dados
+    // Só carrega dados se estiver autenticado OU se quiser permitir carregar algo público (mas aqui protegemos)
+    // Se for modo cadastro, não precisa carregar a lista de protocolos inteira inicialmente
+    if (activeView !== 'student-entry') {
+        loadData();
+    }
+  }, [activeView]);
 
   // AUTO-SAVE LOGIC
   useEffect(() => {
