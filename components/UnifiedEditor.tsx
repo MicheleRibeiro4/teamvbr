@@ -37,7 +37,7 @@ const UnifiedEditor: React.FC<Props> = ({ data, onChange, onBack }) => {
             setViewMode('anamnesis');
             break;
         case 'medidas':
-            // Medidas geralmente compõem o relatório de Anamnese (Avaliação Física)
+            // Medidas compõem a avaliação física/anamnese
             setViewMode('anamnesis');
             break;
         case 'nutricao':
@@ -139,17 +139,18 @@ const UnifiedEditor: React.FC<Props> = ({ data, onChange, onBack }) => {
            <div className="w-full flex justify-center bg-white/5 p-4 md:p-10 rounded-[2rem] md:rounded-[4rem] border-2 border-dashed border-white/10 relative overflow-hidden min-h-[500px] md:min-h-[900px]">
               <div className="transform scale-[0.45] md:scale-[0.7] xl:scale-[0.75] origin-top">
                 
-                <div style={{ display: viewMode === 'protocol' ? 'block' : 'none' }}>
+                {/* Renderização Condicional Estrita para evitar sobreposição */}
+                {viewMode === 'protocol' && (
                   <ProtocolPreview ref={protocolRef} data={data} hideFloatingButton={true} />
-                </div>
+                )}
                 
-                <div style={{ display: viewMode === 'contract' ? 'block' : 'none' }}>
+                {viewMode === 'contract' && (
                   <ContractPreview ref={contractRef} data={data} hideFloatingButton={true} />
-                </div>
+                )}
 
-                <div style={{ display: viewMode === 'anamnesis' ? 'block' : 'none' }}>
+                {viewMode === 'anamnesis' && (
                   <AnamnesisPreview ref={anamnesisRef} data={data} hideFloatingButton={true} />
-                </div>
+                )}
 
               </div>
            </div>

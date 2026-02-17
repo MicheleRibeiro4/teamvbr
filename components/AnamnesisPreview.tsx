@@ -30,7 +30,7 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
         scale: 2, 
         useCORS: true, 
         letterRendering: true, 
-        backgroundColor: '#ffffff',
+        backgroundColor: '#111111', // Fundo preto no PDF
         scrollY: 0,
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
@@ -52,20 +52,21 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
     download: handleDownloadPDF
   }));
 
+  // Estilo Dark Mode para o PDF
   const pageStyle: React.CSSProperties = { 
     width: '210mm', 
     minHeight: '296mm', 
     padding: '15mm', 
-    backgroundColor: 'white', 
-    color: 'black', 
+    backgroundColor: '#111111', 
+    color: 'white', 
     position: 'relative', 
     boxSizing: 'border-box', 
     display: 'block',
   };
   
   const sectionTitle = "text-lg font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-1 mb-4 uppercase mt-6";
-  const labelStyle = "text-xs font-bold text-gray-500 uppercase block mb-1";
-  const valueStyle = "text-sm font-medium text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100 block";
+  const labelStyle = "text-xs font-bold text-white/40 uppercase block mb-1";
+  const valueStyle = "text-sm font-medium text-white bg-[#1a1a1a] p-3 rounded-lg border border-white/10 block";
   const gridItemStyle = "break-inside-avoid";
 
   const measurements = data.physicalData.measurements || {
@@ -86,29 +87,29 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
         </div>
       )}
 
-      <div ref={pdfRef} className="bg-white shadow-inner flex flex-col items-center print:bg-transparent print:m-0 print:p-0">
+      <div ref={pdfRef} className="bg-[#111] shadow-inner flex flex-col items-center print:bg-transparent print:m-0 print:p-0">
         
         {/* PÁGINA ÚNICA (Ou múltipla se estourar) */}
         <div style={pageStyle}>
             {/* Header */}
-            <div className="flex justify-between items-center mb-8 border-b border-gray-200 pb-6">
+            <div className="flex justify-between items-center mb-8 border-b border-white/10 pb-6">
                 <div>
-                    <h1 className="text-3xl font-black text-gray-900 uppercase tracking-tighter">Ficha de Anamnese</h1>
-                    <p className="text-sm text-gray-500 font-bold uppercase tracking-widest mt-1">Team VBR</p>
+                    <h1 className="text-3xl font-black text-white uppercase tracking-tighter">Ficha de Anamnese</h1>
+                    <p className="text-sm text-white/40 font-bold uppercase tracking-widest mt-1">Team VBR</p>
                 </div>
-                {/* Logo Original sem filtro */}
-                <img src={LOGO_VBR_BLACK} alt="Team VBR" className="w-24 h-auto" />
+                {/* Logo Invertida para Branco */}
+                <img src={LOGO_VBR_BLACK} alt="Team VBR" className="w-24 h-auto filter invert brightness-200" />
             </div>
 
             {/* Identificação */}
-            <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="bg-[#1a1a1a] p-4 rounded-xl border border-white/10 mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <span className="text-xs font-bold text-gray-400 uppercase">Aluno</span>
-                    <h2 className="text-2xl font-black text-gray-900 uppercase">{data.clientName}</h2>
+                    <span className="text-xs font-bold text-white/40 uppercase">Aluno</span>
+                    <h2 className="text-2xl font-black text-white uppercase">{data.clientName}</h2>
                 </div>
                 <div className="text-right">
-                     <span className="text-xs font-bold text-gray-400 uppercase">Data do Cadastro</span>
-                     <p className="text-sm font-bold text-gray-900">{new Date(data.updatedAt).toLocaleDateString('pt-BR')}</p>
+                     <span className="text-xs font-bold text-white/40 uppercase">Data do Cadastro</span>
+                     <p className="text-sm font-bold text-white">{new Date(data.updatedAt).toLocaleDateString('pt-BR')}</p>
                 </div>
             </div>
 
@@ -168,30 +169,30 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
                 <div className={gridItemStyle}><span className={labelStyle}>IMC</span><span className={valueStyle}>{data.physicalData.imc || '-'}</span></div>
             </div>
 
-            <div className="border border-gray-200 rounded-lg overflow-hidden">
-                <div className="bg-gray-100 p-2 text-center text-xs font-black uppercase tracking-widest text-gray-500 border-b border-gray-200">
+            <div className="border border-white/10 rounded-lg overflow-hidden">
+                <div className="bg-[#1a1a1a] p-2 text-center text-xs font-black uppercase tracking-widest text-white/40 border-b border-white/10">
                     Circunferências (cm)
                 </div>
-                <div className="grid grid-cols-4 divide-x divide-y divide-gray-200 text-center">
-                     <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Tórax</span><span className="font-bold text-gray-900">{measurements.thorax}</span></div>
-                     <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Cintura</span><span className="font-bold text-gray-900">{measurements.waist}</span></div>
-                     <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Abdômen</span><span className="font-bold text-gray-900">{measurements.abdomen}</span></div>
-                     <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Glúteo</span><span className="font-bold text-gray-900">{measurements.glutes}</span></div>
+                <div className="grid grid-cols-4 divide-x divide-y divide-white/10 text-center">
+                     <div className="p-3"><span className="block text-[10px] text-white/40 uppercase">Tórax</span><span className="font-bold text-white">{measurements.thorax}</span></div>
+                     <div className="p-3"><span className="block text-[10px] text-white/40 uppercase">Cintura</span><span className="font-bold text-white">{measurements.waist}</span></div>
+                     <div className="p-3"><span className="block text-[10px] text-white/40 uppercase">Abdômen</span><span className="font-bold text-white">{measurements.abdomen}</span></div>
+                     <div className="p-3"><span className="block text-[10px] text-white/40 uppercase">Glúteo</span><span className="font-bold text-white">{measurements.glutes}</span></div>
                      
-                     <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Braço Dir (R)</span><span className="font-bold text-gray-900">{measurements.rightArmRelaxed}</span></div>
-                     <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Braço Esq (R)</span><span className="font-bold text-gray-900">{measurements.leftArmRelaxed}</span></div>
-                     <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Braço Dir (C)</span><span className="font-bold text-gray-900">{measurements.rightArmContracted}</span></div>
-                     <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Braço Esq (C)</span><span className="font-bold text-gray-900">{measurements.leftArmContracted}</span></div>
+                     <div className="p-3"><span className="block text-[10px] text-white/40 uppercase">Braço Dir (R)</span><span className="font-bold text-white">{measurements.rightArmRelaxed}</span></div>
+                     <div className="p-3"><span className="block text-[10px] text-white/40 uppercase">Braço Esq (R)</span><span className="font-bold text-white">{measurements.leftArmRelaxed}</span></div>
+                     <div className="p-3"><span className="block text-[10px] text-white/40 uppercase">Braço Dir (C)</span><span className="font-bold text-white">{measurements.rightArmContracted}</span></div>
+                     <div className="p-3"><span className="block text-[10px] text-white/40 uppercase">Braço Esq (C)</span><span className="font-bold text-white">{measurements.leftArmContracted}</span></div>
                      
-                     <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Coxa Dir</span><span className="font-bold text-gray-900">{measurements.rightThigh}</span></div>
-                     <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Coxa Esq</span><span className="font-bold text-gray-900">{measurements.leftThigh}</span></div>
-                     <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Pantur. Dir</span><span className="font-bold text-gray-900">{measurements.rightCalf}</span></div>
-                     <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Pantur. Esq</span><span className="font-bold text-gray-900">{measurements.leftCalf}</span></div>
+                     <div className="p-3"><span className="block text-[10px] text-white/40 uppercase">Coxa Dir</span><span className="font-bold text-white">{measurements.rightThigh}</span></div>
+                     <div className="p-3"><span className="block text-[10px] text-white/40 uppercase">Coxa Esq</span><span className="font-bold text-white">{measurements.leftThigh}</span></div>
+                     <div className="p-3"><span className="block text-[10px] text-white/40 uppercase">Pantur. Dir</span><span className="font-bold text-white">{measurements.rightCalf}</span></div>
+                     <div className="p-3"><span className="block text-[10px] text-white/40 uppercase">Pantur. Esq</span><span className="font-bold text-white">{measurements.leftCalf}</span></div>
                 </div>
             </div>
 
-            <div className="mt-12 text-center border-t border-gray-100 pt-8">
-                 <p className="text-[10px] font-black uppercase text-gray-300 tracking-[0.3em]">Team VBR System © 2026</p>
+            <div className="mt-12 text-center border-t border-white/5 pt-8">
+                 <p className="text-[10px] font-black uppercase text-white/20 tracking-[0.3em]">Team VBR System © 2026</p>
             </div>
         </div>
       </div>
