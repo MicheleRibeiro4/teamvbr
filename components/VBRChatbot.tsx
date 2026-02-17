@@ -3,6 +3,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, X, Send, Loader2, Bot, User, Maximize2, Minimize2 } from 'lucide-react';
 import OpenAI from "openai";
 
+// Chave fornecida explicitamente para fallback
+const API_KEY = process.env.API_KEY || "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";
+
 const VBRChatbot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -42,7 +45,7 @@ const VBRChatbot: React.FC = () => {
 
     try {
       const openai = new OpenAI({
-        apiKey: process.env.API_KEY,
+        apiKey: API_KEY,
         dangerouslyAllowBrowser: true
       });
       
