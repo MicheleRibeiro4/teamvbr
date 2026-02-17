@@ -25,9 +25,6 @@ import {
   BookOpen
 } from 'lucide-react';
 import { LOGO_VBR_BLACK } from '../constants';
-import ProtocolPreview from './ProtocolPreview';
-import ContractPreview from './ContractPreview';
-import AnamnesisPreview from './AnamnesisPreview';
 
 const LOGO_VBR_GOLD = "https://xqwzmvzfemjkvaquxedz.supabase.co/storage/v1/object/public/LOGO/DOURADO.png";
 
@@ -316,36 +313,9 @@ const EvolutionTracker: React.FC<Props> = ({
                   {mode === 'view' ? (
                       <>
                         <div className="flex gap-2 mr-2 pr-2 border-r border-white/5">
-                            <button onClick={() => setShowReportModal(true)} className={docBtnClass} title="Relatório">
+                            <button onClick={() => setShowReportModal(true)} className={docBtnClass} title="Relatório de Evolução">
                                 <TrendingUp size={16}/> <span className="text-[8px] font-black uppercase">Relatório</span>
                             </button>
-                            
-                            <ProtocolPreview 
-                                data={currentProtocol} 
-                                customTrigger={
-                                    <button className={docBtnClass} title="Protocolo">
-                                        <Dumbbell size={16}/> <span className="text-[8px] font-black uppercase">Protocolo</span>
-                                    </button>
-                                } 
-                            />
-
-                            <ContractPreview 
-                                data={currentProtocol} 
-                                customTrigger={
-                                    <button className={docBtnClass} title="Contrato">
-                                        <ShieldCheck size={16}/> <span className="text-[8px] font-black uppercase">Contrato</span>
-                                    </button>
-                                }
-                            />
-
-                            <AnamnesisPreview 
-                                data={currentProtocol} 
-                                customTrigger={
-                                    <button className={docBtnClass} title="Anamnese">
-                                        <BookOpen size={16}/> <span className="text-[8px] font-black uppercase">Anamnese</span>
-                                    </button>
-                                }
-                            />
                         </div>
 
                         <button onClick={handleStartNewProtocol} className="px-5 py-3 rounded-xl bg-blue-500/10 hover:bg-blue-500 hover:text-white text-blue-400 border border-blue-500/30 font-black uppercase text-[10px] tracking-widest transition-all flex items-center gap-2 h-full">

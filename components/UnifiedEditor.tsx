@@ -2,9 +2,6 @@
 import React, { useState, useRef } from 'react';
 import { ProtocolData } from '../types';
 import ProtocolForm from './ProtocolForm';
-import ProtocolPreview from './ProtocolPreview';
-import ContractPreview from './ContractPreview';
-import AnamnesisPreview from './AnamnesisPreview';
 import EvolutionTracker from './EvolutionTracker';
 import { ChevronLeft, Settings2, FileText, Activity, Dumbbell, TrendingUp } from 'lucide-react';
 
@@ -18,8 +15,6 @@ interface Props {
   onDeleteHistory?: (id: string) => void;
 }
 
-type PreviewMode = 'protocol' | 'contract' | 'anamnesis';
-
 const UnifiedEditor: React.FC<Props> = ({ 
   data, 
   onChange, 
@@ -30,31 +25,6 @@ const UnifiedEditor: React.FC<Props> = ({
   onDeleteHistory = () => {}
 }) => {
   const [activeTab, setActiveTab] = useState<'identificacao' | 'anamnese' | 'medidas' | 'nutricao' | 'treino' | 'evolucao'>('identificacao');
-  const [viewMode, setViewMode] = useState<PreviewMode>('contract');
-
-  // Sincroniza a visualização com a aba do formulário
-  React.useEffect(() => {
-    switch (activeTab) {
-        case 'identificacao':
-            setViewMode('contract');
-            break;
-        case 'anamnese':
-            setViewMode('anamnesis');
-            break;
-        case 'medidas':
-            setViewMode('anamnesis');
-            break;
-        case 'nutricao':
-        case 'treino':
-            setViewMode('protocol');
-            break;
-        case 'evolucao':
-            setViewMode('protocol');
-            break;
-        default:
-            setViewMode('protocol');
-    }
-  }, [activeTab]);
 
   const handleViewProtocolFromHistory = () => {
       setActiveTab('treino'); 
@@ -77,8 +47,8 @@ const UnifiedEditor: React.FC<Props> = ({
       </div>
 
       <div className="flex flex-col xl:flex-row gap-6 items-start w-full">
-        {/* LADO DO FORMULÁRIO ÚNICO */}
-        <div className={`no-print ${activeTab === 'evolucao' ? 'w-full' : 'w-full xl:w-2/5'}`}>
+        {/* FORMULÁRIO ÚNICO - FULL WIDTH */}
+        <div className="w-full no-print">
           <div className="bg-white/5 p-4 rounded-[2rem] border border-white/10 shadow-2xl w-full">
             
             <div className="flex flex-nowrap md:justify-center overflow-x-auto pb-2 scrollbar-hide w-full mb-6 gap-2">
@@ -123,23 +93,6 @@ const UnifiedEditor: React.FC<Props> = ({
             )}
           </div>
         </div>
-
-        {/* LADO DO PREVIEW - AGORA GERENCIADO PELOS PRÓPRIOS COMPONENTES */}
-        {activeTab !== 'evolucao' && (
-            <div className="w-full xl:w-3/5 flex flex-col items-center gap-4">
-                {viewMode === 'protocol' && (
-                    <ProtocolPreview data={data} hideFloatingButton={true} />
-                )}
-                
-                {viewMode === 'contract' && (
-                    <ContractPreview data={data} hideFloatingButton={true} />
-                )}
-
-                {viewMode === 'anamnesis' && (
-                    <AnamnesisPreview data={data} hideFloatingButton={true} />
-                )}
-            </div>
-        )}
       </div>
     </div>
   );
