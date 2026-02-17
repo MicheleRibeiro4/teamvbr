@@ -92,15 +92,17 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
   };
 
   const handleWeightMask = (path: string, value: string) => {
-    let v = value.replace(/\D/g, '');
-    if (v.length > 5) v = v.substring(0, 5);
-    if (v === '') {
-      handleChange(path, '');
-      return;
+    let v = value.replace(/\./g, ',');
+    v = v.replace(/[^0-9,]/g, '');
+    const parts = v.split(',');
+    if (parts.length > 2) {
+       v = parts[0] + ',' + parts.slice(1).join('');
     }
-    const numberValue = parseInt(v) / 100;
-    const formatted = numberValue.toFixed(2).replace('.', ',');
-    handleChange(path, formatted);
+    if (parts[1] && parts[1].length > 1) {
+       // Permite até 1 casa decimal por enquanto
+    }
+    if (v.length > 6) v = v.substring(0, 6);
+    handleChange(path, v);
   };
 
   const updateMealTime = (index: number, val: string) => {
@@ -311,7 +313,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
 
   // Botão customizado para os previews
   const ActionButton = ({ icon: Icon, label }: { icon: any, label: string }) => (
-    <button className="bg-white/5 hover:bg-white/10 text-white border border-white/5 px-4 py-2 rounded-xl flex items-center gap-2 transition-all">
+    <button className="bg-white/5 hover:bg-white/10 text-white border border-white/5 px-4 py-2 rounded-xl flex items-center gap-2 transition-all shadow-sm">
         <Icon size={16} className="text-[#d4af37]" />
         <span className="text-[10px] font-black uppercase tracking-widest">{label}</span>
     </button>
@@ -444,16 +446,32 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
       {activeTab === 'medidas' && (
         <div className="animate-in fade-in slide-in-from-right-4 duration-300 space-y-8">
           <section>
-            <div className={sectionHeaderClass + " justify-between"}>
-              <div className="flex items-center gap-2">
-                  <Activity className="text-[#d4af37]" size={20} />
-                  <h2 className="text-xl font-black text-white uppercase tracking-tighter">Bioimpedância & Composição</h2>
-              </div>
-              {/* Medidas também faz parte do protocolo completo */}
-              <ProtocolPreview 
-                  data={data} 
-                  customTrigger={<ActionButton icon={Dumbbell} label="Protocolo PDF" />} 
-              />
+            <div className="bg-[#d4af37]/10 p-6 rounded-[2rem] border border-[#d4af37]/20 flex flex-col md:flex-row justify-between items-center gap-6 mb-8 relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-10 opacity-10 pointer-events-none">
+                    <Activity size={120} />
+                </div>
+                
+                <div className="flex items-center gap-4 relative z-10">
+                    <div className="w-16 h-16 bg-[#d4af37] rounded-2xl flex items-center justify-center text-black shadow-lg">
+                        <Activity size={32} strokeWidth={2.5} />
+                    </div>
+                    <div>
+                        <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Bioimpedância & Composição</h2>
+                        <p className="text-xs font-bold text-[#d4af37] uppercase tracking-widest mt-1">Dados Físicos do Aluno</p>
+                    </div>
+                </div>
+
+                <div className="relative z-10">
+                    <ProtocolPreview 
+                        data={data} 
+                        customTrigger={
+                            <button className="bg-[#d4af37] hover:bg-[#b5952f] text-black px-6 py-3 rounded-xl flex items-center gap-2 transition-all shadow-lg hover:scale-105 active:scale-95">
+                                <FileText size={18} />
+                                <span className="text-xs font-black uppercase tracking-widest">Protocolo PDF</span>
+                            </button>
+                        } 
+                    />
+                </div>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">

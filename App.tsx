@@ -161,7 +161,7 @@ const App: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const loadStudent = (student: ProtocolData, view: ViewMode = 'student-dashboard') => {
+  const loadStudent = (student: ProtocolData, view: ViewMode = 'manage') => {
     setData(student);
     setActiveView(view);
     // Garante que a tela role para o topo ao carregar um aluno
@@ -253,7 +253,7 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
           
           {activeView !== 'home' && (
             <button 
-              onClick={() => setActiveView(data.id && activeView !== 'student-dashboard' ? 'student-dashboard' : 'home')}
+              onClick={() => setActiveView(data.id && activeView !== 'manage' ? 'manage' : 'home')}
               className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-[#d4af37] transition-colors"
             >
               <ChevronLeft size={16} /> Voltar
@@ -313,7 +313,7 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
         )}
 
         {activeView === 'search' && (
-          <StudentSearch protocols={savedProtocols} onLoad={(p) => loadStudent(p, 'student-dashboard')} onDelete={deleteStudent} />
+          <StudentSearch protocols={savedProtocols} onLoad={(p) => loadStudent(p, 'manage')} onDelete={deleteStudent} />
         )}
 
         {activeView === 'student-dashboard' && (
@@ -324,7 +324,14 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
           <UnifiedEditor 
             data={data} 
             onChange={setData} 
-            onBack={() => setActiveView('student-dashboard')} 
+            onBack={() => setActiveView('home')} 
+            history={savedProtocols.filter(p => p.clientName === data.clientName)}
+            onUpdateData={(newData, createHistory, forceNewId) => handleSave(false, newData, createHistory || forceNewId)}
+            onSelectHistory={(hist) => setData(hist)}
+            onDeleteHistory={async (id) => {
+               await db.deleteProtocol(id);
+               setSavedProtocols(prev => prev.filter(p => p.id !== id));
+            }}
           />
         )}
 

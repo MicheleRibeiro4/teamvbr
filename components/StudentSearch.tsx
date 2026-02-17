@@ -120,13 +120,14 @@ const StudentSearch: React.FC<Props> = ({ protocols, onLoad, onDelete }) => {
                           <FileText size={18} />
                           <span className="text-[7px] font-black uppercase">Gerenciar</span>
                       </button>
+                      {/* Botão Painel agora também leva para o Manage (Editor), conforme solicitado */}
                       <button 
-                          onClick={() => onLoad(p, 'student-dashboard')}
+                          onClick={() => onLoad(p, 'manage')} 
                           className={`p-3 rounded-xl transition-all flex flex-col items-center gap-1 min-w-[65px] border ${buttonClass}`}
-                          title="Painel do Aluno"
+                          title="Painel do Aluno (Editor)"
                       >
                           <ChevronRight size={18} />
-                          <span className="text-[7px] font-black uppercase">Painel</span>
+                          <span className="text-[7px] font-black uppercase">Editor</span>
                       </button>
                     </div>
 

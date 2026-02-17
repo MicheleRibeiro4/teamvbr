@@ -38,10 +38,13 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
         updatedAt: new Date().toISOString(),
         contract: {
             ...EMPTY_DATA.contract,
-            status: 'Aguardando'
+            status: 'Aguardando',
+            // Inicializa campos de endereço vazios explicitamente
+            street: "", number: "", neighborhood: "", city: "", state: ""
         },
         physicalData: {
             ...EMPTY_DATA.physicalData,
+            weight: "", height: "", // Garante string vazia
             measurements: {
                 ...EMPTY_DATA.physicalData.measurements
             }
@@ -79,6 +82,20 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
     handleChange('contract.phone', v);
   };
 
+  // Tratamento específico para Peso e Altura permitindo digitação livre mas forçando vírgula para visualização
+  const handleDecimalInput = (path: string, val: string) => {
+      // Substitui ponto por vírgula automaticamente
+      let v = val.replace('.', ',');
+      // Remove tudo que não for número ou vírgula
+      v = v.replace(/[^0-9,]/g, '');
+      // Garante apenas uma vírgula
+      const parts = v.split(',');
+      if (parts.length > 2) {
+          v = parts[0] + ',' + parts.slice(1).join('');
+      }
+      handleChange(path, v);
+  };
+
   const handleSave = async () => {
     if (!data.clientName || !data.contract.phone) {
         alert("⚠️ Nome e Celular são obrigatórios.");
@@ -102,8 +119,6 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
   };
 
   // Styles
-  // Removido focus:ring-2 que cria o anel amarelo. Usando focus:border.
-  // Adicionado estilo inline para evitar fundo amarelo de autofill
   const autofillStyle = {
       WebkitBoxShadow: "0 0 0 30px #1a1a1a inset",
       WebkitTextFillColor: "white",
@@ -382,10 +397,10 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
                                 className={inputNumberClass} 
                                 style={autofillStyle}
                                 value={data.physicalData.weight} 
-                                onChange={(e) => handleChange('physicalData.weight', e.target.value)} 
+                                onChange={(e) => handleDecimalInput('physicalData.weight', e.target.value)} 
                                 type="text"
                                 inputMode="decimal"
-                                placeholder="00.0" 
+                                placeholder="00,0" 
                             />
                         </div>
                         <div>
@@ -394,7 +409,7 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
                                 className={inputClass} 
                                 style={autofillStyle}
                                 value={data.physicalData.height} 
-                                onChange={(e) => handleChange('physicalData.height', e.target.value)} 
+                                onChange={(e) => handleDecimalInput('physicalData.height', e.target.value)} 
                                 placeholder="1,75" 
                                 inputMode="decimal"
                             />
@@ -405,7 +420,7 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
                                 className={inputNumberClass} 
                                 style={autofillStyle}
                                 value={data.physicalData.bodyFat} 
-                                onChange={(e) => handleChange('physicalData.bodyFat', e.target.value)} 
+                                onChange={(e) => handleDecimalInput('physicalData.bodyFat', e.target.value)} 
                                 type="text"
                                 inputMode="decimal"
                                 placeholder="%" 
@@ -418,7 +433,7 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
                                 className={inputNumberClass} 
                                 style={autofillStyle}
                                 value={data.physicalData.muscleMass} 
-                                onChange={(e) => handleChange('physicalData.muscleMass', e.target.value)} 
+                                onChange={(e) => handleDecimalInput('physicalData.muscleMass', e.target.value)} 
                                 type="text"
                                 inputMode="decimal"
                                 placeholder="kg" 
@@ -430,7 +445,7 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
                                 className={inputNumberClass} 
                                 style={autofillStyle}
                                 value={data.physicalData.visceralFat} 
-                                onChange={(e) => handleChange('physicalData.visceralFat', e.target.value)} 
+                                onChange={(e) => handleDecimalInput('physicalData.visceralFat', e.target.value)} 
                                 type="text"
                                 inputMode="decimal"
                                 placeholder="Nível" 
