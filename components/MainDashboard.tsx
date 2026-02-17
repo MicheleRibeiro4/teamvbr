@@ -446,7 +446,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                   <div 
                     key={student.id} 
                     className={`p-3 rounded-xl border flex items-center justify-between group transition-all cursor-pointer ${containerStyle}`}
-                    onClick={() => onLoadStudent(student, 'evolution')}
+                    onClick={() => onLoadStudent(student, 'manage')}
                   >
                     <div className="flex items-center gap-3">
                       <div className={`w-10 h-10 rounded-lg flex items-center justify-center border text-[10px] font-black shrink-0 ${circleStyle}`}>
