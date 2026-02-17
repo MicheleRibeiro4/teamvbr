@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { ProtocolData, Meal, Supplement, TrainingDay, Exercise } from '../types';
 import { Activity, User, ShieldCheck, ChevronLeft, MapPin, Dumbbell, Utensils, Pill, Plus, Trash2, FileText, AlertCircle, Sparkles, Loader2, Ruler, DollarSign, Droplets, BookOpen } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
+import OpenAI from "openai";
 
 interface Props {
   data: ProtocolData;
@@ -138,14 +138,14 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
 
     setIsGenerating(true);
     try {
-      const apiKey = "AIzaSyCm_GznTM26hn_353yq_F0CsCOxDRNAZM8";
+      const apiKey = "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";
       
-      const ai = new GoogleGenAI({ apiKey });
+      const openai = new OpenAI({ 
+        apiKey: apiKey,
+        dangerouslyAllowBrowser: true 
+      });
       
       const prompt = `
-        Você é um treinador de elite e nutricionista esportivo (Estilo Team VBR).
-        Com base nos dados do aluno e na ESTRATÉGIA DEFINIDA PELO TREINADOR abaixo, gere o restante do protocolo (refeições, treino, suplementos) em formato JSON.
-
         DADOS DO ALUNO:
         - Nome: ${data.clientName}
         - Objetivo: ${data.protocolTitle}
@@ -168,28 +168,28 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
         - Frequência de Treino Definida: ${data.trainingFrequency || "Sugerir baseada no objetivo"}
 
         INSTRUÇÕES:
-        1. Se o treinador já definiu a estratégia ou calorias acima, USE esses valores para calcular os macros e montar as refeições.
-        2. A Frequência de Treino foi definida pelo treinador como "${data.trainingFrequency}". USE EXATAMENTE ESTA FREQUÊNCIA para gerar a divisão de treino e calcular o gasto calórico.
-        3. Se estiver vazio, crie a melhor estratégia possível.
-        4. Gere treinos intensos e periodizados.
+        1. Se o treinador já definiu a estratégia ou calorias acima, USE esses valores.
+        2. A Frequência de Treino foi definida pelo treinador como "${data.trainingFrequency}". USE EXATAMENTE ESTA FREQUÊNCIA para gerar a divisão de treino.
+        3. Gere treinos intensos e periodizados.
+        4. Retorne APENAS um JSON válido.
 
-        Gere um JSON com a seguinte estrutura estrita (não inclua markdown, apenas o JSON):
+        Gere um JSON com a seguinte estrutura estrita:
         {
-          "nutritionalStrategy": "Texto explicando a estratégia (se já informado, mantenha ou refine)",
-          "kcalGoal": "Valor numérico (se já informado, mantenha)",
-          "kcalSubtext": "Contexto (Déficit, Superávit ou Manutenção)",
+          "nutritionalStrategy": "Texto explicando a estratégia",
+          "kcalGoal": "Valor numérico",
+          "kcalSubtext": "Déficit, Superávit ou Manutenção",
           "macros": {
             "protein": { "value": "Ex: 180", "ratio": "2g/kg" },
             "carbs": { "value": "Ex: 250", "ratio": "3g/kg" },
             "fats": { "value": "Ex: 60", "ratio": "0.8g/kg" }
           },
           "meals": [
-            { "id": "1", "time": "08:00", "name": "Café da Manhã", "details": "Detalhes dos alimentos e quantidades exatas..." }
+            { "id": "1", "time": "08:00", "name": "Café da Manhã", "details": "Detalhes dos alimentos..." }
           ],
           "supplements": [
              { "id": "1", "name": "Creatina", "dosage": "5g", "timing": "Pós-treino" }
           ],
-          "trainingFrequency": "A frequência definida pelo treinador (Ex: 5x na semana)",
+          "trainingFrequency": "A frequência definida pelo treinador",
           "trainingDays": [
             {
               "id": "1",
@@ -200,23 +200,22 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
               ]
             }
           ],
-          "generalObservations": "Recomendações finais de cardio, hidratação, etc."
+          "generalObservations": "Recomendações finais"
         }
       `;
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: prompt,
-        config: {
-          responseMimeType: 'application/json'
-        }
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          { role: "system", content: "Você é um treinador de elite e nutricionista esportivo (Estilo Team VBR). Gere apenas JSON." },
+          { role: "user", content: prompt }
+        ],
+        response_format: { type: "json_object" }
       });
 
-      let textResponse = response.text;
+      const textResponse = completion.choices[0].message.content;
+      
       if (textResponse) {
-        // Remove markdown formatting if present
-        textResponse = textResponse.replace(/^```json\s*/, '').replace(/^```\s*/, '').replace(/\s*```$/, '');
-        
         const generatedData = JSON.parse(textResponse);
 
         // Mesclar dados gerados com os dados atuais

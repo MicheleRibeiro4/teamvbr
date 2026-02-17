@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ProtocolData } from '../types';
 import { EMPTY_DATA, LOGO_VBR_BLACK } from '../constants';
 import { db } from '../services/db';
@@ -19,39 +19,52 @@ interface Props {
   onCancel: () => void;
 }
 
+const BR_STATES = [
+  "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", 
+  "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"
+];
+
 const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
   const [step, setStep] = useState(0); 
   const [isSaving, setIsSaving] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const [data, setData] = useState<ProtocolData>(() => ({
-    ...EMPTY_DATA,
-    id: "vbr-student-" + Date.now().toString(36), 
-    updatedAt: new Date().toISOString(),
-    contract: {
-        ...EMPTY_DATA.contract,
-        status: 'Aguardando'
-    },
-    physicalData: {
-        ...EMPTY_DATA.physicalData,
-        measurements: EMPTY_DATA.physicalData.measurements || {
-            thorax: "", waist: "", abdomen: "", glutes: "",
-            rightArmRelaxed: "", leftArmRelaxed: "", rightArmContracted: "", leftArmContracted: "",
-            rightThigh: "", leftThigh: "", rightCalf: "", leftCalf: ""
+  // Inicialização segura do estado
+  const [data, setData] = useState<ProtocolData>(() => {
+    // Garante que measurements exista mesmo que EMPTY_DATA falhe
+    const initialMeasurements = EMPTY_DATA.physicalData?.measurements || {
+        thorax: "", waist: "", abdomen: "", glutes: "",
+        rightArmRelaxed: "", leftArmRelaxed: "", rightArmContracted: "", leftArmContracted: "",
+        rightThigh: "", leftThigh: "", rightCalf: "", leftCalf: ""
+    };
+
+    return {
+        ...EMPTY_DATA,
+        id: "vbr-student-" + Date.now().toString(36), 
+        updatedAt: new Date().toISOString(),
+        contract: {
+            ...(EMPTY_DATA.contract || {}),
+            status: 'Aguardando'
+        },
+        physicalData: {
+            ...(EMPTY_DATA.physicalData || {}),
+            measurements: initialMeasurements
         }
-    }
-  }));
+    };
+  });
 
   const handleChange = (path: string, value: any) => {
-    const newData = JSON.parse(JSON.stringify(data));
-    const keys = path.split('.');
-    let current: any = newData;
-    for (let i = 0; i < keys.length - 1; i++) {
-        if (!current[keys[i]]) current[keys[i]] = {};
-        current = current[keys[i]];
-    }
-    current[keys[keys.length - 1]] = value;
-    setData(newData);
+    setData(prev => {
+        const newData = JSON.parse(JSON.stringify(prev));
+        const keys = path.split('.');
+        let current: any = newData;
+        for (let i = 0; i < keys.length - 1; i++) {
+            if (!current[keys[i]]) current[keys[i]] = {};
+            current = current[keys[i]];
+        }
+        current[keys[keys.length - 1]] = value;
+        return newData;
+    });
   };
 
   // MÁSCARAS
@@ -93,10 +106,20 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
   };
 
   // Styles
-  const labelClass = "block text-[11px] font-black text-white/40 mb-2 uppercase tracking-widest";
-  const inputClass = "w-full p-4 bg-[#1a1a1a] border border-white/10 rounded-2xl focus:ring-2 focus:ring-[#d4af37] focus:border-transparent outline-none font-bold text-white text-sm transition-all";
-  const textAreaClass = "w-full p-4 bg-[#1a1a1a] border border-white/10 rounded-2xl focus:ring-2 focus:ring-[#d4af37] focus:border-transparent outline-none font-medium text-white text-sm transition-all min-h-[120px] resize-y";
-  const sectionTitle = "text-sm font-black text-[#d4af37] uppercase tracking-widest mb-4 border-b border-white/5 pb-2 mt-2";
+  const inputBase = "w-full p-4 bg-[#1a1a1a] border border-white/10 rounded-2xl focus:ring-2 focus:ring-[#d4af37] focus:border-transparent outline-none font-bold text-white text-sm transition-all placeholder:text-white/20";
+  const inputClass = inputBase;
+  // Usamos type="text" + inputMode="decimal" para garantir teclado numérico no mobile sem as setas de spinner (spinners)
+  const inputNumberClass = inputBase; 
+
+  const labelClass = "block text-[10px] md:text-[11px] font-black text-white/40 mb-2 uppercase tracking-widest pl-1";
+  const textAreaClass = inputBase + " min-h-[120px] resize-y font-medium";
+  const sectionTitle = "text-sm md:text-base font-black text-[#d4af37] uppercase tracking-widest mb-6 border-b border-white/5 pb-2 mt-2 flex items-center gap-2";
+  const subSectionTitle = "text-[10px] font-black text-white/60 uppercase tracking-widest mb-3 border-l-2 border-[#d4af37] pl-3";
+
+  // Helper seguro para measurements
+  const getMeasurement = (key: string) => {
+      return data.physicalData?.measurements?.[key as keyof typeof data.physicalData.measurements] || '';
+  };
 
   if (isSuccess) {
       return (
@@ -150,10 +173,10 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white p-4 md:p-8 flex items-center justify-center">
-      <div className="w-full max-w-4xl bg-[#111] border border-white/10 rounded-[2.5rem] p-6 md:p-10 shadow-2xl relative overflow-hidden flex flex-col h-[90vh] max-h-[900px]">
+      <div className="w-full max-w-4xl bg-[#111] border border-white/10 rounded-[2rem] md:rounded-[2.5rem] p-5 md:p-10 shadow-2xl relative overflow-hidden flex flex-col h-[90vh] max-h-[900px]">
         
         {/* Progress Bar */}
-        <div className="flex items-center gap-4 mb-8">
+        <div className="flex items-center gap-4 mb-8 shrink-0">
             <button onClick={() => setStep(step - 1)} className="p-2 bg-white/5 rounded-full hover:bg-white/10 text-white/60">
                 <ChevronLeft size={20} />
             </button>
@@ -167,70 +190,90 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 pb-24">
+        <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 md:pr-4 pb-24">
             
             {/* STEP 1: IDENTIFICAÇÃO COMPLETA */}
             {step === 1 && (
                 <div className="animate-in slide-in-from-right-10 duration-500">
-                    <div className="mb-6">
-                        <h2 className="text-2xl font-black uppercase tracking-tighter text-white mb-2">Quem é você?</h2>
+                    <div className="mb-8">
+                        <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tighter text-white mb-2">Quem é você?</h2>
                         <p className="text-white/50 text-sm">Preencha seus dados pessoais e de contato.</p>
                     </div>
 
-                    <div className="space-y-6">
-                        <h3 className={sectionTitle}><User size={14} className="inline mr-2"/> Dados Pessoais</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="md:col-span-2">
-                                <label className={labelClass}>Nome Completo</label>
-                                <input className={inputClass} value={data.clientName} onChange={(e) => handleChange('clientName', e.target.value)} placeholder="Seu nome completo" autoFocus />
-                            </div>
-                            <div>
-                                <label className={labelClass}>CPF</label>
-                                <input className={inputClass} value={data.contract.cpf} onChange={(e) => handleCPFMask(e.target.value)} placeholder="000.000.000-00" maxLength={14} />
-                            </div>
-                             <div>
-                                <label className={labelClass}>Celular (WhatsApp)</label>
-                                <input className={inputClass} value={data.contract.phone} onChange={(e) => handlePhoneMask(e.target.value)} placeholder="(00) 00000-0000" type="tel" maxLength={15} />
-                            </div>
-                            <div className="md:col-span-2">
-                                <label className={labelClass}>E-mail (Opcional)</label>
-                                <input className={inputClass} value={data.contract.email} onChange={(e) => handleChange('contract.email', e.target.value)} type="email" />
-                            </div>
-                            <div>
-                                <label className={labelClass}>Idade</label>
-                                <input className={inputClass} value={data.physicalData.age} onChange={(e) => handleChange('physicalData.age', e.target.value)} type="number" />
-                            </div>
-                            <div>
-                                <label className={labelClass}>Gênero</label>
-                                <select className={inputClass} value={data.physicalData.gender} onChange={(e) => handleChange('physicalData.gender', e.target.value)}>
-                                    <option value="">--</option>
-                                    <option value="Masculino">Masculino</option>
-                                    <option value="Feminino">Feminino</option>
-                                </select>
+                    <div className="space-y-8">
+                        <div>
+                            <h3 className={sectionTitle}><User size={18} /> Dados Pessoais</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="md:col-span-2">
+                                    <label className={labelClass}>Nome Completo</label>
+                                    <input className={inputClass} value={data.clientName} onChange={(e) => handleChange('clientName', e.target.value)} placeholder="Seu nome completo" autoFocus />
+                                </div>
+                                <div>
+                                    <label className={labelClass}>CPF</label>
+                                    <input className={inputClass} value={data.contract.cpf} onChange={(e) => handleCPFMask(e.target.value)} placeholder="000.000.000-00" maxLength={14} inputMode="numeric" />
+                                </div>
+                                <div>
+                                    <label className={labelClass}>Celular (WhatsApp)</label>
+                                    <input className={inputClass} value={data.contract.phone} onChange={(e) => handlePhoneMask(e.target.value)} placeholder="(00) 00000-0000" type="tel" maxLength={15} inputMode="tel" />
+                                </div>
+                                <div className="md:col-span-2">
+                                    <label className={labelClass}>E-mail (Opcional)</label>
+                                    <input className={inputClass} value={data.contract.email} onChange={(e) => handleChange('contract.email', e.target.value)} type="email" />
+                                </div>
+                                <div>
+                                    <label className={labelClass}>Idade</label>
+                                    <input 
+                                        className={inputNumberClass} 
+                                        value={data.physicalData.age} 
+                                        onChange={(e) => handleChange('physicalData.age', e.target.value)} 
+                                        type="text"
+                                        inputMode="numeric" 
+                                        placeholder="Digite sua idade"
+                                    />
+                                </div>
+                                <div>
+                                    <label className={labelClass}>Gênero</label>
+                                    <select className={inputClass} value={data.physicalData.gender} onChange={(e) => handleChange('physicalData.gender', e.target.value)}>
+                                        <option value="">Selecione</option>
+                                        <option value="Masculino">Masculino</option>
+                                        <option value="Feminino">Feminino</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
 
-                        <h3 className={sectionTitle}><MapPin size={14} className="inline mr-2"/> Endereço</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                            <div className="md:col-span-3">
-                                <label className={labelClass}>Rua / Logradouro</label>
-                                <input className={inputClass} value={data.contract.street} onChange={(e) => handleChange('contract.street', e.target.value)} />
-                            </div>
-                            <div>
-                                <label className={labelClass}>Número</label>
-                                <input className={inputClass} value={data.contract.number} onChange={(e) => handleChange('contract.number', e.target.value)} />
-                            </div>
-                            <div className="md:col-span-2">
-                                <label className={labelClass}>Bairro</label>
-                                <input className={inputClass} value={data.contract.neighborhood} onChange={(e) => handleChange('contract.neighborhood', e.target.value)} />
-                            </div>
-                            <div>
-                                <label className={labelClass}>Cidade</label>
-                                <input className={inputClass} value={data.contract.city} onChange={(e) => handleChange('contract.city', e.target.value)} />
-                            </div>
-                            <div>
-                                <label className={labelClass}>Estado (UF)</label>
-                                <input className={inputClass} value={data.contract.state} onChange={(e) => handleChange('contract.state', e.target.value)} maxLength={2} />
+                        <div>
+                            <h3 className={sectionTitle}><MapPin size={18} /> Endereço</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div className="md:col-span-3">
+                                    <label className={labelClass}>Rua / Logradouro</label>
+                                    <input className={inputClass} value={data.contract.street} onChange={(e) => handleChange('contract.street', e.target.value)} placeholder="Av. Principal" />
+                                </div>
+                                <div>
+                                    <label className={labelClass}>Número</label>
+                                    <input className={inputClass} value={data.contract.number} onChange={(e) => handleChange('contract.number', e.target.value)} placeholder="123" />
+                                </div>
+                                <div className="md:col-span-2">
+                                    <label className={labelClass}>Bairro</label>
+                                    <input className={inputClass} value={data.contract.neighborhood} onChange={(e) => handleChange('contract.neighborhood', e.target.value)} />
+                                </div>
+                                <div>
+                                    <label className={labelClass}>Cidade</label>
+                                    <input className={inputClass} value={data.contract.city} onChange={(e) => handleChange('contract.city', e.target.value)} />
+                                </div>
+                                <div>
+                                    <label className={labelClass}>Estado (UF)</label>
+                                    <select 
+                                        className={inputClass} 
+                                        value={data.contract.state} 
+                                        onChange={(e) => handleChange('contract.state', e.target.value)}
+                                    >
+                                        <option value="">UF</option>
+                                        {BR_STATES.map(uf => (
+                                            <option key={uf} value={uf}>{uf}</option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -240,8 +283,8 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
             {/* STEP 2: ANAMNESE */}
             {step === 2 && (
                 <div className="animate-in slide-in-from-right-10 duration-500">
-                    <div className="mb-6">
-                        <h2 className="text-2xl font-black uppercase tracking-tighter text-white mb-2">Seus Objetivos</h2>
+                    <div className="mb-8">
+                        <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tighter text-white mb-2">Seus Objetivos</h2>
                         <p className="text-white/50 text-sm">Conte-nos onde você quer chegar e seu histórico.</p>
                     </div>
 
@@ -301,34 +344,108 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
             {/* STEP 3: CORPO E MEDIDAS */}
             {step === 3 && (
                 <div className="animate-in slide-in-from-right-10 duration-500">
-                    <div className="mb-6">
-                        <h2 className="text-2xl font-black uppercase tracking-tighter text-white mb-2">Corpo & Medidas</h2>
+                    <div className="mb-8">
+                        <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tighter text-white mb-2">Corpo & Medidas</h2>
                         <p className="text-white/50 text-sm">Preencha com o máximo de precisão possível.</p>
                     </div>
 
-                    <h3 className={sectionTitle}><Activity size={14} className="inline mr-2"/> Dados Básicos & Bioimpedância</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-                        <div><label className={labelClass}>Peso (kg)</label><input className={inputClass} value={data.physicalData.weight} onChange={(e) => handleChange('physicalData.weight', e.target.value)} type="number" placeholder="Ex: 70" /></div>
-                        <div><label className={labelClass}>Altura (m)</label><input className={inputClass} value={data.physicalData.height} onChange={(e) => handleChange('physicalData.height', e.target.value)} placeholder="Ex: 1,75" /></div>
-                        <div><label className={labelClass}>Gordura (%)</label><input className={inputClass} value={data.physicalData.bodyFat} onChange={(e) => handleChange('physicalData.bodyFat', e.target.value)} placeholder="Opcional" /></div>
-                        <div><label className={labelClass}>Massa Musc. (kg)</label><input className={inputClass} value={data.physicalData.muscleMass} onChange={(e) => handleChange('physicalData.muscleMass', e.target.value)} placeholder="Opcional" /></div>
-                        <div><label className={labelClass}>Gordura Visceral</label><input className={inputClass} value={data.physicalData.visceralFat} onChange={(e) => handleChange('physicalData.visceralFat', e.target.value)} placeholder="Opcional" /></div>
+                    <h3 className={sectionTitle}><Activity size={18} /> Composição Corporal</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+                        <div>
+                            <label className={labelClass}>Peso (kg)</label>
+                            <input 
+                                className={inputNumberClass} 
+                                value={data.physicalData.weight} 
+                                onChange={(e) => handleChange('physicalData.weight', e.target.value)} 
+                                type="text"
+                                inputMode="decimal"
+                                placeholder="00.0" 
+                            />
+                        </div>
+                        <div>
+                            <label className={labelClass}>Altura (m)</label>
+                            <input 
+                                className={inputClass} 
+                                value={data.physicalData.height} 
+                                onChange={(e) => handleChange('physicalData.height', e.target.value)} 
+                                placeholder="1,75" 
+                                inputMode="decimal"
+                            />
+                        </div>
+                        <div className="col-span-2 md:col-span-1">
+                            <label className={labelClass}>Gordura / BF (%) <span className="text-white/20 ml-1 font-normal lowercase">(opcional)</span></label>
+                            <input 
+                                className={inputNumberClass} 
+                                value={data.physicalData.bodyFat} 
+                                onChange={(e) => handleChange('physicalData.bodyFat', e.target.value)} 
+                                type="text"
+                                inputMode="decimal"
+                                placeholder="%" 
+                            />
+                        </div>
+                        
+                        <div>
+                            <label className={labelClass}>Massa Musc. <span className="text-white/20 ml-1 font-normal lowercase">(opcional)</span></label>
+                            <input 
+                                className={inputNumberClass} 
+                                value={data.physicalData.muscleMass} 
+                                onChange={(e) => handleChange('physicalData.muscleMass', e.target.value)} 
+                                type="text"
+                                inputMode="decimal"
+                                placeholder="kg" 
+                            />
+                        </div>
+                        <div>
+                            <label className={labelClass}>Gordura Visceral <span className="text-white/20 ml-1 font-normal lowercase">(opcional)</span></label>
+                            <input 
+                                className={inputNumberClass} 
+                                value={data.physicalData.visceralFat} 
+                                onChange={(e) => handleChange('physicalData.visceralFat', e.target.value)} 
+                                type="text"
+                                inputMode="decimal"
+                                placeholder="Nível" 
+                            />
+                        </div>
                     </div>
 
-                    <h3 className={sectionTitle}><Ruler size={14} className="inline mr-2"/> Circunferências (cm)</h3>
-                    <p className="text-[10px] text-white/30 mb-4">Deixe em branco se não souber medir.</p>
+                    <h3 className={sectionTitle}><Ruler size={18} /> Medidas Corporais (cm)</h3>
+                    <p className="text-[10px] text-white/30 mb-6 bg-white/5 p-3 rounded-lg border border-white/5 inline-block">
+                        💡 Use uma fita métrica. Se não tiver, deixe em branco.
+                    </p>
                     
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                         <div><label className={labelClass}>Tórax</label><input className={inputClass} value={data.physicalData.measurements?.thorax} onChange={(e) => handleChange('physicalData.measurements.thorax', e.target.value)} /></div>
-                         <div><label className={labelClass}>Cintura</label><input className={inputClass} value={data.physicalData.measurements?.waist} onChange={(e) => handleChange('physicalData.measurements.waist', e.target.value)} /></div>
-                         <div><label className={labelClass}>Abdômen</label><input className={inputClass} value={data.physicalData.measurements?.abdomen} onChange={(e) => handleChange('physicalData.measurements.abdomen', e.target.value)} /></div>
-                         <div><label className={labelClass}>Glúteo</label><input className={inputClass} value={data.physicalData.measurements?.glutes} onChange={(e) => handleChange('physicalData.measurements.glutes', e.target.value)} /></div>
+                    <div className="space-y-6">
+                        {/* TRONCO */}
+                        <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
+                            <h4 className={subSectionTitle}>Tronco</h4>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div><label className={labelClass}>Tórax</label><input className={inputNumberClass} type="text" inputMode="decimal" value={getMeasurement('thorax')} onChange={(e) => handleChange('physicalData.measurements.thorax', e.target.value)} /></div>
+                                <div><label className={labelClass}>Cintura</label><input className={inputNumberClass} type="text" inputMode="decimal" value={getMeasurement('waist')} onChange={(e) => handleChange('physicalData.measurements.waist', e.target.value)} /></div>
+                                <div><label className={labelClass}>Abdômen</label><input className={inputNumberClass} type="text" inputMode="decimal" value={getMeasurement('abdomen')} onChange={(e) => handleChange('physicalData.measurements.abdomen', e.target.value)} /></div>
+                                <div><label className={labelClass}>Glúteo</label><input className={inputNumberClass} type="text" inputMode="decimal" value={getMeasurement('glutes')} onChange={(e) => handleChange('physicalData.measurements.glutes', e.target.value)} /></div>
+                            </div>
+                        </div>
 
-                         <div><label className={labelClass}>Braço Dir.</label><input className={inputClass} value={data.physicalData.measurements?.rightArmContracted} onChange={(e) => handleChange('physicalData.measurements.rightArmContracted', e.target.value)} /></div>
-                         <div><label className={labelClass}>Braço Esq.</label><input className={inputClass} value={data.physicalData.measurements?.leftArmContracted} onChange={(e) => handleChange('physicalData.measurements.leftArmContracted', e.target.value)} /></div>
-                         
-                         <div><label className={labelClass}>Coxa Dir.</label><input className={inputClass} value={data.physicalData.measurements?.rightThigh} onChange={(e) => handleChange('physicalData.measurements.rightThigh', e.target.value)} /></div>
-                         <div><label className={labelClass}>Coxa Esq.</label><input className={inputClass} value={data.physicalData.measurements?.leftThigh} onChange={(e) => handleChange('physicalData.measurements.leftThigh', e.target.value)} /></div>
+                        {/* BRAÇOS */}
+                        <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
+                            <h4 className={subSectionTitle}>Braços</h4>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div><label className={labelClass}>Dir. Relaxado</label><input className={inputNumberClass} type="text" inputMode="decimal" value={getMeasurement('rightArmRelaxed')} onChange={(e) => handleChange('physicalData.measurements.rightArmRelaxed', e.target.value)} /></div>
+                                <div><label className={labelClass}>Esq. Relaxado</label><input className={inputNumberClass} type="text" inputMode="decimal" value={getMeasurement('leftArmRelaxed')} onChange={(e) => handleChange('physicalData.measurements.leftArmRelaxed', e.target.value)} /></div>
+                                <div><label className={labelClass}>Dir. Contraído</label><input className={inputNumberClass} type="text" inputMode="decimal" value={getMeasurement('rightArmContracted')} onChange={(e) => handleChange('physicalData.measurements.rightArmContracted', e.target.value)} /></div>
+                                <div><label className={labelClass}>Esq. Contraído</label><input className={inputNumberClass} type="text" inputMode="decimal" value={getMeasurement('leftArmContracted')} onChange={(e) => handleChange('physicalData.measurements.leftArmContracted', e.target.value)} /></div>
+                            </div>
+                        </div>
+
+                        {/* MEMBROS INFERIORES */}
+                        <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
+                            <h4 className={subSectionTitle}>Membros Inferiores</h4>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div><label className={labelClass}>Coxa Dir.</label><input className={inputNumberClass} type="text" inputMode="decimal" value={getMeasurement('rightThigh')} onChange={(e) => handleChange('physicalData.measurements.rightThigh', e.target.value)} /></div>
+                                <div><label className={labelClass}>Coxa Esq.</label><input className={inputNumberClass} type="text" inputMode="decimal" value={getMeasurement('leftThigh')} onChange={(e) => handleChange('physicalData.measurements.leftThigh', e.target.value)} /></div>
+                                <div><label className={labelClass}>Panturrilha Dir.</label><input className={inputNumberClass} type="text" inputMode="decimal" value={getMeasurement('rightCalf')} onChange={(e) => handleChange('physicalData.measurements.rightCalf', e.target.value)} /></div>
+                                <div><label className={labelClass}>Panturrilha Esq.</label><input className={inputNumberClass} type="text" inputMode="decimal" value={getMeasurement('leftCalf')} onChange={(e) => handleChange('physicalData.measurements.leftCalf', e.target.value)} /></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
