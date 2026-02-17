@@ -4,6 +4,9 @@ import { ProtocolData, Meal, Supplement, TrainingDay, Exercise } from '../types'
 import { Activity, User, ShieldCheck, ChevronLeft, MapPin, Dumbbell, Utensils, Pill, Plus, Trash2, FileText, AlertCircle, Sparkles, Loader2, Ruler, DollarSign, Droplets, BookOpen } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 
+// Chave API Gemini fornecida
+const API_KEY = process.env.API_KEY || "AIzaSyCX1oRHkaPfcf4vfOruLc_rv9B-rMCOpzA";
+
 interface Props {
   data: ProtocolData;
   onChange: (data: ProtocolData) => void;
@@ -138,7 +141,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
 
     setIsGenerating(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey: API_KEY });
       const model = "gemini-2.5-flash";
       
       const prompt = `

@@ -119,18 +119,32 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
   if (isSuccess) {
       return (
         <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-6 animate-in fade-in zoom-in duration-500">
-            <div className="bg-[#111] border border-white/10 p-10 rounded-[2.5rem] text-center max-w-md w-full shadow-[0_0_50px_rgba(212,175,55,0.1)] relative overflow-hidden">
+            <div className="bg-[#111] border border-white/10 p-10 rounded-[2.5rem] text-center max-w-md w-full shadow-[0_0_50px_rgba(212,175,55,0.1)] relative overflow-hidden flex flex-col items-center">
+                
+                {/* Logo de Fundo */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.07]">
+                    <img src={LOGO_VBR_BLACK} alt="" className="w-64 h-auto" />
+                </div>
+
                 <div className="absolute top-0 left-0 w-full h-2 bg-[#d4af37]"></div>
-                <div className="w-24 h-24 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center mx-auto mb-8 border border-green-500/20">
+                
+                <div className="w-24 h-24 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center mb-8 border border-green-500/20 relative z-10">
                     <CheckCircle2 size={48} />
                 </div>
-                <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-4">Recebido!</h2>
-                <p className="text-white/60 text-sm mb-10 font-medium leading-relaxed">
-                    Seus dados já estão com nossa equipe. Seu treinador irá analisar seu perfil e entrará em contato em breve para dar início ao seu protocolo.
-                </p>
+                
+                <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-4 relative z-10">
+                    Você agora é Team VBR
+                </h2>
+                
+                <div className="text-white/60 text-sm mb-10 font-medium leading-relaxed relative z-10 space-y-4">
+                    <p>Seus dados foram recebidos com sucesso.</p>
+                    <p>Vou analisar seu perfil com atenção e em breve falo com você para darmos início ao seu protocolo personalizado!</p>
+                    <p className="text-[#d4af37] font-bold">Bem-vindo, vamos pra cima 💪</p>
+                </div>
+                
                 <button 
                     onClick={onCancel}
-                    className="w-full bg-[#d4af37] text-black py-5 rounded-2xl font-black uppercase text-xs tracking-[0.2em] hover:scale-105 transition-all shadow-lg"
+                    className="w-full bg-[#d4af37] text-black py-5 rounded-2xl font-black uppercase text-xs tracking-[0.2em] hover:scale-105 transition-all shadow-lg relative z-10"
                 >
                     Voltar ao Início
                 </button>

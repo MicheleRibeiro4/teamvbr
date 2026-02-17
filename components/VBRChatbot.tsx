@@ -3,6 +3,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, X, Send, Loader2, Bot, User, Maximize2, Minimize2 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 
+// Chave API Gemini fornecida
+const API_KEY = process.env.API_KEY || "AIzaSyCX1oRHkaPfcf4vfOruLc_rv9B-rMCOpzA";
+
 const VBRChatbot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -41,7 +44,7 @@ const VBRChatbot: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey: API_KEY });
       
       // Converte histórico para formato Gemini (user/model) e extrai system instruction
       const systemInstruction = historyRef.current.find(m => m.role === 'system')?.content || '';
