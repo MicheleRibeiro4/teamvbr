@@ -19,7 +19,8 @@ import {
   Clock,
   Dumbbell,
   X,
-  Maximize2
+  Maximize2,
+  Edit3
 } from 'lucide-react';
 import { LOGO_VBR_BLACK } from '../constants';
 
@@ -135,10 +136,12 @@ const EvolutionTracker: React.FC<Props> = ({
   }, [sortedHistory]);
 
   const [editData, setEditData] = useState<PhysicalData>(currentProtocol.physicalData);
+  const [editTitle, setEditTitle] = useState(currentProtocol.protocolTitle);
 
   React.useEffect(() => {
     setMode('view');
     setEditData(currentProtocol.physicalData);
+    setEditTitle(currentProtocol.protocolTitle);
   }, [currentProtocol.id]);
 
   // --- HANDLERS ---
@@ -149,6 +152,7 @@ const EvolutionTracker: React.FC<Props> = ({
 
   const handleStartNewProtocol = () => {
       setEditData({ ...currentProtocol.physicalData, date: new Date().toLocaleDateString('pt-BR') });
+      setEditTitle(currentProtocol.protocolTitle);
       setMode('new_protocol');
   };
 
@@ -158,13 +162,16 @@ const EvolutionTracker: React.FC<Props> = ({
     try {
         const newProtocolState = {
             ...currentProtocol,
+            protocolTitle: editTitle, // Atualiza o título se estiver em modo de novo protocolo
             physicalData: editData,
             updatedAt: new Date().toISOString(),
-            privateNotes: mode === 'new_protocol' ? "Início de Novo Protocolo (Estratégia Alterada)" : currentProtocol.privateNotes
+            privateNotes: mode === 'new_protocol' ? `Início de Novo Protocolo: ${editTitle}` : currentProtocol.privateNotes
         };
         if (mode === 'new_checkin') {
+            // Cria um histórico (snapshot) do momento atual
             await onUpdateData(newProtocolState, true, false); 
         } else if (mode === 'new_protocol') {
+            // Cria um NOVO protocolo (Novo ID) mantendo os dados anteriores como base
             await onUpdateData(newProtocolState, false, true); 
         }
         setMode('view');
@@ -175,6 +182,7 @@ const EvolutionTracker: React.FC<Props> = ({
   const handleCancel = () => {
       setMode('view');
       setEditData(currentProtocol.physicalData);
+      setEditTitle(currentProtocol.protocolTitle);
   };
 
   const handleGenerateReport = async () => {
@@ -287,10 +295,13 @@ const EvolutionTracker: React.FC<Props> = ({
               <div>
                   <h2 className="text-2xl font-black text-white uppercase tracking-tighter flex items-center gap-3">
                       <div className="bg-[#d4af37] text-black p-2 rounded-lg"><Target size={20} /></div>
-                      Resumo do Progresso
+                      {mode === 'new_protocol' ? 'Iniciando Novo Protocolo' : 'Resumo do Progresso'}
                   </h2>
                   <p className="text-white/40 text-xs font-bold uppercase tracking-widest mt-2 pl-1">
-                      Acompanhamento iniciado em {startDate.toLocaleDateString('pt-BR')} • {diffDays} dias de foco
+                      {mode === 'new_protocol' 
+                        ? 'Defina o objetivo e os dados iniciais para esta nova fase.'
+                        : `Acompanhamento iniciado em ${startDate.toLocaleDateString('pt-BR')} • ${diffDays} dias de foco`
+                      }
                   </p>
               </div>
               
@@ -311,12 +322,32 @@ const EvolutionTracker: React.FC<Props> = ({
                       <>
                         <button onClick={handleCancel} className="px-6 py-3 rounded-xl bg-white/5 hover:text-white text-white/40 font-black uppercase text-[10px] tracking-widest transition-all">Cancelar</button>
                         <button onClick={handleSave} disabled={isSaving} className="px-8 py-3 rounded-xl bg-green-500 text-black hover:scale-105 shadow-lg font-black uppercase text-[10px] tracking-widest transition-all flex items-center gap-2">
-                            {isSaving ? <Loader2 size={16} className="animate-spin"/> : <Save size={16}/>} Salvar Registro
+                            {isSaving ? <Loader2 size={16} className="animate-spin"/> : <Save size={16}/>} 
+                            {mode === 'new_protocol' ? 'Criar Protocolo' : 'Salvar Registro'}
                         </button>
                       </>
                   )}
               </div>
           </div>
+
+          {/* ÁREA DE EDIÇÃO DO TÍTULO DO PROTOCOLO (SE FOR NOVO PROTOCOLO) */}
+          {mode === 'new_protocol' && (
+              <div className="mb-6 relative z-10 bg-blue-500/10 border border-blue-500/30 p-4 rounded-xl flex flex-col md:flex-row items-center gap-4">
+                  <div className="p-3 bg-blue-500 text-white rounded-lg"><Target size={20} /></div>
+                  <div className="flex-1 w-full">
+                      <label className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1 block">Objetivo desta Nova Fase</label>
+                      <input 
+                          className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white font-bold focus:border-blue-500 outline-none"
+                          value={editTitle}
+                          onChange={(e) => setEditTitle(e.target.value)}
+                          placeholder="Ex: Cutting Radical, Bulking Limpo..."
+                      />
+                  </div>
+                  <div className="text-xs text-white/40 max-w-xs text-center md:text-right">
+                      Isso criará um novo marco no histórico. Os treinos e dieta anteriores serão mantidos até você editá-los.
+                  </div>
+              </div>
+          )}
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 relative z-10">
               <div className="bg-white/5 p-5 rounded-2xl border border-white/5 backdrop-blur-sm">
@@ -341,7 +372,9 @@ const EvolutionTracker: React.FC<Props> = ({
                   </div>
                   <div className="flex items-center gap-2 mb-2 text-[#d4af37]">
                       <Target size={14} />
-                      <span className="text-[9px] font-black uppercase tracking-widest">Peso Atual</span>
+                      <span className="text-[9px] font-black uppercase tracking-widest">
+                          {mode === 'new_protocol' ? 'Peso de Início' : 'Peso Atual'}
+                      </span>
                   </div>
                   {isEditing ? (
                       <input 
@@ -387,6 +420,7 @@ const EvolutionTracker: React.FC<Props> = ({
                           </div>
                           <div>
                               <h3 className="text-lg font-black text-white uppercase tracking-tighter">Protocolo Ativo</h3>
+                              <p className="text-xs text-white/50 font-bold uppercase">{currentProtocol.protocolTitle}</p>
                               <div className="flex items-center gap-3 mt-1">
                                   <span className="text-[10px] font-bold uppercase bg-green-500/20 text-green-500 px-2 py-0.5 rounded animate-pulse">Em Execução</span>
                                   <span className="text-[10px] text-white/40 font-bold uppercase flex items-center gap-1">
@@ -426,7 +460,7 @@ const EvolutionTracker: React.FC<Props> = ({
               {isEditing && (
                   <div className="bg-[#1a1a1a] p-8 rounded-[2rem] border border-[#d4af37]/30 shadow-2xl animate-in slide-in-from-bottom-4">
                       <h3 className="text-sm font-black text-[#d4af37] uppercase tracking-widest mb-6 border-b border-[#d4af37]/20 pb-2">
-                          Atualizar Medidas (cm) & Observações
+                          {mode === 'new_protocol' ? 'Novas Medidas e Observações' : 'Atualizar Medidas (cm) & Observações'}
                       </h3>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                           {['waist', 'abdomen', 'glutes', 'rightArmContracted', 'rightThigh', 'rightCalf'].map((key) => (
@@ -447,10 +481,12 @@ const EvolutionTracker: React.FC<Props> = ({
                           ))}
                       </div>
                       <div>
-                          <label className="text-[10px] font-bold text-white/40 uppercase block mb-1">Observações do Check-in</label>
+                          <label className="text-[10px] font-bold text-white/40 uppercase block mb-1">
+                              {mode === 'new_protocol' ? 'Observações Iniciais do Novo Protocolo' : 'Observações do Check-in'}
+                          </label>
                           <textarea 
                               className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white font-medium focus:border-[#d4af37] outline-none min-h-[80px]"
-                              placeholder="Como foi a semana? Dificuldades?"
+                              placeholder={mode === 'new_protocol' ? "Metas para esta nova fase..." : "Como foi a semana? Dificuldades?"}
                               value={currentProtocol.privateNotes}
                               onChange={(e) => onNotesChange(e.target.value)}
                           />
@@ -490,6 +526,9 @@ const EvolutionTracker: React.FC<Props> = ({
                                               <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${isNewProtocol ? 'bg-blue-500/20 text-blue-500' : 'bg-white/10 text-white/40'}`}>
                                                   {isNewProtocol ? 'Novo Protocolo' : 'Check-in'}
                                               </span>
+                                              {isNewProtocol && (
+                                                  <p className="text-[8px] font-bold mt-1 opacity-70 truncate max-w-[100px]">{p.protocolTitle}</p>
+                                              )}
                                           </div>
                                           <div className="text-right">
                                               <p className="text-sm font-black">{p.physicalData.weight || '-'} <span className="text-[9px]">kg</span></p>

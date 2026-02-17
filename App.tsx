@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { ProtocolData } from './types';
 import { EMPTY_DATA, LOGO_VBR_BLACK } from './constants';
@@ -216,11 +217,6 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
                 <button type="submit" className="w-full bg-[#d4af37] text-black py-4 rounded-xl font-black uppercase text-xs tracking-[0.2em] hover:scale-105 transition-all">Entrar</button>
               </form>
             </div>
-            
-            {/* 
-              REMOVIDO BOTÃO DE ALUNO DAQUI 
-              O aluno deve usar o link direto com hash #student ou #cadastro
-            */}
           </div>
 
           <p className="mt-8 text-white/20 text-[10px] uppercase font-bold tracking-widest">Team VBR System © 2026</p>
@@ -337,8 +333,18 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
               currentProtocol={data} 
               history={savedProtocols.filter(p => p.clientName === data.clientName)} 
               onNotesChange={(n) => setData({...data, privateNotes: n})} 
-              onUpdateData={(newData, createHistory) => handleSave(false, newData, createHistory)}
+              // ATUALIZAÇÃO AQUI: Passando os 3 argumentos corretamente para garantir criação de histórico
+              onUpdateData={(newData, createHistory, forceNewId) => handleSave(false, newData, createHistory || forceNewId)}
               onSelectHistory={(hist) => setData(hist)}
+              onDeleteHistory={(id) => {
+                  db.deleteProtocol(id);
+                  setSavedProtocols(prev => prev.filter(p => p.id !== id));
+                  if (data.id === id) {
+                      // Se deletar o atual, tenta carregar o anterior ou reseta
+                      const remaining = savedProtocols.filter(p => p.clientName === data.clientName && p.id !== id);
+                      if (remaining.length > 0) setData(remaining[0]);
+                  }
+              }}
               onOpenEditor={() => setActiveView('manage')}
           />
         )}
