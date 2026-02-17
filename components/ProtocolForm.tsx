@@ -311,14 +311,6 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
     </button>
   );
 
-  // Botão customizado para os previews
-  const ActionButton = ({ icon: Icon, label }: { icon: any, label: string }) => (
-    <button className="bg-white/5 hover:bg-white/10 text-white border border-white/5 px-4 py-2 rounded-xl flex items-center gap-2 transition-all shadow-sm">
-        <Icon size={16} className="text-[#d4af37]" />
-        <span className="text-[10px] font-black uppercase tracking-widest">{label}</span>
-    </button>
-  );
-
   return (
     <div className="space-y-8 no-print w-full">
       {onBack && (
@@ -341,16 +333,24 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
       {activeTab === 'identificacao' && (
         <div className="animate-in fade-in slide-in-from-left-4 duration-300 space-y-8">
            <section>
-            <div className={sectionHeaderClass + " justify-between"}>
-              <div className="flex items-center gap-2">
-                  <User className="text-[#d4af37]" size={20} />
-                  <h2 className="text-xl font-black text-white uppercase tracking-tighter">Identificação</h2>
-              </div>
-              <ContractPreview 
-                  data={data} 
-                  customTrigger={<ActionButton icon={ShieldCheck} label="Contrato PDF" />} 
-              />
+            <div className="bg-[#d4af37]/10 p-6 rounded-[2rem] border border-[#d4af37]/20 flex flex-col md:flex-row justify-between items-center gap-6 mb-8 relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-10 opacity-10 pointer-events-none"><ShieldCheck size={120} /></div>
+                <div className="flex items-center gap-4 relative z-10">
+                    <div className="w-16 h-16 bg-[#d4af37] rounded-2xl flex items-center justify-center text-black shadow-lg"><User size={32} strokeWidth={2.5} /></div>
+                    <div>
+                        <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Identificação & Contrato</h2>
+                        <p className="text-xs font-bold text-[#d4af37] uppercase tracking-widest mt-1">Dados Pessoais e Jurídicos</p>
+                    </div>
+                </div>
+                <div className="relative z-10">
+                    <ContractPreview data={data} customTrigger={
+                        <button className="bg-[#d4af37] hover:bg-[#b5952f] text-black px-6 py-3 rounded-xl flex items-center gap-2 transition-all shadow-lg hover:scale-105 active:scale-95">
+                            <FileText size={18} /> <span className="text-xs font-black uppercase tracking-widest">Contrato PDF</span>
+                        </button>
+                    } />
+                </div>
             </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2"><label className={labelClass}>Nome Completo</label><input className={inputClass} value={data.clientName} onChange={(e) => handleChange('clientName', e.target.value)} /></div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 col-span-1 md:col-span-2">
@@ -418,15 +418,22 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
       {activeTab === 'anamnese' && (
         <div className="animate-in fade-in slide-in-from-right-4 duration-300 space-y-8">
             <section>
-                <div className={sectionHeaderClass + " justify-between"}>
-                    <div className="flex items-center gap-2">
-                        <BookOpen className="text-[#d4af37]" size={20} />
-                        <h2 className="text-xl font-black text-white uppercase tracking-tighter">Anamnese</h2>
+                <div className="bg-[#d4af37]/10 p-6 rounded-[2rem] border border-[#d4af37]/20 flex flex-col md:flex-row justify-between items-center gap-6 mb-8 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-10 opacity-10 pointer-events-none"><BookOpen size={120} /></div>
+                    <div className="flex items-center gap-4 relative z-10">
+                        <div className="w-16 h-16 bg-[#d4af37] rounded-2xl flex items-center justify-center text-black shadow-lg"><Activity size={32} strokeWidth={2.5} /></div>
+                        <div>
+                            <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Anamnese Completa</h2>
+                            <p className="text-xs font-bold text-[#d4af37] uppercase tracking-widest mt-1">Histórico e Objetivos</p>
+                        </div>
                     </div>
-                    <AnamnesisPreview 
-                        data={data} 
-                        customTrigger={<ActionButton icon={Activity} label="Ficha PDF" />} 
-                    />
+                    <div className="relative z-10">
+                        <AnamnesisPreview data={data} customTrigger={
+                            <button className="bg-[#d4af37] hover:bg-[#b5952f] text-black px-6 py-3 rounded-xl flex items-center gap-2 transition-all shadow-lg hover:scale-105 active:scale-95">
+                                <FileText size={18} /> <span className="text-xs font-black uppercase tracking-widest">Ficha PDF</span>
+                            </button>
+                        } />
+                    </div>
                 </div>
                 
                 <div className="space-y-6">
@@ -542,16 +549,24 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
       {activeTab === 'nutricao' && (
         <div className="animate-in fade-in slide-in-from-right-4 duration-300 space-y-8">
           <section>
-            <div className={sectionHeaderClass + " justify-between"}>
-              <div className="flex items-center gap-2">
-                  <Utensils className="text-[#d4af37]" size={20} />
-                  <h2 className="text-xl font-black text-white uppercase tracking-tighter">Estratégia Nutricional</h2>
-              </div>
-              <ProtocolPreview 
-                  data={data} 
-                  customTrigger={<ActionButton icon={Dumbbell} label="Protocolo PDF" />} 
-              />
+            <div className="bg-[#d4af37]/10 p-6 rounded-[2rem] border border-[#d4af37]/20 flex flex-col md:flex-row justify-between items-center gap-6 mb-8 relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-10 opacity-10 pointer-events-none"><Utensils size={120} /></div>
+                <div className="flex items-center gap-4 relative z-10">
+                    <div className="w-16 h-16 bg-[#d4af37] rounded-2xl flex items-center justify-center text-black shadow-lg"><Utensils size={32} strokeWidth={2.5} /></div>
+                    <div>
+                        <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Planejamento Alimentar</h2>
+                        <p className="text-xs font-bold text-[#d4af37] uppercase tracking-widest mt-1">Dieta & Suplementação</p>
+                    </div>
+                </div>
+                <div className="relative z-10">
+                    <ProtocolPreview data={data} customTrigger={
+                        <button className="bg-[#d4af37] hover:bg-[#b5952f] text-black px-6 py-3 rounded-xl flex items-center gap-2 transition-all shadow-lg hover:scale-105 active:scale-95">
+                            <FileText size={18} /> <span className="text-xs font-black uppercase tracking-widest">Protocolo PDF</span>
+                        </button>
+                    } />
+                </div>
             </div>
+
             <div>
               <label className={labelClass}>Linha de raciocínio da dieta</label>
               <textarea className={textAreaClass} value={data.nutritionalStrategy} onChange={(e) => handleChange('nutritionalStrategy', e.target.value)} placeholder="Ex: Dieta Cetogênica..." />
@@ -640,16 +655,25 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
       {activeTab === 'treino' && (
         <div className="animate-in fade-in slide-in-from-right-4 duration-300 space-y-8">
           <section>
-            <div className={sectionHeaderClass + " justify-between"}>
-                <div className="flex items-center gap-2">
-                    <Dumbbell className="text-[#d4af37]" size={20} />
-                    <h2 className="text-xl font-black text-white uppercase tracking-tighter">Divisão de Treinos</h2>
+            <div className="bg-[#d4af37]/10 p-6 rounded-[2rem] border border-[#d4af37]/20 flex flex-col md:flex-row justify-between items-center gap-6 mb-8 relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-10 opacity-10 pointer-events-none"><Dumbbell size={120} /></div>
+                <div className="flex items-center gap-4 relative z-10">
+                    <div className="w-16 h-16 bg-[#d4af37] rounded-2xl flex items-center justify-center text-black shadow-lg"><Dumbbell size={32} strokeWidth={2.5} /></div>
+                    <div>
+                        <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Programação de Treinos</h2>
+                        <p className="text-xs font-bold text-[#d4af37] uppercase tracking-widest mt-1">Periodização e Exercícios</p>
+                    </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="relative z-10 flex gap-2">
                     <button onClick={handleClearTraining} className="text-[10px] font-bold text-red-500 bg-red-500/10 px-3 py-1.5 rounded-lg border border-red-500/20 hover:bg-red-500 hover:text-white transition-all flex items-center gap-1"><Eraser size={12} /> Limpar</button>
-                    <ProtocolPreview data={data} customTrigger={<ActionButton icon={Dumbbell} label="Protocolo PDF" />} />
+                    <ProtocolPreview data={data} customTrigger={
+                        <button className="bg-[#d4af37] hover:bg-[#b5952f] text-black px-6 py-3 rounded-xl flex items-center gap-2 transition-all shadow-lg hover:scale-105 active:scale-95">
+                            <FileText size={18} /> <span className="text-xs font-black uppercase tracking-widest">Protocolo PDF</span>
+                        </button>
+                    } />
                 </div>
             </div>
+
             <div className="mb-6"><label className={labelClass}>Frequência Semanal</label><input className={inputClass} value={data.trainingFrequency} onChange={(e) => handleChange('trainingFrequency', e.target.value)} placeholder="Ex: 5x na semana" /></div>
             <div className="space-y-8">
               {data.trainingDays.map((day, dIndex) => (
