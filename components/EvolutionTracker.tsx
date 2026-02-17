@@ -274,7 +274,11 @@ const EvolutionTracker: React.FC<Props> = ({
           }
       } catch (error: any) {
           console.error(error);
-          alert("Erro na IA: " + error.message);
+          if (error.message?.includes('429') || error.message?.includes('quota') || error.status === 429) {
+              alert("⚠️ Limite de uso da IA atingido.\n\nO Google limitou as requisições temporariamente. Por favor, aguarde cerca de 1 minuto e tente novamente.");
+          } else {
+              alert("Erro na IA: " + error.message);
+          }
       } finally {
           setIsGeneratingAI(false);
       }
