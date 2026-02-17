@@ -1,8 +1,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { ProtocolData, Meal, Supplement, TrainingDay, Exercise } from '../types';
-import { Activity, User, ShieldCheck, ChevronLeft, MapPin, Dumbbell, Utensils, Pill, Plus, Trash2, FileText, AlertCircle, Sparkles, Loader2, Ruler, DollarSign, Droplets, BookOpen } from 'lucide-react';
+import { Activity, User, ShieldCheck, ChevronLeft, MapPin, Dumbbell, Utensils, Pill, Plus, Trash2, FileText, AlertCircle, Sparkles, Loader2, Ruler, DollarSign, Droplets, BookOpen, Eraser } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
+import { EMPTY_DATA } from '../constants'; // Importar EMPTY_DATA
 
 // Chave API Gemini fornecida
 const API_KEY = process.env.API_KEY || "AIzaSyCX1oRHkaPfcf4vfOruLc_rv9B-rMCOpzA";
@@ -12,8 +13,8 @@ interface Props {
   onChange: (data: ProtocolData) => void;
   onBack?: () => void;
   // Novas props para controle externo das abas
-  activeTab: 'identificacao' | 'anamnese' | 'medidas' | 'nutricao' | 'treino' | 'obs';
-  onTabChange: (tab: 'identificacao' | 'anamnese' | 'medidas' | 'nutricao' | 'treino' | 'obs') => void;
+  activeTab: 'identificacao' | 'anamnese' | 'medidas' | 'nutricao' | 'treino';
+  onTabChange: (tab: 'identificacao' | 'anamnese' | 'medidas' | 'nutricao' | 'treino') => void;
   hideTabs?: boolean; // Nova prop para esconder as abas internas
 }
 
@@ -129,6 +130,30 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
   const updateMealTime = (index: number, val: string) => {
     const formatted = formatTime(val);
     updateMeal(index, 'time', formatted);
+  };
+
+  // --- FUNÇÕES DE LIMPEZA ---
+  const handleClearNutrition = () => {
+    if(confirm("Tem certeza? Isso apagará a Estratégia, Metas, Macros, Refeições e Suplementos.")) {
+        const newData = JSON.parse(JSON.stringify(data));
+        newData.nutritionalStrategy = "";
+        newData.kcalGoal = "";
+        newData.kcalSubtext = "";
+        newData.macros = JSON.parse(JSON.stringify(EMPTY_DATA.macros));
+        newData.meals = [];
+        newData.supplements = [];
+        onChange(newData);
+    }
+  };
+
+  const handleClearTraining = () => {
+    if(confirm("Tem certeza? Isso apagará todos os dias de treino cadastrados.")) {
+        const newData = JSON.parse(JSON.stringify(data));
+        newData.trainingDays = [];
+        // Opcional: Limpar frequência também
+        // newData.trainingFrequency = ""; 
+        onChange(newData);
+    }
   };
 
   // --- LÓGICA DO GERADOR IA (Google Gemini) ---
@@ -470,7 +495,6 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
             <TabButton id="medidas" label="Medidas" icon={Ruler} />
             <TabButton id="nutricao" label="Nutrição" icon={Utensils} />
             <TabButton id="treino" label="Treino" icon={Dumbbell} />
-            <TabButton id="obs" label="Observações" icon={FileText} />
         </div>
       )}
 
@@ -803,14 +827,23 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                   </div>
                 </div>
                 
-                <button 
-                  onClick={handleGenerateAI} 
-                  disabled={isGenerating}
-                  className="px-8 py-4 bg-[#d4af37] text-black rounded-xl font-black uppercase text-xs tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto justify-center whitespace-nowrap"
-                >
-                  {isGenerating ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
-                  {isGenerating ? 'Gerando...' : 'Gerar Protocolo Agora'}
-                </button>
+                <div className="flex gap-2 w-full md:w-auto">
+                    <button 
+                        onClick={handleClearNutrition}
+                        className="px-4 py-4 bg-white/5 border border-white/10 hover:bg-red-500/20 hover:text-red-500 hover:border-red-500/30 text-white/40 rounded-xl transition-all flex items-center justify-center"
+                        title="Limpar Dados Gerados"
+                    >
+                        <Eraser size={18} />
+                    </button>
+                    <button 
+                        onClick={handleGenerateAI} 
+                        disabled={isGenerating}
+                        className="px-8 py-4 bg-[#d4af37] text-black rounded-xl font-black uppercase text-xs tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed w-full justify-center whitespace-nowrap"
+                    >
+                        {isGenerating ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
+                        {isGenerating ? 'Gerando...' : 'Gerar Protocolo Agora'}
+                    </button>
+                </div>
             </div>
           </section>
 
@@ -929,9 +962,17 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
         <div className="animate-in fade-in slide-in-from-right-4 duration-300 space-y-8">
            {/* DIVISÃO DE TREINOS */}
           <section>
-            <div className={sectionHeaderClass}>
-              <Dumbbell className="text-[#d4af37]" size={20} />
-              <h2 className="text-xl font-black text-white uppercase tracking-tighter">Divisão de Treinos</h2>
+            <div className={sectionHeaderClass + " justify-between"}>
+                <div className="flex items-center gap-2">
+                    <Dumbbell className="text-[#d4af37]" size={20} />
+                    <h2 className="text-xl font-black text-white uppercase tracking-tighter">Divisão de Treinos</h2>
+                </div>
+                <button 
+                    onClick={handleClearTraining}
+                    className="text-[10px] font-bold text-red-500 bg-red-500/10 px-3 py-1.5 rounded-lg border border-red-500/20 hover:bg-red-500 hover:text-white transition-all flex items-center gap-1"
+                >
+                    <Eraser size={12} /> Limpar Treinos
+                </button>
             </div>
             <div className="mb-6">
               <label className={labelClass}>Frequência Semanal</label>
@@ -972,25 +1013,6 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                   <Plus size={16} /> Novo Bloco de Treino
               </button>
             </div>
-          </section>
-        </div>
-      )}
-
-      {/* ABA: OBS */}
-      {activeTab === 'obs' && (
-        <div className="animate-in fade-in slide-in-from-right-4 duration-300 space-y-8">
-          {/* OBSERVAÇÕES */}
-          <section>
-            <div className={sectionHeaderClass}>
-              <AlertCircle className="text-[#d4af37]" size={20} />
-              <h2 className="text-xl font-black text-white uppercase tracking-tighter">Observação</h2>
-            </div>
-            <textarea 
-                className={textAreaClass}
-                value={data.generalObservations}
-                onChange={(e) => handleChange('generalObservations', e.target.value)}
-                placeholder="Recomendações finais para o aluno..."
-              />
           </section>
         </div>
       )}

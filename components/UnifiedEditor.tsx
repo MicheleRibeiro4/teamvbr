@@ -6,7 +6,7 @@ import ProtocolPreview, { ProtocolPreviewHandle } from './ProtocolPreview';
 import ContractPreview, { ContractPreviewHandle } from './ContractPreview';
 import AnamnesisPreview, { AnamnesisPreviewHandle } from './AnamnesisPreview';
 import EvolutionTracker from './EvolutionTracker'; // Importando EvolutionTracker
-import { ChevronLeft, Settings2, Download, FileText, Activity, Dumbbell, TrendingUp } from 'lucide-react';
+import { ChevronLeft, Settings2, Download, FileText, Activity, Dumbbell, TrendingUp, Utensils, BookOpen, User, Ruler } from 'lucide-react';
 
 interface Props {
   data: ProtocolData;
@@ -31,7 +31,7 @@ const UnifiedEditor: React.FC<Props> = ({
   onDeleteHistory = () => {}
 }) => {
   // Estado elevado para controlar qual aba está ativa no formulário
-  const [activeTab, setActiveTab] = useState<'identificacao' | 'anamnese' | 'medidas' | 'nutricao' | 'treino' | 'obs' | 'evolucao'>('identificacao');
+  const [activeTab, setActiveTab] = useState<'identificacao' | 'anamnese' | 'medidas' | 'nutricao' | 'treino' | 'evolucao'>('identificacao');
   
   // Estado para controlar qual visualização está ativa
   const [viewMode, setViewMode] = useState<PreviewMode>('contract');
@@ -56,7 +56,6 @@ const UnifiedEditor: React.FC<Props> = ({
             break;
         case 'nutricao':
         case 'treino':
-        case 'obs':
             setViewMode('protocol');
             break;
         case 'evolucao':
@@ -122,7 +121,6 @@ const UnifiedEditor: React.FC<Props> = ({
                     { id: 'medidas', label: 'Medidas', fullLabel: 'Medidas', icon: Dumbbell },
                     { id: 'nutricao', label: 'Dieta', fullLabel: 'Nutrição', icon: Activity },
                     { id: 'treino', label: 'Treino', fullLabel: 'Treino', icon: Dumbbell },
-                    { id: 'obs', label: 'Obs', fullLabel: 'Observações', icon: FileText },
                     { id: 'evolucao', label: 'Evolução', fullLabel: 'Evolução', icon: TrendingUp },
                 ].map((tab) => (
                     <button 
