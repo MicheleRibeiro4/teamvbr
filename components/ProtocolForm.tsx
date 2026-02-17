@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { ProtocolData, Meal, Supplement, TrainingDay, Exercise } from '../types';
-import { Activity, User, ShieldCheck, ChevronLeft, MapPin, Dumbbell, Utensils, Pill, Plus, Trash2, FileText, AlertCircle, Sparkles, Loader2, Ruler, DollarSign, Droplets, BookOpen, Eraser, FileDown } from 'lucide-react';
+import { Activity, User, ShieldCheck, ChevronLeft, MapPin, Dumbbell, Utensils, Pill, Plus, Trash2, FileText, AlertCircle, Sparkles, Loader2, Ruler, DollarSign, Droplets, BookOpen, Eraser, FileDown, Lightbulb } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 import { EMPTY_DATA } from '../constants';
 import ContractPreview, { ContractPreviewHandle } from './ContractPreview';
@@ -116,13 +116,14 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
   };
 
   const handleClearNutrition = () => {
-    if(confirm("Tem certeza? Isso apagará as Metas, Macros, Refeições e Suplementos, mas manterá sua Estratégia.")) {
+    if(confirm("Tem certeza? Isso apagará as Metas, Macros, Refeições, Suplementos e Dicas, mas manterá sua Estratégia.")) {
         const newData = JSON.parse(JSON.stringify(data));
         newData.kcalGoal = "";
         newData.kcalSubtext = "";
         newData.macros = JSON.parse(JSON.stringify(EMPTY_DATA.macros));
         newData.meals = [];
         newData.supplements = [];
+        newData.tips = [];
         onChange(newData);
     }
   };
@@ -156,10 +157,23 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
         INSTRUÇÕES OBRIGATÓRIAS: 
         1. Gere treinos intensos e completos. 
         2. GERE A DIETA COMPLETA: Preencha o campo "details" de CADA refeição com os alimentos específicos e quantidades (ex: "150g de Frango Grelhado + 100g Arroz"). NÃO DEIXE O CAMPO "details" VAZIO.
-        3. GERE O TREINO COMPLETO: Preencha o campo "exercises" com exercícios reais, séries e repetições.
+        3. SUPLEMENTAÇÃO: É OBRIGATÓRIO preencher os campos "dosage" (ex: 5g, 1 caps) e "timing" (ex: Ao acordar, Pós-treino) para cada suplemento sugerido.
+        4. DICAS: Gere 4 dicas essenciais ("tips") focadas em hidratação, sono ou comportamento.
+        5. GERE O TREINO COMPLETO: Preencha o campo "exercises" com exercícios reais, séries e repetições.
         
         Retorne APENAS JSON.
-        Estrutura JSON: { "nutritionalStrategy": "...", "kcalGoal": "...", "kcalSubtext": "...", "macros": { "protein": { "value": "...", "ratio": "..." }, "carbs": { "value": "...", "ratio": "..." }, "fats": { "value": "...", "ratio": "..." } }, "meals": [{ "time": "08:00", "name": "Café", "details": "2 ovos, 1 pão..." }], "supplements": [...], "trainingFrequency": "...", "trainingDays": [{ "title": "A", "focus": "Peito", "exercises": [{ "name": "Supino", "sets": "4x12" }] }], "generalObservations": "..." }
+        Estrutura JSON: { 
+            "nutritionalStrategy": "...", 
+            "kcalGoal": "...", 
+            "kcalSubtext": "...", 
+            "macros": { "protein": { "value": "...", "ratio": "..." }, "carbs": { "value": "...", "ratio": "..." }, "fats": { "value": "...", "ratio": "..." } }, 
+            "meals": [{ "time": "08:00", "name": "Café", "details": "2 ovos, 1 pão..." }], 
+            "supplements": [{ "name": "Creatina", "dosage": "5g", "timing": "Pós-treino" }], 
+            "tips": ["Beber 4L de água", "Dormir 8h"],
+            "trainingFrequency": "...", 
+            "trainingDays": [{ "title": "A", "focus": "Peito", "exercises": [{ "name": "Supino", "sets": "4x12" }] }], 
+            "generalObservations": "..." 
+        }
       `;
 
       const response = await ai.models.generateContent({
@@ -179,6 +193,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
           macros: generatedData.macros || data.macros,
           meals: generatedData.meals ? generatedData.meals.map((m: any, i: number) => ({ ...m, id: Date.now().toString() + i })) : [],
           supplements: generatedData.supplements ? generatedData.supplements.map((s: any, i: number) => ({ ...s, id: Date.now().toString() + i })) : [],
+          tips: generatedData.tips || data.tips || [],
           trainingFrequency: generatedData.trainingFrequency || data.trainingFrequency,
           trainingDays: generatedData.trainingDays ? generatedData.trainingDays.map((d: any, i: number) => ({
              ...d, 
@@ -301,6 +316,10 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
   const addSupplement = () => handleChange('supplements', [...data.supplements, { id: Date.now().toString(), name: '', dosage: '', timing: '' }]);
   const removeSupplement = (index: number) => { const newSupps = [...data.supplements]; newSupps.splice(index, 1); handleChange('supplements', newSupps); };
   const updateSupplement = (index: number, field: keyof Supplement, val: string) => { const newSupps = [...data.supplements]; newSupps[index] = { ...newSupps[index], [field]: val }; handleChange('supplements', newSupps); };
+
+  const addTip = () => handleChange('tips', [...(data.tips || []), ""]);
+  const removeTip = (index: number) => { const newTips = [...(data.tips || [])]; newTips.splice(index, 1); handleChange('tips', newTips); };
+  const updateTip = (index: number, val: string) => { const newTips = [...(data.tips || [])]; newTips[index] = val; handleChange('tips', newTips); };
 
   const addTrainingDay = () => handleChange('trainingDays', [...data.trainingDays, { id: Date.now().toString(), title: '', focus: '', exercises: [] }]);
   const removeTrainingDay = (index: number) => { const newDays = [...data.trainingDays]; newDays.splice(index, 1); handleChange('trainingDays', newDays); };
@@ -679,6 +698,19 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                 </div>
               ))}
               <button onClick={addSupplement} className={addButtonClass}><Plus size={16} /> Adicionar Suplementação</button>
+            </div>
+          </section>
+
+          <section>
+            <div className={sectionHeaderClass}><Lightbulb className="text-[#d4af37]" size={20} /><h2 className="text-xl font-black text-white uppercase tracking-tighter">Dicas & Orientações</h2></div>
+            <div className="space-y-4">
+              {(data.tips || []).map((tip, index) => (
+                <div key={index} className="flex gap-2 items-center">
+                    <input className={inputClass} value={tip} onChange={(e) => updateTip(index, e.target.value)} placeholder="Ex: Beber 500ml de água ao acordar" />
+                    <button onClick={() => removeTip(index)} className="p-3 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-colors"><Trash2 size={18} /></button>
+                </div>
+              ))}
+              <button onClick={addTip} className={addButtonClass}><Plus size={16} /> Adicionar Dica</button>
             </div>
           </section>
         </div>
