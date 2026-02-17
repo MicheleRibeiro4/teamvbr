@@ -20,11 +20,10 @@ import {
   Dumbbell,
   X,
   Maximize2,
-  Edit3,
-  ShieldCheck,
-  BookOpen
+  Eye
 } from 'lucide-react';
 import { LOGO_VBR_BLACK } from '../constants';
+import ProtocolPreview from './ProtocolPreview';
 
 const LOGO_VBR_GOLD = "https://xqwzmvzfemjkvaquxedz.supabase.co/storage/v1/object/public/LOGO/DOURADO.png";
 
@@ -41,7 +40,9 @@ interface Props {
 // --- SUB-COMPONENT: SIMPLE SVG CHART ---
 const EvolutionChart = ({ history }: { history: ProtocolData[] }) => {
     const dataPoints = useMemo(() => {
-        return [...history].reverse().map(p => ({
+        // Ordena do mais antigo para o mais novo para o gráfico
+        const sorted = [...history].sort((a, b) => new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime());
+        return sorted.map(p => ({
             date: new Date(p.updatedAt).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
             weight: parseFloat(p.physicalData.weight.replace(',', '.') || '0'),
         })).filter(p => p.weight > 0);
@@ -54,8 +55,9 @@ const EvolutionChart = ({ history }: { history: ProtocolData[] }) => {
         </div>
     );
 
-    const maxWeight = Math.max(...dataPoints.map(d => d.weight)) * 1.02;
-    const minWeight = Math.min(...dataPoints.map(d => d.weight)) * 0.98;
+    const weights = dataPoints.map(d => d.weight);
+    const maxWeight = Math.max(...weights) * 1.02;
+    const minWeight = Math.min(...weights) * 0.98;
     const range = maxWeight - minWeight;
 
     // SVG Dimensions
@@ -120,20 +122,26 @@ const EvolutionTracker: React.FC<Props> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [historyPreview, setHistoryPreview] = useState<ProtocolData | null>(null);
   
   const reportRef = useRef<HTMLDivElement>(null);
-  const viewReportRef = useRef<HTMLDivElement>(null);
 
   // --- GESTÃO DE HISTÓRICO ---
   const sortedHistory = useMemo(() => {
+    // Mescla o protocolo atual com o histórico e remove duplicatas por ID
     const uniqueMap = new Map();
-    [currentProtocol, ...history].forEach(p => uniqueMap.set(p.id, p));
+    // Prioriza o history (que contém versões antigas) e adiciona o atual
+    [...history, currentProtocol].forEach(p => uniqueMap.set(p.id, p));
+    
+    // Retorna array ordenado por data de atualização (mais recentes primeiro)
     return Array.from(uniqueMap.values())
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
   }, [history, currentProtocol]);
 
+  // Encontra o registro mais antigo para usar como base de comparação
   const startSnapshot = useMemo(() => {
       if (sortedHistory.length === 0) return currentProtocol;
+      // O último elemento do array ordenado por data desc é o mais antigo
       return sortedHistory[sortedHistory.length - 1];
   }, [sortedHistory]);
 
@@ -141,20 +149,30 @@ const EvolutionTracker: React.FC<Props> = ({
   const [editTitle, setEditTitle] = useState(currentProtocol.protocolTitle);
 
   React.useEffect(() => {
-    setMode('view');
-    setEditData(currentProtocol.physicalData);
-    setEditTitle(currentProtocol.protocolTitle);
-  }, [currentProtocol.id]);
+    if (mode === 'view') {
+        setEditData(currentProtocol.physicalData);
+        setEditTitle(currentProtocol.protocolTitle);
+    }
+  }, [currentProtocol.id, mode]);
 
   // --- HANDLERS ---
   const handleStartNewCheckin = () => {
-      setEditData({ ...currentProtocol.physicalData, date: new Date().toLocaleDateString('pt-BR'), weight: "" });
+      // Mantém os dados atuais como base, mas permite editar data e peso
+      setEditData({ 
+          ...currentProtocol.physicalData, 
+          date: new Date().toLocaleDateString('pt-BR'),
+          // Opcional: limpar peso para forçar nova entrada ou manter o anterior
+          // weight: "" 
+      });
       setMode('new_checkin');
   };
 
   const handleStartNewProtocol = () => {
-      setEditData({ ...currentProtocol.physicalData, date: new Date().toLocaleDateString('pt-BR') });
-      setEditTitle(currentProtocol.protocolTitle);
+      setEditData({ 
+          ...currentProtocol.physicalData, 
+          date: new Date().toLocaleDateString('pt-BR') 
+      });
+      setEditTitle(currentProtocol.protocolTitle); // Inicia com o título atual para edição
       setMode('new_protocol');
   };
 
@@ -162,18 +180,27 @@ const EvolutionTracker: React.FC<Props> = ({
     if (!editData.weight) { alert("⚠️ Por favor, informe o Peso Atual."); return; }
     setIsSaving(true);
     try {
+        const timestamp = new Date().toISOString();
+        
         const newProtocolState = {
             ...currentProtocol,
             protocolTitle: editTitle, // Atualiza o título se estiver em modo de novo protocolo
             physicalData: editData,
-            updatedAt: new Date().toISOString(),
-            privateNotes: mode === 'new_protocol' ? `Início de Novo Protocolo: ${editTitle}` : currentProtocol.privateNotes
+            updatedAt: timestamp,
+            privateNotes: mode === 'new_protocol' 
+                ? `Início de Novo Protocolo: ${editTitle}` 
+                : (currentProtocol.privateNotes || 'Evolução registrada')
         };
+
         if (mode === 'new_checkin') {
-            // Cria um histórico (snapshot) do momento atual
+            // Check-in: Atualiza os dados do protocolo existente e cria um registro no histórico
+            // createHistory = true: Salva o estado ANTERIOR no histórico antes de atualizar?
+            // A lógica do UnifiedEditor/App geralmente salva o estado atual.
+            // Aqui vamos pedir para salvar e garantir que uma entrada de histórico seja criada.
             await onUpdateData(newProtocolState, true, false); 
         } else if (mode === 'new_protocol') {
-            // Cria um NOVO protocolo (Novo ID) mantendo os dados anteriores como base
+            // Novo Protocolo: Gera um novo ID para separar as fases, mas mantém histórico visualmente
+            // forceNewId = true: Cria um novo registro no banco com novo ID
             await onUpdateData(newProtocolState, false, true); 
         }
         setMode('view');
@@ -188,7 +215,6 @@ const EvolutionTracker: React.FC<Props> = ({
   };
 
   const handleGenerateReport = async () => {
-      // Usa a referência oculta para garantir formatação correta no PDF
       const targetRef = reportRef.current;
       if (!targetRef) return;
       
@@ -210,7 +236,8 @@ const EvolutionTracker: React.FC<Props> = ({
   const isEditing = mode !== 'view';
   const displayData = isEditing ? editData : currentProtocol.physicalData;
 
-  // --- CÁLCULOS ---
+  // --- CÁLCULOS FIXOS DE INÍCIO ---
+  // Usa o startSnapshot (mais antigo) como referência fixa
   const startDate = new Date(startSnapshot.createdAt || startSnapshot.updatedAt);
   const diffTime = Math.abs(new Date().getTime() - startDate.getTime());
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
@@ -253,6 +280,11 @@ const EvolutionTracker: React.FC<Props> = ({
             </div>
         </div>
 
+        {/* Gráfico no Relatório */}
+        <div className="mb-10 h-64 border border-gray-200 rounded-lg p-4">
+             <EvolutionChart history={sortedHistory} />
+        </div>
+
         <table className="w-full text-sm border-collapse mb-8">
             <thead>
                 <tr className="bg-black text-white">
@@ -261,18 +293,21 @@ const EvolutionTracker: React.FC<Props> = ({
                     <th className="p-4 text-center">BF (%)</th>
                     <th className="p-4 text-center">Massa (kg)</th>
                     <th className="p-4 text-center">Cintura (cm)</th>
-                    <th className="p-4 text-left rounded-tr-lg">Observações</th>
+                    <th className="p-4 text-left rounded-tr-lg">Fase / Observações</th>
                 </tr>
             </thead>
             <tbody>
-                {[...sortedHistory].reverse().map((p, i) => (
+                {sortedHistory.map((p, i) => (
                     <tr key={p.id} className={i % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
                         <td className="p-4 font-bold border-b border-gray-200">{new Date(p.updatedAt).toLocaleDateString('pt-BR')}</td>
                         <td className="p-4 text-center border-b border-gray-200 font-medium">{p.physicalData.weight}</td>
                         <td className="p-4 text-center border-b border-gray-200">{p.physicalData.bodyFat || '-'}</td>
                         <td className="p-4 text-center border-b border-gray-200">{p.physicalData.muscleMass || '-'}</td>
                         <td className="p-4 text-center border-b border-gray-200">{p.physicalData.measurements?.waist || '-'}</td>
-                        <td className="p-4 text-xs italic text-gray-500 border-b border-gray-200 max-w-[200px] truncate">{p.privateNotes || '-'}</td>
+                        <td className="p-4 text-xs italic text-gray-500 border-b border-gray-200 max-w-[200px] truncate">
+                            <span className="font-bold text-black block">{p.protocolTitle}</span>
+                            {p.privateNotes || '-'}
+                        </td>
                     </tr>
                 ))}
             </tbody>
@@ -314,12 +349,12 @@ const EvolutionTracker: React.FC<Props> = ({
                       <>
                         <div className="flex gap-2 mr-2 pr-2 border-r border-white/5">
                             <button onClick={() => setShowReportModal(true)} className={docBtnClass} title="Relatório de Evolução">
-                                <TrendingUp size={16}/> <span className="text-[8px] font-black uppercase">Relatório</span>
+                                <FileText size={16}/> <span className="text-[8px] font-black uppercase">Relatório PDF</span>
                             </button>
                         </div>
 
                         <button onClick={handleStartNewProtocol} className="px-5 py-3 rounded-xl bg-blue-500/10 hover:bg-blue-500 hover:text-white text-blue-400 border border-blue-500/30 font-black uppercase text-[10px] tracking-widest transition-all flex items-center gap-2 h-full">
-                            <RefreshCw size={14}/> Novo Protocolo
+                            <RefreshCw size={14}/> Gerar Novo Protocolo
                         </button>
                         <button onClick={handleStartNewCheckin} className="px-6 py-3 rounded-xl bg-[#d4af37] text-black hover:scale-105 shadow-[0_0_20px_rgba(212,175,55,0.3)] font-black uppercase text-[10px] tracking-widest transition-all flex items-center gap-2 h-full">
                             <Plus size={16}/> Nova Evolução
@@ -330,7 +365,7 @@ const EvolutionTracker: React.FC<Props> = ({
                         <button onClick={handleCancel} className="px-6 py-3 rounded-xl bg-white/5 hover:text-white text-white/40 font-black uppercase text-[10px] tracking-widest transition-all">Cancelar</button>
                         <button onClick={handleSave} disabled={isSaving} className="px-8 py-3 rounded-xl bg-green-500 text-black hover:scale-105 shadow-lg font-black uppercase text-[10px] tracking-widest transition-all flex items-center gap-2">
                             {isSaving ? <Loader2 size={16} className="animate-spin"/> : <Save size={16}/>} 
-                            {mode === 'new_protocol' ? 'Criar Protocolo' : 'Salvar Registro'}
+                            {mode === 'new_protocol' ? 'Criar Protocolo' : 'Salvar Evolução'}
                         </button>
                       </>
                   )}
@@ -351,7 +386,7 @@ const EvolutionTracker: React.FC<Props> = ({
                       />
                   </div>
                   <div className="text-xs text-white/40 max-w-xs text-center md:text-right">
-                      Isso criará um novo marco no histórico. Os treinos e dieta anteriores serão mantidos até você editá-los.
+                      Isso criará um novo marco no histórico. Os treinos e dieta anteriores serão mantidos no histórico visualizável.
                   </div>
               </div>
           )}
@@ -514,15 +549,11 @@ const EvolutionTracker: React.FC<Props> = ({
 
                       {sortedHistory.map((p, idx) => {
                           const isActive = p.id === currentProtocol.id;
-                          const isNewProtocol = p.privateNotes?.includes('Novo Protocolo') || idx === sortedHistory.length - 1;
+                          const isNewProtocol = p.privateNotes?.includes('Novo Protocolo') || p.privateNotes?.includes('Início') || idx === sortedHistory.length - 1;
                           
                           return (
                               <div key={p.id} className="relative z-10 group">
-                                  <button
-                                      onClick={() => mode === 'view' && onSelectHistory && onSelectHistory(p)}
-                                      disabled={mode !== 'view'}
-                                      className={`w-full text-left p-4 pl-12 rounded-2xl border transition-all relative ${isActive ? 'bg-[#d4af37] border-[#d4af37] text-black shadow-lg scale-[1.02]' : 'bg-[#1a1a1a] border-white/5 text-white/60 hover:bg-white/5 hover:border-white/10'}`}
-                                  >
+                                  <div className={`w-full text-left p-4 pl-12 rounded-2xl border transition-all relative ${isActive ? 'bg-[#d4af37] border-[#d4af37] text-black shadow-lg scale-[1.02]' : 'bg-[#1a1a1a] border-white/5 text-white/60 hover:bg-white/5 hover:border-white/10'}`}>
                                       <div className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 ${isActive ? 'bg-black border-black' : isNewProtocol ? 'bg-blue-500 border-blue-500' : 'bg-[#111] border-white/20'}`}></div>
 
                                       <div className="flex justify-between items-start">
@@ -531,22 +562,35 @@ const EvolutionTracker: React.FC<Props> = ({
                                                   {new Date(p.updatedAt).toLocaleDateString('pt-BR')}
                                               </span>
                                               <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${isNewProtocol ? 'bg-blue-500/20 text-blue-500' : 'bg-white/10 text-white/40'}`}>
-                                                  {isNewProtocol ? 'Novo Protocolo' : 'Check-in'}
+                                                  {isNewProtocol ? 'Novo Protocolo' : 'Evolução'}
                                               </span>
                                               {isNewProtocol && (
                                                   <p className="text-[8px] font-bold mt-1 opacity-70 truncate max-w-[100px]">{p.protocolTitle}</p>
                                               )}
                                           </div>
-                                          <div className="text-right">
+                                          <div className="flex flex-col items-end gap-1">
                                               <p className="text-sm font-black">{p.physicalData.weight || '-'} <span className="text-[9px]">kg</span></p>
+                                              
+                                              {/* BOTÃO VER PROTOCOLO (Olho) */}
+                                              <button 
+                                                  onClick={(e) => { e.stopPropagation(); setHistoryPreview(p); }}
+                                                  className="p-1.5 bg-white/10 rounded-lg hover:bg-white/20 text-white transition-all flex items-center gap-1"
+                                                  title="Ver Protocolo desta data"
+                                              >
+                                                  <Eye size={12} /> <span className="text-[8px] font-bold uppercase">Ver</span>
+                                              </button>
                                           </div>
                                       </div>
-                                  </button>
+                                  </div>
 
-                                  {onDeleteHistory && idx !== sortedHistory.length - 1 && mode === 'view' && (
+                                  {/* BOTÃO EXCLUIR HISTÓRICO */}
+                                  {onDeleteHistory && !isActive && mode === 'view' && (
                                       <button 
-                                          onClick={(e) => { e.stopPropagation(); onDeleteHistory(p.id); }}
-                                          className="absolute top-2 right-2 p-2 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/10 rounded-lg"
+                                          onClick={(e) => { 
+                                              e.stopPropagation(); 
+                                              if(confirm("Deseja realmente excluir este registro de evolução?")) onDeleteHistory(p.id); 
+                                          }}
+                                          className="absolute top-2 right-14 p-2 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/10 rounded-lg"
                                           title="Excluir este registro"
                                       >
                                           <Trash2 size={14} />
@@ -560,14 +604,14 @@ const EvolutionTracker: React.FC<Props> = ({
           </div>
       </div>
 
-      {/* REPORT PREVIEW MODAL (VISUALIZAR) */}
+      {/* REPORT PREVIEW MODAL (VISUALIZAR RELATÓRIO DE EVOLUÇÃO) */}
       {showReportModal && (
         <div className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
             <div className="bg-white w-full max-w-5xl h-[90vh] rounded-[2rem] flex flex-col relative overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
                 {/* Header */}
                 <div className="bg-gray-100 p-4 px-8 flex justify-between items-center border-b border-gray-200">
                     <h2 className="text-black font-black uppercase tracking-tighter text-lg flex items-center gap-2">
-                        <FileText size={20} className="text-[#d4af37]" /> Visualização de Relatório
+                        <FileText size={20} className="text-[#d4af37]" /> Relatório de Evolução
                     </h2>
                     <button onClick={() => setShowReportModal(false)} className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-500">
                         <X size={24} />
@@ -598,6 +642,48 @@ const EvolutionTracker: React.FC<Props> = ({
                 </div>
             </div>
         </div>
+      )}
+
+      {/* HISTORY PROTOCOL PREVIEW MODAL (VISUALIZAR PROTOCOLO ANTIGO) */}
+      {historyPreview && (
+          <div className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
+              <div className="w-full max-w-5xl h-[90vh] relative">
+                  <button 
+                      onClick={() => setHistoryPreview(null)} 
+                      className="absolute -top-10 right-0 text-white/60 hover:text-white flex items-center gap-2 font-bold uppercase text-xs"
+                  >
+                      Fechar <X size={20} />
+                  </button>
+                  <div className="bg-[#111] rounded-[2rem] h-full overflow-hidden border border-white/10 shadow-2xl flex flex-col">
+                      <div className="bg-[#d4af37] p-4 flex justify-between items-center">
+                          <h3 className="text-black font-black uppercase tracking-tighter">
+                              Histórico: {new Date(historyPreview.updatedAt).toLocaleDateString('pt-BR')} - {historyPreview.protocolTitle}
+                          </h3>
+                      </div>
+                      <div className="flex-1 overflow-y-auto p-4 custom-scrollbar bg-white">
+                          {/* Reutiliza o ProtocolPreview com customTrigger null para renderizar direto (precisaria adaptar o ProtocolPreview para aceitar renderização direta ou usar o modal interno dele. 
+                              Como ProtocolPreview tem estado interno, vamos instanciá-lo e forçar o modal aberto ou renderizar o conteudo) 
+                              SIMPLIFICAÇÃO: Vamos renderizar o ProtocolPreview passando um trigger que já abre clicado ou refatorar.
+                              Melhor: Criar uma instancia de ProtocolPreview com customTrigger que simula o botão já clicado, 
+                              OU melhor ainda: O ProtocolPreview já tem lógica de modal. Vamos apenas passar os dados.
+                          */}
+                          <ProtocolPreview 
+                              data={historyPreview} 
+                              customTrigger={
+                                  <div className="w-full h-full flex flex-col items-center justify-center text-black py-20">
+                                      <p className="mb-4 font-bold">Clique para visualizar o PDF gerado deste histórico</p>
+                                      <button className="bg-[#d4af37] px-6 py-3 rounded-xl font-black uppercase shadow-lg">Abrir Visualização</button>
+                                  </div>
+                              } 
+                          />
+                          {/* 
+                             NOTA: O ideal seria o ProtocolPreview aceitar uma prop "isOpen" controlada externamente, 
+                             mas para não quebrar a estrutura existente, o usuário clica no botão acima dentro do modal para ver o PDF formatado.
+                          */}
+                      </div>
+                  </div>
+              </div>
+          </div>
       )}
 
       {/* HIDDEN REPORT FOR PDF GENERATION */}

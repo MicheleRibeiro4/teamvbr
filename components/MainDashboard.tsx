@@ -40,6 +40,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
   
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [previewStudent, setPreviewStudent] = useState<ProtocolData | null>(null);
+  const [showOnlyActive, setShowOnlyActive] = useState(false); // New state for filtering
 
   const activeProtocolsCount = protocols.filter(p => p.contract.status === 'Ativo').length;
   // Filtra alunos pendentes
@@ -68,9 +69,14 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
   const totalStudents = uniqueStudents.length;
 
   // Alunos recentes (apenas ativos ou já processados)
-  const recentStudents = uniqueStudents
-    .filter((p: any) => p.contract.status !== 'Aguardando')
-    .slice(0, 5);
+  // Modified to support filtering based on `showOnlyActive`
+  const displayedStudents = uniqueStudents
+    .filter((p: any) => {
+        if (p.contract.status === 'Aguardando') return false; // Never show pending in recent list
+        if (showOnlyActive) return p.contract.status === 'Ativo'; // Filter active if requested
+        return true;
+    })
+    .slice(0, showOnlyActive ? 100 : 5); // Show more if filtering, else limit to 5
 
   // --- LÓGICA DE AGENDA QUINZENAL ---
   const scheduledUpdates = useMemo(() => {
@@ -168,9 +174,9 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
   };
 
   const metrics = [
-    { label: 'Alunos Ativos', val: totalStudents, icon: <Users size={20}/>, color: 'text-blue-400', border: 'border-blue-400/20', bg: 'bg-blue-400/10' },
-    { label: 'Protocolos Ativos', val: activeProtocolsCount, icon: <Target size={20}/>, color: 'text-[#d4af37]', border: 'border-[#d4af37]/20', bg: 'bg-[#d4af37]/10' },
-    { label: 'Faturamento', val: 'R$ ' + totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 }), icon: <DollarSign size={20}/>, color: 'text-green-500', border: 'border-green-500/20', bg: 'bg-green-500/10' },
+    { label: 'Alunos Cadastrados', val: totalStudents, icon: <Users size={20}/>, color: 'text-blue-400', border: 'border-blue-400/20', bg: 'bg-blue-400/10', action: () => setShowOnlyActive(false) },
+    { label: 'Protocolos Ativos', val: activeProtocolsCount, icon: <Target size={20}/>, color: 'text-[#d4af37]', border: 'border-[#d4af37]/20', bg: 'bg-[#d4af37]/10', action: () => setShowOnlyActive(true) },
+    { label: 'Faturamento', val: 'R$ ' + totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 }), icon: <DollarSign size={20}/>, color: 'text-green-500', border: 'border-green-500/20', bg: 'bg-green-500/10', action: () => {} },
   ];
 
   // Styles for Preview Modal
@@ -393,8 +399,8 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
             {metrics.map((s, i) => (
             <button 
                 key={i} 
-                onClick={onList}
-                className="bg-white/5 p-4 rounded-[1.5rem] border border-white/10 shadow-sm flex flex-col justify-between group hover:bg-white/[0.1] hover:border-[#d4af37]/30 transition-all text-left h-full min-h-[120px]"
+                onClick={s.action}
+                className={`bg-white/5 p-4 rounded-[1.5rem] border ${showOnlyActive && i === 1 ? 'border-[#d4af37] bg-[#d4af37]/5' : 'border-white/10'} shadow-sm flex flex-col justify-between group hover:bg-white/[0.1] hover:border-[#d4af37]/30 transition-all text-left h-full min-h-[120px]`}
             >
                 <div className="flex justify-between items-start mb-3">
                     <div className={`p-2 rounded-xl ${s.bg} ${s.color} border ${s.border}`}>
@@ -487,24 +493,37 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
       <div className="w-full bg-[#111] border border-white/10 rounded-[2rem] p-6 flex flex-col">
           <div className="flex items-center justify-between mb-4 px-2">
             <h3 className="text-sm font-black text-white uppercase tracking-tighter flex items-center gap-2">
-              <Clock size={16} className="text-[#d4af37]" /> Alunos Recentes
+              <Clock size={16} className="text-[#d4af37]" /> {showOnlyActive ? 'Alunos Ativos' : 'Alunos Recentes'}
             </h3>
-            <button onClick={onList} className="text-[9px] font-black text-[#d4af37] uppercase tracking-widest hover:underline">Ver Todos</button>
+            {showOnlyActive && (
+                <button onClick={() => setShowOnlyActive(false)} className="text-[9px] font-black text-white/40 uppercase tracking-widest hover:text-white flex items-center gap-1">
+                    <XCircle size={12}/> Limpar Filtro
+                </button>
+            )}
+            {!showOnlyActive && (
+                <button onClick={onList} className="text-[9px] font-black text-[#d4af37] uppercase tracking-widest hover:underline">Ver Todos</button>
+            )}
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
-            {recentStudents.length > 0 ? recentStudents.map((p: any) => {
+            {displayedStudents.length > 0 ? displayedStudents.map((p: any) => {
               const isFemale = p.physicalData.gender === 'Feminino';
               
               // Alterado bg-black para bg-white para garantir contraste
               let iconColorClass = 'bg-white border-white/10';
               let hoverTextClass = 'group-hover:text-[#d4af37]';
               let buttonHoverBg = 'hover:bg-[#d4af37]';
+              let statusBadge = null;
+
+              if (p.contract.status === 'Ativo') {
+                  statusBadge = <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div>;
+              }
               
               const userIconSrc = isFemale ? ICON_WOMAN : ICON_MAN;
 
               return (
-                <div key={p.id} className="bg-white/5 p-3 rounded-xl border border-white/5 flex flex-col justify-between gap-3 hover:border-white/20 transition-all group">
+                <div key={p.id} className="bg-white/5 p-3 rounded-xl border border-white/5 flex flex-col justify-between gap-3 hover:border-white/20 transition-all group relative overflow-hidden">
+                  {statusBadge}
                   <div className="flex items-center gap-3 overflow-hidden">
                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center border transition-all shrink-0 ${iconColorClass} overflow-hidden`}>
                         <img src={userIconSrc} alt="Icon" className="w-full h-full object-cover" />
@@ -527,7 +546,9 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
               );
             }) : (
               <div className="col-span-full text-center py-8">
-                <p className="text-white/20 font-black uppercase tracking-widest text-[10px]">Nenhum registro recente</p>
+                <p className="text-white/20 font-black uppercase tracking-widest text-[10px]">
+                    {showOnlyActive ? 'Nenhum aluno ativo encontrado.' : 'Nenhum registro recente.'}
+                </p>
               </div>
             )}
           </div>
