@@ -3,8 +3,8 @@ import React, { useRef, useState, useImperativeHandle, forwardRef } from 'react'
 import { ProtocolData } from '../types';
 import { ChevronLeft, Download, Loader2 } from 'lucide-react';
 
-// Nova Logo Específica para Anamnese
-const LOGO_ANAMNESIS = "https://xqwzmvzfemjkvaquxedz.supabase.co/storage/v1/object/public/LOGO/logo1.jpeg";
+// Nova Logo Específica para Anamnese (Dourada)
+const LOGO_ANAMNESIS = "https://xqwzmvzfemjkvaquxedz.supabase.co/storage/v1/object/public/LOGO/DOURADO.png";
 
 export interface AnamnesisPreviewHandle {
   download: () => Promise<void>;
@@ -100,7 +100,7 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
                     <p className="text-sm text-gray-500 font-bold uppercase tracking-widest mt-1">Team VBR</p>
                 </div>
                 {/* Logo Nova Específica */}
-                <img src={LOGO_ANAMNESIS} alt="Team VBR" className="w-24 h-auto" />
+                <img src={LOGO_ANAMNESIS} alt="Team VBR" className="w-32 h-auto" />
             </div>
 
             {/* Identificação */}
