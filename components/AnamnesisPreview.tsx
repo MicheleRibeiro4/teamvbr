@@ -1,9 +1,8 @@
 
 import React, { useRef, useState, useImperativeHandle, forwardRef } from 'react';
 import { ProtocolData } from '../types';
-import { ChevronLeft, Download, Loader2 } from 'lucide-react';
+import { ChevronLeft, Download, Loader2, Activity, Maximize2, X, FileDown, ClipboardList } from 'lucide-react';
 
-// Nova Logo Específica para Anamnese (Dourada)
 const LOGO_ANAMNESIS = "https://xqwzmvzfemjkvaquxedz.supabase.co/storage/v1/object/public/LOGO/DOURADO.png";
 
 export interface AnamnesisPreviewHandle {
@@ -18,10 +17,12 @@ interface Props {
 
 const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBack, hideFloatingButton }, ref) => {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const pdfRef = useRef<HTMLDivElement>(null);
 
   const handleDownloadPDF = async () => {
-    if (!pdfRef.current) return;
+    const targetRef = pdfRef.current;
+    if (!targetRef) return;
     setIsGenerating(true);
     
     const opt = {
@@ -32,7 +33,7 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
         scale: 2, 
         useCORS: true, 
         letterRendering: true, 
-        backgroundColor: '#ffffff', // Fundo branco explícito
+        backgroundColor: '#ffffff',
         scrollY: 0,
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
@@ -41,7 +42,7 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
 
     try {
       // @ts-ignore
-      await html2pdf().set(opt).from(pdfRef.current).save();
+      await html2pdf().set(opt).from(targetRef).save();
     } catch (err) { 
       alert("Erro ao gerar PDF."); 
       console.error(err);
@@ -54,69 +55,51 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
     download: handleDownloadPDF
   }));
 
-  // Estilo Light Mode para o PDF
-  const pageStyle: React.CSSProperties = { 
-    width: '210mm', 
-    minHeight: '296mm', 
-    padding: '15mm', 
-    backgroundColor: '#ffffff', 
-    color: 'black', 
-    position: 'relative', 
-    boxSizing: 'border-box', 
-    display: 'block',
-  };
-  
-  const sectionTitle = "text-lg font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-1 mb-4 uppercase mt-6";
-  const labelStyle = "text-xs font-bold text-gray-500 uppercase block mb-1";
-  const valueStyle = "text-sm font-medium text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100 block";
-  const gridItemStyle = "break-inside-avoid";
+  const renderContent = (isPdfMode = false) => {
+    const pageStyle: React.CSSProperties = { 
+        width: '210mm', 
+        minHeight: '296mm', 
+        padding: '15mm', 
+        backgroundColor: '#ffffff', 
+        color: 'black', 
+        position: 'relative', 
+        boxSizing: 'border-box', 
+        display: 'block',
+        margin: isPdfMode ? '0' : '0 auto',
+        boxShadow: isPdfMode ? 'none' : '0 10px 30px rgba(0,0,0,0.1)'
+    };
+    
+    const sectionTitle = "text-lg font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-1 mb-4 uppercase mt-6";
+    const labelStyle = "text-xs font-bold text-gray-500 uppercase block mb-1";
+    const valueStyle = "text-sm font-medium text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100 block";
+    const gridItemStyle = "break-inside-avoid";
 
-  // Lógica defensiva para registros antigos (Legacy Support)
-  // Se o objeto measurements não existir no DB, cria um com valores padrão
-  const measurements = data.physicalData?.measurements || {
-      thorax: "-", waist: "-", abdomen: "-", glutes: "-",
-      rightArmRelaxed: "-", leftArmRelaxed: "-",
-      rightArmContracted: "-", leftArmContracted: "-",
-      rightThigh: "-", leftThigh: "-",
-      rightCalf: "-", leftCalf: "-"
-  };
+    const measurements = data.physicalData?.measurements || {
+        thorax: "-", waist: "-", abdomen: "-", glutes: "-",
+        rightArmRelaxed: "-", leftArmRelaxed: "-",
+        rightArmContracted: "-", leftArmContracted: "-",
+        rightThigh: "-", leftThigh: "-",
+        rightCalf: "-", leftCalf: "-"
+    };
 
-  // Safe access para Anamnese
-  const anamnesis = data.anamnesis || {
-      mainObjective: "", routine: "", trainingHistory: "", 
-      foodPreferences: "", ergogenics: ""
-  };
+    const anamnesis = data.anamnesis || {
+        mainObjective: "", routine: "", trainingHistory: "", 
+        foodPreferences: "", ergogenics: ""
+    };
 
-  // Data de Cadastro Fixa (Usa createdAt. Se não existir (legado muito antigo), usa updatedAt)
-  const registrationDate = new Date(data.createdAt || data.updatedAt || Date.now()).toLocaleDateString('pt-BR');
+    const registrationDate = new Date(data.createdAt || data.updatedAt || Date.now()).toLocaleDateString('pt-BR');
 
-  return (
-    <div className="flex flex-col items-center w-full pb-20 print:pb-0">
-      
-      {!hideFloatingButton && (
-        <div className="no-print fixed bottom-8 right-8 z-[100] flex gap-3">
-          {onBack && <button onClick={onBack} className="bg-white/10 backdrop-blur-md text-white px-6 py-4 rounded-full border border-white/20 hover:bg-white/20 transition-all font-black uppercase text-[10px] flex items-center gap-2"><ChevronLeft size={16} /> Voltar</button>}
-          <button onClick={handleDownloadPDF} disabled={isGenerating} className="bg-[#d4af37] text-black px-8 py-5 rounded-full shadow-2xl font-black uppercase text-xs flex items-center gap-3 transition-all active:scale-95">{isGenerating ? <Loader2 className="animate-spin" size={20} /> : <Download size={20} />}{isGenerating ? 'Processando...' : 'Baixar Anamnese PDF'}</button>
-        </div>
-      )}
-
-      {/* Container Branco Forçado para evitar tela preta */}
-      <div className="bg-white text-black p-4 md:p-8 rounded-lg shadow-2xl w-full max-w-[220mm] mx-auto">
-          <div ref={pdfRef} className="bg-white flex flex-col items-center print:bg-transparent print:m-0 print:p-0 w-full">
-            
-            {/* PÁGINA ÚNICA */}
+    return (
+        <div className="bg-white flex flex-col items-center print:bg-transparent w-full">
             <div style={pageStyle}>
-                {/* Header */}
                 <div className="flex justify-between items-center mb-8 border-b border-gray-200 pb-6">
                     <div>
                         <h1 className="text-3xl font-black text-gray-900 uppercase tracking-tighter">Ficha de Anamnese</h1>
                         <p className="text-sm text-gray-500 font-bold uppercase tracking-widest mt-1">Team VBR</p>
                     </div>
-                    {/* Logo Nova Específica */}
                     <img src={LOGO_ANAMNESIS} alt="Team VBR" className="w-32 h-auto" />
                 </div>
 
-                {/* Identificação */}
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                         <span className="text-xs font-bold text-gray-400 uppercase">Aluno</span>
@@ -124,7 +107,6 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
                     </div>
                     <div className="text-right">
                         <span className="text-xs font-bold text-gray-400 uppercase">Data do Cadastro</span>
-                        {/* DATA FIXA DE CADASTRO */}
                         <p className="text-sm font-bold text-gray-900">{registrationDate}</p>
                     </div>
                 </div>
@@ -148,7 +130,6 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
                     </div>
                 </div>
 
-                {/* Anamnese */}
                 <h3 className={sectionTitle}>Histórico & Objetivos</h3>
                 <div className="space-y-4">
                     <div className={gridItemStyle}>
@@ -175,7 +156,6 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
 
                 <div className="html2pdf__page-break"></div>
 
-                {/* Medidas */}
                 <h3 className={sectionTitle}>Medidas Corporais</h3>
                 
                 <div className="grid grid-cols-4 gap-4 mb-8">
@@ -211,8 +191,80 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
                     <p className="text-[10px] font-black uppercase text-gray-300 tracking-[0.3em]">Team VBR System © 2026</p>
                 </div>
             </div>
-          </div>
-      </div>
+        </div>
+    );
+  };
+
+  return (
+    <div className="w-full animate-in fade-in duration-500">
+        
+        {/* CARD DE AÇÃO */}
+        <div className="bg-[#111] rounded-[2.5rem] p-8 border border-white/10 shadow-2xl relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-10 opacity-[0.03] pointer-events-none group-hover:opacity-[0.05] transition-opacity duration-700">
+                <ClipboardList size={250} />
+            </div>
+
+            <div className="relative z-10 flex flex-col items-center justify-center text-center py-12">
+                <div className="w-20 h-20 bg-[#d4af37]/10 text-[#d4af37] rounded-3xl flex items-center justify-center mb-6 border border-[#d4af37]/20 shadow-lg">
+                    <Activity size={40} />
+                </div>
+                <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-2">Anamnese Completa</h2>
+                <p className="text-white/40 text-sm max-w-md mx-auto mb-8">
+                    Dados de saúde, histórico e objetivos do aluno prontos para visualização.
+                </p>
+                <button 
+                    onClick={() => setShowModal(true)}
+                    className="px-10 py-4 bg-[#d4af37] text-black rounded-xl font-black uppercase text-xs tracking-[0.2em] hover:scale-105 active:scale-95 transition-all shadow-[0_0_30px_rgba(212,175,55,0.3)] flex items-center gap-3"
+                >
+                    <Maximize2 size={16} /> Visualizar Anamnese
+                </button>
+            </div>
+        </div>
+
+        {/* MODAL */}
+        {showModal && (
+            <div className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
+                <div className="bg-white w-full max-w-5xl h-[90vh] rounded-[2rem] flex flex-col relative overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+                    <div className="bg-gray-100 p-4 px-8 flex justify-between items-center border-b border-gray-200">
+                        <h2 className="text-black font-black uppercase tracking-tighter text-lg flex items-center gap-2">
+                            <Activity size={20} className="text-[#d4af37]" /> Ficha de Anamnese
+                        </h2>
+                        <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-500">
+                            <X size={24} />
+                        </button>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto bg-gray-50 p-8 custom-scrollbar-light flex justify-center">
+                        {renderContent(false)}
+                    </div>
+
+                    <div className="bg-white p-6 border-t border-gray-200 flex justify-end gap-4">
+                        <button 
+                            onClick={() => setShowModal(false)} 
+                            className="px-6 py-3 rounded-xl font-bold uppercase text-xs text-gray-500 hover:bg-gray-100 transition-colors"
+                        >
+                            Fechar
+                        </button>
+                        <button 
+                            onClick={handleDownloadPDF} 
+                            disabled={isGenerating}
+                            className="px-8 py-3 bg-[#d4af37] hover:bg-[#b5952f] text-black rounded-xl font-black uppercase text-xs tracking-widest shadow-lg flex items-center gap-2 transition-all active:scale-95"
+                        >
+                            {isGenerating ? <Loader2 size={16} className="animate-spin" /> : <FileDown size={16} />}
+                            Baixar PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {/* PDF HIDDEN */}
+        <div className="fixed left-[-9999px]">
+            <div ref={pdfRef} className="bg-white">
+                {renderContent(true)}
+            </div>
+        </div>
+
     </div>
   );
 });
