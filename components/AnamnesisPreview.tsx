@@ -94,9 +94,10 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
             <div className="flex justify-between items-center mb-8 border-b border-gray-200 pb-6">
                 <div>
                     <h1 className="text-3xl font-black text-gray-900 uppercase tracking-tighter">Ficha de Anamnese</h1>
-                    <p className="text-sm text-gray-500 font-bold uppercase tracking-widest mt-1">Team VBR Assessment</p>
+                    <p className="text-sm text-gray-500 font-bold uppercase tracking-widest mt-1">Team VBR</p>
                 </div>
-                <img src={LOGO_VBR_BLACK} alt="Team VBR" className="w-24 h-auto filter invert" />
+                {/* Logo Original sem filtro */}
+                <img src={LOGO_VBR_BLACK} alt="Team VBR" className="w-24 h-auto" />
             </div>
 
             {/* Identificação */}

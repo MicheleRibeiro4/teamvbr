@@ -20,19 +20,34 @@ const UnifiedEditor: React.FC<Props> = ({ data, onChange, onBack }) => {
   const [activeTab, setActiveTab] = useState<'identificacao' | 'anamnese' | 'medidas' | 'nutricao' | 'treino' | 'obs'>('identificacao');
   
   // Estado para controlar qual visualização está ativa
-  const [viewMode, setViewMode] = useState<PreviewMode>('protocol');
+  const [viewMode, setViewMode] = useState<PreviewMode>('contract');
 
   // Refs para acionar os downloads
   const protocolRef = useRef<ProtocolPreviewHandle>(null);
   const contractRef = useRef<ContractPreviewHandle>(null);
   const anamnesisRef = useRef<AnamnesisPreviewHandle>(null);
 
-  // Sincroniza a visualização com a aba do formulário (opcional, mas ajuda UX)
-  // Se usuário clicar em "Identificação", mostra contrato. Se clicar em "Anamnese", mostra anamnese.
+  // Sincroniza a visualização com a aba do formulário seguindo as regras estritas
   React.useEffect(() => {
-    if (activeTab === 'identificacao') setViewMode('contract');
-    else if (activeTab === 'anamnese' || activeTab === 'medidas') setViewMode('anamnesis');
-    else setViewMode('protocol');
+    switch (activeTab) {
+        case 'identificacao':
+            setViewMode('contract');
+            break;
+        case 'anamnese':
+            setViewMode('anamnesis');
+            break;
+        case 'medidas':
+            // Medidas geralmente compõem o relatório de Anamnese (Avaliação Física)
+            setViewMode('anamnesis');
+            break;
+        case 'nutricao':
+        case 'treino':
+        case 'obs':
+            setViewMode('protocol');
+            break;
+        default:
+            setViewMode('protocol');
+    }
   }, [activeTab]);
 
   const handleDownloadCurrent = () => {
@@ -88,7 +103,7 @@ const UnifiedEditor: React.FC<Props> = ({ data, onChange, onBack }) => {
            {/* BARRA DE FERRAMENTAS DO PREVIEW */}
            <div className="no-print w-full bg-[#111] p-4 rounded-[2rem] border border-white/10 shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-4">
               
-              {/* Seletor de Visualização */}
+              {/* Seletor de Visualização (Manual override) */}
               <div className="flex gap-1 bg-black/50 p-1 rounded-xl border border-white/5 w-full lg:w-auto overflow-x-auto">
                  <button 
                     onClick={() => setViewMode('contract')}
