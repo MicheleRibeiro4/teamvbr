@@ -23,17 +23,19 @@ import {
 type ViewMode = 'home' | 'search' | 'manage' | 'settings' | 'student-dashboard' | 'evolution' | 'student-entry';
 
 const App: React.FC = () => {
-  // --- LÓGICA DE ROTEAMENTO SEGURA ---
-  // Verifica se a URL contém o parâmetro de cadastro
+  // --- LÓGICA DE ROTEAMENTO VIA HASH (Mais Robusta) ---
   const checkIsStudentMode = () => {
     if (typeof window === 'undefined') return false;
-    return window.location.href.includes('mode=cadastro') || 
-           window.location.search.includes('mode=cadastro');
+    // Verifica se a URL termina em #cadastro (Método Principal)
+    if (window.location.hash.includes('cadastro')) return true;
+    // Mantém compatibilidade com o método antigo
+    if (window.location.href.includes('mode=cadastro')) return true;
+    return false;
   };
 
   const [data, setData] = useState<ProtocolData>(EMPTY_DATA);
   
-  // Inicializa activeView baseado na URL imediatamente
+  // Inicializa a view baseada na URL
   const [activeView, setActiveView] = useState<ViewMode>(() => checkIsStudentMode() ? 'student-entry' : 'home');
   
   const [savedProtocols, setSavedProtocols] = useState<ProtocolData[]>([]);
@@ -47,15 +49,25 @@ const App: React.FC = () => {
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const MASTER_PASSWORD = "vbr-master-2025";
 
-  // Listener de URL para navegação via botões do navegador
+  // Listener para mudanças na URL (Hash ou Histórico)
   useEffect(() => {
-    const handleUrlChange = () => {
+    const handleNavigation = () => {
       if (checkIsStudentMode()) {
         setActiveView('student-entry');
       }
     };
-    window.addEventListener('popstate', handleUrlChange);
-    return () => window.removeEventListener('popstate', handleUrlChange);
+
+    // Escuta mudanças de hash (#) e navegação
+    window.addEventListener('hashchange', handleNavigation);
+    window.addEventListener('popstate', handleNavigation);
+    
+    // Verificação inicial
+    handleNavigation();
+
+    return () => {
+      window.removeEventListener('hashchange', handleNavigation);
+      window.removeEventListener('popstate', handleNavigation);
+    };
   }, []);
 
   // Login handler
@@ -73,7 +85,7 @@ const App: React.FC = () => {
 
   // Auth & Data Load
   useEffect(() => {
-    // Se for modo aluno, aborta carregamento de dados e auth
+    // Se for modo aluno (detectado via função), não carrega dados sensíveis
     if (checkIsStudentMode()) return;
 
     const auth = localStorage.getItem('vbr_auth');
@@ -202,13 +214,15 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
   // --- RENDERIZAÇÃO CONDICIONAL ---
 
   // 1. TELA DE CADASTRO DO ALUNO (PRIORIDADE MÁXIMA)
-  // Se a URL tiver mode=cadastro OU a view ativa for student-entry, renderiza o formulário
-  // Isso acontece ANTES de verificar autenticação
+  // Verifica hash ou view ativa
   if (checkIsStudentMode() || activeView === 'student-entry') {
      return <StudentEntryForm onCancel={() => {
-        // Remove parâmetro da URL e recarrega para voltar à tela de login
-        const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-        window.history.pushState({path:cleanUrl}, '', cleanUrl);
+        // Limpa a URL completamente
+        window.history.pushState("", document.title, window.location.pathname + window.location.search);
+        // Remove o hash manualmente se pushState não pegar
+        if (window.location.hash) window.location.hash = '';
+        
+        // Recarrega para voltar limpo
         window.location.reload();
      }} />;
   }
@@ -231,11 +245,9 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
             <div className="mt-8 pt-8 border-t border-white/5">
                 <button 
                   onClick={() => {
-                     // Força a navegação para o modo cadastro
-                     const separator = window.location.href.includes('?') ? '&' : '?';
-                     const newUrl = window.location.href + separator + "mode=cadastro";
-                     window.history.pushState({path:newUrl},'',newUrl);
-                     window.location.reload();
+                     // NOVO MÉTODO: Usa Hash (#cadastro)
+                     window.location.hash = 'cadastro';
+                     window.location.reload(); // Força reload para garantir a detecção limpa
                   }} 
                   className="w-full py-3 rounded-xl border border-white/10 text-white/60 hover:text-[#d4af37] hover:border-[#d4af37] transition-all text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2"
                 >
