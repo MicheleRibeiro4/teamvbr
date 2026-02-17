@@ -18,7 +18,13 @@ import {
   XCircle,
   Check,
   X,
-  Loader2
+  Loader2,
+  Eye,
+  MapPin,
+  Activity,
+  Phone,
+  Mail,
+  User
 } from 'lucide-react';
 
 interface Props {
@@ -33,6 +39,7 @@ interface Props {
 const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStudent, onUpdateStudent, onDeleteStudent }) => {
   
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [previewStudent, setPreviewStudent] = useState<ProtocolData | null>(null);
 
   const activeProtocolsCount = protocols.filter(p => p.contract.status === 'Ativo').length;
   // Filtra alunos pendentes
@@ -135,6 +142,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                 }
             };
             await onUpdateStudent(updatedStudent);
+            if (previewStudent?.id === student.id) setPreviewStudent(null);
         } catch (error) {
             console.error(error);
             alert("Erro ao aceitar aluno.");
@@ -149,6 +157,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
           setProcessingId(id);
           try {
               await onDeleteStudent(id);
+              if (previewStudent?.id === id) setPreviewStudent(null);
           } catch (error) {
               console.error(error);
               alert("Erro ao recusar aluno.");
@@ -163,6 +172,11 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
     { label: 'Protocolos Ativos', val: activeProtocolsCount, icon: <Target size={20}/>, color: 'text-[#d4af37]', border: 'border-[#d4af37]/20', bg: 'bg-[#d4af37]/10' },
     { label: 'Faturamento', val: 'R$ ' + totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 }), icon: <DollarSign size={20}/>, color: 'text-green-500', border: 'border-green-500/20', bg: 'bg-green-500/10' },
   ];
+
+  // Styles for Preview Modal
+  const previewLabel = "text-[10px] font-black text-white/40 uppercase tracking-widest mb-1";
+  const previewValue = "text-sm font-bold text-white bg-white/5 p-3 rounded-xl border border-white/5 min-h-[46px] flex items-center";
+  const previewArea = "text-sm font-medium text-white/80 bg-white/5 p-3 rounded-xl border border-white/5 min-h-[80px] whitespace-pre-wrap";
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-6 duration-700 space-y-6 pb-20">
@@ -227,6 +241,13 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                         </div>
                         
                         <div className="flex items-center gap-2">
+                             <button 
+                                onClick={() => setPreviewStudent(student)}
+                                className="p-2 bg-blue-500/10 text-blue-400 rounded-lg hover:bg-blue-500 hover:text-white transition-all"
+                                title="Visualizar Detalhes"
+                            >
+                                <Eye size={16} />
+                            </button>
                             <button 
                                 onClick={() => handleRejectStudent(student.id, student.clientName)}
                                 disabled={processingId === student.id}
@@ -246,6 +267,120 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                         </div>
                     </div>
                 ))}
+            </div>
+        </div>
+      )}
+
+      {/* MODAL DE PRÉ-VISUALIZAÇÃO */}
+      {previewStudent && (
+        <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-[#111] border border-white/10 w-full max-w-4xl max-h-[90vh] rounded-[2rem] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
+                
+                {/* Modal Header */}
+                <div className="p-6 border-b border-white/10 bg-white/5 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-[#d4af37] text-black rounded-xl flex items-center justify-center font-black">
+                            <FileText size={24} />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-black uppercase tracking-tighter text-white">{previewStudent.clientName}</h2>
+                            <p className="text-xs text-white/40 font-bold uppercase tracking-widest">Solicitado em: {new Date(previewStudent.createdAt).toLocaleDateString('pt-BR')}</p>
+                        </div>
+                    </div>
+                    <button onClick={() => setPreviewStudent(null)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60 hover:text-white">
+                        <X size={24} />
+                    </button>
+                </div>
+
+                {/* Modal Content */}
+                <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar space-y-8 flex-1">
+                    
+                    {/* Seção Pessoal */}
+                    <div className="space-y-4">
+                         <h3 className="text-sm font-black text-[#d4af37] uppercase tracking-widest border-b border-[#d4af37]/20 pb-2 flex items-center gap-2">
+                            <User size={16}/> Dados Pessoais
+                         </h3>
+                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                             <div><p className={previewLabel}>Telefone</p><div className={previewValue}>{previewStudent.contract.phone}</div></div>
+                             <div><p className={previewLabel}>CPF</p><div className={previewValue}>{previewStudent.contract.cpf}</div></div>
+                             <div><p className={previewLabel}>Email</p><div className={previewValue}>{previewStudent.contract.email || '-'}</div></div>
+                             <div className="md:col-span-3">
+                                <p className={previewLabel}>Endereço</p>
+                                <div className={previewValue}>
+                                    {previewStudent.contract.street}, {previewStudent.contract.number} - {previewStudent.contract.neighborhood}, {previewStudent.contract.city}/{previewStudent.contract.state}
+                                </div>
+                             </div>
+                         </div>
+                    </div>
+
+                    {/* Seção Física */}
+                    <div className="space-y-4">
+                         <h3 className="text-sm font-black text-[#d4af37] uppercase tracking-widest border-b border-[#d4af37]/20 pb-2 flex items-center gap-2">
+                            <Activity size={16}/> Dados Físicos
+                         </h3>
+                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                             <div><p className={previewLabel}>Idade</p><div className={previewValue}>{previewStudent.physicalData.age} anos</div></div>
+                             <div><p className={previewLabel}>Peso</p><div className={previewValue}>{previewStudent.physicalData.weight} kg</div></div>
+                             <div><p className={previewLabel}>Altura</p><div className={previewValue}>{previewStudent.physicalData.height} m</div></div>
+                             <div><p className={previewLabel}>Gênero</p><div className={previewValue}>{previewStudent.physicalData.gender}</div></div>
+                         </div>
+                    </div>
+
+                    {/* Seção Anamnese */}
+                    <div className="space-y-4">
+                         <h3 className="text-sm font-black text-[#d4af37] uppercase tracking-widest border-b border-[#d4af37]/20 pb-2 flex items-center gap-2">
+                            <FileText size={16}/> Anamnese Detalhada
+                         </h3>
+                         
+                         <div>
+                            <p className={previewLabel}>Objetivo Principal</p>
+                            <div className={previewArea}>{previewStudent.anamnesis.mainObjective}</div>
+                         </div>
+
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <p className={previewLabel}>Rotina Diária</p>
+                                <div className={previewArea}>{previewStudent.anamnesis.routine}</div>
+                            </div>
+                            <div>
+                                <p className={previewLabel}>Histórico de Treino / Lesões</p>
+                                <div className={previewArea}>{previewStudent.anamnesis.trainingHistory}</div>
+                            </div>
+                         </div>
+
+                         <div>
+                            <p className={previewLabel}>Preferências Alimentares / Alergias</p>
+                            <div className={previewArea}>{previewStudent.anamnesis.foodPreferences}</div>
+                         </div>
+                         <div>
+                            <p className={previewLabel}>Medicamentos / Uso de Ergogênicos</p>
+                            <div className={previewArea}>{previewStudent.anamnesis.ergogenics}</div>
+                         </div>
+                    </div>
+
+                </div>
+
+                {/* Modal Actions */}
+                <div className="p-6 border-t border-white/10 bg-black/20 flex flex-col md:flex-row gap-4 justify-end">
+                     <button 
+                        onClick={() => handleRejectStudent(previewStudent.id, previewStudent.clientName)}
+                        disabled={processingId === previewStudent.id}
+                        className="bg-red-500/10 text-red-500 border border-red-500/20 px-6 py-3 rounded-xl font-black uppercase text-xs tracking-widest hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                     >
+                        {processingId === previewStudent.id ? <Loader2 size={16} className="animate-spin" /> : <X size={16} />}
+                        Recusar Solicitação
+                     </button>
+
+                     <button 
+                        onClick={() => handleAcceptStudent(previewStudent)}
+                        disabled={processingId === previewStudent.id}
+                        className="bg-[#d4af37] text-black px-8 py-3 rounded-xl font-black uppercase text-xs tracking-widest hover:scale-105 transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
+                     >
+                        {processingId === previewStudent.id ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
+                        Aceitar e Cadastrar
+                     </button>
+                </div>
+
             </div>
         </div>
       )}
