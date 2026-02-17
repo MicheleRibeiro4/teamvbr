@@ -20,9 +20,14 @@ import {
   Dumbbell,
   X,
   Maximize2,
-  Edit3
+  Edit3,
+  ShieldCheck,
+  BookOpen
 } from 'lucide-react';
 import { LOGO_VBR_BLACK } from '../constants';
+import ProtocolPreview from './ProtocolPreview';
+import ContractPreview from './ContractPreview';
+import AnamnesisPreview from './AnamnesisPreview';
 
 const LOGO_VBR_GOLD = "https://xqwzmvzfemjkvaquxedz.supabase.co/storage/v1/object/public/LOGO/DOURADO.png";
 
@@ -282,6 +287,8 @@ const EvolutionTracker: React.FC<Props> = ({
     </div>
   );
 
+  const docBtnClass = "p-3 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 hover:text-white border border-white/5 transition-all flex flex-col items-center justify-center gap-1 min-w-[70px]";
+
   return (
     <div className="animate-in fade-in duration-500 pb-20 space-y-8">
       
@@ -305,16 +312,46 @@ const EvolutionTracker: React.FC<Props> = ({
                   </p>
               </div>
               
-              <div className="flex gap-2 mt-4 md:mt-0">
+              <div className="flex flex-wrap gap-2 mt-4 md:mt-0 justify-end">
                   {mode === 'view' ? (
                       <>
-                        <button onClick={() => setShowReportModal(true)} className="px-5 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 hover:text-white border border-white/5 font-black uppercase text-[10px] tracking-widest transition-all flex items-center gap-2">
-                            <Maximize2 size={14}/> Visualizar Relatório
-                        </button>
-                        <button onClick={handleStartNewProtocol} className="px-5 py-3 rounded-xl bg-blue-500/10 hover:bg-blue-500 hover:text-white text-blue-400 border border-blue-500/30 font-black uppercase text-[10px] tracking-widest transition-all flex items-center gap-2">
+                        <div className="flex gap-2 mr-2 pr-2 border-r border-white/5">
+                            <button onClick={() => setShowReportModal(true)} className={docBtnClass} title="Relatório">
+                                <TrendingUp size={16}/> <span className="text-[8px] font-black uppercase">Relatório</span>
+                            </button>
+                            
+                            <ProtocolPreview 
+                                data={currentProtocol} 
+                                customTrigger={
+                                    <button className={docBtnClass} title="Protocolo">
+                                        <Dumbbell size={16}/> <span className="text-[8px] font-black uppercase">Protocolo</span>
+                                    </button>
+                                } 
+                            />
+
+                            <ContractPreview 
+                                data={currentProtocol} 
+                                customTrigger={
+                                    <button className={docBtnClass} title="Contrato">
+                                        <ShieldCheck size={16}/> <span className="text-[8px] font-black uppercase">Contrato</span>
+                                    </button>
+                                }
+                            />
+
+                            <AnamnesisPreview 
+                                data={currentProtocol} 
+                                customTrigger={
+                                    <button className={docBtnClass} title="Anamnese">
+                                        <BookOpen size={16}/> <span className="text-[8px] font-black uppercase">Anamnese</span>
+                                    </button>
+                                }
+                            />
+                        </div>
+
+                        <button onClick={handleStartNewProtocol} className="px-5 py-3 rounded-xl bg-blue-500/10 hover:bg-blue-500 hover:text-white text-blue-400 border border-blue-500/30 font-black uppercase text-[10px] tracking-widest transition-all flex items-center gap-2 h-full">
                             <RefreshCw size={14}/> Novo Protocolo
                         </button>
-                        <button onClick={handleStartNewCheckin} className="px-6 py-3 rounded-xl bg-[#d4af37] text-black hover:scale-105 shadow-[0_0_20px_rgba(212,175,55,0.3)] font-black uppercase text-[10px] tracking-widest transition-all flex items-center gap-2">
+                        <button onClick={handleStartNewCheckin} className="px-6 py-3 rounded-xl bg-[#d4af37] text-black hover:scale-105 shadow-[0_0_20px_rgba(212,175,55,0.3)] font-black uppercase text-[10px] tracking-widest transition-all flex items-center gap-2 h-full">
                             <Plus size={16}/> Nova Evolução
                         </button>
                       </>

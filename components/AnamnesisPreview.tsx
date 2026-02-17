@@ -13,9 +13,10 @@ interface Props {
   data: ProtocolData;
   onBack?: () => void;
   hideFloatingButton?: boolean;
+  customTrigger?: React.ReactNode;
 }
 
-const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBack, hideFloatingButton }, ref) => {
+const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBack, hideFloatingButton, customTrigger }, ref) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const pdfRef = useRef<HTMLDivElement>(null);
@@ -198,88 +199,99 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
   return (
     <div className="w-full animate-in fade-in duration-500">
         
-        {/* CARD DE AÇÃO COMPACTO */}
-        <div className="bg-[#111] p-5 rounded-2xl border border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 group hover:border-[#d4af37]/30 transition-all shadow-lg relative overflow-hidden">
-             
-             {/* Background Decoration */}
-             <div className="absolute right-0 top-0 opacity-[0.03] transform translate-x-1/4 -translate-y-1/4 pointer-events-none">
-                 <ClipboardList size={150} />
-             </div>
+        {customTrigger ? (
+            <>
+                <div onClick={() => setShowModal(true)} className="cursor-pointer">
+                    {customTrigger}
+                </div>
 
-             {/* Left Info */}
-             <div className="flex items-center gap-4 relative z-10 w-full md:w-auto">
-                 <div className="w-12 h-12 bg-[#d4af37]/10 text-[#d4af37] rounded-xl flex items-center justify-center border border-[#d4af37]/20 shrink-0">
-                     <Activity size={20} />
-                 </div>
-                 <div className="min-w-0">
-                     <h3 className="font-bold text-white text-sm uppercase tracking-wide truncate">Anamnese Completa</h3>
-                     <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest truncate">Visualizar e Exportar</p>
-                 </div>
-             </div>
-
-             {/* Right Actions */}
-             <div className="flex items-center gap-2 relative z-10 w-full md:w-auto">
-                 <button 
-                     onClick={() => setShowModal(true)} 
-                     className="flex-1 md:flex-none py-3 px-4 bg-white/5 hover:bg-white/10 rounded-xl text-white/60 hover:text-white transition-colors flex items-center justify-center gap-2" 
-                     title="Visualizar em Tela Cheia"
-                 >
-                     <Maximize2 size={16} /> <span className="md:hidden text-xs font-bold uppercase">Visualizar</span>
-                 </button>
-                 <button 
-                     onClick={handleDownloadPDF} 
-                     disabled={isGenerating}
-                     className="flex-[2] md:flex-none px-6 py-3 bg-[#d4af37] hover:bg-[#b5952f] text-black rounded-xl font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2 shadow-lg hover:scale-105 transition-all active:scale-95 whitespace-nowrap"
-                 >
-                     {isGenerating ? <Loader2 size={16} className="animate-spin" /> : <FileDown size={16} />}
-                     Baixar PDF
-                 </button>
-             </div>
-        </div>
-
-        {/* MODAL */}
-        {showModal && (
-            <div className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
-                <div className="bg-white w-full max-w-5xl h-[90vh] rounded-[2rem] flex flex-col relative overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
-                    <div className="bg-gray-100 p-4 px-8 flex justify-between items-center border-b border-gray-200">
-                        <h2 className="text-black font-black uppercase tracking-tighter text-lg flex items-center gap-2">
-                            <Activity size={20} className="text-[#d4af37]" /> Ficha de Anamnese
-                        </h2>
-                        <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-500">
-                            <X size={24} />
-                        </button>
+                {showModal && (
+                    <div className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
+                        <div className="bg-white w-full max-w-5xl h-[90vh] rounded-[2rem] flex flex-col relative overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+                            <div className="bg-gray-100 p-4 px-8 flex justify-between items-center border-b border-gray-200">
+                                <h2 className="text-black font-black uppercase tracking-tighter text-lg flex items-center gap-2">
+                                    <Activity size={20} className="text-[#d4af37]" /> Ficha de Anamnese
+                                </h2>
+                                <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-500">
+                                    <X size={24} />
+                                </button>
+                            </div>
+                            <div className="flex-1 overflow-y-auto bg-gray-50 p-8 custom-scrollbar-light flex justify-center">
+                                {renderContent(false)}
+                            </div>
+                            <div className="bg-white p-6 border-t border-gray-200 flex justify-end gap-4">
+                                <button onClick={() => setShowModal(false)} className="px-6 py-3 rounded-xl font-bold uppercase text-xs text-gray-500 hover:bg-gray-100 transition-colors">Fechar</button>
+                                <button onClick={handleDownloadPDF} disabled={isGenerating} className="px-8 py-3 bg-[#d4af37] hover:bg-[#b5952f] text-black rounded-xl font-black uppercase text-xs tracking-widest shadow-lg flex items-center gap-2 transition-all active:scale-95">
+                                    {isGenerating ? <Loader2 size={16} className="animate-spin" /> : <FileDown size={16} />} Baixar PDF
+                                </button>
+                            </div>
+                        </div>
                     </div>
+                )}
 
-                    <div className="flex-1 overflow-y-auto bg-gray-50 p-8 custom-scrollbar-light flex justify-center">
-                        {renderContent(false)}
+                <div className="fixed left-[-9999px]">
+                    <div ref={pdfRef} className="bg-white">
+                        {renderContent(true)}
                     </div>
-
-                    <div className="bg-white p-6 border-t border-gray-200 flex justify-end gap-4">
-                        <button 
-                            onClick={() => setShowModal(false)} 
-                            className="px-6 py-3 rounded-xl font-bold uppercase text-xs text-gray-500 hover:bg-gray-100 transition-colors"
-                        >
-                            Fechar
+                </div>
+            </>
+        ) : (
+            // Default
+            <>
+                <div className="bg-[#111] p-5 rounded-2xl border border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 group hover:border-[#d4af37]/30 transition-all shadow-lg relative overflow-hidden">
+                    <div className="absolute right-0 top-0 opacity-[0.03] transform translate-x-1/4 -translate-y-1/4 pointer-events-none">
+                        <ClipboardList size={150} />
+                    </div>
+                    <div className="flex items-center gap-4 relative z-10 w-full md:w-auto">
+                        <div className="w-12 h-12 bg-[#d4af37]/10 text-[#d4af37] rounded-xl flex items-center justify-center border border-[#d4af37]/20 shrink-0">
+                            <Activity size={20} />
+                        </div>
+                        <div className="min-w-0">
+                            <h3 className="font-bold text-white text-sm uppercase tracking-wide truncate">Anamnese Completa</h3>
+                            <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest truncate">Visualizar e Exportar</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2 relative z-10 w-full md:w-auto">
+                        <button onClick={() => setShowModal(true)} className="flex-1 md:flex-none py-3 px-4 bg-white/5 hover:bg-white/10 rounded-xl text-white/60 hover:text-white transition-colors flex items-center justify-center gap-2" title="Visualizar em Tela Cheia">
+                            <Maximize2 size={16} /> <span className="md:hidden text-xs font-bold uppercase">Visualizar</span>
                         </button>
-                        <button 
-                            onClick={handleDownloadPDF} 
-                            disabled={isGenerating}
-                            className="px-8 py-3 bg-[#d4af37] hover:bg-[#b5952f] text-black rounded-xl font-black uppercase text-xs tracking-widest shadow-lg flex items-center gap-2 transition-all active:scale-95"
-                        >
-                            {isGenerating ? <Loader2 size={16} className="animate-spin" /> : <FileDown size={16} />}
-                            Baixar PDF
+                        <button onClick={handleDownloadPDF} disabled={isGenerating} className="flex-[2] md:flex-none px-6 py-3 bg-[#d4af37] hover:bg-[#b5952f] text-black rounded-xl font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2 shadow-lg hover:scale-105 transition-all active:scale-95 whitespace-nowrap">
+                            {isGenerating ? <Loader2 size={16} className="animate-spin" /> : <FileDown size={16} />} Baixar PDF
                         </button>
                     </div>
                 </div>
-            </div>
-        )}
 
-        {/* PDF HIDDEN */}
-        <div className="fixed left-[-9999px]">
-            <div ref={pdfRef} className="bg-white">
-                {renderContent(true)}
-            </div>
-        </div>
+                {showModal && (
+                    <div className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
+                        <div className="bg-white w-full max-w-5xl h-[90vh] rounded-[2rem] flex flex-col relative overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+                            <div className="bg-gray-100 p-4 px-8 flex justify-between items-center border-b border-gray-200">
+                                <h2 className="text-black font-black uppercase tracking-tighter text-lg flex items-center gap-2">
+                                    <Activity size={20} className="text-[#d4af37]" /> Ficha de Anamnese
+                                </h2>
+                                <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-500">
+                                    <X size={24} />
+                                </button>
+                            </div>
+                            <div className="flex-1 overflow-y-auto bg-gray-50 p-8 custom-scrollbar-light flex justify-center">
+                                {renderContent(false)}
+                            </div>
+                            <div className="bg-white p-6 border-t border-gray-200 flex justify-end gap-4">
+                                <button onClick={() => setShowModal(false)} className="px-6 py-3 rounded-xl font-bold uppercase text-xs text-gray-500 hover:bg-gray-100 transition-colors">Fechar</button>
+                                <button onClick={handleDownloadPDF} disabled={isGenerating} className="px-8 py-3 bg-[#d4af37] hover:bg-[#b5952f] text-black rounded-xl font-black uppercase text-xs tracking-widest shadow-lg flex items-center gap-2 transition-all active:scale-95">
+                                    {isGenerating ? <Loader2 size={16} className="animate-spin" /> : <FileDown size={16} />} Baixar PDF
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                <div className="fixed left-[-9999px]">
+                    <div ref={pdfRef} className="bg-white">
+                        {renderContent(true)}
+                    </div>
+                </div>
+            </>
+        )}
 
     </div>
   );
