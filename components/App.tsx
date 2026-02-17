@@ -24,6 +24,7 @@ type ViewMode = 'home' | 'search' | 'manage' | 'settings' | 'student-dashboard' 
 
 const App: React.FC = () => {
   // --- LÓGICA DE ROTEAMENTO SEGURA ---
+  // Verifica se a URL contém o parâmetro de cadastro
   const checkIsStudentMode = () => {
     if (typeof window === 'undefined') return false;
     return window.location.href.includes('mode=cadastro') || 
@@ -32,7 +33,7 @@ const App: React.FC = () => {
 
   const [data, setData] = useState<ProtocolData>(EMPTY_DATA);
   
-  // Inicializa activeView baseado na URL imediatamente para evitar flash da tela de login
+  // Inicializa activeView baseado na URL imediatamente
   const [activeView, setActiveView] = useState<ViewMode>(() => checkIsStudentMode() ? 'student-entry' : 'home');
   
   const [savedProtocols, setSavedProtocols] = useState<ProtocolData[]>([]);
@@ -46,18 +47,13 @@ const App: React.FC = () => {
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const MASTER_PASSWORD = "vbr-master-2025";
 
-  // Monitora a URL constantemente para garantir que o link funcione mesmo com navegação
+  // Listener de URL para navegação via botões do navegador
   useEffect(() => {
     const handleUrlChange = () => {
       if (checkIsStudentMode()) {
         setActiveView('student-entry');
       }
     };
-
-    // Checa na montagem
-    handleUrlChange();
-
-    // Adiciona listener para mudanças de histórico (voltar/avançar)
     window.addEventListener('popstate', handleUrlChange);
     return () => window.removeEventListener('popstate', handleUrlChange);
   }, []);
@@ -77,7 +73,7 @@ const App: React.FC = () => {
 
   // Auth & Data Load
   useEffect(() => {
-    // Se for modo aluno, aborta carregamento de dados sensíveis
+    // Se for modo aluno, aborta carregamento de dados e auth
     if (checkIsStudentMode()) return;
 
     const auth = localStorage.getItem('vbr_auth');
@@ -191,7 +187,6 @@ const App: React.FC = () => {
     }
   };
 
-  // SQL Repair Script
   const sqlRepairScript = `-- SCRIPT DE REPARO
 CREATE TABLE IF NOT EXISTS public.protocols (
   id text NOT NULL PRIMARY KEY,
@@ -204,20 +199,21 @@ GRANT ALL ON TABLE public.protocols TO anon;
 GRANT ALL ON TABLE public.protocols TO authenticated;
 GRANT ALL ON TABLE public.protocols TO service_role;`;
 
-  // --- RENDERIZAÇÃO CONDICIONAL PRIORITÁRIA ---
+  // --- RENDERIZAÇÃO CONDICIONAL ---
 
-  // 1. TELA DE CADASTRO DO ALUNO (Prioridade Máxima)
-  // Verifica `checkIsStudentMode` diretamente na renderização para garantir que a UI correta seja mostrada
+  // 1. TELA DE CADASTRO DO ALUNO (PRIORIDADE MÁXIMA)
+  // Se a URL tiver mode=cadastro OU a view ativa for student-entry, renderiza o formulário
+  // Isso acontece ANTES de verificar autenticação
   if (checkIsStudentMode() || activeView === 'student-entry') {
      return <StudentEntryForm onCancel={() => {
+        // Remove parâmetro da URL e recarrega para voltar à tela de login
         const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
         window.history.pushState({path:cleanUrl}, '', cleanUrl);
-        // Força reload para limpar completamente o estado e voltar ao login
         window.location.reload();
      }} />;
   }
 
-  // 2. TELA DE LOGIN (Apenas se não for aluno e não estiver autenticado)
+  // 2. TELA DE LOGIN (Apenas se não for aluno e não estiver logado)
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-6 text-center">
@@ -235,10 +231,9 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
             <div className="mt-8 pt-8 border-t border-white/5">
                 <button 
                   onClick={() => {
-                     // Adiciona o parâmetro e força reload para garantir que a detecção de URL pegue
-                     const newUrl = window.location.href.includes('?') 
-                        ? window.location.href + "&mode=cadastro"
-                        : window.location.href + "?mode=cadastro";
+                     // Força a navegação para o modo cadastro
+                     const separator = window.location.href.includes('?') ? '&' : '?';
+                     const newUrl = window.location.href + separator + "mode=cadastro";
                      window.history.pushState({path:newUrl},'',newUrl);
                      window.location.reload();
                   }} 
@@ -253,7 +248,7 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
     );
   }
 
-  // 3. APP PRINCIPAL (Logado)
+  // 3. SISTEMA PRINCIPAL (Consultor Logado)
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white font-sans selection:bg-[#d4af37] selection:text-black">
       
