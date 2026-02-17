@@ -213,7 +213,7 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
                 {showModal && (
                     <div className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
                         <div className="bg-white w-full max-w-5xl h-[90vh] rounded-[2rem] flex flex-col relative overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
-                            <div className="bg-gray-100 p-4 px-8 flex justify-between items-center border-b border-gray-200">
+                            <div className="bg-gray-100 p-4 px-8 flex justify-between items-center border-b border-gray-200 shrink-0">
                                 <h2 className="text-black font-black uppercase tracking-tighter text-lg flex items-center gap-2">
                                     <Activity size={20} className="text-[#d4af37]" /> Ficha de Anamnese
                                 </h2>
@@ -221,10 +221,13 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
                                     <X size={24} />
                                 </button>
                             </div>
-                            <div className="flex-1 overflow-y-auto bg-gray-50 p-8 custom-scrollbar-light flex justify-center">
+                            
+                            {/* Scroll Container Centralizado */}
+                            <div className="flex-1 overflow-auto bg-gray-500/20 p-8 custom-scrollbar-light flex justify-center items-start">
                                 {renderContent(false)}
                             </div>
-                            <div className="bg-white p-6 border-t border-gray-200 flex justify-end gap-4">
+
+                            <div className="bg-white p-6 border-t border-gray-200 flex justify-end gap-4 shrink-0">
                                 <button onClick={() => setShowModal(false)} className="px-6 py-3 rounded-xl font-bold uppercase text-xs text-gray-500 hover:bg-gray-100 transition-colors">Fechar</button>
                                 <button onClick={handleDownloadPDF} disabled={isGenerating} className="px-8 py-3 bg-[#d4af37] hover:bg-[#b5952f] text-black rounded-xl font-black uppercase text-xs tracking-widest shadow-lg flex items-center gap-2 transition-all active:scale-95">
                                     {isGenerating ? <Loader2 size={16} className="animate-spin" /> : <FileDown size={16} />} Baixar PDF
@@ -269,7 +272,7 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
                 {showModal && (
                     <div className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
                         <div className="bg-white w-full max-w-5xl h-[90vh] rounded-[2rem] flex flex-col relative overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
-                            <div className="bg-gray-100 p-4 px-8 flex justify-between items-center border-b border-gray-200">
+                            <div className="bg-gray-100 p-4 px-8 flex justify-between items-center border-b border-gray-200 shrink-0">
                                 <h2 className="text-black font-black uppercase tracking-tighter text-lg flex items-center gap-2">
                                     <Activity size={20} className="text-[#d4af37]" /> Ficha de Anamnese
                                 </h2>
@@ -277,10 +280,13 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
                                     <X size={24} />
                                 </button>
                             </div>
-                            <div className="flex-1 overflow-y-auto bg-gray-50 p-8 custom-scrollbar-light flex justify-center">
+                            
+                            {/* Scroll Container Centralizado */}
+                            <div className="flex-1 overflow-auto bg-gray-500/20 p-8 custom-scrollbar-light flex justify-center items-start">
                                 {renderContent(false)}
                             </div>
-                            <div className="bg-white p-6 border-t border-gray-200 flex justify-end gap-4">
+
+                            <div className="bg-white p-6 border-t border-gray-200 flex justify-end gap-4 shrink-0">
                                 <button onClick={() => setShowModal(false)} className="px-6 py-3 rounded-xl font-bold uppercase text-xs text-gray-500 hover:bg-gray-100 transition-colors">Fechar</button>
                                 <button onClick={handleDownloadPDF} disabled={isGenerating} className="px-8 py-3 bg-[#d4af37] hover:bg-[#b5952f] text-black rounded-xl font-black uppercase text-xs tracking-widest shadow-lg flex items-center gap-2 transition-all active:scale-95">
                                     {isGenerating ? <Loader2 size={16} className="animate-spin" /> : <FileDown size={16} />} Baixar PDF

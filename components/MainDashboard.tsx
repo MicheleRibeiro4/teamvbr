@@ -78,31 +78,32 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
       if (student.contract.planType === 'Avulso') return null;
       if (student.contract.status !== 'Ativo') return null;
 
-      const startDateStr = student.contract.startDate;
-      if (!startDateStr || startDateStr.length !== 10) return null;
-
-      const parts = startDateStr.split('/');
-      const start = new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
+      // Baseia o ciclo na ÚLTIMA ATUALIZAÇÃO DO PROTOCOLO (updatedAt)
+      // Se updatedAt não existir, usa startDate como fallback
+      const lastUpdateStr = student.updatedAt || student.contract.startDate;
+      
+      const lastUpdate = new Date(lastUpdateStr);
       const today = new Date();
       
       // Zera as horas para comparar apenas datas
       today.setHours(0,0,0,0);
-      start.setHours(0,0,0,0);
+      lastUpdate.setHours(0,0,0,0);
 
-      const diffTime = today.getTime() - start.getTime();
+      const diffTime = today.getTime() - lastUpdate.getTime();
       const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
       
-      // Se a data de início for futura, ignora
-      if (diffDays < 0) return null;
-
       // Ciclo de 15 dias
       const cycle = 15;
-      const remainder = diffDays % cycle;
       
-      // Se remainder for 0, é dia de check-in (ex: dia 0, 15, 30...)
-      // Se não, calcula quanto falta para o próximo
-      const daysLeft = remainder === 0 ? 0 : cycle - remainder;
+      // Se diffDays é 0 (atualizado hoje), faltam 15 dias.
+      // Se diffDays é 1 (atualizado ontem), faltam 14 dias.
+      // Se diffDays é 15, faltam 0 dias (Check-in Hoje).
       
+      let daysLeft = cycle - (diffDays % cycle);
+      if (daysLeft === 15 && diffDays > 0 && diffDays % cycle === 0) daysLeft = 0; // Se caiu exatamente no dia do ciclo
+      if (diffDays === 0) daysLeft = 15; // Se atualizou hoje, joga pro final do ciclo
+
+      // Data do próximo check-in
       const nextDate = new Date(today);
       nextDate.setDate(today.getDate() + daysLeft);
 
@@ -117,7 +118,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
       };
     })
     .filter(Boolean) // Remove nulos
-    .sort((a: any, b: any) => a.schedule.daysLeft - b.schedule.daysLeft); // Ordena por urgência
+    .sort((a: any, b: any) => a.schedule.daysLeft - b.schedule.daysLeft); // Ordena por urgência (menor dias restantes primeiro)
   }, [uniqueStudents]);
 
   const handleCopyLink = () => {
@@ -534,17 +535,20 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                 const { isToday, isUrgent } = student.schedule;
                 
                 // Configuração padrão (Em dia = Verde)
+                // "Aguardando Ajuste" (Verde - Em dia)
                 let containerStyle = 'bg-green-500/10 border-green-500/30 hover:bg-green-500/20';
                 let circleStyle = 'bg-green-500/20 text-green-500 border-green-500/30';
                 let dateColor = 'text-green-400';
                 let iconColor = 'text-green-500';
 
                 if (isToday) {
+                    // "Check-in Necessário" (Vermelho - Venceu hoje)
                     containerStyle = 'bg-red-500/10 border-red-500/50 hover:bg-red-500/20';
                     circleStyle = 'bg-red-500 text-white border-red-500';
                     dateColor = 'text-red-400';
                     iconColor = 'text-red-500';
                 } else if (isUrgent) {
+                    // "Urgente" (Amarelo - Perto de vencer)
                     containerStyle = 'bg-yellow-500/10 border-yellow-500/30 hover:bg-yellow-500/20';
                     circleStyle = 'bg-yellow-500 text-black border-yellow-500';
                     dateColor = 'text-[#d4af37]';
@@ -564,7 +568,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                       <div>
                           <h4 className="font-bold text-xs text-white leading-none mb-1">{student.clientName}</h4>
                           <div className="flex items-center gap-2 text-[9px] text-white/40 uppercase font-bold">
-                            <span>Base: {student.contract.startDate}</span>
+                            <span>Base: {student.updatedAt ? new Date(student.updatedAt).toLocaleDateString('pt-BR') : student.contract.startDate}</span>
                             <span>•</span>
                             <span className={dateColor}>
                                 Próx: {student.schedule.nextDate}
