@@ -124,7 +124,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
       // isMissingProtocol: "Protocolo Pendente" (Roxo - Prioridade máxima)
       // daysLeft <= 0: "Check-in Necessário" (Vermelho)
       // daysLeft <= 3 && daysLeft > 0: "Próximo" (Amarelo)
-      // daysLeft > 3: "Em Dia" (Verde)
+      // daysLeft > 3: "AGUARDANDO AJUSTE QUINZENAL" (Verde)
 
       const isOverdue = daysLeft <= 0 || isMissingProtocol;
       const isUrgent = daysLeft > 0 && daysLeft <= 3 && !isMissingProtocol;
@@ -408,7 +408,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                 let circleStyle = 'bg-green-500/20 text-green-500 border-green-500/30';
                 let dateColor = 'text-green-400';
                 let iconColor = 'text-green-500';
-                let statusText = 'Em Dia';
+                let statusText = 'AGUARDANDO AJUSTE QUINZENAL';
 
                 if (isMissingProtocol) {
                     containerStyle = 'bg-indigo-500/10 border-indigo-500/50 hover:bg-indigo-500/20 ring-1 ring-indigo-500/20';
@@ -444,7 +444,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                           <div className="flex items-center gap-2 text-[9px] text-white/40 uppercase font-bold">
                             <span>Base: {student.updatedAt ? new Date(student.updatedAt).toLocaleDateString('pt-BR') : student.contract.startDate}</span>
                             <span>•</span>
-                            <span className={dateColor}>{isMissingProtocol ? 'Ação: Gerar Ficha' : `Próx: ${student.schedule.nextDate}`}</span>
+                            <span className={dateColor}>{isMissingProtocol ? 'Ação: Gerar Ficha' : `Ação Data de Ajuste: ${student.schedule.nextDate}`}</span>
                           </div>
                       </div>
                     </div>

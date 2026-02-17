@@ -1,7 +1,7 @@
 
 import React, { useRef, useState, useImperativeHandle, forwardRef } from 'react';
 import { ProtocolData } from '../types';
-import { LOGO_VBR_BLACK } from '../constants';
+import { LOGO_VBR_BLACK, EMPTY_DATA } from '../constants';
 import { ChevronLeft, Download, Loader2, AlertTriangle, FileText, Maximize2, X, FileDown, Dumbbell, Eye } from 'lucide-react';
 
 const LOGO_VBR_GOLD = "https://xqwzmvzfemjkvaquxedz.supabase.co/storage/v1/object/public/LOGO/DOURADO.png";
@@ -58,7 +58,10 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
     const macros = safeData.macros || { protein: { value: '0', ratio: '' }, carbs: { value: '0', ratio: '' }, fats: { value: '0', ratio: '' } };
     const meals = safeData.meals || [];
     const supplements = safeData.supplements || [];
-    const tips = safeData.tips || [];
+    
+    // Garante que as dicas padrão apareçam se não houver dicas preenchidas
+    const tips = safeData.tips && safeData.tips.length > 0 ? safeData.tips : EMPTY_DATA.tips;
+    
     const trainingDays = safeData.trainingDays || [];
     
     // Chunk training days into groups of 2 for better page flow
@@ -89,7 +92,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
     };
 
     const sectionTitle = "text-xl font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-1 mb-8 uppercase";
-    const dataCardStyle = "bg-white border border-gray-100 p-6 rounded-xl shadow-sm break-inside-avoid text-left";
+    const dataCardStyle = "bg-white border border-gray-100 p-6 rounded-xl shadow-sm break-inside-avoid text-left h-full";
     const labelStyle = "text-[10px] font-bold text-gray-400 uppercase block mb-1 tracking-widest";
     const valueStyle = "text-2xl font-black text-gray-900";
 
@@ -101,7 +104,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                     <img src={LOGO_VBR_GOLD} alt="Team VBR" className="w-80 h-auto mb-16 relative z-10" />
                     
                     <h1 className="text-4xl font-black text-[#d4af37] uppercase tracking-wider leading-tight mb-20 max-w-2xl mx-auto">
-                        PROTOCOLO<br/>COMPLETO DE<br/>{protocolTitle}
+                        PROTOCOLO<br/>COMPLETO DE<br/>{protocolTitle.toUpperCase()}
                     </h1>
                     
                     <div className="border-t border-b border-white/10 py-10 w-full max-w-2xl bg-white/[0.02]">
@@ -110,7 +113,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                         </h2>
                     </div>
                     
-                    <div className="mt-20 bg-[#d4af37]/10 px-10 py-5 rounded-full border border-[#d4af37]/30">
+                    <div className="mt-20 px-10 py-4 rounded-full border-2 border-[#d4af37] bg-transparent">
                         <p className="text-xl font-bold text-white uppercase tracking-widest">
                             Período: {contract.startDate || '...'} — {contract.endDate || '...'}
                         </p>
@@ -141,7 +144,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                 </div>
 
                 <h3 className={sectionTitle}>2. Estratégia Nutricional</h3>
-                <div className="bg-[#f8f9fa] p-8 rounded-none border-l-[12px] border-gray-400 mb-10 text-sm text-gray-800 leading-relaxed break-inside-avoid shadow-sm">
+                <div className="bg-[#f2f2f2] p-8 rounded-none border-l-[12px] border-[#999] mb-10 text-sm text-gray-800 leading-relaxed break-inside-avoid shadow-sm">
                     <span className="font-black uppercase text-[10px] text-black block mb-4 tracking-widest">Observação:</span>
                     <p className="whitespace-pre-wrap font-medium">{safeData.nutritionalStrategy || "Estratégia personalizada de acordo com anamnese e objetivos."}</p>
                 </div>
@@ -216,10 +219,11 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                 <h3 className={sectionTitle}>4. Suplementação e Recomendações</h3>
                 <div className="space-y-6 mb-16">
                     {supplements.map((supp) => {
-                        let bgColor = "bg-[#1f2937]"; // Default Dark Gray
+                        let bgColor = "bg-[#1a1a1a]"; 
                         const nameLower = (supp.name || "").toLowerCase();
                         if (nameLower.includes('creatina')) bgColor = "bg-[#d4af37]"; 
                         else if (nameLower.includes('whey')) bgColor = "bg-[#2563eb]"; 
+                        else if (nameLower.includes('multivitamínico') || nameLower.includes('multivitaminico') || nameLower.includes('vitaminas')) bgColor = "bg-[#1f2937]"; 
                         else if (nameLower.includes('cafeína') || nameLower.includes('cafeina') || nameLower.includes('café')) bgColor = "bg-[#5d4037]"; 
                         
                         return (
@@ -228,7 +232,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                                     <h4 className="text-2xl font-black uppercase mb-2 tracking-tighter">{supp.name}</h4>
                                     <p className="text-sm font-bold opacity-80 uppercase tracking-widest">{supp.dosage}</p>
                                 </div>
-                                <div className="bg-black/20 px-6 py-4 rounded-xl text-xs font-black uppercase tracking-[0.1em] border border-white/10 relative z-10 max-w-[300px] text-right">
+                                <div className="bg-black/40 px-6 py-4 rounded-xl text-xs font-black uppercase tracking-[0.1em] border border-white/10 relative z-10 max-w-[400px] text-right">
                                     {supp.timing}
                                 </div>
                             </div>
@@ -240,7 +244,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                 <div className="space-y-6">
                     {tips.map((tip, idx) => (
                         <div key={idx} className="flex items-start gap-5 text-lg text-gray-800 break-inside-avoid group">
-                            <div className="w-2.5 h-2.5 bg-black mt-2.5 shrink-0 rounded-none rotate-45 group-hover:bg-[#d4af37] transition-colors"></div>
+                            <div className="w-3 h-3 bg-black mt-2.5 shrink-0 rounded-none group-hover:bg-[#d4af37] transition-colors"></div>
                             <span className="font-bold leading-tight">{tip}</span>
                         </div>
                     ))}
