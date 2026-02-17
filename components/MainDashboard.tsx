@@ -12,9 +12,9 @@ import {
   FileText,
   ChevronRight,
   CalendarClock,
-  AlertCircle,
   CheckCircle2,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Bell
 } from 'lucide-react';
 
 interface Props {
@@ -27,6 +27,9 @@ interface Props {
 const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStudent }) => {
   
   const activeProtocolsCount = protocols.filter(p => p.contract.status === 'Ativo').length;
+  // Filtra alunos pendentes (cadastros novos que ainda não foram ativados)
+  const pendingStudents = protocols.filter(p => p.contract.status === 'Aguardando');
+  
   const totalRevenue = protocols.reduce((acc, curr) => acc + (parseFloat(curr.contract.planValue.replace(',', '.')) || 0), 0);
   
   // Get unique students (latest protocol for each)
@@ -111,6 +114,31 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
   return (
     <div className="animate-in fade-in slide-in-from-bottom-6 duration-700 space-y-6 pb-20">
       
+      {/* NOTIFICAÇÃO DE NOVOS CADASTROS PENDENTES */}
+      {pendingStudents.length > 0 && (
+        <div className="bg-[#d4af37] text-black p-6 rounded-[2rem] mb-2 flex flex-col md:flex-row items-center justify-between gap-6 shadow-[0_0_40px_rgba(212,175,55,0.2)] animate-in slide-in-from-top-4">
+            <div className="flex items-center gap-4">
+                <div className="bg-black/10 p-4 rounded-xl shrink-0">
+                    <Bell size={28} className="animate-pulse" />
+                </div>
+                <div>
+                    <h3 className="font-black uppercase text-lg leading-none mb-1">Solicitações de Cadastro</h3>
+                    <p className="text-xs font-bold opacity-70">
+                        Você tem {pendingStudents.length} novos alunos aguardando finalização de perfil.
+                    </p>
+                </div>
+            </div>
+            <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
+               <button 
+                  onClick={() => onLoadStudent(pendingStudents[0], 'manage')} 
+                  className="bg-black text-[#d4af37] px-6 py-3 rounded-xl font-black uppercase text-xs tracking-widest hover:scale-105 transition-all shadow-lg whitespace-nowrap"
+               >
+                  Finalizar Perfil Agora
+               </button>
+            </div>
+        </div>
+      )}
+
       {/* HEADER DO DASHBOARD */}
       <div className="bg-[#0a0a0a] rounded-[2.5rem] p-6 md:p-8 border-b-[8px] border-[#d4af37] relative overflow-hidden shadow-2xl flex flex-col md:flex-row justify-between items-center gap-6">
         <div className="absolute top-0 right-0 p-10 opacity-[0.03] pointer-events-none">
@@ -264,14 +292,20 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                 buttonHoverBg = 'hover:bg-blue-500';
               }
 
+              // Se for status Aguardando, destaca
+              const isPending = p.contract.status === 'Aguardando';
+
               return (
-                <div key={p.id} className="bg-white/5 p-4 rounded-2xl border border-white/5 flex flex-col md:flex-row items-center justify-between gap-4 hover:border-white/20 transition-all group">
+                <div key={p.id} className={`bg-white/5 p-4 rounded-2xl border ${isPending ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-white/5'} flex flex-col md:flex-row items-center justify-between gap-4 hover:border-white/20 transition-all group`}>
                   <div className="flex items-center gap-4 w-full md:w-auto overflow-hidden">
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center border transition-all shrink-0 ${iconColorClass} group-hover:text-black`}>
                         <Users size={20} />
                     </div>
                     <div className="flex flex-col min-w-0">
-                        <h4 className={`font-black text-sm uppercase tracking-tighter text-white ${hoverTextClass} transition-colors leading-none truncate`}>{p.clientName}</h4>
+                        <div className="flex items-center gap-2">
+                           <h4 className={`font-black text-sm uppercase tracking-tighter text-white ${hoverTextClass} transition-colors leading-none truncate`}>{p.clientName}</h4>
+                           {isPending && <span className="text-[7px] font-black bg-yellow-500 text-black px-1.5 py-0.5 rounded uppercase">Novo</span>}
+                        </div>
                         <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                           <span className="text-[9px] text-white/30 font-bold uppercase tracking-widest truncate max-w-[150px]">{p.protocolTitle || 'Sem Objetivo'}</span>
                         </div>

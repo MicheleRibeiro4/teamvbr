@@ -23,19 +23,20 @@ import {
 type ViewMode = 'home' | 'search' | 'manage' | 'settings' | 'student-dashboard' | 'evolution' | 'student-entry';
 
 const App: React.FC = () => {
-  // --- LÓGICA DE DETECÇÃO DE URL ---
-  // Verifica se estamos no modo de cadastro via URL (Funciona com query param ou hash)
-  const isStudentModeUrl = () => {
-    if (typeof window === 'undefined') return false;
-    const href = window.location.href;
-    return href.includes('mode=cadastro');
+  // Função helper para verificar o modo da URL de forma segura
+  const getUrlMode = () => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('mode');
+    }
+    return null;
   };
 
   const [data, setData] = useState<ProtocolData>(EMPTY_DATA);
   
-  // Inicializa o activeView com base na URL
+  // Inicializa activeView baseado na URL imediatamente
   const [activeView, setActiveView] = useState<ViewMode>(() => {
-    return isStudentModeUrl() ? 'student-entry' : 'home';
+    return getUrlMode() === 'cadastro' ? 'student-entry' : 'home';
   });
 
   const [savedProtocols, setSavedProtocols] = useState<ProtocolData[]>([]);
@@ -63,38 +64,20 @@ const App: React.FC = () => {
     }
   };
 
-  // Garante que se a URL mudar (ex: navegação manual), o view atualiza
-  useEffect(() => {
-    const handlePopState = () => {
-      if (isStudentModeUrl()) {
-        setActiveView('student-entry');
-      }
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    
-    // Verificação inicial extra após montagem
-    if (isStudentModeUrl() && activeView !== 'student-entry') {
-        setActiveView('student-entry');
-    }
-
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
-
   // Check auth and load data
   useEffect(() => {
     // 1. Verifica autenticação do admin
     const auth = localStorage.getItem('vbr_auth');
     if (auth === 'true') setIsAuthenticated(true);
     
-    // 2. Carrega dados APENAS se não estivermos no modo cadastro
-    // Usamos uma verificação dupla aqui para não carregar dados desnecessários para o aluno
-    const currentlyStudentMode = activeView === 'student-entry' || isStudentModeUrl();
-
-    if (!currentlyStudentMode) {
+    // 2. Se a URL indicar cadastro, força a view (mesmo se navegar para trás/frente)
+    if (getUrlMode() === 'cadastro') {
+        setActiveView('student-entry');
+    } else {
+        // Carrega dados se NÃO for cadastro
         loadData();
     }
-  }, [activeView]);
+  }, []);
 
   // AUTO-SAVE LOGIC
   useEffect(() => {
@@ -228,8 +211,10 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
   // --- RENDERIZAÇÃO CONDICIONAL ---
   
   // 1. MODO DE AUTO-CADASTRO (Prioridade Máxima Absoluta)
-  // Se a URL contiver 'mode=cadastro', renderiza o form e ignora o resto.
-  if (isStudentModeUrl() || activeView === 'student-entry') {
+  // Verifica diretamente URLSearchParams na renderização
+  const isUrlModeCadastro = getUrlMode() === 'cadastro';
+  
+  if (isUrlModeCadastro || activeView === 'student-entry') {
      return <StudentEntryForm onCancel={() => {
         // Limpa a URL ao cancelar
         const newUrl = window.location.pathname;
