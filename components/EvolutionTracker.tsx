@@ -5,7 +5,7 @@ import {
   TrendingUp, 
   Save, 
   Loader2, 
-  PlusCircle, 
+  Plus, 
   History, 
   Ruler, 
   Activity, 
@@ -13,12 +13,11 @@ import {
   ArrowDownRight, 
   Minus,
   Scale,
-  CalendarCheck,
-  FilePlus,
-  Flag,
-  Trash2,
-  Eye,
-  ChevronRight
+  Calendar,
+  FileText,
+  Dumbbell,
+  ChevronRight,
+  Lock
 } from 'lucide-react';
 
 interface Props {
@@ -31,8 +30,8 @@ interface Props {
   onOpenEditor?: () => void;
 }
 
-// Componente de Campo de Comparação Renovado
-const ComparisonField = ({ label, value, onChange, prevValue, inverse = false }: any) => {
+// Componente de Campo de Comparação (Visual)
+const MetricCard = ({ label, value, prevValue, inverse = false, isEditable, onChange }: any) => {
     
     // Cálculo da diferença
     let diff = 0;
@@ -52,50 +51,47 @@ const ComparisonField = ({ label, value, onChange, prevValue, inverse = false }:
     const isPositive = diff > 0;
     const isStable = Math.abs(diff) < 0.1;
     
-    // Define cor baseado se "aumentar" é bom (ex: massa) ou ruim (ex: gordura)
-    // inverse = true -> aumentar é ruim (vermelho)
-    // inverse = false -> aumentar é bom (verde)
-    let colorClass = 'text-gray-400';
+    // Cores indicativas (Inverse: Aumentar é "ruim", ex: gordura)
+    let badgeColor = 'bg-gray-500/10 text-gray-400';
     if (!isStable && hasPrev) {
         if (inverse) {
-            colorClass = isPositive ? 'text-red-400' : 'text-green-400';
+            badgeColor = isPositive ? 'bg-red-500/10 text-red-500' : 'bg-green-500/10 text-green-500';
         } else {
-            colorClass = isPositive ? 'text-green-400' : 'text-red-400';
+            badgeColor = isPositive ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500';
         }
     }
 
     return (
-        <div className="bg-[#1a1a1a] p-3 rounded-xl border border-white/5 hover:border-[#d4af37]/30 transition-all group">
-            <div className="flex justify-between items-center mb-2">
+        <div className={`p-4 rounded-2xl border transition-all relative group ${isEditable ? 'bg-[#1a1a1a] border-white/10 hover:border-[#d4af37]/50' : 'bg-black/40 border-white/5 opacity-90'}`}>
+            <div className="flex justify-between items-start mb-2">
                 <label className="text-[10px] font-black text-white/40 uppercase tracking-widest">{label}</label>
                 {hasPrev && (
-                    <div className={`flex items-center gap-1 text-[9px] font-bold ${colorClass} bg-white/5 px-1.5 py-0.5 rounded`}>
-                        {!isStable && (isPositive ? <ArrowUpRight size={10} /> : <ArrowDownRight size={10} />)}
-                        {isStable ? <Minus size={10} /> : diffLabel}
+                    <div className={`flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded-md ${badgeColor}`}>
+                        {!isStable && (isPositive ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />)}
+                        {isStable ? <Minus size={12} /> : diffLabel}
                     </div>
                 )}
             </div>
             
-            <div className="flex items-center gap-3">
-                {/* Valor Anterior (se existir) */}
-                {prevValue && (
-                    <div className="flex flex-col items-end border-r border-white/10 pr-3">
-                        <span className="text-[8px] font-bold text-white/20 uppercase">Anterior</span>
-                        <span className="text-sm font-bold text-white/40">{prevValue}</span>
-                    </div>
-                )}
-
-                {/* Input Atual */}
-                <div className="flex-1">
-                    <span className="text-[8px] font-bold text-[#d4af37] uppercase block mb-0.5">Atual</span>
+            <div className="flex items-end gap-2">
+                {isEditable ? (
                     <input 
-                        className="w-full bg-transparent text-white font-black text-xl outline-none placeholder:text-white/10 focus:placeholder:text-transparent"
+                        className="w-full bg-transparent text-white font-black text-2xl outline-none placeholder:text-white/10 focus:placeholder:text-transparent"
                         value={value}
                         onChange={(e) => onChange(e.target.value)}
                         placeholder="-"
                     />
-                </div>
+                ) : (
+                    <span className="text-2xl font-black text-white">{value || '-'}</span>
+                )}
+                
+                {prevValue && (
+                    <div className="text-[10px] font-bold text-white/20 mb-1.5 whitespace-nowrap">
+                        Ant: {prevValue}
+                    </div>
+                )}
             </div>
+            {!isEditable && <Lock size={12} className="absolute bottom-4 right-4 text-white/10" />}
         </div>
     );
 };
@@ -110,20 +106,9 @@ const EvolutionTracker: React.FC<Props> = ({
   onOpenEditor 
 }) => {
   const [isSaving, setIsSaving] = useState(false);
-  const [isCreatingProtocol, setIsCreatingProtocol] = useState(false);
-  
-  // Garante que measurements sempre existe
-  const [localPhysical, setLocalPhysical] = useState<PhysicalData>(() => ({
-      ...currentProtocol.physicalData,
-      measurements: {
-          thorax: "", waist: "", abdomen: "", glutes: "",
-          rightArmRelaxed: "", leftArmRelaxed: "", rightArmContracted: "", leftArmContracted: "",
-          rightThigh: "", leftThigh: "", rightCalf: "", leftCalf: "",
-          ...(currentProtocol.physicalData?.measurements || {})
-      }
-  }));
+  const [localPhysical, setLocalPhysical] = useState<PhysicalData>(currentProtocol.physicalData);
 
-  // Sincroniza o estado local
+  // Sincroniza estado local quando o protocolo selecionado muda
   useEffect(() => {
     setLocalPhysical({
         ...currentProtocol.physicalData,
@@ -136,21 +121,21 @@ const EvolutionTracker: React.FC<Props> = ({
     });
   }, [currentProtocol.id, currentProtocol.updatedAt]);
 
-  // --- PREPARAÇÃO DE DADOS ---
-
+  // --- ORDENAÇÃO E HISTÓRICO ---
   const sortedHistoryList = useMemo(() => {
     const uniqueMap = new Map();
-    [currentProtocol, ...history].forEach(p => {
-        uniqueMap.set(p.id, p);
-    });
-    // Ordena do mais recente para o mais antigo
+    [currentProtocol, ...history].forEach(p => uniqueMap.set(p.id, p));
+    // Do mais recente para o mais antigo
     return Array.from(uniqueMap.values())
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
   }, [history, currentProtocol]);
 
-  // Encontra o protocolo imediatamente anterior ao atual na lista temporal
+  // Identifica se estamos visualizando o registro mais recente (ativo) ou um histórico (apenas leitura)
+  // O registro "Ativo" é sempre o primeiro da lista ordenada por data.
+  const isLatest = sortedHistoryList.length > 0 && currentProtocol.id === sortedHistoryList[0].id;
+
+  // Encontra o registro anterior na linha do tempo para comparação
   const previousProtocol = useMemo(() => {
-    // Como a lista já está ordenada (Recent -> Old), o "próximo" item no array é o anterior no tempo
     const currentIndex = sortedHistoryList.findIndex(p => p.id === currentProtocol.id);
     if (currentIndex !== -1 && currentIndex < sortedHistoryList.length - 1) {
         return sortedHistoryList[currentIndex + 1];
@@ -158,52 +143,52 @@ const EvolutionTracker: React.FC<Props> = ({
     return null;
   }, [sortedHistoryList, currentProtocol.id]);
 
-  const chartData = useMemo(() => {
-    const data = sortedHistoryList
-      .map(p => ({
-        date: new Date(p.updatedAt).toLocaleDateString('pt-BR').slice(0, 5), // DD/MM
-        weight: parseFloat(p.physicalData.weight?.replace(',', '.') || '0'),
-        bodyFat: parseFloat(p.physicalData.bodyFat?.replace(',', '.') || '0'),
-        muscleMass: parseFloat(p.physicalData.muscleMass?.replace(',', '.') || '0'),
-      }))
-      .filter(d => !isNaN(d.weight) && d.weight > 0)
-      .reverse();
-    return data;
-  }, [sortedHistoryList]);
-
   // --- HANDLERS ---
-
   const handleInputChange = (field: keyof PhysicalData, value: string) => {
+    if (!isLatest) return; // Bloqueia edição em histórico antigo
     setLocalPhysical(prev => ({ ...prev, [field]: value }));
   };
 
   const handleMeasurementChange = (key: string, value: string) => {
+    if (!isLatest) return; // Bloqueia edição em histórico antigo
     setLocalPhysical(prev => ({
       ...prev,
       measurements: {
-        ...(prev.measurements || {
-            thorax: "", waist: "", abdomen: "", glutes: "",
-            rightArmRelaxed: "", leftArmRelaxed: "", rightArmContracted: "", leftArmContracted: "",
-            rightThigh: "", leftThigh: "", rightCalf: "", leftCalf: ""
-        }),
+        ...(prev.measurements || {}),
         [key]: value
       } as BodyMeasurements
     }));
   };
 
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+        const updatedProtocol = {
+            ...currentProtocol,
+            physicalData: localPhysical,
+            updatedAt: new Date().toISOString()
+        };
+        // Salva as alterações no registro ATUAL (sem criar novo ID, apenas update)
+        await onUpdateData(updatedProtocol, false, false); 
+    } finally {
+        setTimeout(() => setIsSaving(false), 500);
+    }
+  };
+
   const handleNewCheckin = async () => {
-    if (confirm("Deseja criar uma nova atualização na linha do tempo com os dados inseridos?")) {
+    if (confirm("Iniciar novo Check-in? Isso copiará os dados atuais para um novo registro na data de hoje.")) {
       setIsSaving(true);
       try {
         const newProtocolState = {
           ...currentProtocol,
           physicalData: {
-             ...localPhysical,
-             date: new Date().toLocaleDateString('pt-BR'),
+             ...localPhysical, // Copia dados atuais como base
+             date: new Date().toLocaleDateString('pt-BR'), // Data de hoje
           },
           updatedAt: new Date().toISOString(),
           privateNotes: ""
         };
+        // createHistory=true cria um novo registro no banco mantendo o histórico anterior intacto
         await onUpdateData(newProtocolState, true, false); 
       } finally {
         setTimeout(() => setIsSaving(false), 1000);
@@ -211,14 +196,14 @@ const EvolutionTracker: React.FC<Props> = ({
     }
   };
 
-  const handleCreateNextProtocol = async () => {
-    if (confirm("Isso criará um NOVO PROTOCOLO (novo ciclo) usando a evolução atual como base.\nDeseja continuar?")) {
-        setIsCreatingProtocol(true);
+  const handleNewCycle = async () => {
+    if (confirm("Iniciar um NOVO PROTOCOLO/CICLO?\n\nUse isso quando mudar radicalmente a estratégia (ex: Bulking -> Cutting). Isso manterá o histórico mas indicará uma nova fase.")) {
+        setIsSaving(true);
         try {
             const today = new Date().toLocaleDateString('pt-BR');
             const newProtocolState = {
                 ...currentProtocol,
-                createdAt: currentProtocol.createdAt,
+                createdAt: new Date().toISOString(), // Nova data de criação base
                 updatedAt: new Date().toISOString(),
                 contract: {
                     ...currentProtocol.contract,
@@ -232,112 +217,106 @@ const EvolutionTracker: React.FC<Props> = ({
                 },
                 privateNotes: "" 
             };
+            // forceNewId=true gera um ID totalmente novo, desvinculando do "histórico linear" visual se desejado, 
+            // mas mantendo o nome do cliente para agrupamento no dashboard.
             await onUpdateData(newProtocolState, false, true);
         } finally {
-            setIsCreatingProtocol(false);
+            setIsSaving(false);
         }
     }
   };
 
   return (
-    <div className="max-w-[1600px] mx-auto animate-in fade-in duration-500 pb-20">
+    <div className="animate-in fade-in duration-500 pb-20">
       
-      {/* HEADER DO ALUNO */}
-      <div className="bg-[#111] p-6 rounded-[2.5rem] border border-white/10 mb-8 flex flex-col md:flex-row justify-between items-center gap-6 shadow-2xl">
-         <div className="flex items-center gap-6">
-            <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10 text-[#d4af37]">
-               <Activity size={28} />
+      {/* --- HEADER SUPERIOR: AÇÕES PRINCIPAIS --- */}
+      <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8 bg-[#111] p-6 rounded-[2rem] border border-white/10 shadow-lg">
+         <div className="flex items-center gap-4 w-full md:w-auto">
+            <div className="w-12 h-12 bg-[#d4af37] text-black rounded-xl flex items-center justify-center font-black shadow-[0_0_20px_rgba(212,175,55,0.3)]">
+                <Activity size={24} />
             </div>
             <div>
-               <h1 className="text-xl md:text-2xl font-black text-white uppercase tracking-tighter mb-1">
-                 Evolução: {currentProtocol.clientName}
-               </h1>
-               <div className="flex items-center gap-3 text-[10px] font-bold text-white/40 uppercase tracking-widest">
-                  <span className="bg-white/5 px-2 py-1 rounded-md text-white/60">
-                    {sortedHistoryList.length} Registros
-                  </span>
-                  <span>•</span>
-                  <span>Último: {new Date(currentProtocol.updatedAt).toLocaleDateString('pt-BR')}</span>
-               </div>
+                <h2 className="text-xl font-black text-white uppercase tracking-tighter leading-none">Evolução</h2>
+                <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1">
+                    Visualizando: <span className="text-[#d4af37]">{new Date(currentProtocol.updatedAt).toLocaleDateString('pt-BR')}</span> {isLatest ? '(Atual)' : '(Histórico)'}
+                </p>
             </div>
+         </div>
+
+         <div className="flex items-center gap-3 w-full md:w-auto">
+            {/* Se for o registro mais recente, mostra opção de Novo Checkin */}
+            {isLatest ? (
+                <>
+                    <button 
+                        onClick={handleSave}
+                        disabled={isSaving}
+                        className="flex-1 md:flex-none py-3 px-6 bg-white/5 border border-white/10 hover:bg-white/10 hover:text-white text-white/60 rounded-xl font-bold uppercase text-[10px] tracking-widest transition-all flex items-center justify-center gap-2"
+                    >
+                        {isSaving ? <Loader2 className="animate-spin" size={14}/> : <Save size={14}/>} Salvar
+                    </button>
+                    <button 
+                        onClick={handleNewCheckin}
+                        className="flex-1 md:flex-none py-3 px-6 bg-[#d4af37] text-black rounded-xl font-bold uppercase text-[10px] tracking-widest hover:scale-105 transition-all shadow-lg flex items-center justify-center gap-2"
+                    >
+                        <Plus size={16} /> Novo Check-in
+                    </button>
+                </>
+            ) : (
+                /* Se for histórico, mostra opção de ver o treino daquela época */
+                <button 
+                    onClick={onOpenEditor}
+                    className="w-full md:w-auto py-3 px-8 bg-blue-500/10 text-blue-400 border border-blue-500/30 hover:bg-blue-500 hover:text-white rounded-xl font-bold uppercase text-[10px] tracking-widest transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(59,130,246,0.1)]"
+                >
+                    <Dumbbell size={16} /> Ver Treino Desta Data
+                </button>
+            )}
          </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        {/* COLUNA ESQUERDA: LINHA DO TEMPO */}
-        <div className="lg:col-span-3 space-y-4">
+        {/* --- COLUNA ESQUERDA: LINHA DO TEMPO (HISTÓRICO) --- */}
+        <div className="lg:col-span-3">
            <div className="bg-[#111] border border-white/10 rounded-[2rem] p-6 sticky top-24 max-h-[80vh] overflow-y-auto custom-scrollbar">
-              <h3 className="text-xs font-black text-white/40 uppercase tracking-widest mb-6 flex items-center gap-2">
-                <History size={14} className="text-[#d4af37]" /> Histórico
-              </h3>
+              <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xs font-black text-white/40 uppercase tracking-widest flex items-center gap-2">
+                    <History size={14} className="text-[#d4af37]" /> Histórico
+                  </h3>
+                  <button onClick={handleNewCycle} className="text-[9px] font-bold text-white/20 hover:text-[#d4af37] uppercase tracking-widest transition-colors">
+                      + Novo Ciclo
+                  </button>
+              </div>
               
-              <div className="space-y-3">
+              <div className="space-y-0 relative">
+                {/* Linha vertical conectora */}
+                <div className="absolute left-[19px] top-4 bottom-4 w-0.5 bg-white/5 z-0"></div>
+
                 {sortedHistoryList.map((p, idx) => {
                   const isActive = p.id === currentProtocol.id;
-                  const isStart = idx === sortedHistoryList.length - 1;
-
+                  
                   return (
-                    <div key={p.id} className="relative group">
-                        <div 
-                            className={`w-full rounded-2xl border transition-all relative z-10 overflow-hidden ${
+                    <div key={p.id} className="relative z-10 group pl-2 py-2">
+                        <button
+                            onClick={() => onSelectHistory && onSelectHistory(p)}
+                            className={`w-full flex items-center gap-4 p-3 rounded-xl border transition-all text-left group-hover:translate-x-1 ${
                                 isActive 
-                                ? 'bg-[#d4af37] border-[#d4af37] text-black shadow-lg scale-105' 
-                                : 'bg-white/5 border-white/5 text-white/60 hover:bg-white/10 hover:border-white/20'
+                                ? 'bg-[#d4af37] border-[#d4af37] text-black shadow-lg' 
+                                : 'bg-[#1a1a1a] border-white/5 text-white/60 hover:bg-white/5 hover:border-white/20'
                             }`}
                         >
-                            <button
-                                onClick={() => onSelectHistory && onSelectHistory(p)}
-                                className="w-full text-left p-4 pb-2"
-                            >
-                                <div className="flex justify-between items-center mb-1">
-                                    <div className="flex items-center gap-2">
-                                        {isStart ? <Flag size={12} className={isActive ? 'text-black' : 'text-blue-400'} /> : <CalendarCheck size={12} className={isActive ? 'text-black' : 'text-[#d4af37]'} />}
-                                        <span className="text-[10px] font-black uppercase tracking-widest">
-                                        {new Date(p.updatedAt).toLocaleDateString('pt-BR')}
-                                        </span>
-                                    </div>
-                                    {isActive && <span className="bg-black text-[#d4af37] text-[8px] font-bold px-1.5 py-0.5 rounded">ATUAL</span>}
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-[10px] shrink-0 border ${isActive ? 'bg-black text-[#d4af37] border-black' : 'bg-black/30 border-white/10'}`}>
+                                {sortedHistoryList.length - idx}
+                            </div>
+                            <div>
+                                <span className="text-[10px] font-black uppercase tracking-widest block leading-none mb-1">
+                                    {new Date(p.updatedAt).toLocaleDateString('pt-BR')}
+                                </span>
+                                <div className="flex items-center gap-2 text-[9px] font-bold opacity-70">
+                                    <span className="flex items-center gap-1"><Scale size={10}/> {p.physicalData.weight || '-'}kg</span>
                                 </div>
-                                
-                                <div className="grid grid-cols-2 gap-2 mt-3">
-                                    <div className={`bg-black/10 p-2 rounded-lg text-center ${isActive ? 'text-black' : 'text-white'}`}>
-                                        <span className="block text-[8px] font-black uppercase opacity-60">Peso</span>
-                                        <span className="text-xs font-bold">{p.physicalData.weight || '-'}</span>
-                                    </div>
-                                    <div className={`bg-black/10 p-2 rounded-lg text-center ${isActive ? 'text-black' : 'text-white'}`}>
-                                        <span className="block text-[8px] font-black uppercase opacity-60">BF%</span>
-                                        <span className="text-xs font-bold">{p.physicalData.bodyFat || '-'}</span>
-                                    </div>
-                                </div>
-                            </button>
-
-                            {/* Botão de Visualizar Protocolo (Apenas aparece se ativo ou hover) */}
-                            {isActive && onOpenEditor && (
-                                <button 
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        onOpenEditor();
-                                    }}
-                                    className="w-full py-2 bg-black/20 hover:bg-black/40 text-[9px] font-bold uppercase tracking-widest flex items-center justify-center gap-1 transition-colors border-t border-black/10"
-                                >
-                                    <Eye size={10} /> Ver Treino/Dieta
-                                </button>
-                            )}
-                        </div>
-
-                        {onDeleteHistory && (
-                            <button 
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onDeleteHistory(p.id);
-                                }}
-                                className="absolute top-2 right-2 p-1.5 bg-black/50 text-white/40 hover:text-red-500 hover:bg-black rounded-lg transition-all z-20 opacity-0 group-hover:opacity-100"
-                                title="Excluir este registro"
-                            >
-                                <Trash2 size={12} />
-                            </button>
-                        )}
+                            </div>
+                            {isActive && <ChevronRight size={14} className="ml-auto opacity-50" />}
+                        </button>
                     </div>
                   );
                 })}
@@ -345,156 +324,104 @@ const EvolutionTracker: React.FC<Props> = ({
            </div>
         </div>
 
-        {/* COLUNA CENTRAL: DADOS & GRÁFICOS */}
+        {/* --- COLUNA DIREITA: DADOS DO CHECK-IN SELECIONADO --- */}
         <div className="lg:col-span-9 space-y-6">
           
-          {/* GRÁFICOS RÁPIDOS */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-             {/* Gráfico Peso */}
-             <div className="bg-[#111] p-5 rounded-[2rem] border border-white/10 relative overflow-hidden group">
-                <div className="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><Scale size={40} /></div>
-                <h4 className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-4">Evolução de Peso</h4>
-                <div className="h-24 flex items-end gap-1">
-                   {chartData.map((d, i) => (
-                      <div key={i} className="flex-1 bg-[#d4af37]/20 hover:bg-[#d4af37] transition-colors rounded-t-sm relative group/bar" style={{ height: `${(d.weight / 150) * 100}%` }}>
-                         <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black text-white text-[9px] px-1 rounded opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap z-20 pointer-events-none">
-                            {d.weight}kg
-                         </div>
-                      </div>
-                   ))}
-                </div>
-             </div>
+          {/* AVISO DE MODO LEITURA */}
+          {!isLatest && (
+              <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+                  <Lock size={18} className="text-blue-400" />
+                  <div>
+                      <p className="text-xs font-bold text-blue-200 uppercase tracking-wide">Modo Histórico (Leitura)</p>
+                      <p className="text-[10px] text-blue-400/60">Você está visualizando dados passados. Para editar, selecione o registro mais recente ou crie um novo.</p>
+                  </div>
+              </div>
+          )}
 
-             {/* Gráfico BF */}
-             <div className="bg-[#111] p-5 rounded-[2rem] border border-white/10 relative overflow-hidden group">
-                <div className="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><Activity size={40} /></div>
-                <h4 className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-4">Evolução de Gordura</h4>
-                <div className="h-24 flex items-end gap-1">
-                   {chartData.map((d, i) => (
-                      <div key={i} className="flex-1 bg-red-500/20 hover:bg-red-500 transition-colors rounded-t-sm relative group/bar" style={{ height: `${(d.bodyFat / 50) * 100}%` }}>
-                         <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black text-white text-[9px] px-1 rounded opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap z-20 pointer-events-none">
-                            {d.bodyFat}%
-                         </div>
-                      </div>
-                   ))}
-                </div>
-             </div>
-
-             {/* Gráfico Massa */}
-             <div className="bg-[#111] p-5 rounded-[2rem] border border-white/10 relative overflow-hidden group">
-                <div className="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><TrendingUp size={40} /></div>
-                <h4 className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-4">Evolução Muscular</h4>
-                <div className="h-24 flex items-end gap-1">
-                   {chartData.map((d, i) => (
-                      <div key={i} className="flex-1 bg-blue-500/20 hover:bg-blue-500 transition-colors rounded-t-sm relative group/bar" style={{ height: `${(d.muscleMass / 100) * 100}%` }}>
-                         <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black text-white text-[9px] px-1 rounded opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap z-20 pointer-events-none">
-                            {d.muscleMass}kg
-                         </div>
-                      </div>
-                   ))}
-                </div>
-             </div>
-          </div>
-
-          {/* INPUTS DE CHECK-IN */}
-          <div className="bg-[#111] p-8 rounded-[2.5rem] border border-white/10 shadow-xl">
-             <div className="flex items-center justify-between mb-8">
-                <h2 className="text-xl font-black text-white uppercase tracking-tighter flex items-center gap-2">
-                   <Activity size={20} className="text-[#d4af37]" /> Bioimpedância & Composição
-                </h2>
-                <span className="text-[10px] font-black bg-white/5 px-3 py-1 rounded text-white/40">
-                   {new Date(currentProtocol.updatedAt).toLocaleDateString('pt-BR')}
-                </span>
-             </div>
-
-             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                 <ComparisonField 
+          {/* DADOS PRINCIPAIS (Cards Grandes) */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                 <MetricCard 
                     label="Peso (kg)" 
                     value={localPhysical.weight} 
                     onChange={(v: string) => handleInputChange('weight', v)}
                     prevValue={previousProtocol?.physicalData.weight}
                     inverse={true}
+                    isEditable={isLatest}
                  />
-                 <ComparisonField 
+                 <MetricCard 
                     label="Gordura (%)" 
                     value={localPhysical.bodyFat} 
                     onChange={(v: string) => handleInputChange('bodyFat', v)}
                     prevValue={previousProtocol?.physicalData.bodyFat}
                     inverse={true}
+                    isEditable={isLatest}
                  />
-                 <ComparisonField 
+                 <MetricCard 
                     label="Massa Musc. (kg)" 
                     value={localPhysical.muscleMass} 
                     onChange={(v: string) => handleInputChange('muscleMass', v)}
                     prevValue={previousProtocol?.physicalData.muscleMass}
                     inverse={false}
+                    isEditable={isLatest}
                  />
-                 <ComparisonField 
+                 <MetricCard 
                     label="Visceral" 
                     value={localPhysical.visceralFat} 
                     onChange={(v: string) => handleInputChange('visceralFat', v)}
                     prevValue={previousProtocol?.physicalData.visceralFat}
                     inverse={true}
+                    isEditable={isLatest}
                  />
-             </div>
+          </div>
 
-             {/* MEDIDAS */}
-             <div className="bg-white/5 p-6 rounded-3xl border border-white/5 mb-8">
-                <h4 className="text-[10px] font-black text-[#d4af37] uppercase tracking-widest mb-6 flex items-center gap-2">
-                   <Ruler size={14} /> Medidas Corporais (cm)
-                </h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {/* MEDIDAS CORPORAIS (Grid Compacto) */}
+          <div className="bg-[#111] p-6 rounded-[2rem] border border-white/10">
+                <div className="flex items-center justify-between mb-6">
+                    <h4 className="text-[10px] font-black text-[#d4af37] uppercase tracking-widest flex items-center gap-2">
+                        <Ruler size={14} /> Medidas Corporais (cm)
+                    </h4>
+                    {isLatest && <span className="text-[9px] text-white/20 font-bold uppercase">Editável</span>}
+                </div>
+                
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                   {[
                     { k: 'thorax', l: 'Tórax' }, { k: 'waist', l: 'Cintura' }, { k: 'abdomen', l: 'Abdômen' }, 
                     { k: 'glutes', l: 'Glúteo' }, { k: 'rightArmContracted', l: 'Braço Dir.' }, { k: 'leftArmContracted', l: 'Braço Esq.' },
                     { k: 'rightThigh', l: 'Coxa Dir.' }, { k: 'leftThigh', l: 'Coxa Esq.' }, { k: 'rightCalf', l: 'Pantur. Dir' }, { k: 'leftCalf', l: 'Pantur. Esq' }
                   ].map((m) => (
-                    <ComparisonField 
-                        key={m.k}
-                        label={m.l}
-                        value={(localPhysical.measurements as any)?.[m.k] || ''}
-                        onChange={(val: string) => handleMeasurementChange(m.k, val)}
-                        prevValue={(previousProtocol?.physicalData.measurements as any)?.[m.k]}
-                        inverse={false}
-                    />
+                    <div key={m.k}>
+                        <MetricCard 
+                            label={m.l}
+                            value={(localPhysical.measurements as any)?.[m.k] || ''}
+                            onChange={(val: string) => handleMeasurementChange(m.k, val)}
+                            prevValue={(previousProtocol?.physicalData.measurements as any)?.[m.k]}
+                            inverse={false}
+                            isEditable={isLatest}
+                        />
+                    </div>
                   ))}
                 </div>
-             </div>
-
-             {/* OBSERVAÇÕES (Sem fotos) */}
-             <div className="w-full">
-                <h4 className="text-[10px] font-black text-[#d4af37] uppercase tracking-widest mb-4">
-                   Observações
-                </h4>
-                <textarea
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-xs font-medium text-white/80 focus:border-[#d4af37] outline-none min-h-[100px] resize-y"
-                  placeholder="Feedback sobre a adesão, pontos de melhoria, queixas..."
-                  value={currentProtocol.privateNotes}
-                  onChange={(e) => onNotesChange(e.target.value)}
-                />
-             </div>
-
-             {/* AÇÕES: Botão atualizado para "Nova Atualização" e "Novo Protocolo" */}
-             <div className="flex flex-col md:flex-row justify-end gap-4 mt-8 pt-6 border-t border-white/5">
-                <button 
-                  onClick={handleCreateNextProtocol}
-                  disabled={isCreatingProtocol}
-                  className="bg-white/5 text-white/60 hover:text-white border border-white/10 px-6 py-4 rounded-xl font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2 transition-all hover:bg-white/10"
-                >
-                  {isCreatingProtocol ? <Loader2 className="animate-spin" size={16} /> : <FilePlus size={16} />}
-                  Gerar Novo Protocolo Base
-                </button>
-
-                <button 
-                  onClick={handleNewCheckin}
-                  disabled={isSaving}
-                  className="bg-[#d4af37] text-black px-8 py-4 rounded-xl font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2 transition-all disabled:opacity-50 hover:scale-105 shadow-lg"
-                >
-                  {isSaving ? <Loader2 className="animate-spin" size={16} /> : <PlusCircle size={16} />}
-                  Nova Atualização
-                </button>
-             </div>
           </div>
+
+          {/* OBSERVAÇÕES */}
+          <div className="bg-[#111] p-6 rounded-[2rem] border border-white/10">
+                <h4 className="text-[10px] font-black text-[#d4af37] uppercase tracking-widest mb-4 flex items-center gap-2">
+                   <FileText size={14} /> Observações & Feedback
+                </h4>
+                {isLatest ? (
+                    <textarea
+                    className="w-full bg-[#1a1a1a] border border-white/10 rounded-xl p-4 text-xs font-medium text-white focus:border-[#d4af37] outline-none min-h-[120px] resize-y placeholder:text-white/20"
+                    placeholder="Feedback sobre a adesão, pontos de melhoria, queixas..."
+                    value={currentProtocol.privateNotes}
+                    onChange={(e) => onNotesChange(e.target.value)}
+                    />
+                ) : (
+                    <div className="bg-white/5 p-4 rounded-xl border border-white/5 text-xs text-white/60 min-h-[80px] italic">
+                        {currentProtocol.privateNotes || "Sem observações registradas."}
+                    </div>
+                )}
+          </div>
+
         </div>
       </div>
     </div>
