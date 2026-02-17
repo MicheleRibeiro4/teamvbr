@@ -116,10 +116,10 @@ const UnifiedEditor: React.FC<Props> = ({
                     { id: 'identificacao', label: 'Identificação', icon: FileText },
                     { id: 'anamnese', label: 'Anamnese', icon: Activity },
                     { id: 'medidas', label: 'Medidas', icon: Dumbbell },
-                    { id: 'evolucao', label: 'Evolução', icon: TrendingUp }, // Nova Aba
                     { id: 'nutricao', label: 'Nutrição', icon: Activity },
                     { id: 'treino', label: 'Treino', icon: Dumbbell },
                     { id: 'obs', label: 'Obs', icon: FileText },
+                    { id: 'evolucao', label: 'Evolução', icon: TrendingUp }, // Nova Aba (Movida para o final)
                 ].map((tab) => (
                     <button 
                         key={tab.id}
