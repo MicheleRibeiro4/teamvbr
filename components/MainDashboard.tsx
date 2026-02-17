@@ -49,7 +49,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
 
   const recentStudents = [...protocols].sort((a, b) => 
     new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-  ).slice(0, 4);
+  ).slice(0, 5); // Aumentei para 5 para preencher melhor a linha
 
   // --- LÓGICA DE AGENDA QUINZENAL ---
   const scheduledUpdates = useMemo(() => {
@@ -106,9 +106,9 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
   };
 
   const metrics = [
-    { label: 'Alunos Ativos', val: totalStudents, icon: <Users/>, color: 'text-blue-400' },
-    { label: 'Protocolos Ativos', val: activeProtocolsCount, icon: <Target/>, color: 'text-[#d4af37]' },
-    { label: 'Faturamento Total', val: 'R$ ' + totalRevenue.toLocaleString('pt-BR'), icon: <DollarSign/>, color: 'text-green-500' },
+    { label: 'Alunos Ativos', val: totalStudents, icon: <Users size={24}/>, color: 'text-blue-400', border: 'border-blue-400/20', bg: 'bg-blue-400/10' },
+    { label: 'Protocolos Ativos', val: activeProtocolsCount, icon: <Target size={24}/>, color: 'text-[#d4af37]', border: 'border-[#d4af37]/20', bg: 'bg-[#d4af37]/10' },
+    { label: 'Faturamento', val: 'R$ ' + totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 }), icon: <DollarSign size={24}/>, color: 'text-green-500', border: 'border-green-500/20', bg: 'bg-green-500/10' },
   ];
 
   return (
@@ -175,31 +175,33 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {metrics.map((s, i) => (
-          <button 
-            key={i} 
-            onClick={onList}
-            className="bg-white/5 p-5 rounded-[1.5rem] border border-white/10 shadow-sm flex flex-col justify-between group hover:bg-white/[0.1] hover:border-[#d4af37]/30 transition-all text-left"
-          >
-             <div className="flex justify-between items-start mb-3">
-               <div className={`p-2.5 bg-white/5 rounded-xl ${s.color} group-hover:bg-[#d4af37] group-hover:text-black transition-all`}>
-                 {s.icon}
-               </div>
-               <ChevronRight className="text-white/10 group-hover:text-[#d4af37] transition-all" size={18} />
-             </div>
-             <div>
-               <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mb-1">{s.label}</p>
-               <p className={`text-2xl font-black ${s.color}`}>{s.val}</p>
-             </div>
-          </button>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      {/* GRID PRINCIPAL: MÉTICAS (ESQ) + AGENDA (DIR) */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         
-        {/* AGENDA DE ATUALIZAÇÕES (QUINZENAL) */}
-        <div className="w-full bg-[#111] border border-white/10 rounded-[2.5rem] p-6 md:p-8 flex flex-col h-[500px]">
+        {/* COLUNA ESQUERDA: MÉTRICAS VERTICAIS */}
+        <div className="lg:col-span-1 flex flex-col gap-4">
+            {metrics.map((s, i) => (
+            <button 
+                key={i} 
+                onClick={onList}
+                className="bg-white/5 p-6 rounded-[2rem] border border-white/10 shadow-sm flex flex-col justify-between group hover:bg-white/[0.1] hover:border-[#d4af37]/30 transition-all text-left h-full min-h-[140px]"
+            >
+                <div className="flex justify-between items-start mb-4">
+                    <div className={`p-3 rounded-2xl ${s.bg} ${s.color} border ${s.border}`}>
+                        {s.icon}
+                    </div>
+                    <ChevronRight className="text-white/10 group-hover:text-[#d4af37] transition-all" size={20} />
+                </div>
+                <div>
+                    <p className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-1">{s.label}</p>
+                    <p className={`text-2xl xl:text-3xl font-black ${s.color}`}>{s.val}</p>
+                </div>
+            </button>
+            ))}
+        </div>
+
+        {/* COLUNA DIREITA: AGENDA DE ATUALIZAÇÕES */}
+        <div className="lg:col-span-3 w-full bg-[#111] border border-white/10 rounded-[2.5rem] p-6 md:p-8 flex flex-col h-[500px]">
           <div className="flex items-center justify-between mb-6">
              <h3 className="text-lg font-black uppercase tracking-tighter flex items-center gap-3 text-white">
                <CalendarClock size={20} className="text-[#d4af37]" /> Agenda de Atualizações
@@ -237,7 +239,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                     onClick={() => onLoadStudent(student, 'evolution')}
                   >
                     <div className="flex items-center gap-4">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center border text-xs font-black ${circleStyle}`}>
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center border text-xs font-black shrink-0 ${circleStyle}`}>
                           {student.schedule.daysLeft === 0 ? 'HOJE' : `${student.schedule.daysLeft}d`}
                       </div>
                       <div>
@@ -251,7 +253,12 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                           </div>
                       </div>
                     </div>
-                    <ChevronRight size={16} className={`opacity-50 group-hover:opacity-100 ${iconColor}`} />
+                    <div className="flex items-center gap-4">
+                        <span className="hidden md:inline-block text-[10px] font-black uppercase tracking-widest text-white/20">
+                            {isToday ? 'Check-in Necessário' : 'Aguardando'}
+                        </span>
+                        <ChevronRight size={16} className={`opacity-50 group-hover:opacity-100 ${iconColor}`} />
+                    </div>
                   </div>
                 );
               })
@@ -264,8 +271,10 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
           </div>
         </div>
 
-        {/* ALUNOS RECENTES */}
-        <div className="w-full bg-[#111] border border-white/10 rounded-[2.5rem] p-6 md:p-8 flex flex-col h-[500px]">
+      </div>
+
+      {/* RODAPÉ: ALUNOS RECENTES (LARGURA TOTAL) */}
+      <div className="w-full bg-[#111] border border-white/10 rounded-[2.5rem] p-6 md:p-8 flex flex-col">
           <div className="flex items-center justify-between mb-6 px-2">
             <h3 className="text-lg font-black text-white uppercase tracking-tighter flex items-center gap-2">
               <Clock size={18} className="text-[#d4af37]" /> Alunos Recentes
@@ -273,7 +282,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
             <button onClick={onList} className="text-[9px] font-black text-[#d4af37] uppercase tracking-widest hover:underline">Ver Todos</button>
           </div>
           
-          <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 pr-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
             {recentStudents.length > 0 ? recentStudents.map((p) => {
               const isFemale = p.physicalData.gender === 'Feminino';
               const isMale = p.physicalData.gender === 'Masculino';
@@ -296,40 +305,35 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
               const isPending = p.contract.status === 'Aguardando';
 
               return (
-                <div key={p.id} className={`bg-white/5 p-4 rounded-2xl border ${isPending ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-white/5'} flex flex-col md:flex-row items-center justify-between gap-4 hover:border-white/20 transition-all group`}>
-                  <div className="flex items-center gap-4 w-full md:w-auto overflow-hidden">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center border transition-all shrink-0 ${iconColorClass} group-hover:text-black`}>
-                        <Users size={20} />
+                <div key={p.id} className={`bg-white/5 p-4 rounded-2xl border ${isPending ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-white/5'} flex flex-col justify-between gap-4 hover:border-white/20 transition-all group`}>
+                  <div className="flex items-center gap-4 overflow-hidden">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all shrink-0 ${iconColorClass} group-hover:text-black`}>
+                        <Users size={18} />
                     </div>
                     <div className="flex flex-col min-w-0">
                         <div className="flex items-center gap-2">
-                           <h4 className={`font-black text-sm uppercase tracking-tighter text-white ${hoverTextClass} transition-colors leading-none truncate`}>{p.clientName}</h4>
-                           {isPending && <span className="text-[7px] font-black bg-yellow-500 text-black px-1.5 py-0.5 rounded uppercase">Novo</span>}
+                           <h4 className={`font-black text-xs uppercase tracking-tighter text-white ${hoverTextClass} transition-colors leading-none truncate`}>{p.clientName}</h4>
                         </div>
-                        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                          <span className="text-[9px] text-white/30 font-bold uppercase tracking-widest truncate max-w-[150px]">{p.protocolTitle || 'Sem Objetivo'}</span>
+                        <div className="mt-1">
+                          <span className="text-[8px] text-white/30 font-bold uppercase tracking-widest block truncate">{p.protocolTitle || 'Sem Objetivo'}</span>
                         </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 w-full md:w-auto justify-end border-t border-white/5 md:border-0 pt-3 md:pt-0 mt-1 md:mt-0 shrink-0">
-                    <div className="flex gap-2">
-                      <button onClick={() => onLoadStudent(p, 'manage')} className={`p-2 bg-white/5 ${buttonHoverBg} hover:text-black rounded-lg transition-all text-white/40`} title="Gerenciar Aluno"><FileText size={16} /></button>
-                    </div>
-                    <div className="w-px h-8 bg-white/5 mx-2 hidden md:block"></div>
-                    <button onClick={() => onLoadStudent(p, 'student-dashboard')} className="w-10 h-10 bg-white/5 hover:bg-white/10 rounded-lg flex items-center justify-center text-[#d4af37] ml-auto md:ml-0"><ChevronRight size={20} /></button>
+                  <div className="flex items-center gap-2 border-t border-white/5 pt-3 mt-1">
+                    <button onClick={() => onLoadStudent(p, 'manage')} className={`flex-1 p-2 bg-white/5 ${buttonHoverBg} hover:text-black rounded-lg transition-all text-white/40 flex justify-center`} title="Gerenciar"><FileText size={14} /></button>
+                    <button onClick={() => onLoadStudent(p, 'student-dashboard')} className="w-8 h-8 bg-white/5 hover:bg-white/10 rounded-lg flex items-center justify-center text-[#d4af37]"><ChevronRight size={16} /></button>
                   </div>
                 </div>
               );
             }) : (
-              <div className="text-center py-16 bg-white/5 rounded-[2rem] border-2 border-dashed border-white/5">
+              <div className="col-span-full text-center py-8">
                 <p className="text-white/20 font-black uppercase tracking-widest text-[10px]">Nenhum registro recente</p>
               </div>
             )}
           </div>
-        </div>
-
       </div>
+
     </div>
   );
 };

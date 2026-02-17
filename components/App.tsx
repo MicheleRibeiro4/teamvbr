@@ -23,20 +23,20 @@ import {
 type ViewMode = 'home' | 'search' | 'manage' | 'settings' | 'student-dashboard' | 'evolution' | 'student-entry';
 
 const App: React.FC = () => {
-  // Função helper para verificar o modo da URL de forma segura
-  const getUrlMode = () => {
+  // Função helper para verificar o modo da URL de forma segura e abrangente
+  const checkCadastroMode = () => {
     if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('mode');
+      // Verifica href completo para garantir compatibilidade com hash routers ou query params mal formatados
+      return window.location.href.includes('mode=cadastro');
     }
-    return null;
+    return false;
   };
 
   const [data, setData] = useState<ProtocolData>(EMPTY_DATA);
   
   // Inicializa activeView baseado na URL imediatamente
   const [activeView, setActiveView] = useState<ViewMode>(() => {
-    return getUrlMode() === 'cadastro' ? 'student-entry' : 'home';
+    return checkCadastroMode() ? 'student-entry' : 'home';
   });
 
   const [savedProtocols, setSavedProtocols] = useState<ProtocolData[]>([]);
@@ -71,8 +71,8 @@ const App: React.FC = () => {
     if (auth === 'true') setIsAuthenticated(true);
     
     // 2. Se a URL indicar cadastro, força a view (mesmo se navegar para trás/frente)
-    if (getUrlMode() === 'cadastro') {
-        setActiveView('student-entry');
+    if (checkCadastroMode()) {
+        if (activeView !== 'student-entry') setActiveView('student-entry');
     } else {
         // Carrega dados se NÃO for cadastro
         loadData();
@@ -211,19 +211,18 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
   // --- RENDERIZAÇÃO CONDICIONAL ---
   
   // 1. MODO DE AUTO-CADASTRO (Prioridade Máxima Absoluta)
-  // Verifica diretamente URLSearchParams na renderização
-  const isUrlModeCadastro = getUrlMode() === 'cadastro';
-  
-  if (isUrlModeCadastro || activeView === 'student-entry') {
+  // Verifica diretamente URLSearchParams na renderização e também o state activeView
+  // A verificação `checkCadastroMode()` aqui garante que mesmo que o state demore, a UI correta é montada.
+  if (checkCadastroMode() || activeView === 'student-entry') {
      return <StudentEntryForm onCancel={() => {
-        // Limpa a URL ao cancelar
-        const newUrl = window.location.pathname;
-        window.history.pushState({}, '', newUrl);
+        // Limpa a URL ao cancelar e volta para a raiz
+        const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+        window.history.pushState({path:cleanUrl}, '', cleanUrl);
         setActiveView('home');
      }} />;
   }
 
-  // 2. TELA DE LOGIN (Se não estiver autenticado)
+  // 2. TELA DE LOGIN (Se não estiver autenticado e não for cadastro)
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-6 text-center">
@@ -242,7 +241,9 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
                 <button 
                   onClick={() => {
                      // Adiciona o param na URL e muda a view
-                     const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + "?mode=cadastro";
+                     const newUrl = window.location.href.includes('?') 
+                        ? window.location.href + "&mode=cadastro"
+                        : window.location.href + "?mode=cadastro";
                      window.history.pushState({path:newUrl},'',newUrl);
                      setActiveView('student-entry');
                   }} 
