@@ -2,7 +2,7 @@ import React, { useRef, useState, useImperativeHandle, forwardRef } from 'react'
 import { createPortal } from 'react-dom';
 import { ProtocolData } from '../types';
 import { EMPTY_DATA } from '../constants';
-import { Loader2, FileText, X, FileDown, AlertTriangle } from 'lucide-react';
+import { Loader2, FileText, X, FileDown, AlertTriangle, Dumbbell } from 'lucide-react';
 
 const LOGO_VBR_GOLD = "https://xqwzmvzfemjkvaquxedz.supabase.co/storage/v1/object/public/LOGO/DOURADO.png";
 
@@ -63,27 +63,16 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
 
   const renderContent = (isPdfMode = false) => {
     const safeData = data || EMPTY_DATA;
-    // Fix: Use EMPTY_DATA properties as fallback to avoid property access errors on empty object
     const physical = safeData.physicalData || EMPTY_DATA.physicalData;
     const contract = safeData.contract || EMPTY_DATA.contract;
     const macros = safeData.macros || { protein: { value: '0', ratio: '' }, carbs: { value: '0', ratio: '' }, fats: { value: '0', ratio: '' } };
     const meals = safeData.meals || [];
     const supplements = safeData.supplements || [];
+    const trainingDays = safeData.trainingDays || [];
     
     const rawTips = safeData.tips || [];
     const hasCustomTips = rawTips.some(t => t && t.trim() !== "");
     const tips = hasCustomTips ? rawTips.filter(t => t && t.trim() !== "") : DEFAULT_TIPS;
-    
-    const trainingDays = safeData.trainingDays || [];
-    
-    const trainingChunks = [];
-    if (trainingDays.length === 0) {
-        trainingChunks.push([]);
-    } else {
-        for (let i = 0; i < trainingDays.length; i += 2) {
-            trainingChunks.push(trainingDays.slice(i, i + 2));
-        }
-    }
     
     const protocolTitle = safeData.protocolTitle || "Geral";
     const clientName = safeData.clientName || "Aluno";
@@ -124,6 +113,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
     return (
         <div className="bg-gray-100 text-black flex flex-col items-center print:bg-transparent w-full">
             
+            {/* CAPA */}
             <div style={coverPageStyle}>
                 <div className="flex-1 flex flex-col items-center justify-center w-full px-12 relative z-10">
                     <img src={LOGO_VBR_GOLD} alt="Team VBR" className="w-64 h-auto mb-16 relative z-10" />
@@ -146,6 +136,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
 
             <div className="html2pdf__page-break"></div>
 
+            {/* PÁGINA 1: DADOS E ESTRATÉGIA */}
             <div style={contentPageStyle}>
                 <h3 className={sectionTitle}>1. DADOS FÍSICOS - {physical.date || new Date().toLocaleDateString('pt-BR')}</h3>
                 <div className="grid grid-cols-3 gap-4 mb-8">
@@ -196,6 +187,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
 
             <div className="html2pdf__page-break"></div>
 
+            {/* PÁGINA 2: PLANO ALIMENTAR */}
             <div style={contentPageStyle}>
                 <h3 className={sectionTitle}>3. PLANO ALIMENTAR DIÁRIO</h3>
                 <table className="w-full text-left text-sm border-collapse mb-10 shadow-sm rounded-lg overflow-hidden">
@@ -217,10 +209,67 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                         ))}
                     </tbody>
                 </table>
+
+                {supplements.length > 0 && (
+                    <div className="mt-8 break-inside-avoid">
+                        <h4 className="text-[11px] font-black text-black mb-4 uppercase tracking-widest border-l-4 border-[#d4af37] pl-3">SUPLEMENTAÇÃO ESTRATÉGICA</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {supplements.map((s, idx) => (
+                                <div key={s.id || idx} className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                                    <p className="font-black text-xs text-gray-900 uppercase">{s.name}</p>
+                                    <p className="text-[10px] text-gray-500 font-bold mt-1 uppercase">{s.dosage} • {s.timing}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
 
             <div className="html2pdf__page-break"></div>
 
+            {/* PÁGINA 3+: TREINAMENTO */}
+            {trainingDays.length > 0 && (
+                <div style={contentPageStyle}>
+                    <h3 className={sectionTitle}>4. PROGRAMAÇÃO DE TREINOS</h3>
+                    <div className="space-y-10">
+                        {trainingDays.map((day, dIdx) => (
+                            <div key={day.id || dIdx} className="break-inside-avoid">
+                                <div className="flex items-center gap-3 mb-4 bg-gray-900 p-4 rounded-t-xl">
+                                    <div className="w-10 h-10 bg-[#d4af37] rounded-lg flex items-center justify-center text-black">
+                                        <Dumbbell size={20} />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-lg font-black text-white uppercase tracking-tighter leading-none">{day.title}</h4>
+                                        <p className="text-[10px] font-bold text-[#d4af37] uppercase tracking-widest mt-1">{day.focus}</p>
+                                    </div>
+                                </div>
+                                <div className="border border-gray-100 rounded-b-xl overflow-hidden">
+                                    <table className="w-full text-left text-xs border-collapse">
+                                        <thead>
+                                            <tr className="bg-gray-50 text-gray-400 uppercase font-black tracking-widest text-[9px]">
+                                                <th className="p-3 border-b border-gray-100">Exercício</th>
+                                                <th className="p-3 border-b border-gray-100 text-center w-32">Séries / Reps</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-50">
+                                            {day.exercises.map((ex, eIdx) => (
+                                                <tr key={ex.id || eIdx} className="hover:bg-gray-50 transition-colors">
+                                                    <td className="p-4 font-bold text-gray-800">{ex.name}</td>
+                                                    <td className="p-4 text-center font-black text-[#d4af37] text-sm">{ex.sets}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            <div className="html2pdf__page-break"></div>
+
+            {/* PÁGINA FINAL: ATENÇÃO */}
             <div style={coverPageStyle}>
                 <div className="flex-none h-24"></div>
                 <div className="flex flex-col items-center justify-center space-y-12 px-10 relative z-10 flex-1">
