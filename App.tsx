@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { ProtocolData } from './types';
 import { EMPTY_DATA, LOGO_VBR_BLACK } from './constants';
@@ -23,7 +22,6 @@ import {
 type ViewMode = 'home' | 'search' | 'manage' | 'settings' | 'student-dashboard' | 'evolution';
 
 const App: React.FC = () => {
-  // --- ROTEAMENTO ESTRITO (SPA) ---
   const checkIsStudent = () => {
     if (typeof window !== 'undefined') {
        const h = window.location.hash;
@@ -51,7 +49,6 @@ const App: React.FC = () => {
       setIsStudentPage(checkIsStudent());
     };
     window.addEventListener('hashchange', handleHashChange);
-    // Verifica inicial
     handleHashChange();
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
@@ -189,14 +186,12 @@ GRANT ALL ON TABLE public.protocols TO anon;
 GRANT ALL ON TABLE public.protocols TO authenticated;
 GRANT ALL ON TABLE public.protocols TO service_role;`;
 
-  // --- MODO ALUNO ---
   if (isStudentPage) {
      return <StudentEntryForm onCancel={() => {
         window.location.hash = ''; 
      }} />;
   }
 
-  // --- TELA DE LOGIN ---
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-4 text-center overflow-y-auto">
@@ -204,7 +199,6 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
           <img src={LOGO_VBR_BLACK} alt="Team VBR Logo" className="h-28 w-auto mx-auto mb-8" />
           
           <div className="bg-white/5 border border-white/10 p-8 rounded-[2rem] shadow-2xl relative overflow-hidden">
-            {/* Login Form */}
             <div className="relative z-10">
               <div className="w-10 h-10 bg-[#d4af37] rounded-xl flex items-center justify-center text-black mx-auto mb-6"><Lock size={20} /></div>
               <h1 className="text-lg font-black text-white uppercase tracking-tighter mb-6">Acesso Consultor</h1>
@@ -214,11 +208,6 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
                 <button type="submit" className="w-full bg-[#d4af37] text-black py-4 rounded-xl font-black uppercase text-xs tracking-[0.2em] hover:scale-105 transition-all">Entrar</button>
               </form>
             </div>
-            
-            {/* 
-              REMOVIDO BOTÃO DE ALUNO DAQUI 
-              O aluno deve usar o link direto com hash #student ou #cadastro
-            */}
           </div>
 
           <p className="mt-8 text-white/20 text-[10px] uppercase font-bold tracking-widest">Team VBR System © 2026</p>
@@ -227,7 +216,6 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
     );
   }
 
-  // --- SISTEMA CONSULTOR ---
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white font-sans selection:bg-[#d4af37] selection:text-black">
       
@@ -255,7 +243,11 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
           
           {activeView !== 'home' && (
             <button 
-              onClick={() => setActiveView(data.id && activeView !== 'student-dashboard' ? 'student-dashboard' : 'home')}
+              onClick={() => {
+                  if (activeView === 'student-dashboard') setActiveView('home');
+                  else if (activeView === 'manage' || activeView === 'evolution') setActiveView('student-dashboard');
+                  else setActiveView('home');
+              }}
               className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-[#d4af37] transition-colors"
             >
               <ChevronLeft size={16} /> Voltar
@@ -301,11 +293,11 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
         )}
 
         {activeView === 'home' && (
-          <MainDashboard protocols={savedProtocols} onNew={handleNew} onList={() => setActiveView('search')} onLoadStudent={(p) => loadStudent(p, 'student-dashboard')} />
+          <MainDashboard protocols={savedProtocols} onNew={handleNew} onList={() => setActiveView('search')} onLoadStudent={(p) => loadStudent(p, 'student-dashboard')} onUpdateStudent={(p) => handleSave(true, p)} onDeleteStudent={(id) => deleteStudent(id)} />
         )}
 
         {activeView === 'search' && (
-          <StudentSearch protocols={savedProtocols} onLoad={(p) => loadStudent(p, 'student-dashboard')} onDelete={deleteStudent} />
+          <StudentSearch protocols={savedProtocols} onLoad={(p) => loadStudent(p, 'student-dashboard')} onDelete={deleteStudent} onUpdate={(p) => handleSave(true, p)} />
         )}
 
         {activeView === 'student-dashboard' && (
@@ -326,7 +318,7 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
               history={savedProtocols.filter(p => p.clientName === data.clientName)} 
               onNotesChange={(n) => setData({...data, privateNotes: n})} 
               onUpdateData={(newData, createHistory) => handleSave(false, newData, createHistory)}
-              onSelectHistory={(hist) => setData(hist)}
+              onDeleteHistory={(id) => deleteStudent(id)}
               onOpenEditor={() => setActiveView('manage')}
           />
         )}
