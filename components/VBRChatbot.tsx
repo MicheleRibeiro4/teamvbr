@@ -50,7 +50,7 @@ const VBRChatbot: React.FC = () => {
         config: { systemInstruction: systemInstruction }
       });
       
-      const result = await chat.sendMessage(userMessage);
+      const result = await chat.sendMessage({ message: userMessage });
       const fullText = result.text;
       setMessages(prev => [...prev, { role: 'model', text: fullText }]);
       historyRef.current.push({ role: 'assistant', content: fullText });

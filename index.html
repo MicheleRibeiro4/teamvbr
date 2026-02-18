@@ -59,7 +59,19 @@
       ::-webkit-scrollbar { width: 6px; }
       ::-webkit-scrollbar-track { background: #0a0a0a; }
       ::-webkit-scrollbar-thumb { background: #d4af37; border-radius: 10px; }
+      
+      .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+      }
+      .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
     </style>
+    <script>
+      // Polyfill process for browser environments to prevent "process is not defined" errors
+      window.process = window.process || { env: {} };
+    </script>
     <script type="importmap">
 {
   "imports": {
@@ -68,16 +80,15 @@
     "lucide-react": "https://esm.sh/lucide-react@0.263.1",
     "react-dom": "https://esm.sh/react-dom@18.2.0",
     "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-    "openai": "https://esm.sh/openai@4.28.0",
-    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2",
     "react-dom/": "https://esm.sh/react-dom@18.2.0/",
-    "@google/genai": "https://esm.sh/@google/genai@0.2.1"
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2",
+    "@google/genai": "https://esm.sh/@google/genai"
   }
 }
 </script>
   </head>
   <body class="bg-[#0a0a0a]">
     <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
+    <script type="module" src="index.tsx"></script>
   </body>
 </html>

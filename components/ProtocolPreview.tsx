@@ -223,15 +223,24 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
 
             <div style={coverPageStyle}>
                 <div className="flex-none h-24"></div>
-                <div className="flex flex-col items-center justify-center space-y-10 px-10 relative z-10 flex-1">
+                <div className="flex flex-col items-center justify-center space-y-12 px-10 relative z-10 flex-1">
                     <AlertTriangle size={80} className="text-[#d4af37]" />
                     <div className="flex flex-col items-center">
                         <h2 className="text-6xl font-black text-white uppercase tracking-tighter leading-none">ATENÇÃO</h2>
-                        <div className="w-24 h-2 bg-[#d4af37] mt-6"></div>
+                        <div className="w-32 h-1 bg-[#d4af37] mt-6"></div>
                     </div>
-                    <div className="max-w-3xl space-y-6 text-white/90 leading-relaxed text-center">
-                        <p className="text-xl font-bold">Este protocolo foi desenhado especificamente para você, {clientName.split(' ')[0]}.</p>
-                        <p className="text-[#d4af37] text-xl font-black mt-12 italic tracking-tight whitespace-nowrap">A consistência vence a intensidade.</p>
+                    <div className="max-w-3xl space-y-8 text-white text-center">
+                        <p className="text-xl font-bold uppercase tracking-tight">
+                            Este protocolo foi desenhado especificamente para você, {clientName.split(' ')[0]}.
+                        </p>
+                        <p className="text-lg font-medium text-white/70 leading-snug">
+                            Ajustes de carga, dieta e cardio serão feitos conforme sua evolução e feedbacks.
+                        </p>
+                        <div className="pt-8">
+                            <p className="text-[#d4af37] text-2xl font-black italic tracking-tighter uppercase">
+                                A consistência vence a intensidade.
+                            </p>
+                        </div>
                     </div>
                 </div>
                 <div className="flex-none pb-12 relative z-10 text-center">
