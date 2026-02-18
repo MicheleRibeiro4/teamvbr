@@ -36,9 +36,6 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
     setIsGenerating(true);
     const clientName = data?.clientName || "Aluno";
     
-    // CONFIGURAÇÃO CRÍTICA PARA EVITAR CORTE LATERAL
-    // 794px = Largura A4 em 96 DPI (padrão web)
-    // Definir width e windowWidth força o renderizador a usar esse tamanho exato
     const opt = {
       margin: 0, 
       filename: `Protocolo_VBR_${clientName.replace(/\s+/g, '_')}.pdf`,
@@ -49,8 +46,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
         letterRendering: true, 
         backgroundColor: '#ffffff',
         scrollY: 0,
-        width: 794,       // Força largura A4
-        windowWidth: 794  // Simula janela A4
+        windowWidth: 794 // 794px é a largura A4 @ 96 DPI
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
@@ -67,8 +63,9 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
 
   const renderContent = (isPdfMode = false) => {
     const safeData = data || EMPTY_DATA;
-    const physical = safeData.physicalData || {};
-    const contract = safeData.contract || {};
+    // Fix: Use EMPTY_DATA properties as fallback to avoid property access errors on empty object
+    const physical = safeData.physicalData || EMPTY_DATA.physicalData;
+    const contract = safeData.contract || EMPTY_DATA.contract;
     const macros = safeData.macros || { protein: { value: '0', ratio: '' }, carbs: { value: '0', ratio: '' }, fats: { value: '0', ratio: '' } };
     const meals = safeData.meals || [];
     const supplements = safeData.supplements || [];
@@ -79,7 +76,6 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
     
     const trainingDays = safeData.trainingDays || [];
     
-    // Chunk training days
     const trainingChunks = [];
     if (trainingDays.length === 0) {
         trainingChunks.push([]);
@@ -92,23 +88,10 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
     const protocolTitle = safeData.protocolTitle || "Geral";
     const clientName = safeData.clientName || "Aluno";
 
-    // ESTILOS GERAIS
     const A4_HEIGHT = '296mm'; 
     const A4_WIDTH = '210mm';
     const CONTENT_PADDING = '12mm'; 
 
-    const containerStyle: React.CSSProperties = { 
-        width: A4_WIDTH,
-        maxWidth: A4_WIDTH, // Garante que não ultrapasse
-        fontFamily: "'Inter', sans-serif",
-        color: '#1a1a1a',
-        backgroundColor: 'white',
-        margin: isPdfMode ? '0' : '0 auto',
-        display: 'block',
-        overflow: 'hidden' // Corta qualquer overflow acidental
-    };
-
-    // Estilo para páginas internas (Brancas)
     const contentPageStyle: React.CSSProperties = {
         minHeight: A4_HEIGHT,
         width: A4_WIDTH,
@@ -119,7 +102,6 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
         overflow: 'hidden'
     };
 
-    // Estilo para Capas (Pretas) - Full Bleed
     const coverPageStyle: React.CSSProperties = {
         minHeight: A4_HEIGHT,
         width: A4_WIDTH,
@@ -137,27 +119,22 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
     const valueStyle = "text-xl font-black text-gray-900 leading-none";
     const cardStyle = "bg-white border border-gray-100 p-4 rounded-xl shadow-sm h-full flex flex-col justify-center break-inside-avoid";
 
-    // Limpeza do valor de Kcal para evitar "kcal kcal"
     const kcalValue = (safeData.kcalGoal || "0").toString().replace(/kcal/gi, '').trim();
 
     return (
         <div className="bg-gray-100 text-black flex flex-col items-center print:bg-transparent w-full">
             
-            {/* --- PÁGINA 1: CAPA --- */}
             <div style={coverPageStyle}>
                 <div className="flex-1 flex flex-col items-center justify-center w-full px-12 relative z-10">
                     <img src={LOGO_VBR_GOLD} alt="Team VBR" className="w-64 h-auto mb-16 relative z-10" />
-                    
                     <h1 className="text-4xl font-black text-[#d4af37] uppercase tracking-wider leading-tight mb-20 max-w-2xl mx-auto text-center">
                         PROTOCOLO<br/>COMPLETO DE<br/>{protocolTitle.toUpperCase()}
                     </h1>
-                    
                     <div className="border-t border-b border-white/20 py-10 w-full max-w-3xl">
                         <h2 className="text-5xl font-black uppercase tracking-tight text-white leading-none text-center">
                             {clientName}
                         </h2>
                     </div>
-                    
                     <div className="mt-20 px-8 py-3 rounded-full border border-[#d4af37]/30 bg-[#d4af37]/10 inline-block mx-auto">
                         <p className="text-sm font-bold text-[#d4af37] uppercase tracking-widest whitespace-nowrap">
                             PERÍODO: {contract.startDate || '...'} — {contract.endDate || '...'}
@@ -167,13 +144,10 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                 <div className="h-6 bg-[#d4af37] w-full shrink-0"></div>
             </div>
 
-            {/* QUEBRA EXPLÍCITA */}
             <div className="html2pdf__page-break"></div>
 
-            {/* --- PÁGINA 2: DADOS & ESTRATÉGIA --- */}
             <div style={contentPageStyle}>
                 <h3 className={sectionTitle}>1. DADOS FÍSICOS - {physical.date || new Date().toLocaleDateString('pt-BR')}</h3>
-                
                 <div className="grid grid-cols-3 gap-4 mb-8">
                     <div className="bg-[#f9fafb] p-4 rounded-lg break-inside-avoid"><span className={labelStyle}>PESO ATUAL</span><span className={valueStyle}>{physical.weight || '-'} kg</span></div>
                     <div className="bg-[#f9fafb] p-4 rounded-lg break-inside-avoid"><span className={labelStyle}>ALTURA</span><span className={valueStyle}>{physical.height || '-'} m</span></div>
@@ -189,7 +163,6 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                 </div>
 
                 <h3 className={sectionTitle}>2. ESTRATÉGIA NUTRICIONAL</h3>
-                
                 <div className="bg-[#eff0f2] p-6 rounded-sm border-l-[6px] border-[#9ca3af] mb-8 shadow-sm break-inside-avoid">
                     <span className="font-black uppercase text-[10px] text-black block mb-2 tracking-widest">Observação:</span>
                     <p className="text-sm text-gray-800 leading-relaxed font-medium text-justify">
@@ -197,16 +170,10 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                     </p>
                 </div>
                 
-                {/* BLACK BOX - META DIÁRIA (CORRIGIDO) */}
-                <div className="bg-[#111] text-center p-8 rounded-xl mb-8 shadow-md break-inside-avoid mx-auto w-full max-w-lg">
-                    <p className="text-[10px] font-black text-white uppercase tracking-[0.2em] mb-3">
-                        META DIÁRIA
-                    </p>
-                    <p className="text-5xl font-black text-[#d4af37] whitespace-nowrap">
+                <div className="bg-[#111] text-center p-8 rounded-xl mb-8 shadow-md break-inside-avoid mx-auto w-full max-w-lg flex flex-col items-center justify-center">
+                    <p className="text-[10px] font-black text-white uppercase tracking-[0.2em] mb-4">META DIÁRIA</p>
+                    <p className="text-6xl font-black text-[#d4af37] whitespace-nowrap leading-none">
                         {kcalValue} <span className="text-xl text-white/50 ml-1">kcal</span>
-                    </p>
-                    <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest mt-4 px-4 leading-relaxed">
-                        {safeData.kcalSubtext || `FOCO EM ${protocolTitle.toUpperCase()} - AJUSTE CONFORME EVOLUÇÃO`}
                     </p>
                 </div>
 
@@ -215,38 +182,27 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                     <div className="bg-white border border-gray-100 p-5 text-center rounded-xl shadow-sm break-inside-avoid">
                         <p className="text-[#d4af37] font-black text-[10px] uppercase tracking-widest mb-2">PROTEÍNAS</p>
                         <p className="text-3xl font-black text-gray-900 mb-1">{macros.protein?.value || '0'}g</p>
-                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{macros.protein?.ratio || ''}</p>
                     </div>
                     <div className="bg-white border border-gray-100 p-5 text-center rounded-xl shadow-sm break-inside-avoid">
                         <p className="text-[#d4af37] font-black text-[10px] uppercase tracking-widest mb-2">CARBOIDRATOS</p>
                         <p className="text-3xl font-black text-gray-900 mb-1">{macros.carbs?.value || '0'}g</p>
-                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{macros.carbs?.ratio || ''}</p>
                     </div>
                     <div className="bg-white border border-gray-100 p-5 text-center rounded-xl shadow-sm break-inside-avoid">
                         <p className="text-[#d4af37] font-black text-[10px] uppercase tracking-widest mb-2">GORDURAS</p>
                         <p className="text-3xl font-black text-gray-900 mb-1">{macros.fats?.value || '0'}g</p>
-                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{macros.fats?.ratio || ''}</p>
                     </div>
-                </div>
-                
-                <div className="bg-[#fffbeb] border border-[#fcd34d] p-4 rounded-lg text-center mt-auto break-inside-avoid">
-                    <p className="text-xs font-bold text-gray-700">
-                        <span className="text-[#d4af37] font-black">Nota Importante:</span> Manter a consistência na pesagem dos alimentos.
-                    </p>
                 </div>
             </div>
 
             <div className="html2pdf__page-break"></div>
 
-            {/* --- PÁGINA 3: PLANO ALIMENTAR --- */}
             <div style={contentPageStyle}>
                 <h3 className={sectionTitle}>3. PLANO ALIMENTAR DIÁRIO</h3>
-                
                 <table className="w-full text-left text-sm border-collapse mb-10 shadow-sm rounded-lg overflow-hidden">
                     <thead>
                         <tr className="bg-[#d4af37] text-white break-inside-avoid">
-                            <th className="p-4 font-black uppercase text-xs tracking-widest w-24 border-b-2 border-white/20">Horário</th>
-                            <th className="p-4 font-black uppercase text-xs tracking-widest border-b-2 border-white/20">Refeição & Detalhes</th>
+                            <th className="p-4 font-black uppercase text-xs tracking-widest w-24">Horário</th>
+                            <th className="p-4 font-black uppercase text-xs tracking-widest">Refeição & Detalhes</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -261,136 +217,23 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                         ))}
                     </tbody>
                 </table>
-                
-                <div className="mt-8 border-2 border-dashed border-gray-300 p-8 text-center rounded-3xl break-inside-avoid">
-                    <p className="text-gray-500 italic text-sm font-medium">
-                        Lembre-se de manter a hidratação ao longo do dia (mínimo <span className="font-bold text-gray-700 text-lg">{safeData.waterGoal || '3.5'}L</span> de água).
-                    </p>
-                </div>
             </div>
 
             <div className="html2pdf__page-break"></div>
 
-            {/* --- PÁGINA 4: SUPLEMENTAÇÃO --- */}
-            <div style={contentPageStyle}>
-                <h3 className={sectionTitle}>4. SUPLEMENTAÇÃO E RECOMENDAÇÕES</h3>
-                
-                <div className="space-y-5 mb-12">
-                    {supplements.map((supp) => {
-                        const nameLower = (supp.name || "").toLowerCase();
-                        let bgClass = "bg-[#1f2937]"; 
-                        
-                        if (nameLower.includes('creatina')) {
-                            bgClass = "bg-[#d4af37]"; 
-                        } else if (nameLower.includes('whey')) {
-                            bgClass = "bg-[#2563eb]"; 
-                        }
-
-                        return (
-                            <div key={supp.id} className={`${bgClass} text-white p-6 rounded-xl flex justify-between items-center shadow-md break-inside-avoid relative overflow-hidden`}>
-                                <div className="relative z-10 max-w-[70%]">
-                                    <h4 className="text-xl font-black uppercase mb-1 tracking-tight leading-none">{supp.name}</h4>
-                                    <p className="text-xs font-bold opacity-90 uppercase tracking-widest">{supp.dosage}</p>
-                                </div>
-                                <div className="bg-black/30 px-4 py-2 rounded text-[10px] font-black uppercase tracking-widest border border-white/10 relative z-10 text-right text-white">
-                                    {supp.timing}
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-                
-                <h4 className="text-lg font-black text-black mb-6 uppercase tracking-tighter break-after-avoid">Dicas:</h4>
-                <div className="space-y-4 pl-2">
-                    {tips.map((tip, idx) => (
-                        <div key={idx} className="flex items-start gap-4 text-sm text-gray-800 break-inside-avoid">
-                            <div className="w-2 h-2 bg-black mt-1.5 shrink-0 rounded-sm"></div>
-                            <span className="font-bold leading-relaxed text-base">{tip}</span>
-                        </div>
-                    ))}
-                </div>
-            </div>
-
-            <div className="html2pdf__page-break"></div>
-
-            {/* --- PÁGINAS DE TREINO --- */}
-            {trainingChunks.map((chunk, index) => (
-                <React.Fragment key={`training-page-${index}`}>
-                    <div style={contentPageStyle}>
-                        <h3 className={sectionTitle}>
-                            5. DIVISÃO DE TREINO (PARTE {index + 1})
-                        </h3>
-                        
-                        {index === 0 && (
-                            <p className="text-xs font-bold text-gray-500 mb-8 uppercase tracking-widest break-after-avoid">
-                                Frequência: {safeData.trainingFrequency || '5x na semana'}
-                            </p>
-                        )}
-                        
-                        <div className="space-y-10">
-                            {chunk.map((day) => (
-                                <div key={day.id} className="border-t-4 border-[#d4af37] shadow-sm break-inside-avoid">
-                                    <div className="bg-[#111] p-4 px-6 flex justify-between items-center">
-                                        <span className="font-black uppercase text-white text-lg tracking-tight">
-                                            {day.title}
-                                        </span>
-                                        <span className="text-[10px] font-black text-[#d4af37] uppercase tracking-[0.2em]">
-                                            FOCO: {day.focus}
-                                        </span>
-                                    </div>
-                                    
-                                    <table className="w-full text-sm text-left bg-white border-x border-b border-gray-200">
-                                        <tbody className="divide-y divide-gray-100">
-                                            {(day.exercises || []).map((ex, idx) => (
-                                                <tr key={ex.id || idx} className="hover:bg-gray-50">
-                                                    <td className="p-4 font-bold text-gray-900 uppercase tracking-tight leading-none w-3/4">
-                                                        {ex.name}
-                                                    </td>
-                                                    <td className="p-4 font-black text-black text-right whitespace-nowrap w-1/4">
-                                                        {ex.sets}
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                    {/* Sempre adicionar quebra após um bloco de treino, exceto se for o último E não houver página final (mas aqui sempre há) */}
-                    <div className="html2pdf__page-break"></div>
-                </React.Fragment>
-            ))}
-
-            {/* --- PÁGINA FINAL: ATENÇÃO (CORRIGIDA) --- */}
             <div style={coverPageStyle}>
                 <div className="flex-none h-24"></div>
-                
                 <div className="flex flex-col items-center justify-center space-y-10 px-10 relative z-10 flex-1">
                     <AlertTriangle size={80} className="text-[#d4af37]" />
-                    
                     <div className="flex flex-col items-center">
                         <h2 className="text-6xl font-black text-white uppercase tracking-tighter leading-none">ATENÇÃO</h2>
                         <div className="w-24 h-2 bg-[#d4af37] mt-6"></div>
                     </div>
-
                     <div className="max-w-3xl space-y-6 text-white/90 leading-relaxed text-center">
-                        <p className="text-xl font-bold">
-                            Este protocolo foi desenhado especificamente para você, {clientName.split(' ')[0]}.
-                        </p>
-                        
-                        {/* Reduzido tamanho da fonte e espaçamento */}
-                        <p className="opacity-80 text-base font-bold max-w-xl mx-auto">
-                            Ajustes de carga, dieta e cardio serão feitos conforme sua evolução e feedbacks.
-                        </p>
-                        
-                        {/* Fonte ajustada para não quebrar linha */}
-                        <p className="text-[#d4af37] text-2xl font-black mt-12 italic tracking-tight whitespace-nowrap">
-                            A consistência vence a intensidade.
-                        </p>
+                        <p className="text-xl font-bold">Este protocolo foi desenhado especificamente para você, {clientName.split(' ')[0]}.</p>
+                        <p className="text-[#d4af37] text-xl font-black mt-12 italic tracking-tight whitespace-nowrap">A consistência vence a intensidade.</p>
                     </div>
                 </div>
-                
                 <div className="flex-none pb-12 relative z-10 text-center">
                     <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em]">TEAM VBR © 2026</p>
                 </div>

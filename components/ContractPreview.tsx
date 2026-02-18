@@ -21,7 +21,8 @@ const ContractPreview = forwardRef<ContractPreviewHandle, Props>(({ data, onBack
 
   // SAFEGUARDS
   const safeData = data || EMPTY_DATA;
-  const contract = safeData.contract || {};
+  // Fix: Use EMPTY_DATA.contract as fallback to avoid property access errors on empty object
+  const contract = safeData.contract || EMPTY_DATA.contract;
   const clientName = safeData.clientName || '____________________';
 
   const getCleanContractText = () => {

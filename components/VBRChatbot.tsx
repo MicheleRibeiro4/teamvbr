@@ -1,22 +1,16 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, X, Send, Loader2, Bot, User, Maximize2, Minimize2 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
-
-// Chave API Gemini fornecida
-const API_KEY = process.env.API_KEY || "AIzaSyCX1oRHkaPfcf4vfOruLc_rv9B-rMCOpzA";
 
 const VBRChatbot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [input, setInput] = useState('');
   
-  // Mensagens do UI
   const [messages, setMessages] = useState<{ role: 'user' | 'model'; text: string }[]>([
     { role: 'model', text: 'Olá! Sou o Assistente IA do Team VBR. Como posso ajudar na sua evolução hoje?' }
   ]);
   
-  // Histórico para a API (Mantendo formato original para compatibilidade local, mas convertido no envio)
   const historyRef = useRef<{ role: "system" | "user" | "assistant"; content: string }[]>([
     { role: 'system', content: 'Você é o Assistente Virtual Oficial do Team VBR Rhino. Seu tom é profissional, motivador e técnico. Você é um expert em musculação, nutrição esportiva e fisiologia. Ajude o usuário com dúvidas sobre seus protocolos, exercícios e dieta. Sempre incentive a disciplina e a constância.' }
   ]);
@@ -35,47 +29,34 @@ const VBRChatbot: React.FC = () => {
 
     const userMessage = input.trim();
     setInput('');
-    
-    // Atualiza UI
     setMessages(prev => [...prev, { role: 'user', text: userMessage }]);
-    // Atualiza histórico local
     historyRef.current.push({ role: 'user', content: userMessage });
-
     setIsLoading(true);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: API_KEY });
-      
-      // Converte histórico para formato Gemini (user/model) e extrai system instruction
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const systemInstruction = historyRef.current.find(m => m.role === 'system')?.content || '';
       
       const historyForGemini = historyRef.current
-        .filter(m => m.role !== 'system' && m.content !== userMessage) // Filtra system e a mensagem atual que será enviada pelo sendMessage
+        .filter(m => m.role !== 'system' && m.content !== userMessage)
         .map(m => ({
             role: m.role === 'assistant' ? 'model' : 'user',
             parts: [{ text: m.content }]
         }));
 
       const chat = ai.chats.create({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3-flash-preview',
         history: historyForGemini,
-        config: {
-            systemInstruction: systemInstruction
-        }
+        config: { systemInstruction: systemInstruction }
       });
       
       const result = await chat.sendMessage(userMessage);
       const fullText = result.text;
-      
       setMessages(prev => [...prev, { role: 'model', text: fullText }]);
-      
-      // Salva a resposta completa no histórico local
       historyRef.current.push({ role: 'assistant', content: fullText });
-
     } catch (error: any) {
       console.error("Erro Chatbot:", error);
-      const errorMessage = 'Desculpe, tive um problema de conexão. Poderia tentar novamente?';
-      setMessages(prev => [...prev, { role: 'model', text: errorMessage }]);
+      setMessages(prev => [...prev, { role: 'model', text: 'Desculpe, tive um problema de conexão. Poderia tentar novamente?' }]);
     } finally {
       setIsLoading(false);
     }
@@ -88,7 +69,6 @@ const VBRChatbot: React.FC = () => {
         className="fixed bottom-8 left-8 z-[100] w-16 h-16 bg-[#d4af37] text-black rounded-full shadow-[0_0_30px_rgba(212,175,55,0.5)] flex items-center justify-center hover:scale-110 active:scale-95 transition-all group"
       >
         <MessageSquare size={28} />
-        <span className="absolute -top-2 -right-2 bg-white text-black text-[10px] font-black px-2 py-1 rounded-full border border-black animate-bounce">AI</span>
       </button>
     );
   }
@@ -102,7 +82,6 @@ const VBRChatbot: React.FC = () => {
           </div>
           <div>
             <h3 className="text-[10px] font-black uppercase tracking-widest text-black leading-none">Team VBR</h3>
-            <p className="text-[8px] font-bold text-black/60 uppercase">AI Assistant</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -114,24 +93,19 @@ const VBRChatbot: React.FC = () => {
           </button>
         </div>
       </div>
-
       {!isMinimized && (
         <>
           <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
             {messages.map((msg, idx) => (
-              <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2`}>
+              <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-[85%] flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border ${msg.role === 'user' ? 'bg-white/5 border-white/10 text-white' : 'bg-[#d4af37]/10 border-[#d4af37]/20 text-[#d4af37]'}`}>
-                    {msg.role === 'user' ? <User size={14} /> : <Bot size={14} />}
-                  </div>
-                  <div className={`p-4 rounded-2xl text-xs font-medium leading-relaxed ${msg.role === 'user' ? 'bg-white/10 text-white rounded-tr-none' : 'bg-[#d4af37]/5 text-white/80 border border-[#d4af37]/10 rounded-tl-none'}`}>
-                    {msg.text || (isLoading && idx === messages.length - 1 ? <Loader2 size={14} className="animate-spin text-[#d4af37]" /> : '')}
+                  <div className={`p-4 rounded-2xl text-xs font-medium leading-relaxed ${msg.role === 'user' ? 'bg-white/10 text-white' : 'bg-[#d4af37]/5 text-white/80 border border-[#d4af37]/10'}`}>
+                    {msg.text}
                   </div>
                 </div>
               </div>
             ))}
           </div>
-
           <div className="p-4 border-t border-white/5 bg-black/40">
             <div className="relative">
               <input
@@ -142,11 +116,7 @@ const VBRChatbot: React.FC = () => {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
               />
-              <button 
-                onClick={handleSendMessage}
-                disabled={isLoading}
-                className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-[#d4af37] text-black rounded-lg flex items-center justify-center hover:scale-105 transition-all disabled:opacity-50"
-              >
+              <button onClick={handleSendMessage} disabled={isLoading} className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-[#d4af37] text-black rounded-lg flex items-center justify-center hover:scale-105 transition-all disabled:opacity-50">
                 {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
               </button>
             </div>

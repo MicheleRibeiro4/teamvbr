@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from 'react';
 import { ProtocolData, Meal, Supplement, TrainingDay, Exercise } from '../types';
 import { Activity, User, ShieldCheck, ChevronLeft, MapPin, Dumbbell, Utensils, Pill, Plus, Trash2, FileText, AlertCircle, Sparkles, Loader2, Ruler, DollarSign, Droplets, BookOpen, Eraser, FileDown, Lightbulb } from 'lucide-react';
@@ -7,8 +6,6 @@ import { EMPTY_DATA } from '../constants';
 import ContractPreview, { ContractPreviewHandle } from './ContractPreview';
 import AnamnesisPreview, { AnamnesisPreviewHandle } from './AnamnesisPreview';
 import ProtocolPreview, { ProtocolPreviewHandle } from './ProtocolPreview';
-
-const API_KEY = process.env.API_KEY || "AIzaSyCX1oRHkaPfcf4vfOruLc_rv9B-rMCOpzA";
 
 interface Props {
   data: ProtocolData;
@@ -22,7 +19,6 @@ interface Props {
 const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTabChange, hideTabs }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   
-  // Refs para download direto do PDF
   const contractRef = useRef<ContractPreviewHandle>(null);
   const anamnesisRef = useRef<AnamnesisPreviewHandle>(null);
   const protocolRef = useRef<ProtocolPreviewHandle>(null);
@@ -103,9 +99,6 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
     if (parts.length > 2) {
        v = parts[0] + ',' + parts.slice(1).join('');
     }
-    if (parts[1] && parts[1].length > 1) {
-       // Permite até 1 casa decimal por enquanto
-    }
     if (v.length > 6) v = v.substring(0, 6);
     handleChange(path, v);
   };
@@ -145,8 +138,8 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
 
     setIsGenerating(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: API_KEY });
-      const model = "gemini-2.5-flash";
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const model = "gemini-3-flash-preview";
       
       const prompt = `
         Você é um treinador de elite e nutricionista esportivo (Estilo Team VBR).
@@ -157,23 +150,8 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
         INSTRUÇÕES OBRIGATÓRIAS: 
         1. Gere treinos intensos e completos. 
         2. GERE A DIETA COMPLETA: Preencha o campo "details" de CADA refeição com os alimentos específicos e quantidades (ex: "150g de Frango Grelhado + 100g Arroz"). NÃO DEIXE O CAMPO "details" VAZIO.
-        3. SUPLEMENTAÇÃO: É OBRIGATÓRIO preencher os campos "dosage" (ex: 5g, 1 caps) e "timing" (ex: Ao acordar, Pós-treino) para cada suplemento sugerido.
-        4. DICAS: Gere 4 dicas essenciais ("tips") focadas em hidratação, sono ou comportamento.
-        5. GERE O TREINO COMPLETO: Preencha o campo "exercises" com exercícios reais, séries e repetições.
-        
-        Retorne APENAS JSON.
-        Estrutura JSON: { 
-            "nutritionalStrategy": "...", 
-            "kcalGoal": "...", 
-            "kcalSubtext": "...", 
-            "macros": { "protein": { "value": "...", "ratio": "..." }, "carbs": { "value": "...", "ratio": "..." }, "fats": { "value": "...", "ratio": "..." } }, 
-            "meals": [{ "time": "08:00", "name": "Café", "details": "2 ovos, 1 pão..." }], 
-            "supplements": [{ "name": "Creatina", "dosage": "5g", "timing": "Pós-treino" }], 
-            "tips": ["Beber 4L de água", "Dormir 8h"],
-            "trainingFrequency": "...", 
-            "trainingDays": [{ "title": "A", "focus": "Peito", "exercises": [{ "name": "Supino", "sets": "4x12" }] }], 
-            "generalObservations": "..." 
-        }
+        3. SUPLEMENTAÇÃO: É OBRIGATÓRIO preencher os campos "dosage" e "timing" para cada suplemento sugerido.
+        4. Retorne APENAS JSON.
       `;
 
       const response = await ai.models.generateContent({
@@ -207,11 +185,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
       }
     } catch (error: any) {
       console.error("Erro na IA:", error);
-      if (error.message?.includes('429') || error.message?.includes('quota') || error.status === 429) {
-          alert("⚠️ Limite de uso da IA atingido.\n\nO Google limitou as requisições temporariamente. Por favor, aguarde cerca de 1 minuto e tente novamente.");
-      } else {
-          alert(`Erro ao gerar protocolo: ${error.message}`);
-      }
+      alert(`Erro ao gerar protocolo: ${error.message}`);
     } finally {
       setIsGenerating(false);
     }
@@ -335,7 +309,6 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
   const sectionHeaderClass = "flex items-center gap-2 mb-8 border-b border-white/5 pb-4 mt-8 first:mt-0";
   const addButtonClass = "w-full py-4 border border-dashed border-white/20 rounded-xl text-white/40 font-black uppercase text-[10px] tracking-widest hover:border-[#d4af37] hover:text-[#d4af37] hover:bg-[#d4af37]/5 transition-all flex items-center justify-center gap-2";
 
-  // Classes PADRONIZADAS para os botões de ação (Limpar, PDF, Visualizar)
   const btnBase = "px-6 py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg hover:scale-105 active:scale-95 whitespace-nowrap text-xs font-black uppercase tracking-widest";
   const btnVisualizarClass = `${btnBase} bg-[#d4af37] hover:bg-[#b5952f] text-black`;
   const btnPdfClass = `${btnBase} bg-white/10 hover:bg-white/20 text-white border border-white/5`;
@@ -368,7 +341,6 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
         </div>
       )}
 
-      {/* ABA: IDENTIFICAÇÃO E CONTRATO */}
       {activeTab === 'identificacao' && (
         <div className="animate-in fade-in slide-in-from-left-4 duration-300 space-y-8">
            <section>
@@ -456,7 +428,6 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
         </div>
       )}
       
-      {/* ABA: ANAMNESE */}
       {activeTab === 'anamnese' && (
         <div className="animate-in fade-in slide-in-from-right-4 duration-300 space-y-8">
             <section>
@@ -494,39 +465,27 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
         </div>
       )}
 
-      {/* ABA: MEDIDAS */}
       {activeTab === 'medidas' && (
         <div className="animate-in fade-in slide-in-from-right-4 duration-300 space-y-8">
           <section>
             <div className="bg-[#d4af37]/10 p-6 rounded-[2rem] border border-[#d4af37]/20 flex flex-col md:flex-row justify-between items-center gap-6 mb-8 relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-10 opacity-10 pointer-events-none">
-                    <Activity size={120} />
-                </div>
-                
+                <div className="absolute top-0 right-0 p-10 opacity-10 pointer-events-none"><Activity size={120} /></div>
                 <div className="flex items-center gap-4 relative z-10">
-                    <div className="w-16 h-16 bg-[#d4af37] rounded-2xl flex items-center justify-center text-black shadow-lg">
-                        <Activity size={32} strokeWidth={2.5} />
-                    </div>
+                    <div className="w-16 h-16 bg-[#d4af37] rounded-2xl flex items-center justify-center text-black shadow-lg"><Activity size={32} strokeWidth={2.5} /></div>
                     <div>
                         <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Bioimpedância & Composição</h2>
                         <p className="text-xs font-bold text-[#d4af37] uppercase tracking-widest mt-1">Dados Físicos do Aluno</p>
                     </div>
                 </div>
-
                 <div className="relative z-10 flex gap-2 items-center">
                     <button onClick={() => protocolRef.current?.download()} className={btnPdfClass}>
                         <FileDown size={14} /> Salvar PDF
                     </button>
-                    <ProtocolPreview 
-                        ref={protocolRef}
-                        data={data} 
-                        customTrigger={
-                            <button className={btnVisualizarClass}>
-                                <FileText size={18} />
-                                Visualizar
-                            </button>
-                        } 
-                    />
+                    <ProtocolPreview ref={protocolRef} data={data} customTrigger={
+                        <button className={btnVisualizarClass}>
+                            <FileText size={18} /> Visualizar
+                        </button>
+                    } />
                 </div>
             </div>
             
@@ -558,43 +517,18 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
               <div className="col-span-2 md:col-span-1"><label className={labelClass}>IMC</label><input className={inputClass + " opacity-60"} value={data.physicalData.imc} readOnly /></div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              <div><label className={labelClass}>Gordura (%)</label><input className={inputClass} value={data.physicalData.bodyFat} onChange={(e) => handleChange('physicalData.bodyFat', e.target.value)} /></div>
-              <div><label className={labelClass}>Massa Musc. (kg)</label><input className={inputClass} value={data.physicalData.muscleMass} onChange={(e) => handleChange('physicalData.muscleMass', e.target.value)} /></div>
-              <div><label className={labelClass}>G. Visceral</label><input className={inputClass} value={data.physicalData.visceralFat} onChange={(e) => handleChange('physicalData.visceralFat', e.target.value)} /></div>
-              <div><label className={labelClass}>Água (%)</label><input className={inputClass} value={data.physicalData.waterPercentage || ''} onChange={(e) => handleChange('physicalData.waterPercentage', e.target.value)} /></div>
-            </div>
-
             <div className="bg-white/5 p-6 rounded-2xl border border-white/5">
               <div className="flex items-center gap-2 mb-6"><Ruler className="text-[#d4af37]" size={16} /><h3 className="text-sm font-black text-white uppercase tracking-widest">Medidas (cm)</h3></div>
-              <div className="mb-6">
-                <h4 className="text-[10px] font-black text-[#d4af37] uppercase tracking-widest mb-3 border-b border-white/5 pb-1">Parte Superior</h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div><label className={labelClass}>Tórax</label><input className={inputClass} value={data.physicalData.measurements?.thorax || ''} onChange={(e) => handleChange('physicalData.measurements.thorax', e.target.value)} /></div>
-                  <div><label className={labelClass}>Cintura</label><input className={inputClass} value={data.physicalData.measurements?.waist || ''} onChange={(e) => handleChange('physicalData.measurements.waist', e.target.value)} /></div>
-                  <div><label className={labelClass}>Abdômen</label><input className={inputClass} value={data.physicalData.measurements?.abdomen || ''} onChange={(e) => handleChange('physicalData.measurements.abdomen', e.target.value)} /></div>
-                  <div><label className={labelClass}>Glúteo</label><input className={inputClass} value={data.physicalData.measurements?.glutes || ''} onChange={(e) => handleChange('physicalData.measurements.glutes', e.target.value)} /></div>
-                  <div><label className={labelClass}>Braço Dir. Rel</label><input className={inputClass} value={data.physicalData.measurements?.rightArmRelaxed || ''} onChange={(e) => handleChange('physicalData.measurements.rightArmRelaxed', e.target.value)} /></div>
-                  <div><label className={labelClass}>Braço Esq. Rel</label><input className={inputClass} value={data.physicalData.measurements?.leftArmRelaxed || ''} onChange={(e) => handleChange('physicalData.measurements.leftArmRelaxed', e.target.value)} /></div>
-                  <div><label className={labelClass}>Braço Dir. Con</label><input className={inputClass} value={data.physicalData.measurements?.rightArmContracted || ''} onChange={(e) => handleChange('physicalData.measurements.rightArmContracted', e.target.value)} /></div>
-                  <div><label className={labelClass}>Braço Esq. Con</label><input className={inputClass} value={data.physicalData.measurements?.leftArmContracted || ''} onChange={(e) => handleChange('physicalData.measurements.leftArmContracted', e.target.value)} /></div>
-                </div>
-              </div>
-              <div>
-                <h4 className="text-[10px] font-black text-[#d4af37] uppercase tracking-widest mb-3 border-b border-white/5 pb-1">Parte Inferior</h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div><label className={labelClass}>Coxa Dir</label><input className={inputClass} value={data.physicalData.measurements?.rightThigh || ''} onChange={(e) => handleChange('physicalData.measurements.rightThigh', e.target.value)} /></div>
-                  <div><label className={labelClass}>Coxa Esq</label><input className={inputClass} value={data.physicalData.measurements?.leftThigh || ''} onChange={(e) => handleChange('physicalData.measurements.leftThigh', e.target.value)} /></div>
-                  <div><label className={labelClass}>Panturrilha Dir</label><input className={inputClass} value={data.physicalData.measurements?.rightCalf || ''} onChange={(e) => handleChange('physicalData.measurements.rightCalf', e.target.value)} /></div>
-                  <div><label className={labelClass}>Panturrilha Esq</label><input className={inputClass} value={data.physicalData.measurements?.leftCalf || ''} onChange={(e) => handleChange('physicalData.measurements.leftCalf', e.target.value)} /></div>
-                </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {Object.keys(data.physicalData.measurements).map(key => (
+                      <div key={key}><label className={labelClass}>{key}</label><input className={inputClass} value={(data.physicalData.measurements as any)[key] || ''} onChange={(e) => handleChange(`physicalData.measurements.${key}`, e.target.value)} /></div>
+                  ))}
               </div>
             </div>
           </section>
         </div>
       )}
 
-      {/* ABA: NUTRIÇÃO */}
       {activeTab === 'nutricao' && (
         <div className="animate-in fade-in slide-in-from-right-4 duration-300 space-y-8">
           <section>
@@ -630,7 +564,6 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
             </div>
           </section>
 
-          {/* GERADOR AUTOMÁTICO IA */}
           <section className="bg-gradient-to-r from-[#d4af37]/10 to-transparent p-6 rounded-2xl border border-[#d4af37]/20 relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-32 h-32 bg-[#d4af37] blur-[80px] opacity-10"></div>
             {isGenerating && (
@@ -658,15 +591,15 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
             <div className={sectionHeaderClass}><Activity className="text-[#d4af37]" size={20} /><h2 className="text-xl font-black text-white uppercase tracking-tighter">Macronutrientes</h2></div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="bg-white/5 p-4 rounded-xl border border-white/5">
-                <div className="flex items-center justify-between mb-2"><label className={labelClass}>Proteínas</label><span className="text-[9px] text-[#d4af37] font-black uppercase tracking-widest">g/kg</span></div>
+                <div className="flex items-center justify-between mb-2"><label className={labelClass}>Proteínas</label></div>
                 <div className="flex gap-2"><input className={inputClass} value={data.macros.protein.value} onChange={(e) => handleChange('macros.protein.value', e.target.value)} placeholder="180" /><input className={inputClass} value={data.macros.protein.ratio} onChange={(e) => handleChange('macros.protein.ratio', e.target.value)} placeholder="2.0" /></div>
               </div>
               <div className="bg-white/5 p-4 rounded-xl border border-white/5">
-                <div className="flex items-center justify-between mb-2"><label className={labelClass}>Carboidratos</label><span className="text-[9px] text-[#d4af37] font-black uppercase tracking-widest">g/kg</span></div>
+                <div className="flex items-center justify-between mb-2"><label className={labelClass}>Carboidratos</label></div>
                 <div className="flex gap-2"><input className={inputClass} value={data.macros.carbs.value} onChange={(e) => handleChange('macros.carbs.value', e.target.value)} placeholder="250" /><input className={inputClass} value={data.macros.carbs.ratio} onChange={(e) => handleChange('macros.carbs.ratio', e.target.value)} placeholder="3.0" /></div>
               </div>
               <div className="bg-white/5 p-4 rounded-xl border border-white/5">
-                <div className="flex items-center justify-between mb-2"><label className={labelClass}>Gorduras</label><span className="text-[9px] text-[#d4af37] font-black uppercase tracking-widest">g/kg</span></div>
+                <div className="flex items-center justify-between mb-2"><label className={labelClass}>Gorduras</label></div>
                 <div className="flex gap-2"><input className={inputClass} value={data.macros.fats.value} onChange={(e) => handleChange('macros.fats.value', e.target.value)} placeholder="60" /><input className={inputClass} value={data.macros.fats.ratio} onChange={(e) => handleChange('macros.fats.ratio', e.target.value)} placeholder="0.8" /></div>
               </div>
             </div>
@@ -679,7 +612,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                 <div key={meal.id} className="bg-white/5 p-4 rounded-xl border border-white/5 flex flex-col md:flex-row gap-4 items-start group">
                     <div className="w-full md:w-1/4"><label className={labelClass}>Horário</label><input className={inputClass} value={meal.time} onChange={(e) => updateMealTime(index, e.target.value)} placeholder="08:00" maxLength={5}/></div>
                     <div className="flex-1 w-full"><label className={labelClass}>Nome</label><input className={inputClass + " mb-2"} value={meal.name} onChange={(e) => updateMeal(index, 'name', e.target.value)} /><textarea className={inputClass + " min-h-[60px]"} value={meal.details} onChange={(e) => updateMeal(index, 'details', e.target.value)} /></div>
-                    <button onClick={() => removeMeal(index)} className="mt-0 md:mt-6 w-full md:w-auto p-2 bg-red-500/10 text-red-500 rounded-lg md:bg-transparent md:text-white/20 hover:text-red-500 transition-colors flex justify-center items-center"><Trash2 size={18} /></button>
+                    <button onClick={() => removeMeal(index)} className="mt-0 md:mt-6 w-full md:w-auto p-2 text-red-500 hover:text-red-500 transition-colors flex justify-center items-center"><Trash2 size={18} /></button>
                 </div>
               ))}
               <button onClick={addMeal} className={addButtonClass}><Plus size={16} /> Adicionar Refeição</button>
@@ -694,29 +627,15 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                     <div className="flex-1 w-full"><label className={labelClass}>Nome</label><input className={inputClass} value={supp.name} onChange={(e) => updateSupplement(index, 'name', e.target.value)} placeholder="Creatina" /></div>
                     <div className="w-full md:w-1/4"><label className={labelClass}>Dose</label><input className={inputClass} value={supp.dosage} onChange={(e) => updateSupplement(index, 'dosage', e.target.value)} placeholder="5g" /></div>
                     <div className="w-full md:w-1/3"><label className={labelClass}>Horário</label><input className={inputClass} value={supp.timing} onChange={(e) => updateSupplement(index, 'timing', e.target.value)} placeholder="Pós-treino" /></div>
-                    <button onClick={() => removeSupplement(index)} className="w-full md:w-auto p-3 bg-red-500/10 rounded-lg md:bg-transparent md:p-3 text-red-500 md:text-white/20 hover:text-red-500 transition-colors flex justify-center"><Trash2 size={18} /></button>
+                    <button onClick={() => removeSupplement(index)} className="w-full md:w-auto p-3 text-red-500 hover:text-red-500 transition-colors flex justify-center"><Trash2 size={18} /></button>
                 </div>
               ))}
               <button onClick={addSupplement} className={addButtonClass}><Plus size={16} /> Adicionar Suplementação</button>
             </div>
           </section>
-
-          <section>
-            <div className={sectionHeaderClass}><Lightbulb className="text-[#d4af37]" size={20} /><h2 className="text-xl font-black text-white uppercase tracking-tighter">Dicas & Orientações</h2></div>
-            <div className="space-y-4">
-              {(data.tips || []).map((tip, index) => (
-                <div key={index} className="flex gap-2 items-center">
-                    <input className={inputClass} value={tip} onChange={(e) => updateTip(index, e.target.value)} placeholder="Ex: Beber 500ml de água ao acordar" />
-                    <button onClick={() => removeTip(index)} className="p-3 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-colors"><Trash2 size={18} /></button>
-                </div>
-              ))}
-              <button onClick={addTip} className={addButtonClass}><Plus size={16} /> Adicionar Dica</button>
-            </div>
-          </section>
         </div>
       )}
 
-      {/* ABA: TREINO */}
       {activeTab === 'treino' && (
         <div className="animate-in fade-in slide-in-from-right-4 duration-300 space-y-8">
           <section>
@@ -751,7 +670,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                           <div className="w-full md:w-1/3"><label className={labelClass}>Título</label><input className={inputClass} value={day.title} onChange={(e) => updateTrainingDay(dIndex, 'title', e.target.value)} placeholder="Treino A" /></div>
                           <div className="flex-1 w-full"><label className={labelClass}>Foco</label><input className={inputClass} value={day.focus} onChange={(e) => updateTrainingDay(dIndex, 'focus', e.target.value)} placeholder="Peito e Tríceps" /></div>
                       </div>
-                      <button onClick={() => removeTrainingDay(dIndex)} className="ml-0 md:ml-4 p-2 bg-red-500/10 rounded-lg md:bg-transparent text-red-500 md:text-white/20 hover:text-red-500 w-full md:w-auto flex justify-center"><Trash2 size={20} /></button>
+                      <button onClick={() => removeTrainingDay(dIndex)} className="ml-0 md:ml-4 p-2 text-red-500 hover:text-red-500 w-full md:w-auto flex justify-center"><Trash2 size={20} /></button>
                     </div>
                     <div className="space-y-2 pl-0 md:pl-4 border-l-0 md:border-l-2 border-white/5">
                       {day.exercises.map((ex, exIndex) => (

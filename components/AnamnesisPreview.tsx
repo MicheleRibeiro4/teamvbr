@@ -1,4 +1,5 @@
 import React, { useRef, useState, useImperativeHandle, forwardRef } from 'react';
+import { createPortal } from 'react-dom';
 import { ProtocolData } from '../types';
 import { EMPTY_DATA } from '../constants';
 import { ChevronLeft, Download, Loader2, Activity, Maximize2, X, FileDown, ClipboardList } from 'lucide-react';
@@ -45,7 +46,8 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
 
   const renderContent = (isPdfMode = false) => {
     const safeData = data || EMPTY_DATA;
-    const physical = safeData.physicalData || {};
+    // Fix: Use EMPTY_DATA.physicalData as fallback to avoid property access errors on empty object
+    const physical = safeData.physicalData || EMPTY_DATA.physicalData;
     const measurements = physical.measurements || {
         thorax: "-", waist: "-", abdomen: "-", glutes: "-",
         rightArmRelaxed: "-", leftArmRelaxed: "-",
