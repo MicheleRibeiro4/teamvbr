@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useRef } from 'react';
 import { ProtocolData, PhysicalData, BodyMeasurements } from '../types';
 import { 
@@ -192,6 +193,8 @@ const EvolutionTracker: React.FC<Props> = ({
               "trainingDays": [{ "title": "...", "focus": "...", "exercises": [{ "name": "...", "sets": "..." }] }],
               "generalObservations": "..."
             }
+            
+            Retorne APENAS o JSON, sem markdown.
           `;
 
           const response = await ai.models.generateContent({
@@ -200,8 +203,11 @@ const EvolutionTracker: React.FC<Props> = ({
             config: { responseMimeType: "application/json" }
           });
 
-          const textResponse = response.text;
+          let textResponse = response.text;
           if (textResponse) {
+              // Remove markdown code blocks if present (```json ... ```)
+              textResponse = textResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+              
               const generated = JSON.parse(textResponse);
               const processed = {
                   ...generated,
@@ -218,7 +224,7 @@ const EvolutionTracker: React.FC<Props> = ({
           }
       } catch (error: any) {
           console.error(error);
-          alert("Erro na IA: " + error.message);
+          alert("Erro na IA: " + (error.message || 'Verifique sua conexão ou API Key'));
       } finally {
           setIsGeneratingAI(false);
       }

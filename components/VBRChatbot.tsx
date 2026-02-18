@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, X, Send, Loader2, Bot, User, Maximize2, Minimize2 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
@@ -56,7 +57,7 @@ const VBRChatbot: React.FC = () => {
       historyRef.current.push({ role: 'assistant', content: fullText });
     } catch (error: any) {
       console.error("Erro Chatbot:", error);
-      setMessages(prev => [...prev, { role: 'model', text: 'Desculpe, tive um problema de conexão. Poderia tentar novamente?' }]);
+      setMessages(prev => [...prev, { role: 'model', text: 'Desculpe, tive um problema de conexão com a IA. Por favor, verifique se a API Key está configurada corretamente e tente novamente.' }]);
     } finally {
       setIsLoading(false);
     }

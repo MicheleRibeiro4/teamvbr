@@ -184,6 +184,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
         }
         
         Importante: Seja específico nas quantidades das refeições e use o estilo motivador Team VBR.
+        Retorne APENAS o JSON, sem markdown.
       `;
 
       const response = await ai.models.generateContent({
@@ -195,8 +196,11 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
         }
       });
 
-      const textResponse = response.text;
+      let textResponse = response.text;
       if (textResponse) {
+        // Remove markdown code blocks if present (```json ... ```)
+        textResponse = textResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+        
         const generatedData = JSON.parse(textResponse);
         const timestamp = Date.now().toString();
         const newData = {
@@ -221,7 +225,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
       }
     } catch (error: any) {
       console.error("Erro na IA:", error);
-      alert(`Erro ao gerar protocolo: ${error.message}`);
+      alert(`Erro ao gerar protocolo: ${error.message || 'Verifique sua conexão ou API Key'}`);
     } finally {
       setIsGenerating(false);
     }
