@@ -35,18 +35,20 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
     setIsGenerating(true);
     const clientName = data?.clientName || "Aluno";
     
-    // Configurações Otimizadas
+    // Configurações Otimizadas para evitar cortes laterais
+    // 794px é a largura exata de uma folha A4 em 96 DPI
     const opt = {
-      margin: 0, // Margem zero global (controlamos via CSS padding)
+      margin: 0, 
       filename: `Protocolo_VBR_${clientName.replace(/\s+/g, '_')}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { 
-        scale: 2, // Scale 2 é suficiente e mais rápido/leve que 3
+        scale: 2, 
         useCORS: true, 
         letterRendering: true, 
         backgroundColor: '#ffffff',
         scrollY: 0,
-        windowWidth: 794 // Largura exata A4 @ 96DPI
+        width: 794,       // Força a largura do canvas para A4
+        windowWidth: 794  // Força a largura da janela de renderização
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
@@ -89,19 +91,19 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
     const clientName = safeData.clientName || "Aluno";
 
     // ESTILOS GERAIS
-    // Usamos 296mm em vez de 297mm para evitar o bug de criação de página extra ou deslocamento
-    // devido a arredondamento de pixels em telas diferentes.
     const A4_HEIGHT = '296mm'; 
     const A4_WIDTH = '210mm';
-    const CONTENT_PADDING = '12mm'; // Aumentado levemente para 12mm para segurança
+    const CONTENT_PADDING = '12mm'; 
 
     const containerStyle: React.CSSProperties = { 
         width: A4_WIDTH,
+        maxWidth: A4_WIDTH, // Garante que não ultrapasse
         fontFamily: "'Inter', sans-serif",
         color: '#1a1a1a',
         backgroundColor: 'white',
         margin: isPdfMode ? '0' : '0 auto',
         display: 'block',
+        overflow: 'hidden' // Corta qualquer overflow acidental
     };
 
     // Estilo para páginas internas (Brancas)
@@ -125,12 +127,16 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
         display: 'flex',
         flexDirection: 'column',
         boxSizing: 'border-box',
+        overflow: 'hidden'
     };
 
     const sectionTitle = "text-lg font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-1 mb-6 uppercase tracking-tight break-after-avoid";
     const labelStyle = "text-[9px] font-bold text-gray-400 uppercase block mb-1 tracking-widest";
     const valueStyle = "text-xl font-black text-gray-900 leading-none";
     const cardStyle = "bg-white border border-gray-100 p-4 rounded-xl shadow-sm h-full flex flex-col justify-center break-inside-avoid";
+
+    // Limpeza do valor de Kcal para evitar "kcal kcal"
+    const kcalValue = (safeData.kcalGoal || "0").toString().replace(/kcal/gi, '').trim();
 
     return (
         <div className="bg-gray-100 text-black flex flex-col items-center print:bg-transparent w-full">
@@ -189,11 +195,17 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                     </p>
                 </div>
                 
-                <div className="bg-[#111] text-center p-8 rounded-xl mb-8 shadow-md break-inside-avoid">
+                {/* BLACK BOX - META DIÁRIA */}
+                <div className="bg-[#111] text-center p-8 rounded-xl mb-8 shadow-md break-inside-avoid mx-auto w-full max-w-lg">
                     <p className="text-[10px] font-black text-white uppercase tracking-[0.2em] mb-3">
-                        META DIÁRIA ({safeData.kcalSubtext || "FOCO EM " + protocolTitle.toUpperCase()})
+                        META DIÁRIA
                     </p>
-                    <p className="text-5xl font-black text-[#d4af37]">{safeData.kcalGoal || "0"} kcal</p>
+                    <p className="text-5xl font-black text-[#d4af37] whitespace-nowrap">
+                        {kcalValue} <span className="text-xl text-white/50 ml-1">kcal</span>
+                    </p>
+                    <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest mt-2">
+                        {safeData.kcalSubtext || "FOCO EM " + protocolTitle.toUpperCase()}
+                    </p>
                 </div>
 
                 <h4 className="text-[11px] font-black text-black mb-4 uppercase tracking-widest break-after-avoid">DISTRIBUIÇÃO DE MACRONUTRIENTES</h4>
@@ -363,13 +375,13 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                     <div className="max-w-3xl space-y-8 text-xl text-white/90 font-bold leading-relaxed">
                         <p>Este protocolo foi desenhado especificamente para você, {clientName.split(' ')[0]}.</p>
                         
-                        {/* Aumentado tamanho da fonte e centralizado */}
-                        <p className="opacity-90 text-2xl font-bold text-center">
+                        {/* Reduzido tamanho da fonte para evitar quebra de linha */}
+                        <p className="opacity-90 text-lg font-bold text-center max-w-2xl mx-auto">
                             Ajustes de carga, dieta e cardio serão feitos conforme sua evolução e feedbacks.
                         </p>
                         
-                        {/* Centralizado explicitamente e tamanho mantido grande */}
-                        <p className="text-[#d4af37] text-3xl font-black mt-10 italic tracking-tight text-center">
+                        {/* Adicionado whitespace-nowrap e reduzido tamanho da fonte */}
+                        <p className="text-[#d4af37] text-2xl font-black mt-8 italic tracking-tight text-center whitespace-nowrap">
                             A consistência vence a intensidade.
                         </p>
                     </div>
