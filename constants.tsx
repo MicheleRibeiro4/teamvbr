@@ -1,3 +1,4 @@
+
 import { ProtocolData } from './types';
 
 export const LOGO_VBR_BLACK = "https://xqwzmvzfemjkvaquxedz.supabase.co/storage/v1/object/public/LOGO/logo.png"; 
@@ -9,6 +10,42 @@ export const CONSULTANT_DEFAULT = {
   consultantCpf: "143.436.487-96",
   consultantEmail: "viniicius.br2@gmail.com",
   consultantAddress: "Rua Serra da Boa Esperança, 540, Serra Dourada, Vespasiano - Minas Gerais",
+};
+
+export const PROTOCOL_TEMPLATES = {
+  emagrecimento: {
+    title: "Emagrecimento",
+    tips: [
+      "Mantenha o déficit calórico constante.",
+      "Aumente o consumo de fibras para maior saciedade.",
+      "Não pule o cardio, ele é essencial para o gasto energético.",
+      "Beba pelo menos 35ml de água por kg de peso.",
+      "Priorize alimentos de baixa densidade calórica."
+    ],
+    strategy: "Foco em restrição calórica controlada, alta ingestão de proteínas para preservar massa magra e volume de treino moderado/alto."
+  },
+  hipertrofia: {
+    title: "Hipertrofia",
+    tips: [
+      "O superávit calórico é necessário para a construção muscular.",
+      "Priorize o descanso; o músculo cresce fora da academia.",
+      "Mantenha a progressão de carga em todos os treinos.",
+      "Consuma proteína em todas as refeições.",
+      "A creatina é sua melhor aliada; tome todos os dias."
+    ],
+    strategy: "Superávit calórico leve, foco em progressão de tensão mecânica e volume de treino otimizado para recuperação."
+  },
+  recomposicao: {
+    title: "Recomposição Corporal",
+    tips: [
+      "Mantenha as calorias próximas da manutenção.",
+      "Proteína alta é a chave para perder gordura e ganhar músculo ao mesmo tempo.",
+      "Treine pesado; a intensidade sinaliza para o corpo manter o músculo.",
+      "A consistência a longo prazo é mais importante que mudanças drásticas.",
+      "Monitore as medidas, não apenas o peso na balança."
+    ],
+    strategy: "Calorias em manutenção ou leve déficit, alta densidade nutricional e treinamento de força intenso."
+  }
 };
 
 const CONTRACT_TEMPLATE = `CLÁUSULA 1 – OBJETO
@@ -47,7 +84,7 @@ b) De condições de saúde preexistentes não informadas;
 c) Da ausência de supervisão profissional presencial;
 d) Do descumprimento das orientações genéricas repassadas.
 
-CLÁUSULA 5 – RESPONSABILIDADES DO CONTRATADO
+CLÁUSULA 5 – RESPONSABILIDADES DO CONTRADO
 5.1. O contratado compromete-se a:
 a) Fornecer os materiais informativos contratados dentro do prazo acordado;
 b) Responder dúvidas do contratante em até 24 (vinte e quatro) horas, em dias úteis, por meio do canal oficial de comunicação (WhatsApp/e-mail), limitando-se a esclarecimentos sobre os conteúdos informativos fornecidos;
@@ -99,7 +136,7 @@ CLÁUSULA 11 – FORO
 
 export const EMPTY_DATA: ProtocolData = {
   id: "",
-  createdAt: new Date().toISOString(), // Inicia com a data atual por padrão
+  createdAt: new Date().toISOString(), 
   updatedAt: new Date().toISOString(),
   privateNotes: "",
   clientName: "",

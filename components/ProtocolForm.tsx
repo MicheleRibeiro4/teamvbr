@@ -1,8 +1,9 @@
+
 import React, { useEffect, useState, useRef } from 'react';
 import { ProtocolData, Meal, Supplement, TrainingDay, Exercise } from '../types';
-import { Activity, User, ShieldCheck, ChevronLeft, MapPin, Dumbbell, Utensils, Pill, Plus, Trash2, FileText, AlertCircle, Sparkles, Loader2, Ruler, DollarSign, Droplets, BookOpen, Eraser, FileDown, Lightbulb } from 'lucide-react';
+import { Activity, User, ShieldCheck, ChevronLeft, MapPin, Dumbbell, Utensils, Pill, Plus, Trash2, FileText, AlertCircle, Sparkles, Loader2, Ruler, DollarSign, Droplets, BookOpen, Eraser, FileDown, Lightbulb, Copy } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
-import { EMPTY_DATA } from '../constants';
+import { EMPTY_DATA, PROTOCOL_TEMPLATES } from '../constants';
 import ContractPreview, { ContractPreviewHandle } from './ContractPreview';
 import AnamnesisPreview, { AnamnesisPreviewHandle } from './AnamnesisPreview';
 import ProtocolPreview, { ProtocolPreviewHandle } from './ProtocolPreview';
@@ -32,6 +33,15 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
         current = current[keys[i]];
     }
     current[keys[keys.length - 1]] = value;
+    onChange(newData);
+  };
+
+  const handleApplyTemplate = (type: keyof typeof PROTOCOL_TEMPLATES) => {
+    const template = PROTOCOL_TEMPLATES[type];
+    const newData = JSON.parse(JSON.stringify(data));
+    newData.protocolTitle = template.title;
+    newData.tips = [...template.tips];
+    newData.nutritionalStrategy = template.strategy;
     onChange(newData);
   };
 
@@ -142,46 +152,72 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
       const model = "gemini-3-flash-preview";
       
       const prompt = `
-        Você é um treinador de elite e nutricionista esportivo (Estilo Team VBR).
-        DADOS DO ALUNO: Nome: ${data.clientName}, Objetivo: ${data.protocolTitle}, Gênero: ${data.physicalData.gender}, Idade: ${data.physicalData.age}, Peso: ${data.physicalData.weight}kg, Altura: ${data.physicalData.height}m, BF: ${data.physicalData.bodyFat}%.
-        ANAMNESE: Rotina: ${data.anamnesis?.routine || ''}, Histórico: ${data.anamnesis?.trainingHistory || ''}, Ergogênicos: ${data.anamnesis?.ergogenics || ''}, Preferências: ${data.anamnesis?.foodPreferences || ''}.
-        DIRETRIZES: Estratégia: ${data.nutritionalStrategy || "Auto"}, Calorias: ${data.kcalGoal || "Auto"}, Frequência: ${data.trainingFrequency || "Sugerir"}.
+        Aja como Vinicius Brasil (Team VBR), um treinador de elite e expert em nutrição.
+        Crie um protocolo COMPLETO (JSON) seguindo estas diretrizes:
         
-        INSTRUÇÕES OBRIGATÓRIAS: 
-        1. Gere treinos intensos e completos. 
-        2. GERE A DIETA COMPLETA: Preencha o campo "details" de CADA refeição com os alimentos específicos e quantidades (ex: "150g de Frango Grelhado + 100g Arroz"). NÃO DEIXE O CAMPO "details" VAZIO.
-        3. SUPLEMENTAÇÃO: É OBRIGATÓRIO preencher os campos "dosage" e "timing" para cada suplemento sugerido.
-        4. Retorne APENAS JSON.
+        ALUNO: ${data.clientName}
+        GÊNERO: ${data.physicalData.gender} | IDADE: ${data.physicalData.age} | PESO: ${data.physicalData.weight}kg | BF: ${data.physicalData.bodyFat}%
+        OBJETIVO: ${data.protocolTitle}
+        ANAMNESE: ${JSON.stringify(data.anamnesis)}
+        ESTRATÉGIA BASE: ${data.nutritionalStrategy || "Definir melhor"}
+        
+        ESTRUTURA JSON REQUERIDA:
+        {
+          "nutritionalStrategy": "Explicação detalhada da fase",
+          "kcalGoal": "Valor numérico (ex: 2800)",
+          "kcalSubtext": "Breve frase motivacional",
+          "macros": { 
+             "protein": { "value": "180", "ratio": "2.2" }, 
+             "carbs": { "value": "250", "ratio": "3.0" }, 
+             "fats": { "value": "60", "ratio": "0.8" } 
+          },
+          "meals": [{ "time": "08:00", "name": "Café da Manhã", "details": "100g Frango + 2 Ovos" }],
+          "supplements": [{ "name": "Creatina", "dosage": "5g", "timing": "Qualquer horário" }],
+          "tips": ["Dica 1", "Dica 2"],
+          "trainingFrequency": "5x por semana",
+          "trainingDays": [{ 
+            "title": "Treino A", 
+            "focus": "Peitoral", 
+            "exercises": [{ "name": "Supino Reto", "sets": "4x10-12" }] 
+          }],
+          "generalObservations": "Instruções finais"
+        }
+        
+        Importante: Seja específico nas quantidades das refeições e use o estilo motivador Team VBR.
       `;
 
       const response = await ai.models.generateContent({
         model: model,
         contents: prompt,
-        config: { responseMimeType: "application/json" }
+        config: { 
+            responseMimeType: "application/json",
+            thinkingConfig: { thinkingBudget: 0 }
+        }
       });
 
       const textResponse = response.text;
       if (textResponse) {
         const generatedData = JSON.parse(textResponse);
+        const timestamp = Date.now().toString();
         const newData = {
           ...data,
-          nutritionalStrategy: data.nutritionalStrategy || generatedData.nutritionalStrategy,
+          nutritionalStrategy: generatedData.nutritionalStrategy || data.nutritionalStrategy,
           kcalGoal: generatedData.kcalGoal || data.kcalGoal,
           kcalSubtext: generatedData.kcalSubtext || data.kcalSubtext,
           macros: generatedData.macros || data.macros,
-          meals: generatedData.meals ? generatedData.meals.map((m: any, i: number) => ({ ...m, id: Date.now().toString() + i })) : [],
-          supplements: generatedData.supplements ? generatedData.supplements.map((s: any, i: number) => ({ ...s, id: Date.now().toString() + i })) : [],
-          tips: generatedData.tips || data.tips || [],
+          meals: generatedData.meals ? generatedData.meals.map((m: any, i: number) => ({ ...m, id: timestamp + 'm' + i })) : [],
+          supplements: generatedData.supplements ? generatedData.supplements.map((s: any, i: number) => ({ ...s, id: timestamp + 's' + i })) : [],
+          tips: (generatedData.tips && generatedData.tips.length > 0) ? generatedData.tips : data.tips,
           trainingFrequency: generatedData.trainingFrequency || data.trainingFrequency,
           trainingDays: generatedData.trainingDays ? generatedData.trainingDays.map((d: any, i: number) => ({
              ...d, 
-             id: Date.now().toString() + i,
-             exercises: d.exercises ? d.exercises.map((e: any, j: number) => ({ ...e, id: Date.now().toString() + i + j })) : []
+             id: timestamp + 'd' + i,
+             exercises: d.exercises ? d.exercises.map((e: any, j: number) => ({ ...e, id: timestamp + 'e' + i + j })) : []
           })) : [],
           generalObservations: generatedData.generalObservations || data.generalObservations
         };
         onChange(newData);
-        alert("Protocolo gerado com sucesso!");
+        alert("Protocolo gerado com sucesso pela IA!");
       }
     } catch (error: any) {
       console.error("Erro na IA:", error);
@@ -494,13 +530,28 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                 <label className={labelClass}>Objetivo</label>
                 <select className={selectClass} value={data.protocolTitle} onChange={(e) => handleChange('protocolTitle', e.target.value)}>
                     <option value="">Selecione</option>
-                    <option value="Emagrecimento">Emagrecimento</option>
-                    <option value="Hipertrofia">Hipertrofia</option>
-                    <option value="Recomposição Corporal">Recomposição Corporal</option>
+                    {Object.keys(PROTOCOL_TEMPLATES).map((key) => (
+                        <option key={key} value={PROTOCOL_TEMPLATES[key as keyof typeof PROTOCOL_TEMPLATES].title}>{PROTOCOL_TEMPLATES[key as keyof typeof PROTOCOL_TEMPLATES].title}</option>
+                    ))}
+                    <option value="Outro">Outro...</option>
                 </select>
               </div>
               <div><label className={labelClass}>Data Avaliação</label><input className={inputClass} value={data.physicalData.date} onChange={(e) => handleDateInput('physicalData.date', e.target.value)} placeholder="DD/MM/AAAA" maxLength={10} /></div>
               <div><label className={labelClass}>Idade</label><input className={inputClass} value={data.physicalData.age} onChange={(e) => handleChange('physicalData.age', e.target.value)} /></div>
+            </div>
+
+            {/* Templates Quick Select */}
+            <div className="flex flex-wrap gap-2 mb-6">
+                <p className="w-full text-[10px] font-black uppercase text-white/20 tracking-widest mb-1">Aplicar Template Rápido:</p>
+                {Object.keys(PROTOCOL_TEMPLATES).map((key) => (
+                    <button 
+                        key={key} 
+                        onClick={() => handleApplyTemplate(key as keyof typeof PROTOCOL_TEMPLATES)}
+                        className="px-4 py-2 bg-white/5 border border-white/5 hover:border-[#d4af37]/30 rounded-lg text-[10px] font-bold uppercase transition-all"
+                    >
+                        {PROTOCOL_TEMPLATES[key as keyof typeof PROTOCOL_TEMPLATES].title}
+                    </button>
+                ))}
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
@@ -577,12 +628,12 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                   <div className="p-3 bg-[#d4af37] text-black rounded-xl shrink-0"><Sparkles size={24} /></div>
                   <div>
                       <h3 className="text-xl font-black text-white uppercase tracking-tighter">Gerador de Protocolo IA</h3>
-                      <p className="text-sm text-white/60 max-w-lg">A IA usará seus dados e estratégia para criar o plano.</p>
+                      <p className="text-sm text-white/60 max-w-lg">A IA usará os dados de anamnese e medidas para criar um plano otimizado.</p>
                   </div>
                 </div>
                 <div className="flex gap-2 w-full md:w-auto">
                     <button onClick={handleClearNutrition} className={btnClearClass}><Eraser size={14} /> Limpar</button>
-                    <button onClick={handleGenerateAI} disabled={isGenerating} className="px-8 py-3 bg-[#d4af37] text-black rounded-xl font-black uppercase text-xs tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed w-full justify-center whitespace-nowrap h-auto">{isGenerating ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}{isGenerating ? 'Gerando...' : 'Gerar Agora'}</button>
+                    <button onClick={handleGenerateAI} disabled={isGenerating} className="px-8 py-3 bg-[#d4af37] text-black rounded-xl font-black uppercase text-xs tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed w-full justify-center whitespace-nowrap h-auto">{isGenerating ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}{isGenerating ? 'Gerando...' : 'Gerar com IA'}</button>
                 </div>
             </div>
           </section>
