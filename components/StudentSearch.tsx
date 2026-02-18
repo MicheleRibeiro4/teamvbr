@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { ProtocolData } from '../types';
 import { Search, Trash2, ChevronRight, Calendar, Target, FileText, User, ToggleLeft, ToggleRight, Settings2 } from 'lucide-react';
@@ -45,7 +44,7 @@ const StudentSearch: React.FC<Props> = ({ protocols, onLoad, onDelete, onUpdate 
   );
 
   const toggleStatus = (student: ProtocolData) => {
-      const newStatus = student.contract.status === 'Ativo' ? 'Cancelado' : 'Ativo';
+      const newStatus: 'Ativo' | 'Cancelado' = student.contract.status === 'Ativo' ? 'Cancelado' : 'Ativo';
       const updatedStudent = {
           ...student,
           contract: {

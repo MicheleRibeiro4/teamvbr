@@ -1,6 +1,7 @@
 import React, { useRef, useState, useImperativeHandle, forwardRef } from 'react';
 import { createPortal } from 'react-dom';
 import { ProtocolData } from '../types';
+import { EMPTY_DATA } from '../constants';
 import { Loader2, FileText, X, FileDown, AlertTriangle } from 'lucide-react';
 
 const LOGO_VBR_GOLD = "https://xqwzmvzfemjkvaquxedz.supabase.co/storage/v1/object/public/LOGO/DOURADO.png";
@@ -35,8 +36,9 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
     setIsGenerating(true);
     const clientName = data?.clientName || "Aluno";
     
-    // Configurações Otimizadas para evitar cortes laterais
-    // 794px é a largura exata de uma folha A4 em 96 DPI
+    // CONFIGURAÇÃO CRÍTICA PARA EVITAR CORTE LATERAL
+    // 794px = Largura A4 em 96 DPI (padrão web)
+    // Definir width e windowWidth força o renderizador a usar esse tamanho exato
     const opt = {
       margin: 0, 
       filename: `Protocolo_VBR_${clientName.replace(/\s+/g, '_')}.pdf`,
@@ -47,8 +49,8 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
         letterRendering: true, 
         backgroundColor: '#ffffff',
         scrollY: 0,
-        width: 794,       // Força a largura do canvas para A4
-        windowWidth: 794  // Força a largura da janela de renderização
+        width: 794,       // Força largura A4
+        windowWidth: 794  // Simula janela A4
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
@@ -64,7 +66,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
   useImperativeHandle(ref, () => ({ download: handleDownloadPDF }));
 
   const renderContent = (isPdfMode = false) => {
-    const safeData = data || {};
+    const safeData = data || EMPTY_DATA;
     const physical = safeData.physicalData || {};
     const contract = safeData.contract || {};
     const macros = safeData.macros || { protein: { value: '0', ratio: '' }, carbs: { value: '0', ratio: '' }, fats: { value: '0', ratio: '' } };
@@ -195,7 +197,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                     </p>
                 </div>
                 
-                {/* BLACK BOX - META DIÁRIA */}
+                {/* BLACK BOX - META DIÁRIA (CORRIGIDO) */}
                 <div className="bg-[#111] text-center p-8 rounded-xl mb-8 shadow-md break-inside-avoid mx-auto w-full max-w-lg">
                     <p className="text-[10px] font-black text-white uppercase tracking-[0.2em] mb-3">
                         META DIÁRIA
@@ -203,8 +205,8 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                     <p className="text-5xl font-black text-[#d4af37] whitespace-nowrap">
                         {kcalValue} <span className="text-xl text-white/50 ml-1">kcal</span>
                     </p>
-                    <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest mt-2">
-                        {safeData.kcalSubtext || "FOCO EM " + protocolTitle.toUpperCase()}
+                    <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest mt-4 px-4 leading-relaxed">
+                        {safeData.kcalSubtext || `FOCO EM ${protocolTitle.toUpperCase()} - AJUSTE CONFORME EVOLUÇÃO`}
                     </p>
                 </div>
 
@@ -360,7 +362,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                 </React.Fragment>
             ))}
 
-            {/* --- PÁGINA FINAL: ATENÇÃO --- */}
+            {/* --- PÁGINA FINAL: ATENÇÃO (CORRIGIDA) --- */}
             <div style={coverPageStyle}>
                 <div className="flex-none h-24"></div>
                 
@@ -372,16 +374,18 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                         <div className="w-24 h-2 bg-[#d4af37] mt-6"></div>
                     </div>
 
-                    <div className="max-w-3xl space-y-8 text-xl text-white/90 font-bold leading-relaxed">
-                        <p>Este protocolo foi desenhado especificamente para você, {clientName.split(' ')[0]}.</p>
+                    <div className="max-w-3xl space-y-6 text-white/90 leading-relaxed text-center">
+                        <p className="text-xl font-bold">
+                            Este protocolo foi desenhado especificamente para você, {clientName.split(' ')[0]}.
+                        </p>
                         
-                        {/* Reduzido tamanho da fonte para evitar quebra de linha */}
-                        <p className="opacity-90 text-lg font-bold text-center max-w-2xl mx-auto">
+                        {/* Reduzido tamanho da fonte e espaçamento */}
+                        <p className="opacity-80 text-base font-bold max-w-xl mx-auto">
                             Ajustes de carga, dieta e cardio serão feitos conforme sua evolução e feedbacks.
                         </p>
                         
-                        {/* Adicionado whitespace-nowrap e reduzido tamanho da fonte */}
-                        <p className="text-[#d4af37] text-2xl font-black mt-8 italic tracking-tight text-center whitespace-nowrap">
+                        {/* Fonte ajustada para não quebrar linha */}
+                        <p className="text-[#d4af37] text-2xl font-black mt-12 italic tracking-tight whitespace-nowrap">
                             A consistência vence a intensidade.
                         </p>
                     </div>

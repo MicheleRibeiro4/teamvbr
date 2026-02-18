@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useImperativeHandle, forwardRef } from 'react';
 import { ProtocolData } from '../types';
 import { CONSULTANT_DEFAULT, EMPTY_DATA } from '../constants';
@@ -21,7 +20,7 @@ const ContractPreview = forwardRef<ContractPreviewHandle, Props>(({ data, onBack
   const contractRef = useRef<HTMLDivElement>(null);
 
   // SAFEGUARDS
-  const safeData = data || {};
+  const safeData = data || EMPTY_DATA;
   const contract = safeData.contract || {};
   const clientName = safeData.clientName || '____________________';
 

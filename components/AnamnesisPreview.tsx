@@ -1,6 +1,6 @@
-
 import React, { useRef, useState, useImperativeHandle, forwardRef } from 'react';
 import { ProtocolData } from '../types';
+import { EMPTY_DATA } from '../constants';
 import { ChevronLeft, Download, Loader2, Activity, Maximize2, X, FileDown, ClipboardList } from 'lucide-react';
 
 const LOGO_ANAMNESIS = "https://xqwzmvzfemjkvaquxedz.supabase.co/storage/v1/object/public/LOGO/DOURADO.png";
@@ -44,7 +44,7 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
   useImperativeHandle(ref, () => ({ download: handleDownloadPDF }));
 
   const renderContent = (isPdfMode = false) => {
-    const safeData = data || {};
+    const safeData = data || EMPTY_DATA;
     const physical = safeData.physicalData || {};
     const measurements = physical.measurements || {
         thorax: "-", waist: "-", abdomen: "-", glutes: "-",
@@ -65,7 +65,7 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
         color: 'black', 
         position: 'relative', 
         boxSizing: 'border-box', 
-        display: 'block',
+        display: 'block', 
         margin: isPdfMode ? '0' : '0 auto',
         boxShadow: isPdfMode ? 'none' : '0 10px 30px rgba(0,0,0,0.1)'
     };
@@ -142,28 +142,30 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
     );
   };
 
+  const modalContent = (
+    <div className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-300">
+        <div className="bg-white w-full max-w-5xl h-[95vh] rounded-[2rem] flex flex-col relative overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.5)] animate-in zoom-in-95 duration-500">
+            <div className="bg-gray-50 p-5 px-8 flex justify-between items-center border-b border-gray-200 shrink-0">
+                <h2 className="text-black font-black uppercase tracking-tighter text-lg flex items-center gap-3"><Activity size={20} className="text-[#d4af37]" /> Anamnese</h2>
+                <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-200 rounded-full transition-all text-gray-500 hover:rotate-90"><X size={24} /></button>
+            </div>
+            <div className="flex-1 overflow-auto bg-[#333] p-8 custom-scrollbar flex justify-center items-start">
+                {renderContent(false)}
+            </div>
+            <div className="bg-white p-6 border-t border-gray-200 flex justify-end gap-4 shrink-0">
+                <button onClick={() => setShowModal(false)} className="px-6 py-3 rounded-xl font-bold uppercase text-xs text-gray-500 hover:bg-gray-100 transition-colors">Fechar</button>
+                <button onClick={handleDownloadPDF} disabled={isGenerating} className="px-8 py-3 bg-[#d4af37] hover:bg-[#b5952f] text-black rounded-xl font-black uppercase text-xs tracking-widest shadow-lg flex items-center gap-2 transition-all active:scale-95">{isGenerating ? <Loader2 size={16} className="animate-spin" /> : <FileDown size={16} />} Baixar PDF</button>
+            </div>
+        </div>
+    </div>
+  );
+
   return (
-    <div className="w-full animate-in fade-in duration-500">
+    <div className="w-full">
         {customTrigger ? (
             <>
                 <div onClick={() => setShowModal(true)} className="cursor-pointer">{customTrigger}</div>
-                {showModal && (
-                    <div className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
-                        <div className="bg-white w-full max-w-5xl h-[90vh] rounded-[2rem] flex flex-col relative overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
-                            <div className="bg-gray-100 p-4 px-8 flex justify-between items-center border-b border-gray-200 shrink-0">
-                                <h2 className="text-black font-black uppercase tracking-tighter text-lg flex items-center gap-2"><Activity size={20} className="text-[#d4af37]" /> Anamnese</h2>
-                                <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-500"><X size={24} /></button>
-                            </div>
-                            <div className="flex-1 overflow-auto bg-gray-500/20 p-8 custom-scrollbar-light flex justify-center items-start">
-                                {renderContent(false)}
-                            </div>
-                            <div className="bg-white p-6 border-t border-gray-200 flex justify-end gap-4 shrink-0">
-                                <button onClick={() => setShowModal(false)} className="px-6 py-3 rounded-xl font-bold uppercase text-xs text-gray-500 hover:bg-gray-100 transition-colors">Fechar</button>
-                                <button onClick={handleDownloadPDF} disabled={isGenerating} className="px-8 py-3 bg-[#d4af37] hover:bg-[#b5952f] text-black rounded-xl font-black uppercase text-xs tracking-widest shadow-lg flex items-center gap-2 transition-all active:scale-95">{isGenerating ? <Loader2 size={16} className="animate-spin" /> : <FileDown size={16} />} Baixar PDF</button>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                {showModal && typeof document !== 'undefined' && createPortal(modalContent, document.body)}
                 <div className="fixed left-[-9999px] top-0"><div ref={pdfRef} className="bg-white">{renderContent(true)}</div></div>
             </>
         ) : null}
