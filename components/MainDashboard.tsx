@@ -120,12 +120,6 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
       const nextDate = new Date(lastUpdate);
       nextDate.setDate(lastUpdate.getDate() + checkinInterval);
 
-      // Estados:
-      // isMissingProtocol: "Protocolo Pendente" (Roxo - Prioridade máxima)
-      // daysLeft <= 0: "Check-in Necessário" (Vermelho)
-      // daysLeft <= 3 && daysLeft > 0: "Próximo" (Amarelo)
-      // daysLeft > 3: "AGUARDANDO AJUSTE QUINZENAL" (Verde)
-
       const isOverdue = daysLeft <= 0 || isMissingProtocol;
       const isUrgent = daysLeft > 0 && daysLeft <= 3 && !isMissingProtocol;
 
