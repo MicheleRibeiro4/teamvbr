@@ -1,4 +1,3 @@
-
 import { ProtocolData } from './types';
 
 export const LOGO_VBR_BLACK = "https://xqwzmvzfemjkvaquxedz.supabase.co/storage/v1/object/public/LOGO/logo.png"; 
