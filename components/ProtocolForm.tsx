@@ -540,25 +540,10 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                     {Object.keys(PROTOCOL_TEMPLATES).map((key) => (
                         <option key={key} value={PROTOCOL_TEMPLATES[key as keyof typeof PROTOCOL_TEMPLATES].title}>{PROTOCOL_TEMPLATES[key as keyof typeof PROTOCOL_TEMPLATES].title}</option>
                     ))}
-                    <option value="Outro">Outro...</option>
                 </select>
               </div>
               <div><label className={labelClass}>Data Avaliação</label><input className={inputClass} value={data.physicalData.date} onChange={(e) => handleDateInput('physicalData.date', e.target.value)} placeholder="DD/MM/AAAA" maxLength={10} /></div>
               <div><label className={labelClass}>Idade</label><input className={inputClass} value={data.physicalData.age} onChange={(e) => handleChange('physicalData.age', e.target.value)} /></div>
-            </div>
-
-            {/* Templates Quick Select */}
-            <div className="flex flex-wrap gap-2 mb-6">
-                <p className="w-full text-[10px] font-black uppercase text-white/20 tracking-widest mb-1">Aplicar Template Rápido:</p>
-                {Object.keys(PROTOCOL_TEMPLATES).map((key) => (
-                    <button 
-                        key={key} 
-                        onClick={() => handleApplyTemplate(key as keyof typeof PROTOCOL_TEMPLATES)}
-                        className="px-4 py-2 bg-white/5 border border-white/5 hover:border-[#d4af37]/30 rounded-lg text-[10px] font-bold uppercase transition-all"
-                    >
-                        {PROTOCOL_TEMPLATES[key as keyof typeof PROTOCOL_TEMPLATES].title}
-                    </button>
-                ))}
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
@@ -696,6 +681,27 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                 </div>
               ))}
               <button onClick={addSupplement} className={addButtonClass}><Plus size={16} /> Adicionar Suplementação</button>
+            </div>
+          </section>
+
+          <section>
+            <div className={sectionHeaderClass}><Lightbulb className="text-[#d4af37]" size={20} /><h2 className="text-xl font-black text-white uppercase tracking-tighter">Dicas e Recomendações</h2></div>
+            <div className="space-y-3">
+              {(data.tips || []).map((tip, index) => (
+                <div key={index} className="flex gap-3 items-center group">
+                    <div className="w-8 h-12 md:h-14 bg-[#d4af37]/10 text-[#d4af37] rounded-xl flex items-center justify-center font-black text-xs shrink-0 border border-[#d4af37]/20">
+                        {index + 1}
+                    </div>
+                    <textarea 
+                        className={inputClass + " min-h-[50px] md:min-h-[60px] resize-none"} 
+                        value={tip} 
+                        onChange={(e) => updateTip(index, e.target.value)} 
+                        placeholder="Escreva uma dica..."
+                    />
+                    <button onClick={() => removeTip(index)} className="p-3 text-white/20 hover:text-red-500 transition-colors bg-white/5 rounded-xl hover:bg-red-500/10"><Trash2 size={18} /></button>
+                </div>
+              ))}
+              <button onClick={addTip} className={addButtonClass}><Plus size={16} /> Adicionar Nova Dica</button>
             </div>
           </section>
         </div>
