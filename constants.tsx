@@ -12,6 +12,21 @@ export const CONSULTANT_DEFAULT = {
   consultantAddress: "Rua Serra da Boa Esperança, 540, Serra Dourada, Vespasiano - Minas Gerais",
 };
 
+export const MEASUREMENT_LABELS: Record<string, string> = {
+  thorax: 'Tórax',
+  waist: 'Cintura',
+  abdomen: 'Abdômen',
+  glutes: 'Glúteos',
+  rightArmRelaxed: 'Braço Dir. Relaxado',
+  leftArmRelaxed: 'Braço Esq. Relaxado',
+  rightArmContracted: 'Braço Dir. Contraído',
+  leftArmContracted: 'Braço Esq. Contraído',
+  rightThigh: 'Coxa Direita',
+  leftThigh: 'Coxa Esquerda',
+  rightCalf: 'Panturrilha Direita',
+  leftCalf: 'Panturrilha Esquerda',
+};
+
 export const PROTOCOL_TEMPLATES = {
   emagrecimento: {
     title: "Emagrecimento",

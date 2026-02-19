@@ -3,7 +3,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { ProtocolData, Meal, Supplement, TrainingDay, Exercise } from '../types';
 import { Activity, User, ShieldCheck, ChevronLeft, MapPin, Dumbbell, Utensils, Pill, Plus, Trash2, FileText, AlertCircle, Sparkles, Loader2, Ruler, DollarSign, Droplets, BookOpen, Eraser, FileDown, Lightbulb, Copy } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
-import { EMPTY_DATA, PROTOCOL_TEMPLATES } from '../constants';
+import { EMPTY_DATA, PROTOCOL_TEMPLATES, MEASUREMENT_LABELS } from '../constants';
 import ContractPreview, { ContractPreviewHandle } from './ContractPreview';
 import AnamnesisPreview, { AnamnesisPreviewHandle } from './AnamnesisPreview';
 import ProtocolPreview, { ProtocolPreviewHandle } from './ProtocolPreview';
@@ -154,7 +154,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
     setIsGenerating(true);
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const model = "gemini-3-flash-preview";
+      const model = "gemini-2.0-flash";
       
       const prompt = `
         Aja como Vinicius Brasil (Team VBR), um treinador de elite e expert em nutrição.
@@ -196,8 +196,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
         model: model,
         contents: prompt,
         config: { 
-            responseMimeType: "application/json",
-            thinkingConfig: { thinkingBudget: 0 }
+            responseMimeType: "application/json"
         }
       });
 
@@ -580,8 +579,15 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
             <div className="bg-white/5 p-6 rounded-2xl border border-white/5">
               <div className="flex items-center gap-2 mb-6"><Ruler className="text-[#d4af37]" size={16} /><h3 className="text-sm font-black text-white uppercase tracking-widest">Medidas (cm)</h3></div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {Object.keys(data.physicalData.measurements).map(key => (
-                      <div key={key}><label className={labelClass}>{key}</label><input className={inputClass} value={(data.physicalData.measurements as any)[key] || ''} onChange={(e) => handleChange(`physicalData.measurements.${key}`, e.target.value)} /></div>
+                  {Object.entries(MEASUREMENT_LABELS).map(([key, label]) => (
+                      <div key={key}>
+                          <label className={labelClass}>{label}</label>
+                          <input 
+                            className={inputClass} 
+                            value={(data.physicalData.measurements as any)[key] || ''} 
+                            onChange={(e) => handleChange(`physicalData.measurements.${key}`, e.target.value)} 
+                          />
+                      </div>
                   ))}
               </div>
             </div>
