@@ -146,6 +146,11 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
       return;
     }
 
+    if (!process.env.API_KEY) {
+        alert("Erro de Configuração: API Key não encontrada. Entre em contato com o suporte.");
+        return;
+    }
+
     setIsGenerating(true);
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
