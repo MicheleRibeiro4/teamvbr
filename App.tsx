@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { ProtocolData } from './types';
 import { EMPTY_DATA, LOGO_VBR_BLACK } from './constants';
@@ -293,11 +294,23 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
         )}
 
         {activeView === 'home' && (
-          <MainDashboard protocols={savedProtocols} onNew={handleNew} onList={() => setActiveView('search')} onLoadStudent={(p) => loadStudent(p, 'student-dashboard')} onUpdateStudent={(p) => handleSave(true, p)} onDeleteStudent={(id) => deleteStudent(id)} />
+          <MainDashboard 
+            protocols={savedProtocols} 
+            onNew={handleNew} 
+            onList={() => setActiveView('search')} 
+            onLoadStudent={(p, view) => loadStudent(p, view)} 
+            onUpdateStudent={(p) => handleSave(true, p)} 
+            onDeleteStudent={(id) => deleteStudent(id)} 
+          />
         )}
 
         {activeView === 'search' && (
-          <StudentSearch protocols={savedProtocols} onLoad={(p) => loadStudent(p, 'student-dashboard')} onDelete={deleteStudent} onUpdate={(p) => handleSave(true, p)} />
+          <StudentSearch 
+            protocols={savedProtocols} 
+            onLoad={(p, view) => loadStudent(p, view)} 
+            onDelete={deleteStudent} 
+            onUpdate={(p) => handleSave(true, p)} 
+          />
         )}
 
         {activeView === 'student-dashboard' && (
