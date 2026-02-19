@@ -23,7 +23,7 @@ import {
   Eye,
   Sparkles
 } from 'lucide-react';
-import { LOGO_VBR_BLACK } from '../constants';
+import { LOGO_VBR_BLACK, MEASUREMENT_LABELS } from '../constants';
 import ProtocolPreview from './ProtocolPreview';
 import { GoogleGenAI } from "@google/genai";
 
@@ -169,7 +169,7 @@ const EvolutionTracker: React.FC<Props> = ({
       setIsGeneratingAI(true);
       try {
           const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-          const model = "gemini-3-flash-preview";
+          const model = "gemini-2.0-flash";
           
           const prompt = `
             ATUE COMO UM TREINADOR ELITE (Estilo Team VBR).
@@ -380,7 +380,28 @@ const EvolutionTracker: React.FC<Props> = ({
               )}
               <div className="bg-[#111] p-8 rounded-[2rem] border border-white/10 shadow-lg relative overflow-hidden"><div className="flex justify-between items-center mb-8"><h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2"><TrendingUp className="text-[#d4af37]" size={16} /> Curva de Peso</h3></div><EvolutionChart history={sortedHistory} /></div>
               {isEditing && (
-                  <div className="bg-[#1a1a1a] p-8 rounded-[2rem] border border-[#d4af37]/30 shadow-2xl animate-in slide-in-from-bottom-4"><h3 className="text-sm font-black text-[#d4af37] uppercase tracking-widest mb-6 border-b border-[#d4af37]/20 pb-2">{mode === 'new_protocol' ? 'Novas Medidas' : 'Atualizar Medidas (cm)'}</h3><div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">{['waist', 'abdomen', 'glutes', 'rightArmContracted', 'rightThigh', 'rightCalf'].map((key) => (<div key={key}><label className="text-[10px] font-bold text-white/40 uppercase block mb-1">{key}</label><input className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white font-bold focus:border-[#d4af37] outline-none" value={(editData.measurements as any)?.[key] || ''} onChange={(e) => setEditData({...editData, measurements: { ...editData.measurements, [key]: e.target.value } as BodyMeasurements})} placeholder="0 cm" /></div>))}</div><div><label className="text-[10px] font-bold text-white/40 uppercase block mb-1">Observações</label><textarea className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white font-medium focus:border-[#d4af37] outline-none min-h-[80px]" placeholder="..." value={currentProtocol.privateNotes} onChange={(e) => onNotesChange(e.target.value)} /></div></div>
+                  <div className="bg-[#1a1a1a] p-8 rounded-[2rem] border border-[#d4af37]/30 shadow-2xl animate-in slide-in-from-bottom-4">
+                    <h3 className="text-sm font-black text-[#d4af37] uppercase tracking-widest mb-6 border-b border-[#d4af37]/20 pb-2">{mode === 'new_protocol' ? 'Novas Medidas' : 'Atualizar Medidas (cm)'}</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        {Object.entries(MEASUREMENT_LABELS).map(([key, label]) => (
+                            <div key={key}>
+                                <label className="text-[10px] font-bold text-white/40 uppercase block mb-1">
+                                    {label}
+                                </label>
+                                <input 
+                                    className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white font-bold focus:border-[#d4af37] outline-none" 
+                                    value={(editData.measurements as any)?.[key] || ''} 
+                                    onChange={(e) => setEditData({...editData, measurements: { ...editData.measurements, [key]: e.target.value } as BodyMeasurements})} 
+                                    placeholder="0 cm" 
+                                />
+                            </div>
+                        ))}
+                    </div>
+                    <div>
+                        <label className="text-[10px] font-bold text-white/40 uppercase block mb-1">Observações</label>
+                        <textarea className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white font-medium focus:border-[#d4af37] outline-none min-h-[80px]" placeholder="..." value={currentProtocol.privateNotes} onChange={(e) => onNotesChange(e.target.value)} />
+                    </div>
+                  </div>
               )}
           </div>
           <div className="lg:col-span-1">

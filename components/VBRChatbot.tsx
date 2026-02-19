@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, X, Send, Loader2, Bot, User, Maximize2, Minimize2 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
@@ -46,7 +45,7 @@ const VBRChatbot: React.FC = () => {
         }));
 
       const chat = ai.chats.create({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-2.0-flash',
         history: historyForGemini,
         config: { systemInstruction: systemInstruction }
       });
