@@ -202,7 +202,6 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
 
       let textResponse = response.text;
       if (textResponse) {
-        // Remove markdown code blocks if present (```json ... ```)
         textResponse = textResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
         
         const generatedData = JSON.parse(textResponse);

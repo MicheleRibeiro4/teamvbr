@@ -205,7 +205,6 @@ const EvolutionTracker: React.FC<Props> = ({
 
           let textResponse = response.text;
           if (textResponse) {
-              // Remove markdown code blocks if present (```json ... ```)
               textResponse = textResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
               
               const generated = JSON.parse(textResponse);
