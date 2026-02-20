@@ -182,20 +182,19 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
         
         // Garante que o waterGoal seja consistente
         let finalWaterGoal = aiData.waterGoal || calculatedWater;
-        finalWaterGoal = finalWaterGoal.replace('L', '').trim();
+        finalWaterGoal = finalWaterGoal.replace(/[a-zA-Z]/g, '').trim(); // Remove 'L' or other chars if AI added them
 
-        // Garante que a dica da água esteja presente nas dicas geradas
+        // Garante que a dica da água esteja presente nas dicas geradas e coincida com o waterGoal
         let finalTips = aiData.tips || [];
-        const waterTipText = `Beber no mínimo ${finalWaterGoal}L de água por dia (fracionados).`;
+        const waterTipText = `Beber no mínimo ${finalWaterGoal}L de água por dia.`;
         const hasWaterTip = finalTips.some((t: string) => t.toLowerCase().includes('água'));
         
         if (!hasWaterTip) {
             finalTips = [waterTipText, ...finalTips];
         } else {
-            // Se já tem, vamos tentar atualizar para bater com a meta ou deixar como está se a IA for criativa
-            // Mas para garantir o pedido do usuário "quantidade deve seguir a meta", vamos forçar a atualização se encontrar
+             // Atualiza a dica existente para bater com a meta
              finalTips = finalTips.map((t: string) => {
-                 if (t.toLowerCase().includes('água') && !t.includes(finalWaterGoal)) {
+                 if (t.toLowerCase().includes('água')) {
                      return waterTipText;
                  }
                  return t;

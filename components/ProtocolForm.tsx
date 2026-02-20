@@ -38,30 +38,36 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
 
   // Sincronização automática: Meta de Água -> Dicas
   useEffect(() => {
-    if (!data.waterGoal || data.waterGoal.trim() === '') return;
-
-    const waterVal = data.waterGoal;
-    // Padrão de texto para a dica
-    const waterTipText = `Beber no mínimo ${waterVal}L de água por dia (fracionados).`;
+    if (!data.waterGoal) return;
     
-    // Verifica se já existe nas dicas
+    // Normaliza o valor da meta (remove letras, mantem numeros e virgula/ponto)
+    const goalVal = data.waterGoal.replace(/[^0-9.,]/g, '').trim();
+    if (!goalVal) return;
+
+    const waterTipText = `Beber no mínimo ${data.waterGoal}L de água por dia.`;
+    
+    // Verifica se já existe nas dicas (procura por "água" ou "hidratação")
     const currentTips = data.tips || [];
     const waterTipIndex = currentTips.findIndex(t => 
         t.toLowerCase().includes('água') || t.toLowerCase().includes('hidratação')
     );
 
     if (waterTipIndex !== -1) {
-        // Se existe, mas o texto é diferente, atualiza
+        // Se existe, mas o texto é diferente (ex: valor antigo), atualiza
         if (currentTips[waterTipIndex] !== waterTipText) {
             const newTips = [...currentTips];
             newTips[waterTipIndex] = waterTipText;
-            handleChange('tips', newTips);
+            // Usamos onChange direto para evitar loop com handleChange que depende de data
+            const newData = { ...data, tips: newTips };
+            onChange(newData);
         }
     } else {
         // Se não existe, adiciona no topo
-        handleChange('tips', [waterTipText, ...currentTips]);
+        const newTips = [waterTipText, ...currentTips];
+        const newData = { ...data, tips: newTips };
+        onChange(newData);
     }
-  }, [data.waterGoal]); // Dependência apenas na meta de água
+  }, [data.waterGoal]); 
 
   const handleApplyTemplate = (type: keyof typeof PROTOCOL_TEMPLATES) => {
     const template = PROTOCOL_TEMPLATES[type];
@@ -155,7 +161,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
             ...data,
             kcalGoal: "",
             kcalSubtext: "",
-            waterGoal: "", // Limpa a meta de água também
+            waterGoal: "",
             macros: {
                 protein: { value: "", ratio: "" },
                 carbs: { value: "", ratio: "" },
@@ -327,6 +333,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
         
         if (aiData.nutritionalStrategy) newData.nutritionalStrategy = aiData.nutritionalStrategy;
         if (aiData.kcalGoal) newData.kcalGoal = aiData.kcalGoal;
+        
         // Atualiza waterGoal se a IA retornou, senão recalcula
         if (aiData.waterGoal) {
             newData.waterGoal = aiData.waterGoal.replace('L', '').trim();
@@ -373,7 +380,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
     // Cálculo inicial de água caso esteja vazio ao carregar, baseado no peso
     const weight = parseFloat(data.physicalData.weight.replace(',', '.'));
     if (!isNaN(weight) && weight > 0 && (!data.waterGoal || data.waterGoal === '')) {
-        const liters = (weight * 0.045).toFixed(1).replace('.', ','); // Ajustado para 45ml/kg para atletas
+        const liters = (weight * 0.045).toFixed(1).replace('.', ',');
         if (data.waterGoal !== liters) handleChange('waterGoal', liters);
     }
   }, [data.physicalData.weight]);
@@ -824,7 +831,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
             <div className={sectionHeaderClass}><Lightbulb className="text-[#d4af37]" size={20} /><h2 className="text-xl font-black text-white uppercase tracking-tighter">Dicas e Recomendações</h2></div>
             <div className="space-y-3">
               {(data.tips || []).map((tip, index) => (
-                <div key={index} className="flex gap-3 items-center group">
+                <div key={index} className="flex gap-3 items-start group">
                     <div className="w-8 h-12 md:h-14 bg-[#d4af37]/10 text-[#d4af37] rounded-xl flex items-center justify-center font-black text-xs shrink-0 border border-[#d4af37]/20">
                         {index + 1}
                     </div>
