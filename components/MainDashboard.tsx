@@ -405,11 +405,11 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
       )}
 
       {/* GRID PRINCIPAL */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-full">
         {/* METRICS */}
-        <div className="lg:col-span-1 flex flex-col gap-3">
+        <div className="lg:col-span-1 flex flex-col gap-3 h-full">
             {metrics.map((s, i) => (
-            <button key={i} onClick={s.action} className={`bg-white/5 p-4 rounded-[1.5rem] border border-white/10 shadow-sm flex flex-col justify-between group hover:bg-white/[0.1] hover:border-[#d4af37]/30 transition-all text-left h-full min-h-[120px]`}>
+            <button key={i} onClick={s.action} className={`bg-white/5 p-4 rounded-[1.5rem] border border-white/10 shadow-sm flex flex-col justify-between group hover:bg-white/[0.1] hover:border-[#d4af37]/30 transition-all text-left flex-1 min-h-[140px]`}>
                 <div className="flex justify-between items-start mb-3"><div className={`p-2 rounded-xl ${s.bg} ${s.color} border ${s.border}`}>{s.icon}</div><ChevronRight className="text-white/10 group-hover:text-[#d4af37] transition-all" size={16} /></div>
                 <div><p className="text-[9px] font-black text-white/30 uppercase tracking-widest mb-1">{s.label}</p><p className={`text-xl xl:text-2xl font-black ${s.color}`}>{s.val}</p></div>
             </button>
@@ -417,88 +417,89 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
         </div>
 
         {/* AGENDA */}
-        <div className="lg:col-span-3 w-full bg-[#111] border border-white/10 rounded-[2rem] p-6 flex flex-col h-[420px]">
-          <div className="flex items-center justify-between mb-4">
-             <h3 className="text-sm font-black uppercase tracking-tighter flex items-center gap-3 text-white"><CalendarClock size={18} className="text-[#d4af37]" /> Agenda de Atualizações</h3>
-             <span className="text-[9px] font-black text-white/30 uppercase tracking-widest bg-white/5 px-2 py-1 rounded">Ciclo: 15 Dias Pós-Ajuste</span>
+        <div className="lg:col-span-3 w-full bg-[#111] border border-white/10 rounded-[2rem] p-6 flex flex-col min-h-[65vh]">
+          <div className="flex items-center justify-between mb-6">
+             <h3 className="text-lg font-black uppercase tracking-tighter flex items-center gap-3 text-white"><CalendarClock size={24} className="text-[#d4af37]" /> Agenda de Atualizações</h3>
+             <span className="text-[10px] font-black text-white/30 uppercase tracking-widest bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">Ciclo: 15 Dias Pós-Ajuste</span>
           </div>
 
-          <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-2">
+          <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 pr-2">
             {scheduledUpdates.length > 0 ? (
               scheduledUpdates.map((student: any) => {
                 const { isOverdue, isUrgent, isMissingProtocol, daysLeft } = student.schedule;
                 
                 // Configuração visual dinâmica
-                let containerStyle = 'bg-green-500/10 border-green-500/30 hover:bg-green-500/20';
+                let containerStyle = 'bg-green-500/5 border-green-500/20 hover:bg-green-500/10';
                 let circleStyle = 'bg-green-500/20 text-green-500 border-green-500/30';
                 let dateColor = 'text-green-400';
                 let iconColor = 'text-green-500';
-                let statusText = 'AGUARDANDO AJUSTE QUINZENAL';
+                let statusText = 'AGUARDANDO';
 
                 if (isMissingProtocol) {
-                    containerStyle = 'bg-indigo-500/10 border-indigo-500/50 hover:bg-indigo-500/20 ring-1 ring-indigo-500/20';
+                    containerStyle = 'bg-indigo-500/5 border-indigo-500/20 hover:bg-indigo-500/10';
                     circleStyle = 'bg-indigo-500 text-white border-indigo-500';
                     dateColor = 'text-indigo-400';
                     iconColor = 'text-indigo-500';
-                    statusText = 'Pendente: Criar Protocolo';
+                    statusText = 'PENDENTE';
                 } else if (isOverdue) {
-                    containerStyle = 'bg-red-500/10 border-red-500/50 hover:bg-red-500/20';
+                    containerStyle = 'bg-red-500/5 border-red-500/20 hover:bg-red-500/10';
                     circleStyle = 'bg-red-500 text-white border-red-500';
                     dateColor = 'text-red-400';
                     iconColor = 'text-red-500';
-                    statusText = 'Check-in Necessário';
+                    statusText = 'CHECK-IN';
                 } else if (isUrgent) {
-                    containerStyle = 'bg-yellow-500/10 border-yellow-500/30 hover:bg-yellow-500/20';
+                    containerStyle = 'bg-yellow-500/5 border-yellow-500/20 hover:bg-yellow-500/10';
                     circleStyle = 'bg-yellow-500 text-black border-yellow-500';
                     dateColor = 'text-[#d4af37]';
                     iconColor = 'text-[#d4af37]';
-                    statusText = 'Próximo do Vencimento';
+                    statusText = 'VENCENDO';
                 }
 
                 return (
-                  <div key={student.id} className={`p-3 rounded-xl border flex items-center justify-between group transition-all cursor-pointer ${containerStyle}`}>
-                    <div className="flex items-center gap-3 flex-1" onClick={() => onLoadStudent(student, 'manage')}>
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center border text-[10px] font-black shrink-0 ${circleStyle}`}>
-                          {isMissingProtocol ? <Sparkles size={14} /> : (isOverdue ? 'HOJE' : `${daysLeft}d`)}
+                  <div key={student.id} className={`p-4 rounded-2xl border flex flex-col md:flex-row md:items-center justify-between group transition-all cursor-pointer gap-4 ${containerStyle}`}>
+                    <div className="flex items-center gap-4 flex-1" onClick={() => onLoadStudent(student, 'manage')}>
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center border text-xs font-black shrink-0 ${circleStyle}`}>
+                          {isMissingProtocol ? <Sparkles size={18} /> : (isOverdue ? 'HOJE' : `${daysLeft}d`)}
                       </div>
                       <div>
-                          <h4 className="font-bold text-xs text-white leading-none mb-1 flex items-center gap-2">
+                          <h4 className="font-black text-sm text-white leading-none mb-1.5 flex items-center gap-2">
                             {student.clientName}
-                            {isMissingProtocol && <span className="bg-indigo-500 text-white text-[8px] font-black uppercase px-1.5 py-0.5 rounded">Novo</span>}
+                            {isMissingProtocol && <span className="bg-indigo-500 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded">Novo</span>}
                           </h4>
-                          <div className="flex items-center gap-2 text-[9px] text-white/40 uppercase font-bold">
+                          <div className="flex flex-wrap items-center gap-3 text-[10px] text-white/40 uppercase font-bold">
                             <span>Base: {student.lastSentDate ? new Date(student.lastSentDate).toLocaleDateString('pt-BR') : (student.updatedAt ? new Date(student.updatedAt).toLocaleDateString('pt-BR') : student.contract.startDate)}</span>
-                            <span>•</span>
-                            <span className={dateColor}>{isMissingProtocol ? 'Ação: Gerar Ficha' : `Ação Data de Ajuste: ${student.schedule.nextDate}`}</span>
+                            <span className="w-1 h-1 bg-white/20 rounded-full"></span>
+                            <span className={dateColor}>{isMissingProtocol ? 'Ação: Gerar Ficha' : `Próximo Ajuste: ${student.schedule.nextDate}`}</span>
                           </div>
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-between md:justify-end gap-3 w-full md:w-auto border-t border-white/5 pt-3 md:pt-0 md:border-0">
                         {confirmSendId === student.id ? (
-                            <div className="flex items-center gap-2 bg-black/50 p-1 rounded-lg animate-in fade-in slide-in-from-right-5" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center gap-2 bg-[#111] p-1.5 rounded-xl border border-white/10 animate-in fade-in slide-in-from-right-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
                                 <input 
                                     type="date" 
                                     value={sendDate} 
                                     onChange={(e) => setSendDate(e.target.value)}
-                                    className="bg-white/10 text-white text-[10px] p-1 rounded border border-white/10 outline-none"
+                                    className="bg-white/5 text-white text-xs p-2 rounded-lg border border-white/10 outline-none focus:border-[#d4af37] transition-colors"
                                 />
-                                <button onClick={() => handleConfirmSend(student)} className="p-1 bg-green-500 text-white rounded hover:bg-green-600"><Check size={12} /></button>
-                                <button onClick={() => setConfirmSendId(null)} className="p-1 bg-red-500 text-white rounded hover:bg-red-600"><X size={12} /></button>
+                                <button onClick={() => handleConfirmSend(student)} className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors shadow-lg"><Check size={14} /></button>
+                                <button onClick={() => setConfirmSendId(null)} className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors shadow-lg"><X size={14} /></button>
                             </div>
                         ) : (
                             <button 
                                 onClick={(e) => { e.stopPropagation(); setConfirmSendId(student.id); setSendDate(new Date().toISOString().split('T')[0]); }}
-                                className="p-2 bg-white/5 hover:bg-[#d4af37] hover:text-black rounded-lg text-white/40 transition-all"
+                                className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-[#d4af37] hover:text-black hover:border-[#d4af37] rounded-xl text-white/60 font-black text-[10px] uppercase tracking-widest transition-all flex items-center gap-2 group/btn"
                                 title="Confirmar Envio do Protocolo"
                             >
-                                <CheckCircle2 size={14} />
+                                <CheckCircle2 size={14} className="group-hover/btn:scale-110 transition-transform" />
+                                <span>Confirmar Envio</span>
                             </button>
                         )}
                         
-                        <div onClick={() => onLoadStudent(student, 'manage')}>
-                            <span className={`hidden md:inline-block text-[9px] font-black uppercase tracking-widest ${isOverdue ? 'text-red-400 animate-pulse' : 'text-white/20'} ${isMissingProtocol ? 'text-indigo-400' : ''} mr-2`}>{statusText}</span>
-                            <ChevronRight size={14} className={`opacity-50 group-hover:opacity-100 ${iconColor} inline-block`} />
+                        <div onClick={() => onLoadStudent(student, 'manage')} className="flex items-center gap-2 pl-2 border-l border-white/5 md:border-0">
+                            <span className={`text-[10px] font-black uppercase tracking-widest ${isOverdue ? 'text-red-400 animate-pulse' : 'text-white/20'} ${isMissingProtocol ? 'text-indigo-400' : ''}`}>{statusText}</span>
+                            <ChevronRight size={16} className={`opacity-50 group-hover:opacity-100 ${iconColor}`} />
                         </div>
                     </div>
                   </div>
@@ -506,8 +507,8 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
               })
             ) : (
               <div className="h-full flex flex-col items-center justify-center text-white/20">
-                 <CheckCircle2 size={32} className="mb-2" />
-                 <p className="text-[10px] font-black uppercase tracking-widest">Nenhuma atualização pendente</p>
+                 <CheckCircle2 size={48} className="mb-4 opacity-20" />
+                 <p className="text-xs font-black uppercase tracking-widest">Nenhuma atualização pendente</p>
               </div>
             )}
           </div>
