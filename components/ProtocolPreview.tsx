@@ -91,6 +91,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
 
     const coverPageStyle: React.CSSProperties = {
         ...pageStyle,
+        minHeight: '1122px', // Full A4 height to prevent white footer on black background
         backgroundColor: '#050505',
         color: '#ffffff',
         display: 'flex',
