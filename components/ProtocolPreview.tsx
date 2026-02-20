@@ -67,6 +67,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
     
     const protocolTitle = safeData.protocolTitle || "HIPERTROFIA";
     const clientName = safeData.clientName || "ALUNO";
+    const firstName = clientName.split(' ')[0];
 
     // Medidas exatas A4
     const A4_WIDTH = '210mm';
@@ -110,7 +111,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
     const kcalValue = (safeData.kcalGoal || "0").toString().replace(/kcal/gi, '').trim();
 
     return (
-        <div className="flex flex-col items-center bg-gray-100 print:bg-transparent">
+        <div className="flex flex-col items-center bg-white print:bg-transparent">
             
             {/* CAPA (Page 1) */}
             <div style={coverPageStyle}>
@@ -323,8 +324,8 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                     <h2 className="text-6xl font-black uppercase tracking-tighter mb-4 text-white">Atenção</h2>
                     <div className="w-24 h-2 bg-[#d4af37] mb-12"></div>
                     
-                    <p className="text-lg text-white/90 leading-relaxed max-w-2xl mx-auto mb-16 font-medium">
-                        Este protocolo foi desenhado especificamente para você, {clientName}.<br/><br/>
+                    <p className="text-sm text-white/90 leading-relaxed max-w-2xl mx-auto mb-16 font-medium">
+                        Este protocolo foi desenhado especificamente para você, {firstName}.<br/><br/>
                         Ajustes de carga, dieta e cardio serão feitos conforme sua evolução e feedbacks.
                     </p>
                     
