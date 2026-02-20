@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { ProtocolData } from '../types';
 import { EMPTY_DATA } from '../constants';
@@ -40,6 +41,10 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
     try {
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         
+        // Cálculo de água padrão (45ml/kg) para garantir que temos um valor
+        const weight = parseFloat(formData.weight.replace(',', '.'));
+        const calculatedWater = !isNaN(weight) ? (weight * 0.045).toFixed(1).replace('.', ',') : "3,5";
+
         const prompt = `
           Aja como um treinador e nutricionista de elite do 'Team VBR'.
           Crie um protocolo completo para um aluno com os seguintes dados:
@@ -57,6 +62,7 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
           {
             "nutritionalStrategy": "Texto curto descrevendo a estratégia da dieta",
             "kcalGoal": "Ex: 2500 kcal",
+            "waterGoal": "Ex: ${calculatedWater}", 
             "macros": {
                "protein": { "value": "gramas totais", "ratio": "g/kg" },
                "carbs": { "value": "gramas totais", "ratio": "g/kg" },
@@ -84,6 +90,7 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
           1. O treino deve ter divisão inteligente (ABC, ABCD, ABCDE) compatível com a frequência informada.
           2. A dieta deve ser realista e calculada para o objetivo (Déficit para emagrecimento, Superávit para hipertrofia).
           3. Use português do Brasil.
+          4. O campo 'waterGoal' deve conter APENAS O NÚMERO em litros (ex: "3,5").
         `;
 
         const response = await ai.models.generateContent({
@@ -96,6 +103,7 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
                     properties: {
                         nutritionalStrategy: { type: Type.STRING },
                         kcalGoal: { type: Type.STRING },
+                        waterGoal: { type: Type.STRING },
                         macros: {
                             type: Type.OBJECT,
                             properties: {
@@ -171,6 +179,28 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
 
         const timestamp = new Date().toISOString();
         const newId = "vbr-" + Math.random().toString(36).substr(2, 9);
+        
+        // Garante que o waterGoal seja consistente
+        let finalWaterGoal = aiData.waterGoal || calculatedWater;
+        finalWaterGoal = finalWaterGoal.replace('L', '').trim();
+
+        // Garante que a dica da água esteja presente nas dicas geradas
+        let finalTips = aiData.tips || [];
+        const waterTipText = `Beber no mínimo ${finalWaterGoal}L de água por dia (fracionados).`;
+        const hasWaterTip = finalTips.some((t: string) => t.toLowerCase().includes('água'));
+        
+        if (!hasWaterTip) {
+            finalTips = [waterTipText, ...finalTips];
+        } else {
+            // Se já tem, vamos tentar atualizar para bater com a meta ou deixar como está se a IA for criativa
+            // Mas para garantir o pedido do usuário "quantidade deve seguir a meta", vamos forçar a atualização se encontrar
+             finalTips = finalTips.map((t: string) => {
+                 if (t.toLowerCase().includes('água') && !t.includes(finalWaterGoal)) {
+                     return waterTipText;
+                 }
+                 return t;
+             });
+        }
 
         // Merge AI Data with Protocol Structure
         const finalProtocol: ProtocolData = {
@@ -189,6 +219,7 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
           },
           nutritionalStrategy: aiData.nutritionalStrategy || "Estratégia personalizada.",
           kcalGoal: aiData.kcalGoal || "Calculando...",
+          waterGoal: finalWaterGoal,
           macros: aiData.macros || EMPTY_DATA.macros,
           meals: (aiData.meals || []).map((m: any) => ({ ...m, id: Math.random().toString(36).substr(2, 9) })),
           supplements: (aiData.supplements || []).map((s: any) => ({ ...s, id: Math.random().toString(36).substr(2, 9) })),
@@ -199,7 +230,7 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
              focus: d.focus,
              exercises: (d.exercises || []).map((e: any) => ({ ...e, id: Math.random().toString(36).substr(2, 9) }))
           })),
-          tips: aiData.tips || EMPTY_DATA.tips,
+          tips: finalTips,
           generalObservations: formData.observations,
           anamnesis: {
              ...EMPTY_DATA.anamnesis,

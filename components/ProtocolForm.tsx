@@ -36,11 +36,42 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
     onChange(newData);
   };
 
+  // Sincronização automática: Meta de Água -> Dicas
+  useEffect(() => {
+    if (!data.waterGoal || data.waterGoal.trim() === '') return;
+
+    const waterVal = data.waterGoal;
+    // Padrão de texto para a dica
+    const waterTipText = `Beber no mínimo ${waterVal}L de água por dia (fracionados).`;
+    
+    // Verifica se já existe nas dicas
+    const currentTips = data.tips || [];
+    const waterTipIndex = currentTips.findIndex(t => 
+        t.toLowerCase().includes('água') || t.toLowerCase().includes('hidratação')
+    );
+
+    if (waterTipIndex !== -1) {
+        // Se existe, mas o texto é diferente, atualiza
+        if (currentTips[waterTipIndex] !== waterTipText) {
+            const newTips = [...currentTips];
+            newTips[waterTipIndex] = waterTipText;
+            handleChange('tips', newTips);
+        }
+    } else {
+        // Se não existe, adiciona no topo
+        handleChange('tips', [waterTipText, ...currentTips]);
+    }
+  }, [data.waterGoal]); // Dependência apenas na meta de água
+
   const handleApplyTemplate = (type: keyof typeof PROTOCOL_TEMPLATES) => {
     const template = PROTOCOL_TEMPLATES[type];
     const newData = JSON.parse(JSON.stringify(data));
     newData.protocolTitle = template.title;
-    newData.tips = [...template.tips];
+    // Mantém dicas existentes e adiciona as novas se não existirem
+    const existingTips = new Set(newData.tips || []);
+    template.tips.forEach((t: string) => existingTips.add(t));
+    newData.tips = Array.from(existingTips);
+    
     newData.nutritionalStrategy = template.strategy;
     onChange(newData);
   };
@@ -119,22 +150,31 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
   };
 
   const handleClearNutrition = () => {
-    if(confirm("Tem certeza? Isso apagará as Metas, Macros, Refeições, Suplementos e Dicas, mas manterá sua Estratégia.")) {
-        const newData = JSON.parse(JSON.stringify(data));
-        newData.kcalGoal = "";
-        newData.kcalSubtext = "";
-        newData.macros = JSON.parse(JSON.stringify(EMPTY_DATA.macros));
-        newData.meals = [];
-        newData.supplements = [];
-        newData.tips = [];
+    if(confirm("Tem certeza? Isso apagará as Metas, Macros, Refeições, Suplementos e Dicas.")) {
+        const newData = {
+            ...data,
+            kcalGoal: "",
+            kcalSubtext: "",
+            waterGoal: "", // Limpa a meta de água também
+            macros: {
+                protein: { value: "", ratio: "" },
+                carbs: { value: "", ratio: "" },
+                fats: { value: "", ratio: "" }
+            },
+            meals: [],
+            supplements: [],
+            tips: []
+        };
         onChange(newData);
     }
   };
 
   const handleClearTraining = () => {
     if(confirm("Tem certeza? Isso apagará todos os dias de treino cadastrados.")) {
-        const newData = JSON.parse(JSON.stringify(data));
-        newData.trainingDays = [];
+        const newData = {
+            ...data,
+            trainingDays: []
+        };
         onChange(newData);
     }
   };
@@ -167,6 +207,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
           {
             "nutritionalStrategy": "Texto curto e direto sobre a estratégia (ex: Carb Cycling, Normocalórica, etc)",
             "kcalGoal": "Ex: 2500 kcal",
+            "waterGoal": "Ex: 3,5", 
             "macros": {
                "protein": { "value": "gramas totais", "ratio": "g/kg" },
                "carbs": { "value": "gramas totais", "ratio": "g/kg" },
@@ -194,6 +235,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
           1. Use português do Brasil.
           2. Seja específico nas quantidades dos alimentos.
           3. O treino deve ser coerente com o objetivo.
+          4. O campo waterGoal deve ser APENAS O NÚMERO em Litros (ex: "3,5").
         `;
 
         const response = await ai.models.generateContent({
@@ -206,6 +248,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                     properties: {
                         nutritionalStrategy: { type: Type.STRING },
                         kcalGoal: { type: Type.STRING },
+                        waterGoal: { type: Type.STRING },
                         macros: {
                             type: Type.OBJECT,
                             properties: {
@@ -284,6 +327,14 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
         
         if (aiData.nutritionalStrategy) newData.nutritionalStrategy = aiData.nutritionalStrategy;
         if (aiData.kcalGoal) newData.kcalGoal = aiData.kcalGoal;
+        // Atualiza waterGoal se a IA retornou, senão recalcula
+        if (aiData.waterGoal) {
+            newData.waterGoal = aiData.waterGoal.replace('L', '').trim();
+        } else {
+             const weight = parseFloat(data.physicalData.weight.replace(',', '.'));
+             if (!isNaN(weight)) newData.waterGoal = (weight * 0.045).toFixed(1).replace('.', ',');
+        }
+
         if (aiData.macros) newData.macros = aiData.macros;
         
         if (aiData.meals && Array.isArray(aiData.meals)) {
@@ -319,9 +370,10 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
   };
 
   useEffect(() => {
+    // Cálculo inicial de água caso esteja vazio ao carregar, baseado no peso
     const weight = parseFloat(data.physicalData.weight.replace(',', '.'));
-    if (!isNaN(weight) && weight > 0) {
-        const liters = (weight * 0.035).toFixed(1).replace('.', ',');
+    if (!isNaN(weight) && weight > 0 && (!data.waterGoal || data.waterGoal === '')) {
+        const liters = (weight * 0.045).toFixed(1).replace('.', ','); // Ajustado para 45ml/kg para atletas
         if (data.waterGoal !== liters) handleChange('waterGoal', liters);
     }
   }, [data.physicalData.weight]);
