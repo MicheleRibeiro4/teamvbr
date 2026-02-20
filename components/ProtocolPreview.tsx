@@ -332,7 +332,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                     <h2 className="text-6xl font-black uppercase tracking-tighter mb-4 text-white">Atenção</h2>
                     <div className="w-24 h-2 bg-[#d4af37] mb-12"></div>
                     
-                    <p className="text-xs text-white/90 leading-relaxed max-w-2xl mx-auto mb-21 font-medium">
+                    <p className="text-xs text-white/90 leading-relaxed max-w-2xl mx-auto mb-16 font-medium">
                         Este protocolo foi desenhado especificamente para você, {firstName}.<br/><br/>
                         Ajustes de carga, dieta e cardio serão feitos conforme sua evolução e feedbacks.
                     </p>
