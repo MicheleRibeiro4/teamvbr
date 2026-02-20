@@ -207,13 +207,9 @@ export const EMPTY_DATA: ProtocolData = {
   supplements: [],
   // DICAS PADRÃO INSERIDAS AQUI PARA TODOS OS NOVOS ALUNOS
   tips: [
-    "Organize suas marmitas no dia anterior para evitar furos na dieta.",
-    "A Creatina não tem efeito imediato, seu efeito é crônico. Tome mesmo nos dias que não treinar.",
     "Mantenha a hidratação constante.",
-    "Priorize o sono reparador.",
     "A consistência é o segredo do resultado.",
-    "Se errar uma refeição, não chute o balde. Volte ao plano na próxima.",
-    "Registre sua evolução a cada 15 dias."
+    "Priorize o sono reparador."
   ],
   trainingFrequency: "",
   trainingDays: [],
