@@ -87,7 +87,7 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
         `;
 
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3-flash-preview',
             contents: prompt,
             config: {
                 responseMimeType: 'application/json',
@@ -152,8 +152,16 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
             }
         });
 
-        const jsonText = response.text || "{}";
-        const aiData = JSON.parse(jsonText);
+        // Limpeza robusta do JSON
+        let jsonStr = response.text || "{}";
+        jsonStr = jsonStr.trim();
+        if (jsonStr.startsWith('```json')) {
+            jsonStr = jsonStr.replace(/^```json/, '').replace(/```$/, '');
+        } else if (jsonStr.startsWith('```')) {
+            jsonStr = jsonStr.replace(/^```/, '').replace(/```$/, '');
+        }
+        
+        const aiData = JSON.parse(jsonStr);
 
         const timestamp = new Date().toISOString();
         const newId = "vbr-" + Math.random().toString(36).substr(2, 9);
