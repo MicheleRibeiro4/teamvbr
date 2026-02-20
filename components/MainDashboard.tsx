@@ -37,7 +37,9 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
   const [previewStudent, setPreviewStudent] = useState<ProtocolData | null>(null);
   const [dashboardView, setDashboardView] = useState<'default' | 'active_protocols' | 'financial'>('default');
 
-  const activeProtocols = protocols.filter(p => p.contract.status === 'Ativo');
+  const activeProtocols = protocols
+    .filter(p => p.contract.status === 'Ativo')
+    .sort((a, b) => a.clientName.localeCompare(b.clientName));
   const activeProtocolsCount = activeProtocols.length;
   const pendingStudents = protocols.filter(p => p.contract.status === 'Aguardando');
   
@@ -95,7 +97,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
   const [confirmSendId, setConfirmSendId] = useState<string | null>(null);
   const [sendDate, setSendDate] = useState<string>(new Date().toISOString().split('T')[0]);
 
-  // --- LÓGICA DE AGENDA (Baseada na Última Atualização e Conteúdo) ---
+  // --- LÓGICA DE AGENDA REFORMULADA ---
   const scheduledUpdates = useMemo(() => {
     return uniqueStudents.map((student: any) => {
       // Ignora Avulso e Pendentes
@@ -105,74 +107,87 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
       // Verifica se o protocolo está "vazio" (sem refeições e sem treinos)
       const isMissingProtocol = (student.meals?.length || 0) === 0 && (student.trainingDays?.length || 0) === 0;
 
-      // Usa a data do último envio confirmado SE existir, senão usa updatedAt ou startDate
-      const lastUpdateStr = student.lastSentDate || student.updatedAt || student.contract.startDate;
-      if (!lastUpdateStr) return null;
+      // Data Base: Último envio OU Data de Início (fallback)
+      const baseDateStr = student.lastSentDate || student.contract.startDate;
+      if (!baseDateStr) return null;
 
-      const lastUpdate = new Date(lastUpdateStr);
+      // Converte string DD/MM/AAAA (startDate) ou YYYY-MM-DD (lastSentDate) para Date
+      let baseDate = new Date();
+      if (baseDateStr.includes('/')) {
+          const [d, m, y] = baseDateStr.split('/');
+          baseDate = new Date(`${y}-${m}-${d}T00:00:00`);
+      } else {
+          baseDate = new Date(`${baseDateStr}T00:00:00`);
+      }
+
       const today = new Date();
-      
-      // Reset hours to compare dates only
       today.setHours(0,0,0,0);
-      lastUpdate.setHours(0,0,0,0);
+      baseDate.setHours(0,0,0,0);
 
-      // Calculate difference in milliseconds
-      const diffTime = today.getTime() - lastUpdate.getTime();
-      // Convert to days (Math.round handles daylight saving time shifts better than Math.floor)
-      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-      
+      // Ciclo de 15 dias
       const checkinInterval = 15;
-      const daysLeft = checkinInterval - diffDays;
       
-      const nextDate = new Date(lastUpdate);
-      nextDate.setDate(lastUpdate.getDate() + checkinInterval);
+      // Próxima data = Base + 15 dias
+      const nextDate = new Date(baseDate);
+      nextDate.setDate(baseDate.getDate() + checkinInterval);
+      
+      // Dias restantes = Próxima - Hoje
+      const diffTime = nextDate.getTime() - today.getTime();
+      const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-      // isOverdue if daysLeft is 0 or negative (meaning today is the day or passed)
-      const isOverdue = daysLeft <= 0 || isMissingProtocol;
-      // isUrgent if 1-3 days left
-      const isUrgent = daysLeft > 0 && daysLeft <= 3 && !isMissingProtocol;
+      // Status
+      const isOverdue = daysLeft <= 0; // Venceu hoje ou antes
+      const isUrgent = daysLeft > 0 && daysLeft <= 3; // Vence em breve
 
       return {
         ...student,
         schedule: {
-          daysLeft: isMissingProtocol ? 0 : (isOverdue ? 0 : daysLeft),
+          daysLeft,
           nextDate: nextDate.toLocaleDateString('pt-BR'),
+          baseDate: baseDate.toLocaleDateString('pt-BR'),
           isOverdue,
           isUrgent,
           isMissingProtocol,
-          displayDays: isMissingProtocol ? 0 : (isOverdue ? Math.abs(daysLeft) : daysLeft)
+          status: isMissingProtocol ? 'PENDENTE' : (isOverdue ? 'ATRASADO' : (isUrgent ? 'VENCENDO' : 'EM DIA'))
         }
       };
     })
     .filter(Boolean)
-    // Ordena: Novos sem protocolo primeiro, depois atrasados, depois urgentes
+    // Ordenação: Pendentes -> Atrasados -> Vencendo -> Em dia (mais próximos primeiro)
     .sort((a: any, b: any) => {
-        if (a.schedule.isMissingProtocol && !b.schedule.isMissingProtocol) return -1;
-        if (!a.schedule.isMissingProtocol && b.schedule.isMissingProtocol) return 1;
-        if (a.schedule.isOverdue && !b.schedule.isOverdue) return -1;
-        if (!a.schedule.isOverdue && b.schedule.isOverdue) return 1;
+        if (a.schedule.isMissingProtocol !== b.schedule.isMissingProtocol) return a.schedule.isMissingProtocol ? -1 : 1;
         return a.schedule.daysLeft - b.schedule.daysLeft;
     });
   }, [uniqueStudents]);
 
+  // Helper para pegar data local YYYY-MM-DD de um ISO string UTC
+  const getLocalDateFromISO = (isoStr: string) => {
+      if (!isoStr) return '';
+      const date = new Date(isoStr);
+      // Subtrai o offset do timezone para garantir que pegamos o dia local correto
+      const userTimezoneOffset = date.getTimezoneOffset() * 60000;
+      const localDate = new Date(date.getTime() - userTimezoneOffset);
+      return localDate.toISOString().split('T')[0];
+  };
+
   const handleConfirmSend = async (student: ProtocolData) => {
       if (!sendDate) return;
       
-      // Fix timezone issue by appending time
-      const dateObj = new Date(sendDate + 'T12:00:00');
+      // Formata data visualmente para o confirm
+      const [y, m, d] = sendDate.split('-');
+      const formattedDate = `${d}/${m}/${y}`;
       
-      if (confirm(`Confirmar envio do protocolo em ${dateObj.toLocaleDateString('pt-BR')}? A contagem de 15 dias reiniciará a partir desta data.`)) {
+      if (confirm(`Confirmar envio do protocolo em ${formattedDate}? A contagem de 15 dias reiniciará a partir desta data.`)) {
           setProcessingId(student.id);
           try {
               const updatedStudent = {
                   ...student,
-                  lastSentDate: sendDate, // Salva YYYY-MM-DD direto
-                  // updatedAt: new Date().toISOString() // REMOVIDO: Não atualizar data de modificação ao confirmar envio
+                  lastSentDate: sendDate, // Salva YYYY-MM-DD
+                  // NÃO atualizamos o updatedAt aqui para garantir que a lógica de comparação funcione (updatedAt <= lastSentDate)
+                  // Se atualizássemos, o updatedAt ficaria > lastSentDate (mesmo dia, mas milissegundos depois ou timezone diff)
               };
               await onUpdateStudent(updatedStudent);
               setConfirmSendId(null);
-              // Force refresh of uniqueStudents by updating protocols list in parent if needed, 
-              // but onUpdateStudent should trigger re-render of MainDashboard via props update.
           } catch (error) {
               console.error(error);
               alert("Erro ao confirmar envio.");
@@ -431,39 +446,40 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
           <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 pr-2">
             {scheduledUpdates.length > 0 ? (
               scheduledUpdates.map((student: any) => {
-                const { isOverdue, isUrgent, isMissingProtocol, daysLeft } = student.schedule;
+                const { isOverdue, isUrgent, isMissingProtocol, daysLeft, status, baseDate, nextDate } = student.schedule;
                 
                 // Configuração visual dinâmica
                 let containerStyle = 'bg-green-500/5 border-green-500/20 hover:bg-green-500/10';
                 let circleStyle = 'bg-green-500/20 text-green-500 border-green-500/30';
                 let dateColor = 'text-green-400';
                 let iconColor = 'text-green-500';
-                let statusText = 'AGUARDANDO';
 
                 if (isMissingProtocol) {
                     containerStyle = 'bg-indigo-500/5 border-indigo-500/20 hover:bg-indigo-500/10';
                     circleStyle = 'bg-indigo-500 text-white border-indigo-500';
                     dateColor = 'text-indigo-400';
                     iconColor = 'text-indigo-500';
-                    statusText = 'PENDENTE';
                 } else if (isOverdue) {
                     containerStyle = 'bg-red-500/5 border-red-500/20 hover:bg-red-500/10';
                     circleStyle = 'bg-red-500 text-white border-red-500';
                     dateColor = 'text-red-400';
                     iconColor = 'text-red-500';
-                    statusText = 'CHECK-IN';
                 } else if (isUrgent) {
                     containerStyle = 'bg-yellow-500/5 border-yellow-500/20 hover:bg-yellow-500/10';
                     circleStyle = 'bg-yellow-500 text-black border-yellow-500';
                     dateColor = 'text-[#d4af37]';
                     iconColor = 'text-[#d4af37]';
-                    statusText = 'VENCENDO';
                 }
 
-                // Lógica para mostrar botão de confirmação
-                // Mostra se: NUNCA foi enviado OU se foi atualizado DEPOIS do último envio (comparando apenas datas YYYY-MM-DD)
-                const updatedAtDate = student.updatedAt ? new Date(student.updatedAt).toISOString().split('T')[0] : '';
-                const showConfirmButton = !student.lastSentDate || (updatedAtDate > student.lastSentDate);
+                // Lógica de Botão de Confirmação (Reformulada)
+                // Compara data local da última edição vs data do último envio
+                const updatedAtLocal = getLocalDateFromISO(student.updatedAt);
+                const lastSentLocal = student.lastSentDate || ''; // YYYY-MM-DD
+                
+                // Mostra botão se:
+                // 1. Nunca foi enviado
+                // 2. Foi editado DEPOIS do último envio (Data Edição > Data Envio)
+                const showConfirmButton = !lastSentLocal || (updatedAtLocal > lastSentLocal);
 
                 return (
                   <div key={student.id} className={`p-4 rounded-2xl border flex flex-col md:flex-row md:items-center justify-between group transition-all cursor-pointer gap-4 ${containerStyle}`}>
@@ -477,15 +493,15 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                             {isMissingProtocol && <span className="bg-indigo-500 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded">Novo</span>}
                           </h4>
                           <div className="flex flex-wrap items-center gap-3 text-[10px] text-white/40 uppercase font-bold">
-                            <span>Base: {student.lastSentDate ? new Date(student.lastSentDate + 'T12:00:00').toLocaleDateString('pt-BR') : (student.updatedAt ? new Date(student.updatedAt).toLocaleDateString('pt-BR') : student.contract.startDate)}</span>
+                            <span>Base: {baseDate}</span>
                             <span className="w-1 h-1 bg-white/20 rounded-full"></span>
-                            <span className={dateColor}>{isMissingProtocol ? 'Ação: Gerar Ficha' : `Próximo Ajuste: ${student.schedule.nextDate}`}</span>
+                            <span className={dateColor}>{isMissingProtocol ? 'Ação: Gerar Ficha' : `Próximo: ${nextDate}`}</span>
                           </div>
                       </div>
                     </div>
                     
                     <div className="flex items-center justify-between md:justify-end gap-3 w-full md:w-auto border-t border-white/5 pt-3 md:pt-0 md:border-0">
-                        {showConfirmButton && (
+                        {showConfirmButton ? (
                             confirmSendId === student.id ? (
                                 <div className="flex items-center gap-2 bg-[#111] p-1.5 rounded-xl border border-white/10 animate-in fade-in slide-in-from-right-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
                                     <input 
@@ -507,10 +523,15 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                                     <span>Confirmar Envio</span>
                                 </button>
                             )
+                        ) : (
+                             <div className="flex items-center gap-2 px-3 py-2 bg-green-500/10 rounded-xl border border-green-500/20">
+                                <CheckCircle2 size={14} className="text-green-500" />
+                                <span className="text-[9px] font-black uppercase text-green-500 tracking-widest">Enviado</span>
+                             </div>
                         )}
                         
                         <div onClick={() => onLoadStudent(student, 'manage')} className="flex items-center gap-2 pl-2 border-l border-white/5 md:border-0">
-                            <span className={`text-[10px] font-black uppercase tracking-widest ${isOverdue ? 'text-red-400 animate-pulse' : 'text-white/20'} ${isMissingProtocol ? 'text-indigo-400' : ''}`}>{statusText}</span>
+                            <span className={`text-[10px] font-black uppercase tracking-widest ${isOverdue ? 'text-red-400 animate-pulse' : 'text-white/20'} ${isMissingProtocol ? 'text-indigo-400' : ''}`}>{status}</span>
                             <ChevronRight size={16} className={`opacity-50 group-hover:opacity-100 ${iconColor}`} />
                         </div>
                     </div>

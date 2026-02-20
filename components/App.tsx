@@ -81,6 +81,19 @@ const App: React.FC = () => {
     setIsSyncing(true);
     try {
       const protocols = await db.getAll();
+      
+      // --- MIGRATION: Update Vitor's date one-time ---
+      const vitor = protocols.find(p => p.clientName.toLowerCase().includes('vitor'));
+      if (vitor && vitor.lastSentDate !== '2026-02-20') {
+          console.log("Applying fix for Vitor...");
+          const updatedVitor = { ...vitor, lastSentDate: '2026-02-20' };
+          await db.saveProtocol(updatedVitor);
+          // Update local list
+          const idx = protocols.findIndex(p => p.id === vitor.id);
+          if (idx >= 0) protocols[idx] = updatedVitor;
+      }
+      // -----------------------------------------------
+
       setSavedProtocols(protocols);
       setCloudStatus('online');
     } catch (e: any) {

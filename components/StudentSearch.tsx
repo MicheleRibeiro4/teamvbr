@@ -32,9 +32,9 @@ const StudentSearch: React.FC<Props> = ({ protocols, onLoad, onDelete, onUpdate 
       }
     });
 
-    // Retorna array ordenado por data de atualização (mais recentes primeiro)
+    // Retorna array ordenado alfabeticamente pelo nome do aluno
     return Array.from(map.values()).sort((a, b) => 
-        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        a.clientName.localeCompare(b.clientName)
     );
   }, [protocols]);
 
