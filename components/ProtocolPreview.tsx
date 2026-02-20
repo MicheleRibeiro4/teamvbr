@@ -337,8 +337,8 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                         Ajustes de carga, dieta e cardio serão feitos conforme sua evolução e feedbacks.
                     </p>
                     
-                    <p className="text-[#d4af37] text-2xl font-black italic uppercase tracking-widest">
-                        "A consistência vence a intensidade."
+                    <p className="text-[#d4af37] text-2xl font-black italic tracking-widest">
+                        A consistência vence a intensidade.
                     </p>
 
                     <div className="absolute bottom-8 text-[10px] font-black uppercase text-gray-600 tracking-[0.5em]">
