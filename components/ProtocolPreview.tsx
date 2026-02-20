@@ -29,9 +29,9 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
     setIsGenerating(true);
     const clientName = data?.clientName || "Aluno";
     
-    // A4 Dimensions in Pixels (96 DPI) - standard for web-to-pdf
-    // 210mm approx 794px
-    // 297mm approx 1123px
+    // A4 Dimensions in Pixels (96 DPI)
+    // 210mm = 793.7px (approx 794px)
+    // 297mm = 1122.5px (approx 1123px)
     const A4_WIDTH_PX = 794; 
 
     const opt = {
@@ -45,8 +45,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
         backgroundColor: '#ffffff',
         scrollY: 0,
         scrollX: 0,
-        width: A4_WIDTH_PX, // Force canvas width
-        windowWidth: A4_WIDTH_PX + 20, // Slightly larger window to avoid scrollbars
+        // Remove pixel width/height options to let it auto-detect the element size which we fixed via CSS
         x: 0,
         y: 0
       },
@@ -79,16 +78,16 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
 
     // Configuração de Estilo para Página A4
     const pageStyle: React.CSSProperties = {
-        width: '210mm', // Fixed width matching PDF page size
-        minHeight: '296.5mm', // Slightly less than 297mm to prevent overflow on exact fit
-        padding: '15mm', 
+        width: '794px', // STRICT PIXEL WIDTH for A4 (210mm @ 96 DPI)
+        minHeight: '1123px', // STRICT PIXEL HEIGHT for A4 (297mm @ 96 DPI)
+        padding: '40px', 
         backgroundColor: 'white',
         position: 'relative',
         boxSizing: 'border-box',
         fontFamily: "'Inter', sans-serif",
         overflow: 'hidden',
         pageBreakAfter: 'always',
-        margin: '0', // Important for PDF generation
+        margin: '0', 
     };
 
     const coverPageStyle: React.CSSProperties = {
@@ -104,7 +103,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
 
     const endPageStyle: React.CSSProperties = {
         ...coverPageStyle,
-        padding: '20mm'
+        padding: '40px'
     };
 
     // Estilos utilitários baseados no modelo
@@ -378,9 +377,9 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                 {/* 
                    AJUSTE CRÍTICO DE CORTE LATERAL:
                    Posicionamento absoluto com z-index negativo at top 0 left 0.
-                   Fixed Width 210mm to ensure A4 proportions.
+                   Fixed Width 794px to ensure A4 proportions at 96 DPI.
                 */}
-                <div style={{ position: 'absolute', top: 0, left: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none', width: '210mm' }}>
+                <div style={{ position: 'absolute', top: 0, left: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none', width: '794px' }}>
                     <div ref={pdfRef} className="bg-white">{renderContent(true)}</div>
                 </div>
             </>

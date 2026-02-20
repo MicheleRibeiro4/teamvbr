@@ -205,6 +205,16 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
     try {
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         
+        // Extract frequency number from "5x na semana" or similar
+        const freqMatch = (data.trainingFrequency || '').match(/\d+/);
+        const freqNum = freqMatch ? parseInt(freqMatch[0]) : 5;
+        
+        const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+        const requiredDaysList = Array.from({ length: freqNum }, (_, i) => {
+            const letter = letters[i] || (i + 1).toString();
+            return `Treino ${letter}`;
+        }).join(', ');
+
         const prompt = `
           Aja como um treinador e nutricionista de elite do 'Team VBR'.
           Crie um protocolo completo para o aluno baseado nos dados abaixo:
@@ -217,6 +227,11 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
           - Altura: ${data.physicalData.height}m
           - Objetivo Atual: ${data.protocolTitle}
           - Observações/Restrições (Anamnese): ${data.anamnesis.mainObjective} | ${data.anamnesis.foodPreferences} | ${data.anamnesis.injuries}
+          - Frequência de Treino: ${freqNum} vezes na semana.
+
+          REQUISITO CRÍTICO DE TREINO:
+          Gere EXATAMENTE ${freqNum} treinos no array 'trainingDays'.
+          Títulos esperados: ${requiredDaysList}.
           
           Gere um JSON com a seguinte estrutura estrita:
           {
@@ -361,14 +376,37 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
             newData.supplements = aiData.supplements.map((s: any) => ({ ...s, id: Math.random().toString(36).substr(2, 9) }));
         }
         
-        if (aiData.trainingDays && Array.isArray(aiData.trainingDays)) {
-            newData.trainingDays = aiData.trainingDays.map((d: any) => ({
-                 id: Math.random().toString(36).substr(2, 9),
-                 title: d.title,
-                 focus: d.focus,
-                 exercises: (d.exercises || []).map((e: any) => ({ ...e, id: Math.random().toString(36).substr(2, 9) }))
-            }));
+        // --- LOGICA DE CORREÇÃO DE TREINOS ---
+        let generatedTrainingDays = aiData.trainingDays || [];
+        if (!Array.isArray(generatedTrainingDays)) generatedTrainingDays = [];
+
+        // Garante que o número de dias seja exatamente o solicitado (backfill ou slice)
+        if (generatedTrainingDays.length < freqNum) {
+            for (let i = generatedTrainingDays.length; i < freqNum; i++) {
+                generatedTrainingDays.push({
+                    title: `Treino ${letters[i] || (i + 1)}`,
+                    focus: "Foco a definir (Gerado automaticamente)",
+                    exercises: [
+                        { name: "Exercício Principal", sets: "4x10" },
+                        { name: "Exercício Auxiliar", sets: "3x12" },
+                        { name: "Exercício Isolado", sets: "3x15" }
+                    ]
+                });
+            }
+        } else if (generatedTrainingDays.length > freqNum) {
+            generatedTrainingDays = generatedTrainingDays.slice(0, freqNum);
         }
+
+        newData.trainingDays = generatedTrainingDays.map((d: any) => ({
+                id: Math.random().toString(36).substr(2, 9),
+                title: d.title || "Treino",
+                focus: d.focus || "Geral",
+                exercises: (d.exercises || []).map((e: any) => ({ 
+                    id: Math.random().toString(36).substr(2, 9),
+                    name: e.name || "Exercício",
+                    sets: e.sets || "3x10"
+                }))
+        }));
 
         if (aiData.tips && Array.isArray(aiData.tips)) {
             newData.tips = aiData.tips;
@@ -538,6 +576,8 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
 
       {activeTab === 'identificacao' && (
         <div className="animate-in fade-in slide-in-from-left-4 duration-300 space-y-8">
+           {/* ... existing identification fields ... */}
+           {/* Include original content for identification tab */}
            <section>
             <div className="bg-[#d4af37]/10 p-6 rounded-[2rem] border border-[#d4af37]/20 flex flex-col md:flex-row justify-between items-center gap-6 mb-8 relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-10 opacity-10 pointer-events-none"><ShieldCheck size={120} /></div>
