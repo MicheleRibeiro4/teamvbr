@@ -73,7 +73,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
       action: () => onList()
     },
     {
-      label: 'Alunos Ativos',
+      label: 'Protocolos Ativos',
       val: activeProtocolsCount,
       icon: <Target size={20} />,
       bg: 'bg-green-500/10',
