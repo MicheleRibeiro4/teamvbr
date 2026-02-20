@@ -99,10 +99,11 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
                         macros: {
                             type: Type.OBJECT,
                             properties: {
-                                protein: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } },
-                                carbs: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } },
-                                fats: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } }
-                            }
+                                protein: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } }, required: ["value", "ratio"] },
+                                carbs: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } }, required: ["value", "ratio"] },
+                                fats: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } }, required: ["value", "ratio"] }
+                            },
+                            required: ["protein", "carbs", "fats"]
                         },
                         meals: {
                             type: Type.ARRAY,
@@ -112,7 +113,8 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
                                     time: { type: Type.STRING },
                                     name: { type: Type.STRING },
                                     details: { type: Type.STRING }
-                                }
+                                },
+                                required: ["time", "name", "details"]
                             }
                         },
                         supplements: {
@@ -123,7 +125,8 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
                                     name: { type: Type.STRING },
                                     dosage: { type: Type.STRING },
                                     timing: { type: Type.STRING }
-                                }
+                                },
+                                required: ["name", "dosage", "timing"]
                             }
                         },
                         trainingDays: {
@@ -140,14 +143,17 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
                                             properties: {
                                                 name: { type: Type.STRING },
                                                 sets: { type: Type.STRING }
-                                            }
+                                            },
+                                            required: ["name", "sets"]
                                         }
                                     }
-                                }
+                                },
+                                required: ["title", "focus", "exercises"]
                             }
                         },
                         tips: { type: Type.ARRAY, items: { type: Type.STRING } }
-                    }
+                    },
+                    required: ["nutritionalStrategy", "kcalGoal", "macros", "meals", "supplements", "trainingDays", "tips"]
                 }
             }
         });
