@@ -245,10 +245,10 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
           
           {activeView !== 'home' && (
             <button 
-              onClick={() => setActiveView(data.id && activeView !== 'student-dashboard' ? 'student-dashboard' : 'home')}
+              onClick={() => setActiveView('home')}
               className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-[#d4af37] transition-colors"
             >
-              <ChevronLeft size={16} /> Voltar
+              <ChevronLeft size={16} /> Voltar ao Início
             </button>
           )}
         </div>
@@ -306,7 +306,7 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
           <UnifiedEditor 
             data={data} 
             onChange={setData} 
-            onBack={() => setActiveView('student-dashboard')} 
+            onBack={() => setActiveView('home')} 
           />
         )}
 
