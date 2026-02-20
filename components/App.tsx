@@ -144,16 +144,6 @@ const App: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    if (activeView === 'manage' && data.id && data.clientName && isAuthenticated && !isStudentPage) {
-      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
-      autoSaveTimerRef.current = setTimeout(() => {
-        handleSave(true);
-      }, 2000);
-    }
-    return () => { if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current); };
-  }, [data]);
-
   const handleNew = () => {
     const newId = "vbr-" + Math.random().toString(36).substr(2, 9);
     setData({ ...EMPTY_DATA, id: newId, updatedAt: new Date().toISOString() });

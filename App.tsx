@@ -143,16 +143,6 @@ const App: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    if (activeView === 'manage' && data.id && data.clientName && isAuthenticated && !isStudentPage) {
-      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
-      autoSaveTimerRef.current = setTimeout(() => {
-        handleSave(true);
-      }, 2000);
-    }
-    return () => { if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current); };
-  }, [data]);
-
   const handleNew = () => {
     // Agora vai para o Gerador em vez de criar vazio direto
     setActiveView('generator');

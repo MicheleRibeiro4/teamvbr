@@ -45,11 +45,12 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
         backgroundColor: '#ffffff',
         scrollY: 0,
         scrollX: 0,
+        windowWidth: 794,
         // Remove pixel width/height options to let it auto-detect the element size which we fixed via CSS
         x: 0,
         y: 0
       },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      jsPDF: { unit: 'px', format: [794, 1123], orientation: 'portrait' },
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
@@ -79,19 +80,18 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
     // Configuração de Estilo para Página A4
     const pageStyle: React.CSSProperties = {
         width: '794px', // STRICT PIXEL WIDTH for A4 (210mm @ 96 DPI)
-        minHeight: '1050px', // Reduced to ensure it fits within A4 (1123px) with buffer for margins
+        height: '1123px', // Fixed height to exactly match A4
         padding: '40px', 
         backgroundColor: 'white',
         position: 'relative',
         boxSizing: 'border-box',
         fontFamily: "'Inter', sans-serif",
-        overflow: 'visible',
+        overflow: 'hidden', // Hide overflow to prevent pushing content to next page
         margin: '0', 
     };
 
     const coverPageStyle: React.CSSProperties = {
         ...pageStyle,
-        minHeight: '1122px', // Full A4 height to prevent white footer on black background
         backgroundColor: '#050505',
         color: '#ffffff',
         display: 'flex',
@@ -99,14 +99,14 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
         alignItems: 'center',
         justifyContent: 'center',
         padding: 0,
-        // pageBreakAfter removed to avoid double break with next page's pageBreakBefore
+        pageBreakAfter: 'always'
     };
 
     const endPageStyle: React.CSSProperties = {
         ...coverPageStyle,
         padding: '40px',
         pageBreakBefore: 'always', // Ensure it starts on a new page
-        pageBreakAfter: 'auto'
+        pageBreakAfter: 'avoid'
     };
 
     // Estilos utilitários baseados no modelo
