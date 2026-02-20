@@ -460,6 +460,11 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                     statusText = 'VENCENDO';
                 }
 
+                // Lógica para mostrar botão de confirmação
+                // Mostra se: NUNCA foi enviado OU se foi atualizado DEPOIS do último envio (comparando apenas datas YYYY-MM-DD)
+                const updatedAtDate = student.updatedAt ? new Date(student.updatedAt).toISOString().split('T')[0] : '';
+                const showConfirmButton = !student.lastSentDate || (updatedAtDate > student.lastSentDate);
+
                 return (
                   <div key={student.id} className={`p-4 rounded-2xl border flex flex-col md:flex-row md:items-center justify-between group transition-all cursor-pointer gap-4 ${containerStyle}`}>
                     <div className="flex items-center gap-4 flex-1" onClick={() => onLoadStudent(student, 'manage')}>
@@ -472,7 +477,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                             {isMissingProtocol && <span className="bg-indigo-500 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded">Novo</span>}
                           </h4>
                           <div className="flex flex-wrap items-center gap-3 text-[10px] text-white/40 uppercase font-bold">
-                            <span>Base: {student.lastSentDate ? new Date(student.lastSentDate).toLocaleDateString('pt-BR') : (student.updatedAt ? new Date(student.updatedAt).toLocaleDateString('pt-BR') : student.contract.startDate)}</span>
+                            <span>Base: {student.lastSentDate ? new Date(student.lastSentDate + 'T12:00:00').toLocaleDateString('pt-BR') : (student.updatedAt ? new Date(student.updatedAt).toLocaleDateString('pt-BR') : student.contract.startDate)}</span>
                             <span className="w-1 h-1 bg-white/20 rounded-full"></span>
                             <span className={dateColor}>{isMissingProtocol ? 'Ação: Gerar Ficha' : `Próximo Ajuste: ${student.schedule.nextDate}`}</span>
                           </div>
@@ -480,8 +485,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                     </div>
                     
                     <div className="flex items-center justify-between md:justify-end gap-3 w-full md:w-auto border-t border-white/5 pt-3 md:pt-0 md:border-0">
-                        {/* Só mostra botão de confirmar se NÃO tiver data de envio confirmada OU se for um novo protocolo (updatedAt > lastSentDate) */}
-                        {(!student.lastSentDate || (student.updatedAt && new Date(student.updatedAt).getTime() > new Date(student.lastSentDate).getTime() + 60000)) && (
+                        {showConfirmButton && (
                             confirmSendId === student.id ? (
                                 <div className="flex items-center gap-2 bg-[#111] p-1.5 rounded-xl border border-white/10 animate-in fade-in slide-in-from-right-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
                                     <input 
