@@ -83,14 +83,21 @@ const App: React.FC = () => {
       const protocols = await db.getAll();
       
       // --- MIGRATION: Update Vitor's date one-time ---
-      const vitor = protocols.find(p => p.clientName.toLowerCase().includes('vitor'));
-      if (vitor && vitor.lastSentDate !== '2026-02-20') {
-          console.log("Applying fix for Vitor...");
-          const updatedVitor = { ...vitor, lastSentDate: '2026-02-20' };
-          await db.saveProtocol(updatedVitor);
-          // Update local list
-          const idx = protocols.findIndex(p => p.id === vitor.id);
-          if (idx >= 0) protocols[idx] = updatedVitor;
+      const vitor = protocols.find(p => p.clientName.toLowerCase().includes('vitor barbosa'));
+      if (vitor) {
+          // Força a atualização se a data não for 2026-02-20
+          if (vitor.lastSentDate !== '2026-02-20') {
+              console.log("Applying fix for Vitor Barbosa Drumond...");
+              const updatedVitor = { 
+                  ...vitor, 
+                  lastSentDate: '2026-02-20',
+                  updatedAt: new Date().toISOString()
+              };
+              await db.saveProtocol(updatedVitor);
+              // Update local list
+              const idx = protocols.findIndex(p => p.id === vitor.id);
+              if (idx >= 0) protocols[idx] = updatedVitor;
+          }
       }
       // -----------------------------------------------
 
