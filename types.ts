@@ -125,4 +125,5 @@ export interface ProtocolData {
   trainingDays: TrainingDay[];
   generalObservations: string;
   contract: ContractInfo;
+  lastSentDate?: string; // Data do último envio confirmado
 }

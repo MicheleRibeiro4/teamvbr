@@ -92,6 +92,9 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
     }
   ];
 
+  const [confirmSendId, setConfirmSendId] = useState<string | null>(null);
+  const [sendDate, setSendDate] = useState<string>(new Date().toISOString().split('T')[0]);
+
   // --- LÓGICA DE AGENDA (Baseada na Última Atualização e Conteúdo) ---
   const scheduledUpdates = useMemo(() => {
     return uniqueStudents.map((student: any) => {
@@ -102,17 +105,21 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
       // Verifica se o protocolo está "vazio" (sem refeições e sem treinos)
       const isMissingProtocol = (student.meals?.length || 0) === 0 && (student.trainingDays?.length || 0) === 0;
 
-      const lastUpdateStr = student.updatedAt || student.contract.startDate;
+      // Usa a data do último envio confirmado SE existir, senão usa updatedAt ou startDate
+      const lastUpdateStr = student.lastSentDate || student.updatedAt || student.contract.startDate;
       if (!lastUpdateStr) return null;
 
       const lastUpdate = new Date(lastUpdateStr);
       const today = new Date();
       
+      // Reset hours to compare dates only
       today.setHours(0,0,0,0);
       lastUpdate.setHours(0,0,0,0);
 
+      // Calculate difference in milliseconds
       const diffTime = today.getTime() - lastUpdate.getTime();
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      // Convert to days (Math.round handles daylight saving time shifts better than Math.floor)
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
       
       const checkinInterval = 15;
       const daysLeft = checkinInterval - diffDays;
@@ -120,7 +127,9 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
       const nextDate = new Date(lastUpdate);
       nextDate.setDate(lastUpdate.getDate() + checkinInterval);
 
+      // isOverdue if daysLeft is 0 or negative (meaning today is the day or passed)
       const isOverdue = daysLeft <= 0 || isMissingProtocol;
+      // isUrgent if 1-3 days left
       const isUrgent = daysLeft > 0 && daysLeft <= 3 && !isMissingProtocol;
 
       return {
@@ -145,6 +154,28 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
         return a.schedule.daysLeft - b.schedule.daysLeft;
     });
   }, [uniqueStudents]);
+
+  const handleConfirmSend = async (student: ProtocolData) => {
+      if (!sendDate) return;
+      
+      if (confirm(`Confirmar envio do protocolo em ${new Date(sendDate).toLocaleDateString('pt-BR')}? A contagem de 15 dias reiniciará a partir desta data.`)) {
+          setProcessingId(student.id);
+          try {
+              const updatedStudent = {
+                  ...student,
+                  lastSentDate: sendDate,
+                  updatedAt: new Date().toISOString() // Atualiza também o registro geral
+              };
+              await onUpdateStudent(updatedStudent);
+              setConfirmSendId(null);
+          } catch (error) {
+              console.error(error);
+              alert("Erro ao confirmar envio.");
+          } finally {
+              setProcessingId(null);
+          }
+      }
+  };
 
   const handleCopyLink = () => {
      const origin = typeof window !== 'undefined' ? window.location.origin : '';
@@ -425,8 +456,8 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                 }
 
                 return (
-                  <div key={student.id} className={`p-3 rounded-xl border flex items-center justify-between group transition-all cursor-pointer ${containerStyle}`} onClick={() => onLoadStudent(student, 'manage')}>
-                    <div className="flex items-center gap-3">
+                  <div key={student.id} className={`p-3 rounded-xl border flex items-center justify-between group transition-all cursor-pointer ${containerStyle}`}>
+                    <div className="flex items-center gap-3 flex-1" onClick={() => onLoadStudent(student, 'manage')}>
                       <div className={`w-10 h-10 rounded-lg flex items-center justify-center border text-[10px] font-black shrink-0 ${circleStyle}`}>
                           {isMissingProtocol ? <Sparkles size={14} /> : (isOverdue ? 'HOJE' : `${daysLeft}d`)}
                       </div>
@@ -436,15 +467,39 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                             {isMissingProtocol && <span className="bg-indigo-500 text-white text-[8px] font-black uppercase px-1.5 py-0.5 rounded">Novo</span>}
                           </h4>
                           <div className="flex items-center gap-2 text-[9px] text-white/40 uppercase font-bold">
-                            <span>Base: {student.updatedAt ? new Date(student.updatedAt).toLocaleDateString('pt-BR') : student.contract.startDate}</span>
+                            <span>Base: {student.lastSentDate ? new Date(student.lastSentDate).toLocaleDateString('pt-BR') : (student.updatedAt ? new Date(student.updatedAt).toLocaleDateString('pt-BR') : student.contract.startDate)}</span>
                             <span>•</span>
                             <span className={dateColor}>{isMissingProtocol ? 'Ação: Gerar Ficha' : `Ação Data de Ajuste: ${student.schedule.nextDate}`}</span>
                           </div>
                       </div>
                     </div>
+                    
                     <div className="flex items-center gap-3">
-                        <span className={`hidden md:inline-block text-[9px] font-black uppercase tracking-widest ${isOverdue ? 'text-red-400 animate-pulse' : 'text-white/20'} ${isMissingProtocol ? 'text-indigo-400' : ''}`}>{statusText}</span>
-                        <ChevronRight size={14} className={`opacity-50 group-hover:opacity-100 ${iconColor}`} />
+                        {confirmSendId === student.id ? (
+                            <div className="flex items-center gap-2 bg-black/50 p-1 rounded-lg animate-in fade-in slide-in-from-right-5" onClick={(e) => e.stopPropagation()}>
+                                <input 
+                                    type="date" 
+                                    value={sendDate} 
+                                    onChange={(e) => setSendDate(e.target.value)}
+                                    className="bg-white/10 text-white text-[10px] p-1 rounded border border-white/10 outline-none"
+                                />
+                                <button onClick={() => handleConfirmSend(student)} className="p-1 bg-green-500 text-white rounded hover:bg-green-600"><Check size={12} /></button>
+                                <button onClick={() => setConfirmSendId(null)} className="p-1 bg-red-500 text-white rounded hover:bg-red-600"><X size={12} /></button>
+                            </div>
+                        ) : (
+                            <button 
+                                onClick={(e) => { e.stopPropagation(); setConfirmSendId(student.id); setSendDate(new Date().toISOString().split('T')[0]); }}
+                                className="p-2 bg-white/5 hover:bg-[#d4af37] hover:text-black rounded-lg text-white/40 transition-all"
+                                title="Confirmar Envio do Protocolo"
+                            >
+                                <CheckCircle2 size={14} />
+                            </button>
+                        )}
+                        
+                        <div onClick={() => onLoadStudent(student, 'manage')}>
+                            <span className={`hidden md:inline-block text-[9px] font-black uppercase tracking-widest ${isOverdue ? 'text-red-400 animate-pulse' : 'text-white/20'} ${isMissingProtocol ? 'text-indigo-400' : ''} mr-2`}>{statusText}</span>
+                            <ChevronRight size={14} className={`opacity-50 group-hover:opacity-100 ${iconColor} inline-block`} />
+                        </div>
                     </div>
                   </div>
                 );
