@@ -167,7 +167,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
               const updatedStudent = {
                   ...student,
                   lastSentDate: sendDate, // Salva YYYY-MM-DD direto
-                  updatedAt: new Date().toISOString() 
+                  // updatedAt: new Date().toISOString() // REMOVIDO: Não atualizar data de modificação ao confirmar envio
               };
               await onUpdateStudent(updatedStudent);
               setConfirmSendId(null);
