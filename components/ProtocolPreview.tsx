@@ -34,22 +34,25 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
     // 297mm = 1122.5px (approx 1123px)
     const A4_WIDTH_PX = 794; 
 
-   const opt = {
-  margin: 0,
-  filename: `Protocolo_VBR_${clientName.replace(/\s+/g, '_')}.pdf`,
-  image: { type: 'jpeg', quality: 0.98 },
-  html2canvas: {
-    scale: 2,
-    useCORS: true,
-    backgroundColor: '#ffffff'
-  },
-  jsPDF: {
-    unit: 'mm',         
-    format: 'a4',        
-    orientation: 'portrait'
-  },
-  pagebreak: { mode: ['css'] }
-};
+    const opt = {
+      margin: 0,
+      filename: `Protocolo_VBR_${clientName.replace(/\s+/g, '_')}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { 
+        scale: 2, 
+        useCORS: true, 
+        letterRendering: true, 
+        backgroundColor: '#ffffff',
+        scrollY: 0,
+        scrollX: 0,
+        windowWidth: 794,
+        // Remove pixel width/height options to let it auto-detect the element size which we fixed via CSS
+        x: 0,
+        y: 0
+      },
+      jsPDF: { unit: 'px', format: [794, 1123], orientation: 'portrait' },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+    };
 
     try {
       // @ts-ignore
@@ -75,14 +78,17 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
     const firstName = clientName.split(' ')[0];
 
     // Configuração de Estilo para Página A4
-const pageStyle: React.CSSProperties = {
-  width: '794px',       // largura A4 em px
-  minHeight: '1123px',  // altura mínima A4
-  padding: '40px',
-  backgroundColor: 'white',
-  boxSizing: 'border-box',
-  fontFamily: "'Inter', sans-serif",
-};
+    const pageStyle: React.CSSProperties = {
+        width: '794px', // STRICT PIXEL WIDTH for A4 (210mm @ 96 DPI)
+        height: '1123px', // Fixed height to exactly match A4
+        padding: '40px', 
+        backgroundColor: 'white',
+        position: 'relative',
+        boxSizing: 'border-box',
+        fontFamily: "'Inter', sans-serif",
+        overflow: 'hidden', // Hide overflow to prevent pushing content to next page
+        margin: '0', 
+    };
 
     const coverPageStyle: React.CSSProperties = {
         ...pageStyle,
@@ -112,7 +118,8 @@ const pageStyle: React.CSSProperties = {
     const kcalValue = (safeData.kcalGoal || "0").toString().replace(/kcal/gi, '').trim();
 
     return (
-<div className="bg-white">            
+        <div className="flex flex-col items-center bg-white print:bg-transparent">
+            
             {/* CAPA (Page 1) */}
             <div style={coverPageStyle}>
                 <div className="w-full h-full flex flex-col items-center justify-center relative z-10">
@@ -385,4 +392,3 @@ const pageStyle: React.CSSProperties = {
 });
 
 export default ProtocolPreview;
-
