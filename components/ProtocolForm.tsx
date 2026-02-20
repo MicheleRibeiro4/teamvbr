@@ -38,34 +38,43 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
 
   // Sincronização automática: Meta de Água -> Dicas
   useEffect(() => {
-    if (!data.waterGoal) return;
-    
     // Normaliza o valor da meta (remove letras, mantem numeros e virgula/ponto)
-    const goalVal = data.waterGoal.replace(/[^0-9.,]/g, '').trim();
-    if (!goalVal) return;
-
-    const waterTipText = `Beber no mínimo ${data.waterGoal}L de água por dia.`;
-    
-    // Verifica se já existe nas dicas (procura por "água" ou "hidratação")
+    const goalVal = data.waterGoal ? data.waterGoal.replace(/[^0-9.,]/g, '').trim() : '';
     const currentTips = data.tips || [];
+    
+    // Procura se já existe uma dica de água
     const waterTipIndex = currentTips.findIndex(t => 
         t.toLowerCase().includes('água') || t.toLowerCase().includes('hidratação')
     );
+
+    // Se a meta foi apagada
+    if (!goalVal) {
+        // Se existe dica e a meta foi limpa, removemos a dica para manter coerência
+        if (waterTipIndex !== -1) {
+            const newTips = [...currentTips];
+            newTips.splice(waterTipIndex, 1);
+            // Evita loop infinito verificando se realmente mudou
+            if (newTips.length !== currentTips.length) {
+                // Atualiza diretamente o estado sem depender de handleChange para evitar deps circulares
+                onChange({ ...data, tips: newTips });
+            }
+        }
+        return;
+    }
+
+    const waterTipText = `Beber no mínimo ${data.waterGoal}L de água por dia.`;
 
     if (waterTipIndex !== -1) {
         // Se existe, mas o texto é diferente (ex: valor antigo), atualiza
         if (currentTips[waterTipIndex] !== waterTipText) {
             const newTips = [...currentTips];
             newTips[waterTipIndex] = waterTipText;
-            // Usamos onChange direto para evitar loop com handleChange que depende de data
-            const newData = { ...data, tips: newTips };
-            onChange(newData);
+            onChange({ ...data, tips: newTips });
         }
     } else {
         // Se não existe, adiciona no topo
         const newTips = [waterTipText, ...currentTips];
-        const newData = { ...data, tips: newTips };
-        onChange(newData);
+        onChange({ ...data, tips: newTips });
     }
   }, [data.waterGoal]); 
 
@@ -831,7 +840,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
             <div className={sectionHeaderClass}><Lightbulb className="text-[#d4af37]" size={20} /><h2 className="text-xl font-black text-white uppercase tracking-tighter">Dicas e Recomendações</h2></div>
             <div className="space-y-3">
               {(data.tips || []).map((tip, index) => (
-                <div key={index} className="flex gap-3 items-start group">
+                <div key={index} className="flex gap-3 items-center group">
                     <div className="w-8 h-12 md:h-14 bg-[#d4af37]/10 text-[#d4af37] rounded-xl flex items-center justify-center font-black text-xs shrink-0 border border-[#d4af37]/20">
                         {index + 1}
                     </div>
