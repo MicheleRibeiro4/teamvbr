@@ -158,13 +158,16 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
   const handleConfirmSend = async (student: ProtocolData) => {
       if (!sendDate) return;
       
-      if (confirm(`Confirmar envio do protocolo em ${new Date(sendDate).toLocaleDateString('pt-BR')}? A contagem de 15 dias reiniciará a partir desta data.`)) {
+      // Fix timezone issue by appending time
+      const dateObj = new Date(sendDate + 'T12:00:00');
+      
+      if (confirm(`Confirmar envio do protocolo em ${dateObj.toLocaleDateString('pt-BR')}? A contagem de 15 dias reiniciará a partir desta data.`)) {
           setProcessingId(student.id);
           try {
               const updatedStudent = {
                   ...student,
-                  lastSentDate: sendDate,
-                  updatedAt: new Date().toISOString() // Atualiza também o registro geral
+                  lastSentDate: sendDate, // Salva YYYY-MM-DD direto
+                  updatedAt: new Date().toISOString() 
               };
               await onUpdateStudent(updatedStudent);
               setConfirmSendId(null);
@@ -475,26 +478,29 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                     </div>
                     
                     <div className="flex items-center justify-between md:justify-end gap-3 w-full md:w-auto border-t border-white/5 pt-3 md:pt-0 md:border-0">
-                        {confirmSendId === student.id ? (
-                            <div className="flex items-center gap-2 bg-[#111] p-1.5 rounded-xl border border-white/10 animate-in fade-in slide-in-from-right-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
-                                <input 
-                                    type="date" 
-                                    value={sendDate} 
-                                    onChange={(e) => setSendDate(e.target.value)}
-                                    className="bg-white/5 text-white text-xs p-2 rounded-lg border border-white/10 outline-none focus:border-[#d4af37] transition-colors"
-                                />
-                                <button onClick={() => handleConfirmSend(student)} className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors shadow-lg"><Check size={14} /></button>
-                                <button onClick={() => setConfirmSendId(null)} className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors shadow-lg"><X size={14} /></button>
-                            </div>
-                        ) : (
-                            <button 
-                                onClick={(e) => { e.stopPropagation(); setConfirmSendId(student.id); setSendDate(new Date().toISOString().split('T')[0]); }}
-                                className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-[#d4af37] hover:text-black hover:border-[#d4af37] rounded-xl text-white/60 font-black text-[10px] uppercase tracking-widest transition-all flex items-center gap-2 group/btn"
-                                title="Confirmar Envio do Protocolo"
-                            >
-                                <CheckCircle2 size={14} className="group-hover/btn:scale-110 transition-transform" />
-                                <span>Confirmar Envio</span>
-                            </button>
+                        {/* Só mostra botão de confirmar se NÃO tiver data de envio confirmada OU se for um novo protocolo (updatedAt > lastSentDate) */}
+                        {(!student.lastSentDate || new Date(student.updatedAt) > new Date(student.lastSentDate)) && (
+                            confirmSendId === student.id ? (
+                                <div className="flex items-center gap-2 bg-[#111] p-1.5 rounded-xl border border-white/10 animate-in fade-in slide-in-from-right-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
+                                    <input 
+                                        type="date" 
+                                        value={sendDate} 
+                                        onChange={(e) => setSendDate(e.target.value)}
+                                        className="bg-white/5 text-white text-xs p-2 rounded-lg border border-white/10 outline-none focus:border-[#d4af37] transition-colors"
+                                    />
+                                    <button onClick={() => handleConfirmSend(student)} className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors shadow-lg"><Check size={14} /></button>
+                                    <button onClick={() => setConfirmSendId(null)} className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors shadow-lg"><X size={14} /></button>
+                                </div>
+                            ) : (
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); setConfirmSendId(student.id); setSendDate(new Date().toISOString().split('T')[0]); }}
+                                    className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-[#d4af37] hover:text-black hover:border-[#d4af37] rounded-xl text-white/60 font-black text-[10px] uppercase tracking-widest transition-all flex items-center gap-2 group/btn"
+                                    title="Confirmar Envio do Protocolo"
+                                >
+                                    <CheckCircle2 size={14} className="group-hover/btn:scale-110 transition-transform" />
+                                    <span>Confirmar Envio</span>
+                                </button>
+                            )
                         )}
                         
                         <div onClick={() => onLoadStudent(student, 'manage')} className="flex items-center gap-2 pl-2 border-l border-white/5 md:border-0">
