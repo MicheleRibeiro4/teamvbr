@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { ProtocolData } from '../types';
 import { EMPTY_DATA } from '../constants';
-import { Loader2, Sparkles, User, Target, ChevronLeft, Dumbbell, Activity, Calendar, AlertCircle } from 'lucide-react';
+import { Loader2, Sparkles, User, Target, ChevronLeft, Activity, Calendar, AlertCircle } from 'lucide-react';
+import { GoogleGenAI, Type } from "@google/genai";
 
 interface Props {
   onGenerate: (data: ProtocolData) => void;
@@ -36,11 +37,128 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
     setError('');
     setLoading(true);
 
-    // SIMULAÇÃO SEM IA PARA CORRIGIR ERRO DE BUILD
-    setTimeout(() => {
+    try {
+        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        
+        const prompt = `
+          Aja como um treinador e nutricionista de elite do 'Team VBR'.
+          Crie um protocolo completo para um aluno com os seguintes dados:
+          - Nome: ${formData.name}
+          - Idade: ${formData.age}
+          - Gênero: ${formData.gender}
+          - Peso: ${formData.weight}kg
+          - Altura: ${formData.height}m
+          - Objetivo: ${formData.goal}
+          - Nível: ${formData.level}
+          - Frequência de Treino: ${formData.frequency} dias na semana
+          - Observações/Restrições: ${formData.observations || "Nenhuma"}
+
+          Gere um JSON com a seguinte estrutura estrita:
+          {
+            "nutritionalStrategy": "Texto curto descrevendo a estratégia da dieta",
+            "kcalGoal": "Ex: 2500 kcal",
+            "macros": {
+               "protein": { "value": "gramas totais", "ratio": "g/kg" },
+               "carbs": { "value": "gramas totais", "ratio": "g/kg" },
+               "fats": { "value": "gramas totais", "ratio": "g/kg" }
+            },
+            "meals": [
+              { "time": "08:00", "name": "Café da Manhã", "details": "Alimentos e quantidades detalhadas" }
+            ],
+            "supplements": [
+              { "name": "Nome", "dosage": "Dose", "timing": "Horário" }
+            ],
+            "trainingDays": [
+              {
+                "title": "Treino A",
+                "focus": "Grupo Muscular",
+                "exercises": [
+                   { "name": "Nome do Exercício", "sets": "4x12" }
+                ]
+              }
+            ],
+            "tips": ["Dica 1", "Dica 2"]
+          }
+          
+          Importante:
+          1. O treino deve ter divisão inteligente (ABC, ABCD, ABCDE) compatível com a frequência informada.
+          2. A dieta deve ser realista e calculada para o objetivo (Déficit para emagrecimento, Superávit para hipertrofia).
+          3. Use português do Brasil.
+        `;
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: {
+                responseMimeType: 'application/json',
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        nutritionalStrategy: { type: Type.STRING },
+                        kcalGoal: { type: Type.STRING },
+                        macros: {
+                            type: Type.OBJECT,
+                            properties: {
+                                protein: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } },
+                                carbs: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } },
+                                fats: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } }
+                            }
+                        },
+                        meals: {
+                            type: Type.ARRAY,
+                            items: {
+                                type: Type.OBJECT,
+                                properties: {
+                                    time: { type: Type.STRING },
+                                    name: { type: Type.STRING },
+                                    details: { type: Type.STRING }
+                                }
+                            }
+                        },
+                        supplements: {
+                            type: Type.ARRAY,
+                            items: {
+                                type: Type.OBJECT,
+                                properties: {
+                                    name: { type: Type.STRING },
+                                    dosage: { type: Type.STRING },
+                                    timing: { type: Type.STRING }
+                                }
+                            }
+                        },
+                        trainingDays: {
+                            type: Type.ARRAY,
+                            items: {
+                                type: Type.OBJECT,
+                                properties: {
+                                    title: { type: Type.STRING },
+                                    focus: { type: Type.STRING },
+                                    exercises: {
+                                        type: Type.ARRAY,
+                                        items: {
+                                            type: Type.OBJECT,
+                                            properties: {
+                                                name: { type: Type.STRING },
+                                                sets: { type: Type.STRING }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        tips: { type: Type.ARRAY, items: { type: Type.STRING } }
+                    }
+                }
+            }
+        });
+
+        const jsonText = response.text || "{}";
+        const aiData = JSON.parse(jsonText);
+
         const timestamp = new Date().toISOString();
         const newId = "vbr-" + Math.random().toString(36).substr(2, 9);
 
+        // Merge AI Data with Protocol Structure
         const finalProtocol: ProtocolData = {
           ...EMPTY_DATA,
           id: newId,
@@ -55,8 +173,19 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
             age: formData.age,
             gender: formData.gender as any,
           },
-          nutritionalStrategy: "Estratégia a ser definida manualmente.",
+          nutritionalStrategy: aiData.nutritionalStrategy || "Estratégia personalizada.",
+          kcalGoal: aiData.kcalGoal || "Calculando...",
+          macros: aiData.macros || EMPTY_DATA.macros,
+          meals: (aiData.meals || []).map((m: any) => ({ ...m, id: Math.random().toString(36).substr(2, 9) })),
+          supplements: (aiData.supplements || []).map((s: any) => ({ ...s, id: Math.random().toString(36).substr(2, 9) })),
           trainingFrequency: `${formData.frequency}x na semana`,
+          trainingDays: (aiData.trainingDays || []).map((d: any) => ({
+             id: Math.random().toString(36).substr(2, 9),
+             title: d.title,
+             focus: d.focus,
+             exercises: (d.exercises || []).map((e: any) => ({ ...e, id: Math.random().toString(36).substr(2, 9) }))
+          })),
+          tips: aiData.tips || EMPTY_DATA.tips,
           generalObservations: formData.observations,
           anamnesis: {
              ...EMPTY_DATA.anamnesis,
@@ -65,10 +194,14 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
           }
         };
 
-        alert("A geração automática por IA foi desativada temporariamente para manutenção. Um protocolo base foi criado com seus dados.");
         onGenerate(finalProtocol);
+
+    } catch (err: any) {
+        console.error(err);
+        setError("Erro ao gerar protocolo com IA. Tente novamente ou preencha manualmente. Detalhes: " + err.message);
+    } finally {
         setLoading(false);
-    }, 1500);
+    }
   };
 
   return (
@@ -91,8 +224,8 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
                <Sparkles size={28} fill="black" />
             </div>
             <div>
-              <h1 className="text-3xl font-black text-white uppercase tracking-tighter leading-none">Gerador de Protocolo</h1>
-              <p className="text-white/40 text-xs font-bold uppercase tracking-widest mt-1">Criação Rápida de Ficha</p>
+              <h1 className="text-3xl font-black text-white uppercase tracking-tighter leading-none">Gerador de Protocolo IA</h1>
+              <p className="text-white/40 text-xs font-bold uppercase tracking-widest mt-1">Criação Inteligente com Google Gemini</p>
             </div>
           </div>
 
@@ -240,7 +373,7 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
                 className="flex-[2] py-4 bg-[#d4af37] text-black rounded-xl font-black uppercase text-xs tracking-[0.2em] hover:scale-[1.02] transition-all shadow-[0_0_30px_rgba(212,175,55,0.4)] flex items-center justify-center gap-3 disabled:opacity-50 disabled:hover:scale-100"
              >
                 {loading ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
-                {loading ? 'Criando...' : 'Iniciar Protocolo'}
+                {loading ? 'Criando com IA...' : 'Gerar Protocolo'}
              </button>
           </div>
 
