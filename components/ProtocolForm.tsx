@@ -219,16 +219,29 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
           Aja como um treinador e nutricionista de elite do 'Team VBR'.
           Crie um protocolo completo para o aluno baseado nos dados abaixo:
           
-          DADOS:
+          DADOS DO ALUNO:
           - Nome: ${data.clientName}
           - Idade: ${data.physicalData.age}
           - Gênero: ${data.physicalData.gender}
           - Peso: ${data.physicalData.weight}kg
           - Altura: ${data.physicalData.height}m
           - Objetivo Atual: ${data.protocolTitle}
-          - Observações/Restrições (Anamnese): ${data.anamnesis.mainObjective} | ${data.anamnesis.foodPreferences} | ${data.anamnesis.injuries}
           - Frequência de Treino: ${freqNum} vezes na semana.
+          
+          ANAMNESE COMPLETA (CONSIDERAR TODOS OS DETALHES):
+          - Objetivo Principal: ${data.anamnesis.mainObjective}
+          - Rotina Diária: ${data.anamnesis.routine}
+          - Histórico de Treino/Dieta: ${data.anamnesis.trainingHistory}
+          - Preferências Alimentares: ${data.anamnesis.foodPreferences}
+          - Lesões/Limitações: ${data.anamnesis.injuries}
+          - Ergogênicos/Medicamentos: ${data.anamnesis.ergogenics} | ${data.anamnesis.medications}
 
+          ESTRATÉGIA NUTRICIONAL JÁ DEFINIDA (SE HOUVER):
+          "${data.nutritionalStrategy || "Nenhuma definida ainda."}"
+          
+          INSTRUÇÃO:
+          Se já houver uma estratégia nutricional acima, NÃO a ignore. Gere uma complementação ou uma nova visão que se some a ela.
+          
           REQUISITO CRÍTICO DE TREINO:
           Gere EXATAMENTE ${freqNum} treinos no array 'trainingDays'.
           Títulos esperados: ${requiredDaysList}.
@@ -264,7 +277,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
           Regras:
           1. Use português do Brasil.
           2. Seja específico nas quantidades dos alimentos.
-          3. O treino deve ser coerente com o objetivo.
+          3. O treino deve ser coerente com o objetivo e anamnesis.
           4. O campo waterGoal deve ser APENAS O NÚMERO em Litros (ex: "3,5").
         `;
 
@@ -355,7 +368,14 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
         // Merge com dados existentes
         const newData = JSON.parse(JSON.stringify(data));
         
-        if (aiData.nutritionalStrategy) newData.nutritionalStrategy = aiData.nutritionalStrategy;
+        // PRESERVA E CONCATENA A ESTRATÉGIA
+        if (aiData.nutritionalStrategy) {
+            if (newData.nutritionalStrategy && newData.nutritionalStrategy.trim() !== "") {
+                newData.nutritionalStrategy = newData.nutritionalStrategy + "\n\n" + aiData.nutritionalStrategy;
+            } else {
+                newData.nutritionalStrategy = aiData.nutritionalStrategy;
+            }
+        }
         if (aiData.kcalGoal) newData.kcalGoal = aiData.kcalGoal;
         
         // Atualiza waterGoal se a IA retornou, senão recalcula

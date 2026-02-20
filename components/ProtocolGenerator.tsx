@@ -216,13 +216,14 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
         let generatedTrainingDays = aiData.trainingDays || [];
         if (!Array.isArray(generatedTrainingDays)) generatedTrainingDays = [];
 
-        // Se a IA gerou menos dias que o solicitado, preenchemos o restante
-        if (generatedTrainingDays.length < freqNum) {
+        // Se a IA gerou menos dias que o mínimo esperado (3), preenchemos
+        const minFreq = 3;
+        if (generatedTrainingDays.length < minFreq) {
             const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
-            for (let i = generatedTrainingDays.length; i < freqNum; i++) {
+            for (let i = generatedTrainingDays.length; i < minFreq; i++) {
                 generatedTrainingDays.push({
                     title: `Treino ${letters[i] || (i + 1)}`,
-                    focus: "Foco a definir (Gerado automaticamente para completar a frequência)",
+                    focus: "Foco a definir (Gerado automaticamente)",
                     exercises: [
                         { name: "Exercício Principal", sets: "4x10" },
                         { name: "Exercício Auxiliar", sets: "3x12" },
@@ -231,10 +232,6 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
                     ]
                 });
             }
-        }
-        // Se a IA gerou mais dias (raro, mas possível), cortamos
-        else if (generatedTrainingDays.length > freqNum) {
-            generatedTrainingDays = generatedTrainingDays.slice(0, freqNum);
         }
 
         // Merge AI Data with Protocol Structure
@@ -252,13 +249,14 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
             age: formData.age,
             gender: formData.gender as any,
           },
-          nutritionalStrategy: aiData.nutritionalStrategy || "Estratégia personalizada.",
+          // Usa a estratégia retornada pela IA (que deve conter a original + melhorias) ou a original como fallback
+          nutritionalStrategy: aiData.nutritionalStrategy || formData.nutritionalStrategy || "Estratégia personalizada.",
           kcalGoal: aiData.kcalGoal || "Calculando...",
           waterGoal: finalWaterGoal,
           macros: aiData.macros || EMPTY_DATA.macros,
           meals: (aiData.meals || []).map((m: any) => ({ ...m, id: Math.random().toString(36).substr(2, 9) })),
           supplements: (aiData.supplements || []).map((s: any) => ({ ...s, id: Math.random().toString(36).substr(2, 9) })),
-          trainingFrequency: `${freqNum}x na semana`,
+          trainingFrequency: `${generatedTrainingDays.length}x na semana`,
           trainingDays: generatedTrainingDays.map((d: any) => ({
              id: Math.random().toString(36).substr(2, 9),
              title: d.title || "Treino",
@@ -270,11 +268,16 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
              }))
           })),
           tips: finalTips,
-          generalObservations: formData.observations,
+          generalObservations: "", // Removido pois agora está na anamnese
           anamnesis: {
              ...EMPTY_DATA.anamnesis,
-             mainObjective: formData.goal,
-             routine: formData.observations
+             mainObjective: formData.anamnesis.mainObjective || formData.goal,
+             routine: formData.anamnesis.routine,
+             trainingHistory: formData.anamnesis.trainingHistory,
+             ergogenics: formData.anamnesis.ergogenics,
+             foodPreferences: formData.anamnesis.foodPreferences,
+             injuries: formData.anamnesis.injuries,
+             medications: formData.anamnesis.medications
           }
         };
 
