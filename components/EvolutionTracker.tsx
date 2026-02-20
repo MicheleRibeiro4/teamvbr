@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { LOGO_VBR_BLACK, MEASUREMENT_LABELS } from '../constants';
 import ProtocolPreview from './ProtocolPreview';
+import { GoogleGenAI, Type } from "@google/genai";
 
 const LOGO_VBR_GOLD = "https://xqwzmvzfemjkvaquxedz.supabase.co/storage/v1/object/public/LOGO/DOURADO.png";
 
@@ -160,7 +161,97 @@ const EvolutionTracker: React.FC<Props> = ({
   };
 
   const handleGenerateProtocolAI = async () => {
-     alert("IA temporariamente desativada para manutenção.");
+     setIsGeneratingAI(true);
+     try {
+         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+         const prompt = `
+            Atue como treinador do Team VBR.
+            O aluno ${currentProtocol.clientName} está iniciando uma nova fase.
+            
+            DADOS ATUAIS:
+            - Peso Atual: ${editData.weight}kg
+            - Peso Anterior: ${currentProtocol.physicalData.weight}kg
+            - Objetivo da Nova Fase: ${editTitle}
+            
+            Gere uma sugestão de nova Estratégia Nutricional e Treino.
+            
+            Retorne JSON estrito:
+            {
+                "nutritionalStrategy": "Nova estratégia...",
+                "kcalGoal": "Nova meta calórica...",
+                "macros": { ... },
+                "trainingDays": [ ... ]
+            }
+         `;
+         
+         const response = await ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: prompt,
+            config: {
+                responseMimeType: 'application/json',
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        nutritionalStrategy: { type: Type.STRING },
+                        kcalGoal: { type: Type.STRING },
+                        macros: {
+                            type: Type.OBJECT,
+                            properties: {
+                                protein: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } },
+                                carbs: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } },
+                                fats: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } }
+                            }
+                        },
+                        trainingDays: {
+                            type: Type.ARRAY,
+                            items: {
+                                type: Type.OBJECT,
+                                properties: {
+                                    title: { type: Type.STRING },
+                                    focus: { type: Type.STRING },
+                                    exercises: {
+                                        type: Type.ARRAY,
+                                        items: {
+                                            type: Type.OBJECT,
+                                            properties: {
+                                                name: { type: Type.STRING },
+                                                sets: { type: Type.STRING }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+         });
+
+         let jsonStr = response.text || "{}";
+         jsonStr = jsonStr.trim();
+         if (jsonStr.startsWith('```json')) jsonStr = jsonStr.replace(/^```json/, '').replace(/```$/, '');
+         else if (jsonStr.startsWith('```')) jsonStr = jsonStr.replace(/^```/, '').replace(/```$/, '');
+
+         const aiData = JSON.parse(jsonStr);
+         
+         if (aiData.trainingDays) {
+             aiData.trainingDays = aiData.trainingDays.map((d: any) => ({
+                 id: Math.random().toString(36).substr(2, 9),
+                 title: d.title,
+                 focus: d.focus,
+                 exercises: (d.exercises || []).map((e: any) => ({ ...e, id: Math.random().toString(36).substr(2, 9) }))
+            }));
+         }
+         
+         setAiGeneratedData(aiData);
+         alert("Sugestão gerada! Ao salvar, os novos dados de dieta e treino serão aplicados.");
+
+     } catch (err: any) {
+         console.error(err);
+         alert("Erro ao gerar sugestão: " + err.message);
+     } finally {
+         setIsGeneratingAI(false);
+     }
   };
 
   const handleSave = async () => {

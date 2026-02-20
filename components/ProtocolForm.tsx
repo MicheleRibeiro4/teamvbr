@@ -6,6 +6,7 @@ import { EMPTY_DATA, PROTOCOL_TEMPLATES, MEASUREMENT_LABELS } from '../constants
 import ContractPreview, { ContractPreviewHandle } from './ContractPreview';
 import AnamnesisPreview, { AnamnesisPreviewHandle } from './AnamnesisPreview';
 import ProtocolPreview, { ProtocolPreviewHandle } from './ProtocolPreview';
+import { GoogleGenAI, Type } from "@google/genai";
 
 interface Props {
   data: ProtocolData;
@@ -139,7 +140,176 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
   };
 
   const handleGenerateAI = async () => {
-    alert("Funcionalidade de IA temporariamente desativada para manutenção.");
+    if (!data.clientName || !data.physicalData.weight) {
+        alert("Preencha pelo menos o Nome e o Peso do aluno na aba de Identificação/Medidas.");
+        return;
+    }
+
+    setIsGenerating(true);
+
+    try {
+        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        
+        const prompt = `
+          Aja como um treinador e nutricionista de elite do 'Team VBR'.
+          Crie um protocolo completo para o aluno baseado nos dados abaixo:
+          
+          DADOS:
+          - Nome: ${data.clientName}
+          - Idade: ${data.physicalData.age}
+          - Gênero: ${data.physicalData.gender}
+          - Peso: ${data.physicalData.weight}kg
+          - Altura: ${data.physicalData.height}m
+          - Objetivo Atual: ${data.protocolTitle}
+          - Observações/Restrições (Anamnese): ${data.anamnesis.mainObjective} | ${data.anamnesis.foodPreferences} | ${data.anamnesis.injuries}
+          
+          Gere um JSON com a seguinte estrutura estrita:
+          {
+            "nutritionalStrategy": "Texto curto e direto sobre a estratégia (ex: Carb Cycling, Normocalórica, etc)",
+            "kcalGoal": "Ex: 2500 kcal",
+            "macros": {
+               "protein": { "value": "gramas totais", "ratio": "g/kg" },
+               "carbs": { "value": "gramas totais", "ratio": "g/kg" },
+               "fats": { "value": "gramas totais", "ratio": "g/kg" }
+            },
+            "meals": [
+              { "time": "08:00", "name": "Café da Manhã", "details": "Alimentos e quantidades detalhadas" }
+            ],
+            "supplements": [
+              { "name": "Nome", "dosage": "Dose", "timing": "Horário" }
+            ],
+            "trainingDays": [
+              {
+                "title": "Treino A",
+                "focus": "Grupo Muscular",
+                "exercises": [
+                   { "name": "Nome do Exercício", "sets": "4x12" }
+                ]
+              }
+            ],
+            "tips": ["Dica 1", "Dica 2"]
+          }
+          
+          Regras:
+          1. Use português do Brasil.
+          2. Seja específico nas quantidades dos alimentos.
+          3. O treino deve ser coerente com o objetivo.
+        `;
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: prompt,
+            config: {
+                responseMimeType: 'application/json',
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        nutritionalStrategy: { type: Type.STRING },
+                        kcalGoal: { type: Type.STRING },
+                        macros: {
+                            type: Type.OBJECT,
+                            properties: {
+                                protein: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } },
+                                carbs: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } },
+                                fats: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } }
+                            }
+                        },
+                        meals: {
+                            type: Type.ARRAY,
+                            items: {
+                                type: Type.OBJECT,
+                                properties: {
+                                    time: { type: Type.STRING },
+                                    name: { type: Type.STRING },
+                                    details: { type: Type.STRING }
+                                }
+                            }
+                        },
+                        supplements: {
+                            type: Type.ARRAY,
+                            items: {
+                                type: Type.OBJECT,
+                                properties: {
+                                    name: { type: Type.STRING },
+                                    dosage: { type: Type.STRING },
+                                    timing: { type: Type.STRING }
+                                }
+                            }
+                        },
+                        trainingDays: {
+                            type: Type.ARRAY,
+                            items: {
+                                type: Type.OBJECT,
+                                properties: {
+                                    title: { type: Type.STRING },
+                                    focus: { type: Type.STRING },
+                                    exercises: {
+                                        type: Type.ARRAY,
+                                        items: {
+                                            type: Type.OBJECT,
+                                            properties: {
+                                                name: { type: Type.STRING },
+                                                sets: { type: Type.STRING }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        tips: { type: Type.ARRAY, items: { type: Type.STRING } }
+                    }
+                }
+            }
+        });
+
+        // Limpeza do JSON
+        let jsonStr = response.text || "{}";
+        jsonStr = jsonStr.trim();
+        if (jsonStr.startsWith('```json')) {
+            jsonStr = jsonStr.replace(/^```json/, '').replace(/```$/, '');
+        } else if (jsonStr.startsWith('```')) {
+            jsonStr = jsonStr.replace(/^```/, '').replace(/```$/, '');
+        }
+        
+        const aiData = JSON.parse(jsonStr);
+
+        // Merge com dados existentes
+        const newData = JSON.parse(JSON.stringify(data));
+        
+        if (aiData.nutritionalStrategy) newData.nutritionalStrategy = aiData.nutritionalStrategy;
+        if (aiData.kcalGoal) newData.kcalGoal = aiData.kcalGoal;
+        if (aiData.macros) newData.macros = aiData.macros;
+        
+        if (aiData.meals && Array.isArray(aiData.meals)) {
+            newData.meals = aiData.meals.map((m: any) => ({ ...m, id: Math.random().toString(36).substr(2, 9) }));
+        }
+        
+        if (aiData.supplements && Array.isArray(aiData.supplements)) {
+            newData.supplements = aiData.supplements.map((s: any) => ({ ...s, id: Math.random().toString(36).substr(2, 9) }));
+        }
+        
+        if (aiData.trainingDays && Array.isArray(aiData.trainingDays)) {
+            newData.trainingDays = aiData.trainingDays.map((d: any) => ({
+                 id: Math.random().toString(36).substr(2, 9),
+                 title: d.title,
+                 focus: d.focus,
+                 exercises: (d.exercises || []).map((e: any) => ({ ...e, id: Math.random().toString(36).substr(2, 9) }))
+            }));
+        }
+
+        if (aiData.tips && Array.isArray(aiData.tips)) {
+            newData.tips = aiData.tips;
+        }
+
+        onChange(newData);
+        alert("Protocolo gerado com sucesso! Revise os dados.");
+
+    } catch (err: any) {
+        console.error(err);
+        alert("Erro ao gerar com IA: " + err.message);
+    } finally {
+        setIsGenerating(false);
+    }
   };
 
   useEffect(() => {
