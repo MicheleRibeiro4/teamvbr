@@ -29,9 +29,10 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
     setIsGenerating(true);
     const clientName = data?.clientName || "Aluno";
     
-    // Dimensões A4 em mm
-    const A4_WIDTH_MM = 210;
-    const A4_HEIGHT_MM = 297;
+    // A4 Dimensions in Pixels (96 DPI) - standard for web-to-pdf
+    // 210mm approx 794px
+    // 297mm approx 1123px
+    const A4_WIDTH_PX = 794; 
 
     const opt = {
       margin: 0,
@@ -43,8 +44,11 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
         letterRendering: true, 
         backgroundColor: '#ffffff',
         scrollY: 0,
-        // Garante que o canvas capture a largura total sem cortar
-        windowWidth: 1200, 
+        scrollX: 0,
+        width: A4_WIDTH_PX, // Force canvas width
+        windowWidth: A4_WIDTH_PX + 20, // Slightly larger window to avoid scrollbars
+        x: 0,
+        y: 0
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
@@ -75,16 +79,16 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
 
     // Configuração de Estilo para Página A4
     const pageStyle: React.CSSProperties = {
-        width: '210mm', // Largura EXATA do A4
-        minHeight: '296mm', // Altura A4 (leve ajuste pra margem)
+        width: '210mm', // Fixed width matching PDF page size
+        minHeight: '296.5mm', // Slightly less than 297mm to prevent overflow on exact fit
         padding: '15mm', 
         backgroundColor: 'white',
         position: 'relative',
         boxSizing: 'border-box',
         fontFamily: "'Inter', sans-serif",
-        overflow: 'hidden', // Evita overflow que causa corte
+        overflow: 'hidden',
         pageBreakAfter: 'always',
-        margin: '0 auto' // Centraliza se visualizado fora do PDF
+        margin: '0', // Important for PDF generation
     };
 
     const coverPageStyle: React.CSSProperties = {
@@ -373,8 +377,8 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                 {showModal && typeof document !== 'undefined' && createPortal(modalContent, document.body)}
                 {/* 
                    AJUSTE CRÍTICO DE CORTE LATERAL:
-                   Posicionamento absoluto com z-index negativo
-                   O container tem largura fixa de 210mm para garantir proporção A4
+                   Posicionamento absoluto com z-index negativo at top 0 left 0.
+                   Fixed Width 210mm to ensure A4 proportions.
                 */}
                 <div style={{ position: 'absolute', top: 0, left: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none', width: '210mm' }}>
                     <div ref={pdfRef} className="bg-white">{renderContent(true)}</div>

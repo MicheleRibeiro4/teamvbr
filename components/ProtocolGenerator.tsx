@@ -212,18 +212,29 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
              });
         }
 
-        // Validação de Treinos: Se a IA não gerou, cria placeholder
-        let finalTrainingDays = aiData.trainingDays || [];
-        if (!Array.isArray(finalTrainingDays) || finalTrainingDays.length === 0) {
-            finalTrainingDays = [{
-                title: "Treino A",
-                focus: "Adaptação (Gerado automaticamente pois a IA não retornou treinos)",
-                exercises: [
-                    { name: "Supino Reto", sets: "3x12" },
-                    { name: "Puxada Alta", sets: "3x12" },
-                    { name: "Agachamento Livre", sets: "3x12" }
-                ]
-            }];
+        // Validação e Preenchimento de Treinos (Fallback System)
+        let generatedTrainingDays = aiData.trainingDays || [];
+        if (!Array.isArray(generatedTrainingDays)) generatedTrainingDays = [];
+
+        // Se a IA gerou menos dias que o solicitado, preenchemos o restante
+        if (generatedTrainingDays.length < freqNum) {
+            const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+            for (let i = generatedTrainingDays.length; i < freqNum; i++) {
+                generatedTrainingDays.push({
+                    title: `Treino ${letters[i] || (i + 1)}`,
+                    focus: "Foco a definir (Gerado automaticamente para completar a frequência)",
+                    exercises: [
+                        { name: "Exercício Principal", sets: "4x10" },
+                        { name: "Exercício Auxiliar", sets: "3x12" },
+                        { name: "Exercício Isolado", sets: "3x15" },
+                        { name: "Abdômen", sets: "3x20" }
+                    ]
+                });
+            }
+        }
+        // Se a IA gerou mais dias (raro, mas possível), cortamos
+        else if (generatedTrainingDays.length > freqNum) {
+            generatedTrainingDays = generatedTrainingDays.slice(0, freqNum);
         }
 
         // Merge AI Data with Protocol Structure
@@ -248,7 +259,7 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
           meals: (aiData.meals || []).map((m: any) => ({ ...m, id: Math.random().toString(36).substr(2, 9) })),
           supplements: (aiData.supplements || []).map((s: any) => ({ ...s, id: Math.random().toString(36).substr(2, 9) })),
           trainingFrequency: `${freqNum}x na semana`,
-          trainingDays: finalTrainingDays.map((d: any) => ({
+          trainingDays: generatedTrainingDays.map((d: any) => ({
              id: Math.random().toString(36).substr(2, 9),
              title: d.title || "Treino",
              focus: d.focus || "Geral",
