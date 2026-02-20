@@ -138,8 +138,8 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
 
                     <div className="w-2/3 border-b border-white/20 my-8"></div>
 
-                    <div className="mt-8 px-6 py-2 rounded-full border border-[#d4af37]/30 bg-[#d4af37]/10">
-                        <p className="text-xs font-bold text-[#d4af37] uppercase tracking-widest">
+                    <div className="mt-12 px-10 py-4 rounded-full border border-[#d4af37]/30 bg-[#d4af37]/10">
+                        <p className="text-xl font-bold text-[#d4af37] uppercase tracking-widest">
                             PERÍODO: {contract.startDate || '...'} — {contract.endDate || '...'}
                         </p>
                     </div>
@@ -327,13 +327,13 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
 
             {/* PAGE FINAL (Atenção) */}
             <div style={endPageStyle}>
-                 <div className="border-[3px] border-[#d4af37] w-full h-full flex flex-col items-center justify-center p-12 text-center rounded-3xl relative">
+                 <div className="border-[3px] border-[#d4af37] w-full flex-1 flex flex-col items-center justify-center p-12 text-center rounded-3xl relative">
                     <AlertTriangle size={80} className="text-[#d4af37] mb-8" strokeWidth={1.5} />
                     <h2 className="text-6xl font-black uppercase tracking-tighter mb-4 text-white">Atenção</h2>
                     <div className="w-24 h-2 bg-[#d4af37] mb-12"></div>
                     
-                    <p className="text-xs text-white/90 leading-relaxed max-w-2xl mx-auto mb-16 font-medium">
-                        Este protocolo foi desenhado especificamente para você, {firstName}.<br/><br/>
+                    <p className="text-xl text-white/90 leading-relaxed max-w-4xl mx-auto mb-16 font-medium">
+                        Este protocolo foi desenhado especificamente para você, {firstName}. 
                         Ajustes de carga, dieta e cardio serão feitos conforme sua evolução e feedbacks.
                     </p>
                     
