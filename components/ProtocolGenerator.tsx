@@ -55,8 +55,14 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
           - Altura: ${formData.height}m
           - Objetivo: ${formData.goal}
           - Nível: ${formData.level}
-          - Frequência de Treino: ${formData.frequency} dias na semana
+          - Frequência de Treino Solicitada: ${formData.frequency} dias na semana
           - Observações/Restrições: ${formData.observations || "Nenhuma"}
+
+          REQUISITO OBRIGATÓRIO DE TREINO:
+          Você DEVE gerar EXATAMENTE ${formData.frequency} divisões de treino diferentes no array 'trainingDays'.
+          Se a frequência for 5, gere 5 dias (Treino A, B, C, D, E).
+          Se a frequência for 3, gere 3 dias (Treino A, B, C).
+          Não deixe o array de treinos vazio.
 
           Gere um JSON com a seguinte estrutura estrita:
           {
@@ -77,20 +83,21 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
             "trainingDays": [
               {
                 "title": "Treino A",
-                "focus": "Grupo Muscular",
+                "focus": "Grupo Muscular (ex: Peito e Tríceps)",
                 "exercises": [
-                   { "name": "Nome do Exercício", "sets": "4x12" }
+                   { "name": "Supino Reto", "sets": "4x12" },
+                   { "name": "Crucifixo", "sets": "3x15" }
                 ]
               }
             ],
             "tips": ["Dica 1", "Dica 2"]
           }
           
-          Importante:
-          1. O treino deve ter divisão inteligente (ABC, ABCD, ABCDE) compatível com a frequência informada.
-          2. A dieta deve ser realista e calculada para o objetivo (Déficit para emagrecimento, Superávit para hipertrofia).
-          3. Use português do Brasil.
-          4. O campo 'waterGoal' deve conter APENAS O NÚMERO em litros (ex: "3,5").
+          Regras:
+          1. Use português do Brasil.
+          2. Seja específico nas quantidades dos alimentos.
+          3. O treino DEVE conter exercícios reais e séries (ex: 4x10).
+          4. O campo waterGoal deve ser APENAS O NÚMERO em Litros (ex: "3,5").
         `;
 
         const response = await ai.models.generateContent({
@@ -182,9 +189,9 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
         
         // Garante que o waterGoal seja consistente
         let finalWaterGoal = aiData.waterGoal || calculatedWater;
-        finalWaterGoal = finalWaterGoal.replace(/[a-zA-Z]/g, '').trim(); // Remove 'L' or other chars if AI added them
+        finalWaterGoal = finalWaterGoal.replace(/[a-zA-Z]/g, '').trim(); 
 
-        // Garante que a dica da água esteja presente nas dicas geradas e coincida com o waterGoal
+        // Garante que a dica da água esteja presente
         let finalTips = aiData.tips || [];
         const waterTipText = `Beber no mínimo ${finalWaterGoal}L de água por dia.`;
         const hasWaterTip = finalTips.some((t: string) => t.toLowerCase().includes('água'));
@@ -192,13 +199,24 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
         if (!hasWaterTip) {
             finalTips = [waterTipText, ...finalTips];
         } else {
-             // Atualiza a dica existente para bater com a meta
              finalTips = finalTips.map((t: string) => {
-                 if (t.toLowerCase().includes('água')) {
-                     return waterTipText;
-                 }
+                 if (t.toLowerCase().includes('água')) return waterTipText;
                  return t;
              });
+        }
+
+        // Validação de Treinos: Se a IA não gerou, cria placeholder
+        let finalTrainingDays = aiData.trainingDays || [];
+        if (!Array.isArray(finalTrainingDays) || finalTrainingDays.length === 0) {
+            finalTrainingDays = [{
+                title: "Treino A",
+                focus: "Adaptação (Gerado automaticamente pois a IA não retornou treinos)",
+                exercises: [
+                    { name: "Supino Reto", sets: "3x12" },
+                    { name: "Puxada Alta", sets: "3x12" },
+                    { name: "Agachamento Livre", sets: "3x12" }
+                ]
+            }];
         }
 
         // Merge AI Data with Protocol Structure
@@ -223,11 +241,15 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
           meals: (aiData.meals || []).map((m: any) => ({ ...m, id: Math.random().toString(36).substr(2, 9) })),
           supplements: (aiData.supplements || []).map((s: any) => ({ ...s, id: Math.random().toString(36).substr(2, 9) })),
           trainingFrequency: `${formData.frequency}x na semana`,
-          trainingDays: (aiData.trainingDays || []).map((d: any) => ({
+          trainingDays: finalTrainingDays.map((d: any) => ({
              id: Math.random().toString(36).substr(2, 9),
-             title: d.title,
-             focus: d.focus,
-             exercises: (d.exercises || []).map((e: any) => ({ ...e, id: Math.random().toString(36).substr(2, 9) }))
+             title: d.title || "Treino",
+             focus: d.focus || "Geral",
+             exercises: (d.exercises || []).map((e: any) => ({ 
+                 id: Math.random().toString(36).substr(2, 9),
+                 name: e.name || "Exercício",
+                 sets: e.sets || "3x10"
+             }))
           })),
           tips: finalTips,
           generalObservations: formData.observations,
@@ -371,13 +393,13 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
                       </div>
                    </div>
                    <div>
-                      <label className="block text-[10px] font-black text-white/40 uppercase tracking-widest mb-2 ml-1">Frequência</label>
+                      <label className="block text-[10px] font-black text-white/40 uppercase tracking-widest mb-2 ml-1">Frequência (Dias)</label>
                       <div className="relative">
                         <input 
                             value={formData.frequency}
                             onChange={e => handleChange('frequency', e.target.value)}
                             className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-10 pr-4 text-white font-bold focus:border-[#d4af37] outline-none"
-                            placeholder="Dias"
+                            placeholder="5"
                             type="number"
                         />
                         <Calendar size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" />

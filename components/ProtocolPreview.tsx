@@ -29,9 +29,9 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
     setIsGenerating(true);
     const clientName = data?.clientName || "Aluno";
     
-    // Configurações exatas para A4 evitando cortes
+    // Configurações otimizadas para evitar cortes
     const opt = {
-      margin: 0, // Margem zero para controlar via CSS
+      margin: 0, // Margem zero, controlamos via padding CSS interno
       filename: `Protocolo_VBR_${clientName.replace(/\s+/g, '_')}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { 
@@ -40,7 +40,8 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
         letterRendering: true, 
         backgroundColor: '#ffffff',
         scrollY: 0,
-        windowWidth: 794 // Largura exata A4 em pixels a 96DPI
+        x: 0, // Força coordenada X zero
+        y: 0
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
@@ -370,7 +371,15 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
             <>
                 <div onClick={() => setShowModal(true)} className="cursor-pointer">{customTrigger}</div>
                 {showModal && typeof document !== 'undefined' && createPortal(modalContent, document.body)}
-                <div className="fixed left-[-9999px] top-0"><div ref={pdfRef} className="bg-white">{renderContent(true)}</div></div>
+                {/* 
+                   AJUSTE CRÍTICO DE CORTE LATERAL:
+                   Posicionamento absoluto com opacidade 0 e z-index negativo
+                   mantém o elemento no fluxo de coordenadas correto (0,0) sem ser visto,
+                   evitando que html2canvas corte margens esquerdas negativas.
+                */}
+                <div style={{ position: 'absolute', top: 0, left: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none' }}>
+                    <div ref={pdfRef} className="bg-white">{renderContent(true)}</div>
+                </div>
             </>
         ) : null}
     </div>
