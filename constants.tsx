@@ -16,7 +16,7 @@ export const MEASUREMENT_LABELS: Record<string, string> = {
   thorax: 'Tórax',
   waist: 'Cintura',
   abdomen: 'Abdômen',
-  glutes: 'Glúteos',
+  glutes: 'Glúteo', // Alterado de Glúteos para Glúteo
   rightArmRelaxed: 'Braço Dir. Relaxado',
   leftArmRelaxed: 'Braço Esq. Relaxado',
   rightArmContracted: 'Braço Dir. Contraído',
@@ -205,12 +205,15 @@ export const EMPTY_DATA: ProtocolData = {
   },
   meals: [],
   supplements: [],
+  // DICAS PADRÃO INSERIDAS AQUI PARA TODOS OS NOVOS ALUNOS
   tips: [
     "Organize suas marmitas no dia anterior para evitar furos na dieta.",
     "A Creatina não tem efeito imediato, seu efeito é crônico. Tome mesmo nos dias que não treinar.",
     "Mantenha a hidratação constante.",
     "Priorize o sono reparador.",
-    "A consistência é o segredo do resultado."
+    "A consistência é o segredo do resultado.",
+    "Se errar uma refeição, não chute o balde. Volte ao plano na próxima.",
+    "Registre sua evolução a cada 15 dias."
   ],
   trainingFrequency: "",
   trainingDays: [],
