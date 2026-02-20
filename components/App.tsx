@@ -291,7 +291,14 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
         )}
 
         {activeView === 'home' && (
-          <MainDashboard protocols={savedProtocols} onNew={handleNew} onList={() => setActiveView('search')} onLoadStudent={(p) => loadStudent(p, 'student-dashboard')} />
+          <MainDashboard 
+            protocols={savedProtocols} 
+            onNew={handleNew} 
+            onList={() => setActiveView('search')} 
+            onLoadStudent={(p) => loadStudent(p, 'student-dashboard')} 
+            onUpdateStudent={(p) => handleSave(true, p)}
+            onDeleteStudent={deleteStudent}
+          />
         )}
 
         {activeView === 'search' && (
