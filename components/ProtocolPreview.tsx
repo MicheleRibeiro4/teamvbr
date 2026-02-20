@@ -79,14 +79,13 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
     // Configuração de Estilo para Página A4
     const pageStyle: React.CSSProperties = {
         width: '794px', // STRICT PIXEL WIDTH for A4 (210mm @ 96 DPI)
-        minHeight: '1123px', // STRICT PIXEL HEIGHT for A4 (297mm @ 96 DPI)
+        minHeight: '1050px', // Reduced to ensure it fits within A4 (1123px) with buffer for margins
         padding: '40px', 
         backgroundColor: 'white',
         position: 'relative',
         boxSizing: 'border-box',
         fontFamily: "'Inter', sans-serif",
-        overflow: 'hidden',
-        pageBreakAfter: 'always',
+        overflow: 'visible',
         margin: '0', 
     };
 
@@ -98,12 +97,15 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 0
+        padding: 0,
+        // pageBreakAfter removed to avoid double break with next page's pageBreakBefore
     };
 
     const endPageStyle: React.CSSProperties = {
         ...coverPageStyle,
-        padding: '40px'
+        padding: '40px',
+        pageBreakBefore: 'always', // Ensure it starts on a new page
+        pageBreakAfter: 'auto'
     };
 
     // Estilos utilitários baseados no modelo
@@ -144,7 +146,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
             </div>
 
             {/* DADOS E ESTRATÉGIA (Page 2) */}
-            <div style={pageStyle}>
+            <div style={{...pageStyle, pageBreakBefore: 'always'}}>
                 <div className={sectionTitleStyle}>1. DADOS FÍSICOS — {physical.date}</div>
                 
                 <div className="grid grid-cols-3 gap-4 mb-8">
@@ -223,7 +225,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
             </div>
 
             {/* PLANO ALIMENTAR (Page 3) */}
-            <div style={pageStyle}>
+            <div style={{...pageStyle, pageBreakBefore: 'always'}}>
                 <div className={sectionTitleStyle}>3. PLANO ALIMENTAR DIÁRIO</div>
                 
                 {/* Header Tabela */}
@@ -252,7 +254,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
             </div>
 
             {/* SUPLEMENTAÇÃO E DICAS (Page 4) */}
-            <div style={pageStyle}>
+            <div style={{...pageStyle, pageBreakBefore: 'always'}}>
                 <div className={sectionTitleStyle}>4. SUPLEMENTAÇÃO E RECOMENDAÇÕES</div>
                 
                 <div className="space-y-4 mb-10">
@@ -290,7 +292,7 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
 
             {/* TREINO (Page 5+) */}
             {trainingDays.length > 0 && (
-                <div style={pageStyle}>
+                <div style={{...pageStyle, pageBreakBefore: 'always'}}>
                     <div className={sectionTitleStyle}>5. DIVISÃO DE TREINO</div>
                     <p className="text-xs text-gray-500 mb-6 uppercase font-bold">Frequência: {safeData.trainingFrequency || '5x na semana'}</p>
 
