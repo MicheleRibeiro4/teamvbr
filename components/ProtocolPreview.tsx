@@ -29,9 +29,12 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
     setIsGenerating(true);
     const clientName = data?.clientName || "Aluno";
     
-    // Configurações otimizadas para evitar cortes
+    // Dimensões A4 em mm
+    const A4_WIDTH_MM = 210;
+    const A4_HEIGHT_MM = 297;
+
     const opt = {
-      margin: 0, // Margem zero, controlamos via padding CSS interno
+      margin: 0,
       filename: `Protocolo_VBR_${clientName.replace(/\s+/g, '_')}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { 
@@ -40,8 +43,8 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
         letterRendering: true, 
         backgroundColor: '#ffffff',
         scrollY: 0,
-        x: 0, // Força coordenada X zero
-        y: 0
+        // Garante que o canvas capture a largura total sem cortar
+        windowWidth: 1200, 
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
@@ -70,21 +73,18 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
     const clientName = safeData.clientName || "ALUNO";
     const firstName = clientName.split(' ')[0];
 
-    // Medidas exatas A4
-    const A4_WIDTH = '210mm';
-    const A4_HEIGHT = '296.5mm'; // Leve ajuste para evitar página extra
-    const CONTENT_PADDING = '15mm'; 
-
+    // Configuração de Estilo para Página A4
     const pageStyle: React.CSSProperties = {
-        width: A4_WIDTH,
-        minHeight: A4_HEIGHT,
-        padding: CONTENT_PADDING,
+        width: '210mm', // Largura EXATA do A4
+        minHeight: '296mm', // Altura A4 (leve ajuste pra margem)
+        padding: '15mm', 
         backgroundColor: 'white',
         position: 'relative',
         boxSizing: 'border-box',
         fontFamily: "'Inter', sans-serif",
-        overflow: 'hidden',
-        pageBreakAfter: 'always'
+        overflow: 'hidden', // Evita overflow que causa corte
+        pageBreakAfter: 'always',
+        margin: '0 auto' // Centraliza se visualizado fora do PDF
     };
 
     const coverPageStyle: React.CSSProperties = {
@@ -373,11 +373,10 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
                 {showModal && typeof document !== 'undefined' && createPortal(modalContent, document.body)}
                 {/* 
                    AJUSTE CRÍTICO DE CORTE LATERAL:
-                   Posicionamento absoluto com opacidade 0 e z-index negativo
-                   mantém o elemento no fluxo de coordenadas correto (0,0) sem ser visto,
-                   evitando que html2canvas corte margens esquerdas negativas.
+                   Posicionamento absoluto com z-index negativo
+                   O container tem largura fixa de 210mm para garantir proporção A4
                 */}
-                <div style={{ position: 'absolute', top: 0, left: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none' }}>
+                <div style={{ position: 'absolute', top: 0, left: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none', width: '210mm' }}>
                     <div ref={pdfRef} className="bg-white">{renderContent(true)}</div>
                 </div>
             </>

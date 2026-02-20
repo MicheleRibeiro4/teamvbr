@@ -45,6 +45,14 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
         const weight = parseFloat(formData.weight.replace(',', '.'));
         const calculatedWater = !isNaN(weight) ? (weight * 0.045).toFixed(1).replace('.', ',') : "3,5";
 
+        // Gera a lista explícita de dias de treino baseada na frequência
+        const freqNum = parseInt(formData.frequency) || 3;
+        const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+        const requiredDaysList = Array.from({ length: freqNum }, (_, i) => {
+            const letter = letters[i] || (i + 1).toString();
+            return `Treino ${letter}`;
+        }).join(', ');
+
         const prompt = `
           Aja como um treinador e nutricionista de elite do 'Team VBR'.
           Crie um protocolo completo para um aluno com os seguintes dados:
@@ -55,14 +63,13 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
           - Altura: ${formData.height}m
           - Objetivo: ${formData.goal}
           - Nível: ${formData.level}
-          - Frequência de Treino Solicitada: ${formData.frequency} dias na semana
+          - Frequência de Treino Solicitada: ${freqNum} dias na semana
           - Observações/Restrições: ${formData.observations || "Nenhuma"}
 
-          REQUISITO OBRIGATÓRIO DE TREINO:
-          Você DEVE gerar EXATAMENTE ${formData.frequency} divisões de treino diferentes no array 'trainingDays'.
-          Se a frequência for 5, gere 5 dias (Treino A, B, C, D, E).
-          Se a frequência for 3, gere 3 dias (Treino A, B, C).
-          Não deixe o array de treinos vazio.
+          REQUISITO CRÍTICO DE TREINO (IMPORTANTE):
+          Você deve gerar EXATAMENTE ${freqNum} objetos dentro do array 'trainingDays'.
+          Os títulos dos treinos DEVEM ser obrigatóriamente: ${requiredDaysList}.
+          NÃO agrupe treinos. NÃO crie menos que ${freqNum} dias.
 
           Gere um JSON com a seguinte estrutura estrita:
           {
@@ -240,7 +247,7 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
           macros: aiData.macros || EMPTY_DATA.macros,
           meals: (aiData.meals || []).map((m: any) => ({ ...m, id: Math.random().toString(36).substr(2, 9) })),
           supplements: (aiData.supplements || []).map((s: any) => ({ ...s, id: Math.random().toString(36).substr(2, 9) })),
-          trainingFrequency: `${formData.frequency}x na semana`,
+          trainingFrequency: `${freqNum}x na semana`,
           trainingDays: finalTrainingDays.map((d: any) => ({
              id: Math.random().toString(36).substr(2, 9),
              title: d.title || "Treino",
