@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ProtocolData } from './types';
 import { EMPTY_DATA, LOGO_VBR_BLACK } from './constants';
 import { db } from './services/db';
@@ -43,7 +43,6 @@ const App: React.FC = () => {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState(false);
 
-  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const MASTER_PASSWORD = "vbr-master-2025";
 
   useEffect(() => {
@@ -143,16 +142,6 @@ const App: React.FC = () => {
       setIsSyncing(false);
     }
   };
-
-  useEffect(() => {
-    if (activeView === 'manage' && data.id && data.clientName && isAuthenticated && !isStudentPage) {
-      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
-      autoSaveTimerRef.current = setTimeout(() => {
-        handleSave(true);
-      }, 2000);
-    }
-    return () => { if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current); };
-  }, [data]);
 
   const handleNew = () => {
     const newId = "vbr-" + Math.random().toString(36).substr(2, 9);
