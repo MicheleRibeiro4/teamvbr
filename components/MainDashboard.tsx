@@ -481,7 +481,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                     
                     <div className="flex items-center justify-between md:justify-end gap-3 w-full md:w-auto border-t border-white/5 pt-3 md:pt-0 md:border-0">
                         {/* Só mostra botão de confirmar se NÃO tiver data de envio confirmada OU se for um novo protocolo (updatedAt > lastSentDate) */}
-                        {(!student.lastSentDate || new Date(student.updatedAt).getTime() > new Date(student.lastSentDate).getTime() + 60000) && (
+                        {(!student.lastSentDate || (student.updatedAt && new Date(student.updatedAt).getTime() > new Date(student.lastSentDate).getTime() + 60000)) && (
                             confirmSendId === student.id ? (
                                 <div className="flex items-center gap-2 bg-[#111] p-1.5 rounded-xl border border-white/10 animate-in fade-in slide-in-from-right-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
                                     <input 

@@ -368,13 +368,12 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
         // Merge com dados existentes
         const newData = JSON.parse(JSON.stringify(data));
         
-        // PRESERVA E CONCATENA A ESTRATÉGIA
+        // PRESERVA A ESTRATÉGIA ORIGINAL (NÃO CONCATENA NEM SUBSTITUI SE JÁ EXISTIR)
         if (aiData.nutritionalStrategy) {
-            if (newData.nutritionalStrategy && newData.nutritionalStrategy.trim() !== "") {
-                newData.nutritionalStrategy = newData.nutritionalStrategy + "\n\n" + aiData.nutritionalStrategy;
-            } else {
+            if (!newData.nutritionalStrategy || newData.nutritionalStrategy.trim() === "") {
                 newData.nutritionalStrategy = aiData.nutritionalStrategy;
             }
+            // Se já existir, mantém a original e ignora a da IA, conforme solicitado.
         }
         if (aiData.kcalGoal) newData.kcalGoal = aiData.kcalGoal;
         
