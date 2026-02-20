@@ -80,18 +80,19 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
     // Configuração de Estilo para Página A4
     const pageStyle: React.CSSProperties = {
         width: '794px', // STRICT PIXEL WIDTH for A4 (210mm @ 96 DPI)
-        height: '1123px', // Fixed height to exactly match A4
+        minHeight: '1050px', // Reduced to ensure it fits within A4 (1123px) with buffer for margins
         padding: '40px', 
         backgroundColor: 'white',
         position: 'relative',
         boxSizing: 'border-box',
         fontFamily: "'Inter', sans-serif",
-        overflow: 'hidden', // Hide overflow to prevent pushing content to next page
+        overflow: 'visible',
         margin: '0', 
     };
 
     const coverPageStyle: React.CSSProperties = {
         ...pageStyle,
+        minHeight: '1122px', // Full A4 height to prevent white footer on black background
         backgroundColor: '#050505',
         color: '#ffffff',
         display: 'flex',
@@ -99,14 +100,14 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
         alignItems: 'center',
         justifyContent: 'center',
         padding: 0,
-        pageBreakAfter: 'always'
+        // pageBreakAfter removed to avoid double break with next page's pageBreakBefore
     };
 
     const endPageStyle: React.CSSProperties = {
         ...coverPageStyle,
         padding: '40px',
         pageBreakBefore: 'always', // Ensure it starts on a new page
-        pageBreakAfter: 'avoid'
+        pageBreakAfter: 'auto'
     };
 
     // Estilos utilitários baseados no modelo
