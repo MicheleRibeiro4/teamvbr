@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { ProtocolData } from '../types';
 import { EMPTY_DATA } from '../constants';
-import { GoogleGenAI } from "@google/genai";
 import { Loader2, Sparkles, User, Target, ChevronLeft, Dumbbell, Activity, Calendar, AlertCircle } from 'lucide-react';
 
 interface Props {
@@ -37,80 +36,18 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
     setError('');
     setLoading(true);
 
-    try {
-      if (!process.env.API_KEY) throw new Error("API Key não configurada.");
-
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const model = "gemini-2.0-flash";
-      
-      const prompt = `
-        Aja como Vinicius Brasil (Team VBR), um treinador de elite.
-        Crie um protocolo COMPLETO no formato JSON para:
-        
-        Nome: ${formData.name}
-        Idade: ${formData.age} anos
-        Gênero: ${formData.gender}
-        Peso: ${formData.weight}kg
-        Altura: ${formData.height}m
-        Objetivo: ${formData.goal}
-        Nível: ${formData.level}
-        Frequência: ${formData.frequency}x por semana
-        Obs: ${formData.observations}
-
-        O JSON deve seguir EXATAMENTE esta estrutura (sem markdown):
-        {
-          "protocolTitle": "${formData.goal}",
-          "nutritionalStrategy": "Explicação da estratégia dietética...",
-          "kcalGoal": "Valor calórico",
-          "kcalSubtext": "Frase motivacional curta",
-          "macros": { 
-             "protein": { "value": "gramas", "ratio": "g/kg" }, 
-             "carbs": { "value": "gramas", "ratio": "g/kg" }, 
-             "fats": { "value": "gramas", "ratio": "g/kg" } 
-          },
-          "meals": [
-            { "time": "08:00", "name": "Refeição 1", "details": "Alimentos e quantidades exatas..." }
-          ],
-          "supplements": [
-            { "name": "Creatina", "dosage": "5g", "timing": "Pós-treino" }
-          ],
-          "trainingFrequency": "${formData.frequency}x Semana",
-          "trainingDays": [
-            { 
-              "title": "Treino A", 
-              "focus": "Grupo Muscular", 
-              "exercises": [
-                { "name": "Exercício", "sets": "4x12" }
-              ] 
-            }
-          ],
-          "tips": ["Dica 1", "Dica 2", "Dica 3"],
-          "generalObservations": "Considerações finais"
-        }
-      `;
-
-      const response = await ai.models.generateContent({
-        model: model,
-        contents: prompt,
-        config: { responseMimeType: "application/json" }
-      });
-
-      let textResponse = response.text;
-      if (textResponse) {
-        textResponse = textResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-        const generated = JSON.parse(textResponse);
-        
+    // SIMULAÇÃO SEM IA PARA CORRIGIR ERRO DE BUILD
+    setTimeout(() => {
         const timestamp = new Date().toISOString();
         const newId = "vbr-" + Math.random().toString(36).substr(2, 9);
 
-        // Mesclar com estrutura base para garantir campos obrigatórios
         const finalProtocol: ProtocolData = {
           ...EMPTY_DATA,
           id: newId,
           clientName: formData.name,
           createdAt: timestamp,
           updatedAt: timestamp,
-          protocolTitle: generated.protocolTitle || formData.goal,
+          protocolTitle: formData.goal,
           physicalData: {
             ...EMPTY_DATA.physicalData,
             weight: formData.weight,
@@ -118,20 +55,9 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
             age: formData.age,
             gender: formData.gender as any,
           },
-          nutritionalStrategy: generated.nutritionalStrategy || "",
-          kcalGoal: generated.kcalGoal || "",
-          kcalSubtext: generated.kcalSubtext || "",
-          macros: generated.macros || EMPTY_DATA.macros,
-          meals: (generated.meals || []).map((m: any, i: number) => ({ ...m, id: Date.now() + 'm' + i })),
-          supplements: (generated.supplements || []).map((s: any, i: number) => ({ ...s, id: Date.now() + 's' + i })),
-          tips: generated.tips || EMPTY_DATA.tips,
-          trainingFrequency: generated.trainingFrequency || "",
-          trainingDays: (generated.trainingDays || []).map((d: any, i: number) => ({
-             ...d, 
-             id: Date.now() + 'd' + i,
-             exercises: (d.exercises || []).map((e: any, j: number) => ({ ...e, id: Date.now() + 'e' + i + j }))
-          })),
-          generalObservations: generated.generalObservations || "",
+          nutritionalStrategy: "Estratégia a ser definida manualmente.",
+          trainingFrequency: `${formData.frequency}x na semana`,
+          generalObservations: formData.observations,
           anamnesis: {
              ...EMPTY_DATA.anamnesis,
              mainObjective: formData.goal,
@@ -139,14 +65,10 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
           }
         };
 
+        alert("A geração automática por IA foi desativada temporariamente para manutenção. Um protocolo base foi criado com seus dados.");
         onGenerate(finalProtocol);
-      }
-    } catch (err: any) {
-      console.error(err);
-      setError("Erro na IA: " + (err.message || "Tente novamente mais tarde."));
-    } finally {
-      setLoading(false);
-    }
+        setLoading(false);
+    }, 1500);
   };
 
   return (
@@ -170,7 +92,7 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
             </div>
             <div>
               <h1 className="text-3xl font-black text-white uppercase tracking-tighter leading-none">Gerador de Protocolo</h1>
-              <p className="text-white/40 text-xs font-bold uppercase tracking-widest mt-1">Inteligência Artificial Team VBR</p>
+              <p className="text-white/40 text-xs font-bold uppercase tracking-widest mt-1">Criação Rápida de Ficha</p>
             </div>
           </div>
 
@@ -318,7 +240,7 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
                 className="flex-[2] py-4 bg-[#d4af37] text-black rounded-xl font-black uppercase text-xs tracking-[0.2em] hover:scale-[1.02] transition-all shadow-[0_0_30px_rgba(212,175,55,0.4)] flex items-center justify-center gap-3 disabled:opacity-50 disabled:hover:scale-100"
              >
                 {loading ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
-                {loading ? 'Criando Protocolo...' : 'Gerar Protocolo Completo'}
+                {loading ? 'Criando...' : 'Iniciar Protocolo'}
              </button>
           </div>
 

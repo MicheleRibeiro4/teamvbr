@@ -2,7 +2,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { ProtocolData, Meal, Supplement, TrainingDay, Exercise } from '../types';
 import { Activity, User, ShieldCheck, ChevronLeft, MapPin, Dumbbell, Utensils, Pill, Plus, Trash2, FileText, AlertCircle, Sparkles, Loader2, Ruler, DollarSign, Droplets, BookOpen, Eraser, FileDown, Lightbulb, Copy } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
 import { EMPTY_DATA, PROTOCOL_TEMPLATES, MEASUREMENT_LABELS } from '../constants';
 import ContractPreview, { ContractPreviewHandle } from './ContractPreview';
 import AnamnesisPreview, { AnamnesisPreviewHandle } from './AnamnesisPreview';
@@ -140,98 +139,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
   };
 
   const handleGenerateAI = async () => {
-    if (!data.protocolTitle || !data.physicalData.weight) {
-      alert("Por favor, preencha pelo menos o 'Objetivo do Protocolo' e 'Peso' na aba 'Medidas' antes de gerar.");
-      onTabChange('medidas');
-      return;
-    }
-
-    if (!process.env.API_KEY) {
-        alert("Erro de Configuração: API Key não encontrada. Entre em contato com o suporte.");
-        return;
-    }
-
-    setIsGenerating(true);
-    try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const model = "gemini-2.0-flash";
-      
-      const prompt = `
-        Aja como Vinicius Brasil (Team VBR), um treinador de elite e expert em nutrição.
-        Crie um protocolo COMPLETO (JSON) seguindo estas diretrizes:
-        
-        ALUNO: ${data.clientName}
-        GÊNERO: ${data.physicalData.gender} | IDADE: ${data.physicalData.age} | PESO: ${data.physicalData.weight}kg | BF: ${data.physicalData.bodyFat}%
-        OBJETIVO: ${data.protocolTitle}
-        ANAMNESE: ${JSON.stringify(data.anamnesis)}
-        ESTRATÉGIA BASE: ${data.nutritionalStrategy || "Definir melhor"}
-        
-        ESTRUTURA JSON REQUERIDA:
-        {
-          "nutritionalStrategy": "Explicação detalhada da fase",
-          "kcalGoal": "Valor numérico (ex: 2800)",
-          "kcalSubtext": "Breve frase motivacional",
-          "macros": { 
-             "protein": { "value": "180", "ratio": "2.2" }, 
-             "carbs": { "value": "250", "ratio": "3.0" }, 
-             "fats": { "value": "60", "ratio": "0.8" } 
-          },
-          "meals": [{ "time": "08:00", "name": "Café da Manhã", "details": "100g Frango + 2 Ovos" }],
-          "supplements": [{ "name": "Creatina", "dosage": "5g", "timing": "Qualquer horário" }],
-          "tips": ["Dica 1", "Dica 2"],
-          "trainingFrequency": "5x por semana",
-          "trainingDays": [{ 
-            "title": "Treino A", 
-            "focus": "Peitoral", 
-            "exercises": [{ "name": "Supino Reto", "sets": "4x10-12" }] 
-          }],
-          "generalObservations": "Instruções finais"
-        }
-        
-        Importante: Seja específico nas quantidades das refeições e use o estilo motivador Team VBR.
-        Retorne APENAS o JSON, sem markdown.
-      `;
-
-      const response = await ai.models.generateContent({
-        model: model,
-        contents: prompt,
-        config: { 
-            responseMimeType: "application/json"
-        }
-      });
-
-      let textResponse = response.text;
-      if (textResponse) {
-        textResponse = textResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-        
-        const generatedData = JSON.parse(textResponse);
-        const timestamp = Date.now().toString();
-        const newData = {
-          ...data,
-          nutritionalStrategy: generatedData.nutritionalStrategy || data.nutritionalStrategy,
-          kcalGoal: generatedData.kcalGoal || data.kcalGoal,
-          kcalSubtext: generatedData.kcalSubtext || data.kcalSubtext,
-          macros: generatedData.macros || data.macros,
-          meals: generatedData.meals ? generatedData.meals.map((m: any, i: number) => ({ ...m, id: timestamp + 'm' + i })) : [],
-          supplements: generatedData.supplements ? generatedData.supplements.map((s: any, i: number) => ({ ...s, id: timestamp + 's' + i })) : [],
-          tips: (generatedData.tips && generatedData.tips.length > 0) ? generatedData.tips : data.tips,
-          trainingFrequency: generatedData.trainingFrequency || data.trainingFrequency,
-          trainingDays: generatedData.trainingDays ? generatedData.trainingDays.map((d: any, i: number) => ({
-             ...d, 
-             id: timestamp + 'd' + i,
-             exercises: d.exercises ? d.exercises.map((e: any, j: number) => ({ ...e, id: timestamp + 'e' + i + j })) : []
-          })) : [],
-          generalObservations: generatedData.generalObservations || data.generalObservations
-        };
-        onChange(newData);
-        alert("Protocolo gerado com sucesso pela IA!");
-      }
-    } catch (error: any) {
-      console.error("Erro na IA:", error);
-      alert(`Erro ao gerar protocolo: ${error.message || 'Verifique sua conexão ou API Key'}`);
-    } finally {
-      setIsGenerating(false);
-    }
+    alert("Funcionalidade de IA temporariamente desativada para manutenção.");
   };
 
   useEffect(() => {

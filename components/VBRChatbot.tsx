@@ -1,6 +1,6 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, X, Send, Loader2, Bot, User, Maximize2, Minimize2 } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
 
 const VBRChatbot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -8,11 +8,7 @@ const VBRChatbot: React.FC = () => {
   const [input, setInput] = useState('');
   
   const [messages, setMessages] = useState<{ role: 'user' | 'model'; text: string }[]>([
-    { role: 'model', text: 'Olá! Sou o Assistente IA do Team VBR. Como posso ajudar na sua evolução hoje?' }
-  ]);
-  
-  const historyRef = useRef<{ role: "system" | "user" | "assistant"; content: string }[]>([
-    { role: 'system', content: 'Você é o Assistente Virtual Oficial do Team VBR Rhino. Seu tom é profissional, motivador e técnico. Você é um expert em musculação, nutrição esportiva e fisiologia. Ajude o usuário com dúvidas sobre seus protocolos, exercícios e dieta. Sempre incentive a disciplina e a constância.' }
+    { role: 'model', text: 'Olá! Sou o Assistente do Team VBR. No momento, minha conexão com a IA está em manutenção, mas posso te ajudar com o uso do sistema se precisar.' }
   ]);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -30,36 +26,12 @@ const VBRChatbot: React.FC = () => {
     const userMessage = input.trim();
     setInput('');
     setMessages(prev => [...prev, { role: 'user', text: userMessage }]);
-    historyRef.current.push({ role: 'user', content: userMessage });
     setIsLoading(true);
 
-    try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const systemInstruction = historyRef.current.find(m => m.role === 'system')?.content || '';
-      
-      const historyForGemini = historyRef.current
-        .filter(m => m.role !== 'system' && m.content !== userMessage)
-        .map(m => ({
-            role: m.role === 'assistant' ? 'model' : 'user',
-            parts: [{ text: m.content }]
-        }));
-
-      const chat = ai.chats.create({
-        model: 'gemini-2.0-flash',
-        history: historyForGemini,
-        config: { systemInstruction: systemInstruction }
-      });
-      
-      const result = await chat.sendMessage({ message: userMessage });
-      const fullText = result.text;
-      setMessages(prev => [...prev, { role: 'model', text: fullText }]);
-      historyRef.current.push({ role: 'assistant', content: fullText });
-    } catch (error: any) {
-      console.error("Erro Chatbot:", error);
-      setMessages(prev => [...prev, { role: 'model', text: 'Desculpe, tive um problema de conexão com a IA. Por favor, verifique se a API Key está configurada corretamente e tente novamente.' }]);
-    } finally {
+    setTimeout(() => {
+      setMessages(prev => [...prev, { role: 'model', text: 'Desculpe, a IA está temporariamente indisponível para atualização de sistema. Por favor, tente novamente mais tarde.' }]);
       setIsLoading(false);
-    }
+    }, 1000);
   };
 
   if (!isOpen) {

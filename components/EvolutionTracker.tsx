@@ -25,7 +25,6 @@ import {
 } from 'lucide-react';
 import { LOGO_VBR_BLACK, MEASUREMENT_LABELS } from '../constants';
 import ProtocolPreview from './ProtocolPreview';
-import { GoogleGenAI } from "@google/genai";
 
 const LOGO_VBR_GOLD = "https://xqwzmvzfemjkvaquxedz.supabase.co/storage/v1/object/public/LOGO/DOURADO.png";
 
@@ -161,72 +160,7 @@ const EvolutionTracker: React.FC<Props> = ({
   };
 
   const handleGenerateProtocolAI = async () => {
-      if (!editData.weight) {
-          alert("Por favor, atualize o peso atual antes de gerar a sugestão.");
-          return;
-      }
-      
-      setIsGeneratingAI(true);
-      try {
-          const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-          const model = "gemini-2.0-flash";
-          
-          const prompt = `
-            ATUE COMO UM TREINADOR ELITE (Estilo Team VBR).
-            GERE UM PROTOCOLO DE TREINO E DIETA COMPLETO NO FORMATO JSON.
-            
-            ALUNO: ${currentProtocol.clientName}
-            IDADE: ${editData.age}
-            GÊNERO: ${editData.gender}
-            OBJETIVO ATUAL: ${editTitle}
-            PESO ATUAL: ${editData.weight}kg
-            
-            RETORNE O JSON COM ESTA ESTRUTURA:
-            {
-              "nutritionalStrategy": "...",
-              "kcalGoal": "...",
-              "kcalSubtext": "...",
-              "macros": { "protein": { "value": "...", "ratio": "..." }, "carbs": { "value": "...", "ratio": "..." }, "fats": { "value": "...", "ratio": "..." } },
-              "meals": [{ "time": "...", "name": "...", "details": "..." }],
-              "supplements": [{ "name": "...", "dosage": "...", "timing": "..." }],
-              "trainingFrequency": "...",
-              "trainingDays": [{ "title": "...", "focus": "...", "exercises": [{ "name": "...", "sets": "..." }] }],
-              "generalObservations": "..."
-            }
-            
-            Retorne APENAS o JSON, sem markdown.
-          `;
-
-          const response = await ai.models.generateContent({
-            model: model,
-            contents: prompt,
-            config: { responseMimeType: "application/json" }
-          });
-
-          let textResponse = response.text;
-          if (textResponse) {
-              textResponse = textResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-              
-              const generated = JSON.parse(textResponse);
-              const processed = {
-                  ...generated,
-                  meals: (generated.meals || []).map((m: any, i: number) => ({ ...m, id: Date.now().toString() + 'm' + i })),
-                  supplements: (generated.supplements || []).map((s: any, i: number) => ({ ...s, id: Date.now().toString() + 's' + i })),
-                  trainingDays: (generated.trainingDays || []).map((d: any, i: number) => ({
-                     ...d, 
-                     id: Date.now().toString() + 'd' + i,
-                     exercises: (d.exercises || []).map((e: any, j: number) => ({ ...e, id: Date.now().toString() + 'e' + i + j }))
-                  })),
-              };
-              setAiGeneratedData(processed);
-              alert("✨ Sugestão de Protocolo gerada com sucesso!");
-          }
-      } catch (error: any) {
-          console.error(error);
-          alert("Erro na IA: " + (error.message || 'Verifique sua conexão ou API Key'));
-      } finally {
-          setIsGeneratingAI(false);
-      }
+     alert("IA temporariamente desativada para manutenção.");
   };
 
   const handleSave = async () => {
