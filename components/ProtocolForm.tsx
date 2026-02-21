@@ -452,42 +452,72 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
   }, [data.physicalData.weight]);
 
   useEffect(() => {
-    if (data.contract.startDate && data.contract.planType) {
-      const parts = data.contract.startDate.split('/');
-      if (data.contract.planType === 'Avulso') {
-        const newData = JSON.parse(JSON.stringify(data));
-        if (newData.contract.endDate !== newData.contract.startDate) {
-          newData.contract.endDate = newData.contract.startDate;
-          newData.contract.durationDays = "1";
-          onChange(newData);
-        }
-        return;
-      }
-      if (parts.length === 3) {
-        const day = parseInt(parts[0]);
-        const month = parseInt(parts[1]) - 1;
-        const year = parseInt(parts[2]);
-        const dateObj = new Date(year, month, day);
-        if (!isNaN(dateObj.getTime())) {
-          const monthsToAdd = data.contract.planType === 'Trimestral' ? 3 : 6;
-          dateObj.setMonth(dateObj.getMonth() + monthsToAdd);
-          const endDay = String(dateObj.getDate()).padStart(2, '0');
-          const endMonth = String(dateObj.getMonth() + 1).padStart(2, '0');
-          const endYear = dateObj.getFullYear();
-          const newEndDate = `${endDay}/${endMonth}/${endYear}`;
-          
-          const startObj = new Date(year, month, day);
-          const diffTime = Math.abs(dateObj.getTime() - startObj.getTime());
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+    if (!data.contract.startDate || !data.contract.planType) return;
 
-          if (data.contract.endDate !== newEndDate || data.contract.durationDays !== String(diffDays)) {
-             const newData = JSON.parse(JSON.stringify(data));
-             newData.contract.endDate = newEndDate;
-             newData.contract.durationDays = String(diffDays);
-             onChange(newData);
-          }
-        }
-      }
+    const parts = data.contract.startDate.split('/');
+    if (parts.length !== 3) return;
+
+    const day = parseInt(parts[0]);
+    const month = parseInt(parts[1]) - 1;
+    const year = parseInt(parts[2]);
+    
+    // Validação básica de data
+    if (day < 1 || day > 31 || month < 0 || month > 11 || isNaN(year)) return;
+
+    const startDate = new Date(year, month, day);
+    if (isNaN(startDate.getTime())) return;
+
+    let monthsToAdd = 0;
+
+    switch (data.contract.planType) {
+        case 'Avulso':
+            monthsToAdd = 0;
+            break;
+        case 'Mensal':
+            monthsToAdd = 1;
+            break;
+        case 'Trimestral':
+            monthsToAdd = 3;
+            break;
+        case 'Semestral':
+            monthsToAdd = 6;
+            break;
+        case 'Anual':
+            monthsToAdd = 12;
+            break;
+        default:
+            return;
+    }
+
+    const endDate = new Date(startDate);
+    endDate.setMonth(endDate.getMonth() + monthsToAdd);
+    
+    // Se for Avulso, a data final é a mesma da inicial (1 dia de uso)
+    // Se for plano recorrente, subtrai 1 dia para fechar o ciclo (ex: 01/01 a 31/01)
+    if (data.contract.planType !== 'Avulso') {
+        endDate.setDate(endDate.getDate() - 1);
+    }
+
+    const endDay = String(endDate.getDate()).padStart(2, '0');
+    const endMonth = String(endDate.getMonth() + 1).padStart(2, '0');
+    const endYear = endDate.getFullYear();
+    const formattedEndDate = `${endDay}/${endMonth}/${endYear}`;
+
+    // Cálculo de dias totais
+    const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+    // Adiciona 1 dia pois a diferença de tempo entre 00:00 do mesmo dia é 0, mas conta como 1 dia de contrato
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; 
+    
+    const finalDuration = String(diffDays);
+
+    if (data.contract.endDate !== formattedEndDate || data.contract.durationDays !== finalDuration) {
+         // Atualiza via onChange preservando o restante dos dados
+         // Usamos setTimeout para evitar warning de update durante render se necessário, 
+         // mas aqui o useEffect já roda após render.
+         const newData = JSON.parse(JSON.stringify(data));
+         newData.contract.endDate = formattedEndDate;
+         newData.contract.durationDays = finalDuration;
+         onChange(newData);
     }
   }, [data.contract.startDate, data.contract.planType]);
 
@@ -658,8 +688,10 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                 <label className={labelClass}>Tipo de Plano</label>
                 <select className={selectClass} value={data.contract.planType} onChange={(e) => handleChange('contract.planType', e.target.value)}>
                   <option value="Avulso">Avulso (1 Dia)</option>
+                  <option value="Mensal">Mensal (1 Mês)</option>
                   <option value="Trimestral">Trimestral (3 Meses)</option>
                   <option value="Semestral">Semestral (6 Meses)</option>
+                  <option value="Anual">Anual (12 Meses)</option>
                 </select>
               </div>
               <div className="col-span-2 hidden lg:block"></div>
