@@ -183,8 +183,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
               const updatedStudent = {
                   ...student,
                   lastSentDate: sendDate, // Salva YYYY-MM-DD
-                  // NÃO atualizamos o updatedAt aqui para garantir que a lógica de comparação funcione (updatedAt <= lastSentDate)
-                  // Se atualizássemos, o updatedAt ficaria > lastSentDate (mesmo dia, mas milissegundos depois ou timezone diff)
+                  // updatedAt: new Date().toISOString() // REMOVIDO: O envio não deve contar como edição de conteúdo
               };
               await onUpdateStudent(updatedStudent);
               setConfirmSendId(null);
@@ -464,9 +463,20 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                 }
 
                 // Lógica de Botão de Confirmação
-                const updatedAtLocal = getLocalDateFromISO(student.updatedAt);
-                const lastSentLocal = student.lastSentDate || ''; 
-                const showConfirmButton = !lastSentLocal || (updatedAtLocal > lastSentLocal);
+                // Compara datas zeradas (apenas dia/mês/ano) para evitar problemas de hora/timezone
+                const updatedAtDate = new Date(student.updatedAt);
+                updatedAtDate.setHours(0,0,0,0);
+                
+                let lastSentDate = null;
+                if (student.lastSentDate) {
+                    // Garante que a string YYYY-MM-DD seja interpretada como data local meia-noite
+                    const [y, m, d] = student.lastSentDate.split('-');
+                    lastSentDate = new Date(parseInt(y), parseInt(m)-1, parseInt(d));
+                    lastSentDate.setHours(0,0,0,0);
+                }
+
+                // Mostra botão se: Nunca enviado OU Editado DEPOIS do último envio (Data Edição > Data Envio)
+                const showConfirmButton = !lastSentDate || (updatedAtDate.getTime() > lastSentDate.getTime());
 
                 return (
                   <div key={`${student.id}-${student.lastSentDate}-${status}`} className="bg-white/5 p-4 rounded-xl border border-white/5 hover:border-white/10 transition-all flex flex-col md:flex-row items-center gap-4 group">
@@ -498,19 +508,19 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
 
                     {/* ACTIONS */}
                     <div className="flex items-center justify-end gap-2 w-full md:w-auto border-t border-white/5 pt-3 md:pt-0 md:border-0">
-                        {showConfirmButton ? (
-                            confirmSendId === student.id ? (
-                                <div className="flex items-center gap-2 bg-black/40 p-1 rounded-lg border border-white/10 animate-in fade-in slide-in-from-right-5" onClick={(e) => e.stopPropagation()}>
-                                    <input 
-                                        type="date" 
-                                        value={sendDate} 
-                                        onChange={(e) => setSendDate(e.target.value)}
-                                        className="bg-transparent text-white text-[10px] p-1.5 rounded border border-white/10 outline-none focus:border-[#d4af37] w-24"
-                                    />
-                                    <button onClick={() => handleConfirmSend(student)} className="p-1.5 bg-green-500 text-white rounded hover:bg-green-600"><Check size={12} /></button>
-                                    <button onClick={() => setConfirmSendId(null)} className="p-1.5 bg-red-500 text-white rounded hover:bg-red-600"><X size={12} /></button>
-                                </div>
-                            ) : (
+                        {confirmSendId === student.id ? (
+                            <div className="flex items-center gap-2 bg-black/40 p-1 rounded-lg border border-white/10 animate-in fade-in slide-in-from-right-5" onClick={(e) => e.stopPropagation()}>
+                                <input 
+                                    type="date" 
+                                    value={sendDate} 
+                                    onChange={(e) => setSendDate(e.target.value)}
+                                    className="bg-transparent text-white text-[10px] p-1.5 rounded border border-white/10 outline-none focus:border-[#d4af37] w-24"
+                                />
+                                <button onClick={() => handleConfirmSend(student)} className="p-1.5 bg-green-500 text-white rounded hover:bg-green-600"><Check size={12} /></button>
+                                <button onClick={() => setConfirmSendId(null)} className="p-1.5 bg-red-500 text-white rounded hover:bg-red-600"><X size={12} /></button>
+                            </div>
+                        ) : (
+                            showConfirmButton ? (
                                 <button 
                                     onClick={(e) => { e.stopPropagation(); setConfirmSendId(student.id); setSendDate(new Date().toISOString().split('T')[0]); }}
                                     className="px-3 py-2 bg-white/5 hover:bg-[#d4af37] hover:text-black border border-white/10 hover:border-[#d4af37] rounded-lg text-white/60 font-black text-[9px] uppercase tracking-widest transition-all flex items-center gap-2"
@@ -518,12 +528,17 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                                     <span>Confirmar</span>
                                     <CheckCircle2 size={12} />
                                 </button>
+                            ) : (
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); setConfirmSendId(student.id); setSendDate(student.lastSentDate || new Date().toISOString().split('T')[0]); }}
+                                    className="flex items-center gap-1.5 px-3 py-2 bg-green-500/10 hover:bg-green-500/20 rounded-xl border border-green-500/20 transition-all group/sent"
+                                    title="Clique para alterar a data de envio"
+                                >
+                                    <CheckCircle2 size={12} className="text-green-500" />
+                                    <span className="text-[9px] font-black uppercase text-green-500 tracking-widest">Enviado</span>
+                                    <span className="hidden group-hover/sent:inline text-[9px] text-green-500 ml-1"> (Editar)</span>
+                                </button>
                             )
-                        ) : (
-                             <div className="flex items-center gap-1.5 px-3 py-2 opacity-50 cursor-not-allowed">
-                                <CheckCircle2 size={12} className="text-green-500" />
-                                <span className="text-[9px] font-black uppercase text-green-500 tracking-widest">Enviado</span>
-                             </div>
                         )}
                         
                         <button onClick={() => onLoadStudent(student, 'manage')} className="p-2 hover:bg-white/10 rounded-lg text-white/20 hover:text-white transition-colors">
