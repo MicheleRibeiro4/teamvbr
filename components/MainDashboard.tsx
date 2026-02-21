@@ -443,98 +443,94 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
              <span className="text-[10px] font-black text-white/30 uppercase tracking-widest bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">Ciclo: 15 Dias Pós-Ajuste</span>
           </div>
 
-          <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 pr-2">
+          <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-2">
             {scheduledUpdates.length > 0 ? (
               scheduledUpdates.map((student: any) => {
                 const { isOverdue, isUrgent, isMissingProtocol, daysLeft, status, baseDate, nextDate } = student.schedule;
                 
                 // Configuração visual dinâmica
-                let containerStyle = 'bg-green-500/5 border-green-500/20 hover:bg-green-500/10';
-                let circleStyle = 'bg-green-500/20 text-green-500 border-green-500/30';
-                let dateColor = 'text-green-400';
-                let iconColor = 'text-green-500';
+                let statusColor = 'bg-green-500/10 text-green-500 border-green-500/20';
+                let daysColor = 'text-white/40';
 
                 if (isMissingProtocol) {
-                    containerStyle = 'bg-indigo-500/5 border-indigo-500/20 hover:bg-indigo-500/10';
-                    circleStyle = 'bg-indigo-500 text-white border-indigo-500';
-                    dateColor = 'text-indigo-400';
-                    iconColor = 'text-indigo-500';
+                    statusColor = 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20';
+                    daysColor = 'text-indigo-400';
                 } else if (isOverdue) {
-                    containerStyle = 'bg-red-500/5 border-red-500/20 hover:bg-red-500/10';
-                    circleStyle = 'bg-red-500 text-white border-red-500';
-                    dateColor = 'text-red-400';
-                    iconColor = 'text-red-500';
+                    statusColor = 'bg-red-500/10 text-red-500 border-red-500/20';
+                    daysColor = 'text-red-500 font-bold';
                 } else if (isUrgent) {
-                    containerStyle = 'bg-yellow-500/5 border-yellow-500/20 hover:bg-yellow-500/10';
-                    circleStyle = 'bg-yellow-500 text-black border-yellow-500';
-                    dateColor = 'text-[#d4af37]';
-                    iconColor = 'text-[#d4af37]';
+                    statusColor = 'bg-yellow-500/10 text-[#d4af37] border-yellow-500/20';
+                    daysColor = 'text-[#d4af37] font-bold';
                 }
 
-                // Lógica de Botão de Confirmação (Reformulada)
-                // Compara data local da última edição vs data do último envio
+                // Lógica de Botão de Confirmação
                 const updatedAtLocal = getLocalDateFromISO(student.updatedAt);
-                const lastSentLocal = student.lastSentDate || ''; // YYYY-MM-DD
-                
-                // Mostra botão se:
-                // 1. Nunca foi enviado
-                // 2. Foi editado DEPOIS do último envio (Data Edição > Data Envio)
+                const lastSentLocal = student.lastSentDate || ''; 
                 const showConfirmButton = !lastSentLocal || (updatedAtLocal > lastSentLocal);
 
                 return (
-                  <div key={`${student.id}-${student.lastSentDate}-${status}`} className={`p-4 rounded-2xl border flex flex-col md:flex-row md:items-center justify-between group transition-all cursor-pointer gap-4 ${containerStyle}`}>
-                    <div className="flex items-center gap-4 flex-1" onClick={() => onLoadStudent(student, 'manage')}>
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center border text-xs font-black shrink-0 ${circleStyle}`}>
-                          {isMissingProtocol ? <Sparkles size={18} /> : (daysLeft === 0 ? 'HOJE' : (isOverdue ? `${Math.abs(daysLeft)}d` : `${daysLeft}d`))}
-                      </div>
-                      <div>
-                          <h4 className="font-black text-sm text-white leading-none mb-1.5 flex items-center gap-2">
-                            {student.clientName}
-                            {isMissingProtocol && <span className="bg-indigo-500 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded">Novo</span>}
-                          </h4>
-                          <div className="flex flex-wrap items-center gap-3 text-[10px] text-white/40 uppercase font-bold">
-                            <span>Base: {baseDate}</span>
-                            <span className="w-1 h-1 bg-white/20 rounded-full"></span>
-                            <span className={dateColor}>{isMissingProtocol ? 'Ação: Gerar Ficha' : `Próximo: ${nextDate}`}</span>
-                          </div>
-                      </div>
-                    </div>
+                  <div key={`${student.id}-${student.lastSentDate}-${status}`} className="bg-white/5 p-4 rounded-xl border border-white/5 hover:border-white/10 transition-all flex flex-col md:flex-row items-center gap-4 group">
                     
-                    <div className="flex items-center justify-between md:justify-end gap-3 w-full md:w-auto border-t border-white/5 pt-3 md:pt-0 md:border-0">
+                    {/* INFO ALUNO */}
+                    <div className="flex items-center gap-4 flex-1 w-full md:w-auto" onClick={() => onLoadStudent(student, 'manage')}>
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center border text-[10px] font-black shrink-0 ${statusColor}`}>
+                            {isMissingProtocol ? <Sparkles size={16} /> : (daysLeft === 0 ? 'HOJE' : (isOverdue ? `-${Math.abs(daysLeft)}` : `${daysLeft}`))}
+                        </div>
+                        <div className="min-w-0">
+                            <h4 className="font-black text-sm text-white leading-tight truncate flex items-center gap-2">
+                                {student.clientName}
+                                {isMissingProtocol && <span className="bg-indigo-500 text-white text-[8px] px-1.5 py-0.5 rounded uppercase">Novo</span>}
+                            </h4>
+                            <div className="flex items-center gap-3 text-[10px] text-white/40 uppercase font-bold mt-1">
+                                <span className="flex items-center gap-1"><CalendarClock size={10}/> Base: {baseDate}</span>
+                                <span className="w-1 h-1 bg-white/10 rounded-full"></span>
+                                <span className={daysColor}>Próximo: {nextDate}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* STATUS BADGE */}
+                    <div className="w-full md:w-auto flex justify-start md:justify-center">
+                        <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${statusColor}`}>
+                            {status}
+                        </span>
+                    </div>
+
+                    {/* ACTIONS */}
+                    <div className="flex items-center justify-end gap-2 w-full md:w-auto border-t border-white/5 pt-3 md:pt-0 md:border-0">
                         {showConfirmButton ? (
                             confirmSendId === student.id ? (
-                                <div className="flex items-center gap-2 bg-[#111] p-1.5 rounded-xl border border-white/10 animate-in fade-in slide-in-from-right-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
+                                <div className="flex items-center gap-2 bg-black/40 p-1 rounded-lg border border-white/10 animate-in fade-in slide-in-from-right-5" onClick={(e) => e.stopPropagation()}>
                                     <input 
                                         type="date" 
                                         value={sendDate} 
                                         onChange={(e) => setSendDate(e.target.value)}
-                                        className="bg-white/5 text-white text-xs p-2 rounded-lg border border-white/10 outline-none focus:border-[#d4af37] transition-colors"
+                                        className="bg-transparent text-white text-[10px] p-1.5 rounded border border-white/10 outline-none focus:border-[#d4af37] w-24"
                                     />
-                                    <button onClick={() => handleConfirmSend(student)} className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors shadow-lg"><Check size={14} /></button>
-                                    <button onClick={() => setConfirmSendId(null)} className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors shadow-lg"><X size={14} /></button>
+                                    <button onClick={() => handleConfirmSend(student)} className="p-1.5 bg-green-500 text-white rounded hover:bg-green-600"><Check size={12} /></button>
+                                    <button onClick={() => setConfirmSendId(null)} className="p-1.5 bg-red-500 text-white rounded hover:bg-red-600"><X size={12} /></button>
                                 </div>
                             ) : (
                                 <button 
                                     onClick={(e) => { e.stopPropagation(); setConfirmSendId(student.id); setSendDate(new Date().toISOString().split('T')[0]); }}
-                                    className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-[#d4af37] hover:text-black hover:border-[#d4af37] rounded-xl text-white/60 font-black text-[10px] uppercase tracking-widest transition-all flex items-center gap-2 group/btn"
-                                    title="Confirmar Envio do Protocolo"
+                                    className="px-3 py-2 bg-white/5 hover:bg-[#d4af37] hover:text-black border border-white/10 hover:border-[#d4af37] rounded-lg text-white/60 font-black text-[9px] uppercase tracking-widest transition-all flex items-center gap-2"
                                 >
-                                    <CheckCircle2 size={14} className="group-hover/btn:scale-110 transition-transform" />
-                                    <span>Confirmar Envio</span>
+                                    <span>Confirmar</span>
+                                    <CheckCircle2 size={12} />
                                 </button>
                             )
                         ) : (
-                             <div className="flex items-center gap-2 px-3 py-2 bg-green-500/10 rounded-xl border border-green-500/20">
-                                <CheckCircle2 size={14} className="text-green-500" />
+                             <div className="flex items-center gap-1.5 px-3 py-2 opacity-50 cursor-not-allowed">
+                                <CheckCircle2 size={12} className="text-green-500" />
                                 <span className="text-[9px] font-black uppercase text-green-500 tracking-widest">Enviado</span>
                              </div>
                         )}
                         
-                        <div onClick={() => onLoadStudent(student, 'manage')} className="flex items-center gap-2 pl-2 border-l border-white/5 md:border-0">
-                            <span className={`text-[10px] font-black uppercase tracking-widest ${isOverdue ? 'text-red-400 animate-pulse' : 'text-white/20'} ${isMissingProtocol ? 'text-indigo-400' : ''}`}>{status}</span>
-                            <ChevronRight size={16} className={`opacity-50 group-hover:opacity-100 ${iconColor}`} />
-                        </div>
+                        <button onClick={() => onLoadStudent(student, 'manage')} className="p-2 hover:bg-white/10 rounded-lg text-white/20 hover:text-white transition-colors">
+                            <ChevronRight size={16} />
+                        </button>
                     </div>
+
                   </div>
                 );
               })
