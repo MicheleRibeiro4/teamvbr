@@ -83,18 +83,17 @@ const App: React.FC = () => {
       const protocols = await db.getAll();
       
       // --- MIGRATION: Update Vitor's date one-time ---
-      const vitor = protocols.find(p => p.clientName.toLowerCase().includes('vitor barbosa'));
+      const vitor = protocols.find(p => p.clientName.toLowerCase().includes('vitor'));
       if (vitor) {
-          // Força a atualização se a data não for 2026-02-20
+          // Force update if date is not 2026-02-20 OR if we want to ensure it's fresh
           if (vitor.lastSentDate !== '2026-02-20') {
-              console.log("Applying fix for Vitor Barbosa Drumond...");
+              console.log("Applying fix for Vitor...");
               const updatedVitor = { 
                   ...vitor, 
                   lastSentDate: '2026-02-20',
                   updatedAt: new Date().toISOString()
               };
               await db.saveProtocol(updatedVitor);
-              // Update local list
               const idx = protocols.findIndex(p => p.id === vitor.id);
               if (idx >= 0) protocols[idx] = updatedVitor;
           }
