@@ -169,7 +169,7 @@ const App: React.FC = () => {
     setActiveView('manage');
   };
 
-  const loadStudent = (student: ProtocolData, view: ViewMode = 'student-dashboard') => {
+  const loadStudent = (student: ProtocolData, view: ViewMode = 'manage') => {
     setData(student);
     setActiveView(view);
   };
@@ -314,19 +314,17 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
             protocols={savedProtocols} 
             onNew={handleNew} 
             onList={() => setActiveView('search')} 
-            onLoadStudent={(p) => loadStudent(p, 'student-dashboard')} 
+            onLoadStudent={(p) => loadStudent(p, 'manage')} 
             onUpdateStudent={(p) => handleSave(true, p)}
             onDeleteStudent={deleteStudent}
           />
         )}
 
         {activeView === 'search' && (
-          <StudentSearch protocols={savedProtocols} onLoad={(p) => loadStudent(p, 'student-dashboard')} onDelete={deleteStudent} />
+          <StudentSearch protocols={savedProtocols} onLoad={(p) => loadStudent(p, 'manage')} onDelete={deleteStudent} />
         )}
 
-        {activeView === 'student-dashboard' && (
-          <StudentDashboard data={data} setView={(v) => setActiveView(v as ViewMode)} />
-        )}
+        {/* StudentDashboard removed */}
 
         {activeView === 'manage' && (
           <UnifiedEditor 
