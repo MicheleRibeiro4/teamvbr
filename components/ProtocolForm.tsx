@@ -471,9 +471,6 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
 
     switch (data.contract.planType) {
         case 'Avulso':
-            monthsToAdd = 0;
-            break;
-        case 'Mensal':
             monthsToAdd = 1;
             break;
         case 'Trimestral':
@@ -492,11 +489,8 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
     const endDate = new Date(startDate);
     endDate.setMonth(endDate.getMonth() + monthsToAdd);
     
-    // Se for Avulso, a data final é a mesma da inicial (1 dia de uso)
-    // Se for plano recorrente, subtrai 1 dia para fechar o ciclo (ex: 01/01 a 31/01)
-    if (data.contract.planType !== 'Avulso') {
-        endDate.setDate(endDate.getDate() - 1);
-    }
+    // Subtrai 1 dia para fechar o ciclo (ex: 01/01 a 31/01)
+    endDate.setDate(endDate.getDate() - 1);
 
     const endDay = String(endDate.getDate()).padStart(2, '0');
     const endMonth = String(endDate.getMonth() + 1).padStart(2, '0');
@@ -511,9 +505,6 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
     const finalDuration = String(diffDays);
 
     if (data.contract.endDate !== formattedEndDate || data.contract.durationDays !== finalDuration) {
-         // Atualiza via onChange preservando o restante dos dados
-         // Usamos setTimeout para evitar warning de update durante render se necessário, 
-         // mas aqui o useEffect já roda após render.
          const newData = JSON.parse(JSON.stringify(data));
          newData.contract.endDate = formattedEndDate;
          newData.contract.durationDays = finalDuration;
@@ -686,9 +677,19 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="col-span-1 md:col-span-2">
                 <label className={labelClass}>Tipo de Plano</label>
-                <select className={selectClass} value={data.contract.planType} onChange={(e) => handleChange('contract.planType', e.target.value)}>
-                  <option value="Avulso">Avulso (1 Dia)</option>
-                  <option value="Mensal">Mensal (1 Mês)</option>
+                <select className={selectClass} value={data.contract.planType} onChange={(e) => {
+                    const val = e.target.value;
+                    let price = data.contract.planValue;
+                    if (val === 'Avulso') price = '119,99';
+                    else if (val === 'Trimestral') price = '289,99';
+                    else if (val === 'Semestral') price = '499,99';
+                    
+                    const newData = JSON.parse(JSON.stringify(data));
+                    newData.contract.planType = val;
+                    newData.contract.planValue = price;
+                    onChange(newData);
+                }}>
+                  <option value="Avulso">Avulso (1 Mês)</option>
                   <option value="Trimestral">Trimestral (3 Meses)</option>
                   <option value="Semestral">Semestral (6 Meses)</option>
                   <option value="Anual">Anual (12 Meses)</option>
