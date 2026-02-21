@@ -136,8 +136,8 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
       const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
       // Status
-      const isOverdue = daysLeft <= 0; // Venceu hoje ou antes
-      const isUrgent = daysLeft > 0 && daysLeft <= 3; // Vence em breve
+      const isOverdue = daysLeft < 0; // Venceu ontem ou antes
+      const isUrgent = daysLeft >= 0 && daysLeft <= 3; // Vence hoje ou em até 3 dias
 
       return {
         ...student,
@@ -482,10 +482,10 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                 const showConfirmButton = !lastSentLocal || (updatedAtLocal > lastSentLocal);
 
                 return (
-                  <div key={student.id} className={`p-4 rounded-2xl border flex flex-col md:flex-row md:items-center justify-between group transition-all cursor-pointer gap-4 ${containerStyle}`}>
+                  <div key={`${student.id}-${student.lastSentDate}-${status}`} className={`p-4 rounded-2xl border flex flex-col md:flex-row md:items-center justify-between group transition-all cursor-pointer gap-4 ${containerStyle}`}>
                     <div className="flex items-center gap-4 flex-1" onClick={() => onLoadStudent(student, 'manage')}>
                       <div className={`w-12 h-12 rounded-xl flex items-center justify-center border text-xs font-black shrink-0 ${circleStyle}`}>
-                          {isMissingProtocol ? <Sparkles size={18} /> : (isOverdue ? 'HOJE' : `${daysLeft}d`)}
+                          {isMissingProtocol ? <Sparkles size={18} /> : (daysLeft === 0 ? 'HOJE' : (isOverdue ? `${Math.abs(daysLeft)}d` : `${daysLeft}d`))}
                       </div>
                       <div>
                           <h4 className="font-black text-sm text-white leading-none mb-1.5 flex items-center gap-2">
