@@ -194,7 +194,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
     }
   };
 
-  const handleGenerateAI = async () => {
+  const handleGenerateAI = async (provider: 'openai' | 'gemini' = 'openai') => {
     if (!data.clientName || !data.physicalData.weight) {
         alert("Preencha pelo menos o Nome e o Peso do aluno na aba de Identificação/Medidas.");
         return;
@@ -203,9 +203,6 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
     setIsGenerating(true);
 
     try {
-        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-        
-        // Extract frequency number from "5x na semana" or similar
         const freqMatch = (data.trainingFrequency || '').match(/\d+/);
         const freqNum = freqMatch ? parseInt(freqMatch[0]) : 5;
         
@@ -281,89 +278,99 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
           4. O campo waterGoal deve ser APENAS O NÚMERO em Litros (ex: "3,5").
         `;
 
-        const response = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
-            contents: prompt,
-            config: {
-                responseMimeType: 'application/json',
-                responseSchema: {
-                    type: Type.OBJECT,
-                    properties: {
-                        nutritionalStrategy: { type: Type.STRING },
-                        kcalGoal: { type: Type.STRING },
-                        waterGoal: { type: Type.STRING },
-                        macros: {
-                            type: Type.OBJECT,
-                            properties: {
-                                protein: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } }, required: ["value", "ratio"] },
-                                carbs: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } }, required: ["value", "ratio"] },
-                                fats: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } }, required: ["value", "ratio"] }
-                            },
-                            required: ["protein", "carbs", "fats"]
-                        },
-                        meals: {
-                            type: Type.ARRAY,
-                            items: {
-                                type: Type.OBJECT,
-                                properties: {
-                                    time: { type: Type.STRING },
-                                    name: { type: Type.STRING },
-                                    details: { type: Type.STRING }
-                                },
-                                required: ["time", "name", "details"]
-                            }
-                        },
-                        supplements: {
-                            type: Type.ARRAY,
-                            items: {
-                                type: Type.OBJECT,
-                                properties: {
-                                    name: { type: Type.STRING },
-                                    dosage: { type: Type.STRING },
-                                    timing: { type: Type.STRING }
-                                },
-                                required: ["name", "dosage", "timing"]
-                            }
-                        },
-                        trainingDays: {
-                            type: Type.ARRAY,
-                            items: {
-                                type: Type.OBJECT,
-                                properties: {
-                                    title: { type: Type.STRING },
-                                    focus: { type: Type.STRING },
-                                    exercises: {
-                                        type: Type.ARRAY,
-                                        items: {
-                                            type: Type.OBJECT,
-                                            properties: {
-                                                name: { type: Type.STRING },
-                                                sets: { type: Type.STRING }
-                                            },
-                                            required: ["name", "sets"]
-                                        }
-                                    }
-                                },
-                                required: ["title", "focus", "exercises"]
-                            }
-                        },
-                        tips: { type: Type.ARRAY, items: { type: Type.STRING } }
-                    },
-                    required: ["nutritionalStrategy", "kcalGoal", "macros", "meals", "supplements", "trainingDays", "tips"]
-                }
-            }
-        });
+        let aiData: any;
 
-        // Limpeza do JSON
-        let jsonStr = response.text || "{}";
-        jsonStr = jsonStr.trim();
-        if (jsonStr.startsWith('```json')) {
-            jsonStr = jsonStr.replace(/^```json/, '').replace(/```$/, '');
-        } else if (jsonStr.startsWith('```')) {
-            jsonStr = jsonStr.replace(/^```/, '').replace(/```$/, '');
+        if (provider === 'gemini') {
+            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+            const response = await ai.models.generateContent({
+                model: 'gemini-3-flash-preview',
+                contents: prompt,
+                config: {
+                    responseMimeType: 'application/json',
+                    responseSchema: {
+                        type: Type.OBJECT,
+                        properties: {
+                            nutritionalStrategy: { type: Type.STRING },
+                            kcalGoal: { type: Type.STRING },
+                            waterGoal: { type: Type.STRING },
+                            macros: {
+                                type: Type.OBJECT,
+                                properties: {
+                                    protein: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } }, required: ["value", "ratio"] },
+                                    carbs: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } }, required: ["value", "ratio"] },
+                                    fats: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } }, required: ["value", "ratio"] }
+                                },
+                                required: ["protein", "carbs", "fats"]
+                            },
+                            meals: {
+                                type: Type.ARRAY,
+                                items: {
+                                    type: Type.OBJECT,
+                                    properties: {
+                                        time: { type: Type.STRING },
+                                        name: { type: Type.STRING },
+                                        details: { type: Type.STRING }
+                                    },
+                                    required: ["time", "name", "details"]
+                                }
+                            },
+                            supplements: {
+                                type: Type.ARRAY,
+                                items: {
+                                    type: Type.OBJECT,
+                                    properties: {
+                                        name: { type: Type.STRING },
+                                        dosage: { type: Type.STRING },
+                                        timing: { type: Type.STRING }
+                                    },
+                                    required: ["name", "dosage", "timing"]
+                                }
+                            },
+                            trainingDays: {
+                                type: Type.ARRAY,
+                                items: {
+                                    type: Type.OBJECT,
+                                    properties: {
+                                        title: { type: Type.STRING },
+                                        focus: { type: Type.STRING },
+                                        exercises: {
+                                            type: Type.ARRAY,
+                                            items: {
+                                                type: Type.OBJECT,
+                                                properties: {
+                                                    name: { type: Type.STRING },
+                                                    sets: { type: Type.STRING }
+                                                },
+                                                required: ["name", "sets"]
+                                            }
+                                        }
+                                    },
+                                    required: ["title", "focus", "exercises"]
+                                }
+                            },
+                            tips: { type: Type.ARRAY, items: { type: Type.STRING } }
+                        },
+                        required: ["nutritionalStrategy", "kcalGoal", "macros", "meals", "supplements", "trainingDays", "tips"]
+                    }
+                }
+            });
+            let jsonStr = response.text || "{}";
+            jsonStr = jsonStr.trim();
+            if (jsonStr.startsWith('```json')) {
+                jsonStr = jsonStr.replace(/^```json/, '').replace(/```$/, '');
+            } else if (jsonStr.startsWith('```')) {
+                jsonStr = jsonStr.replace(/^```/, '').replace(/```$/, '');
+            }
+            aiData = JSON.parse(jsonStr);
+        } else {
+            const res = await fetch('/api/generate-protocol', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt })
+            });
+            if (!res.ok) throw new Error('Falha ao gerar com OpenAI');
+            aiData = await res.json();
         }
-        
-        const aiData = JSON.parse(jsonStr);
 
         // Merge com dados existentes
         const newData = JSON.parse(JSON.stringify(data));
@@ -875,9 +882,10 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                       <p className="text-sm text-white/60 max-w-lg">A IA usará os dados de anamnese e medidas para criar um plano otimizado.</p>
                   </div>
                 </div>
-                <div className="flex gap-2 w-full md:w-auto">
+                <div className="flex gap-2 w-full md:w-auto flex-wrap">
                     <button onClick={handleClearNutrition} className={btnClearClass}><Eraser size={14} /> Limpar</button>
-                    <button onClick={handleGenerateAI} disabled={isGenerating} className="px-8 py-3 bg-[#d4af37] text-black rounded-xl font-black uppercase text-xs tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed w-full justify-center whitespace-nowrap h-auto">{isGenerating ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}{isGenerating ? 'Gerando...' : 'Gerar com IA'}</button>
+                    <button onClick={() => handleGenerateAI('openai')} disabled={isGenerating} className="px-4 py-3 bg-[#d4af37] text-black rounded-xl font-black uppercase text-xs tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap h-auto">{isGenerating ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}{isGenerating ? 'Gerando...' : 'IA (OpenAI)'}</button>
+                    <button onClick={() => handleGenerateAI('gemini')} disabled={isGenerating} className="px-4 py-3 bg-[#d4af37] text-black rounded-xl font-black uppercase text-xs tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap h-auto">{isGenerating ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}{isGenerating ? 'Gerando...' : 'IA (Gemini)'}</button>
                 </div>
             </div>
           </section>

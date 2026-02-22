@@ -160,10 +160,9 @@ const EvolutionTracker: React.FC<Props> = ({
       setMode('new_protocol');
   };
 
-  const handleGenerateProtocolAI = async () => {
+  const handleGenerateProtocolAI = async (provider: 'openai' | 'gemini' = 'openai') => {
      setIsGeneratingAI(true);
      try {
-         const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
          const prompt = `
             Atue como treinador do Team VBR.
             O aluno ${currentProtocol.clientName} está iniciando uma nova fase.
@@ -184,38 +183,43 @@ const EvolutionTracker: React.FC<Props> = ({
             }
          `;
          
-         const response = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
-            contents: prompt,
-            config: {
-                responseMimeType: 'application/json',
-                responseSchema: {
-                    type: Type.OBJECT,
-                    properties: {
-                        nutritionalStrategy: { type: Type.STRING },
-                        kcalGoal: { type: Type.STRING },
-                        macros: {
-                            type: Type.OBJECT,
-                            properties: {
-                                protein: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } },
-                                carbs: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } },
-                                fats: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } }
-                            }
-                        },
-                        trainingDays: {
-                            type: Type.ARRAY,
-                            items: {
+         let aiData: any;
+
+         if (provider === 'gemini') {
+             const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+             const response = await ai.models.generateContent({
+                model: 'gemini-3-flash-preview',
+                contents: prompt,
+                config: {
+                    responseMimeType: 'application/json',
+                    responseSchema: {
+                        type: Type.OBJECT,
+                        properties: {
+                            nutritionalStrategy: { type: Type.STRING },
+                            kcalGoal: { type: Type.STRING },
+                            macros: {
                                 type: Type.OBJECT,
                                 properties: {
-                                    title: { type: Type.STRING },
-                                    focus: { type: Type.STRING },
-                                    exercises: {
-                                        type: Type.ARRAY,
-                                        items: {
-                                            type: Type.OBJECT,
-                                            properties: {
-                                                name: { type: Type.STRING },
-                                                sets: { type: Type.STRING }
+                                    protein: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } },
+                                    carbs: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } },
+                                    fats: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } }
+                                }
+                            },
+                            trainingDays: {
+                                type: Type.ARRAY,
+                                items: {
+                                    type: Type.OBJECT,
+                                    properties: {
+                                        title: { type: Type.STRING },
+                                        focus: { type: Type.STRING },
+                                        exercises: {
+                                            type: Type.ARRAY,
+                                            items: {
+                                                type: Type.OBJECT,
+                                                properties: {
+                                                    name: { type: Type.STRING },
+                                                    sets: { type: Type.STRING }
+                                                }
                                             }
                                         }
                                     }
@@ -224,15 +228,21 @@ const EvolutionTracker: React.FC<Props> = ({
                         }
                     }
                 }
-            }
-         });
-
-         let jsonStr = response.text || "{}";
-         jsonStr = jsonStr.trim();
-         if (jsonStr.startsWith('```json')) jsonStr = jsonStr.replace(/^```json/, '').replace(/```$/, '');
-         else if (jsonStr.startsWith('```')) jsonStr = jsonStr.replace(/^```/, '').replace(/```$/, '');
-
-         const aiData = JSON.parse(jsonStr);
+             });
+             let jsonStr = response.text || "{}";
+             jsonStr = jsonStr.trim();
+             if (jsonStr.startsWith('```json')) jsonStr = jsonStr.replace(/^```json/, '').replace(/```$/, '');
+             else if (jsonStr.startsWith('```')) jsonStr = jsonStr.replace(/^```/, '').replace(/```$/, '');
+             aiData = JSON.parse(jsonStr);
+         } else {
+             const res = await fetch('/api/generate-protocol', {
+                 method: 'POST',
+                 headers: { 'Content-Type': 'application/json' },
+                 body: JSON.stringify({ prompt })
+             });
+             if (!res.ok) throw new Error('Falha ao gerar com OpenAI');
+             aiData = await res.json();
+         }
          
          if (aiData.trainingDays) {
              aiData.trainingDays = aiData.trainingDays.map((d: any) => ({
@@ -386,7 +396,10 @@ const EvolutionTracker: React.FC<Props> = ({
                   <div className="flex flex-col md:flex-row items-center gap-4">
                       <div className="p-3 bg-blue-500 text-white rounded-lg"><Target size={20} /></div>
                       <div className="flex-1 w-full"><label className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1 block">Objetivo desta Nova Fase</label><input className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white font-bold focus:border-blue-500 outline-none" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} placeholder="Ex: Cutting Radical, Bulking Limpo..." /></div>
-                      <button onClick={handleGenerateProtocolAI} disabled={isGeneratingAI} className="px-6 py-3 rounded-xl bg-purple-600/20 hover:bg-purple-600 text-purple-400 hover:text-white border border-purple-600/30 font-black uppercase text-[10px] tracking-widest transition-all flex items-center gap-2 h-full shadow-lg disabled:opacity-50">{isGeneratingAI ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}{aiGeneratedData ? 'Regerar Sugestão IA' : 'Gerar Estrutura com IA'}</button>
+                      <div className="flex gap-2">
+                        <button onClick={() => handleGenerateProtocolAI('openai')} disabled={isGeneratingAI} className="px-4 py-3 rounded-xl bg-purple-600/20 hover:bg-purple-600 text-purple-400 hover:text-white border border-purple-600/30 font-black uppercase text-[10px] tracking-widest transition-all flex items-center gap-2 h-full shadow-lg disabled:opacity-50">{isGeneratingAI ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />} OpenAI</button>
+                        <button onClick={() => handleGenerateProtocolAI('gemini')} disabled={isGeneratingAI} className="px-4 py-3 rounded-xl bg-purple-600/20 hover:bg-purple-600 text-purple-400 hover:text-white border border-purple-600/30 font-black uppercase text-[10px] tracking-widest transition-all flex items-center gap-2 h-full shadow-lg disabled:opacity-50">{isGeneratingAI ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />} Gemini</button>
+                      </div>
                   </div>
               </div>
           )}

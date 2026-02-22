@@ -8,12 +8,13 @@ import { GoogleGenAI, Type } from "@google/genai";
 interface Props {
   onGenerate: (data: ProtocolData) => void;
   onCancel: () => void;
+  initialProvider?: 'openai' | 'gemini';
 }
 
-const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
+const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel, initialProvider = 'openai' }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [aiProvider, setAiProvider] = useState<'openai' | 'gemini'>('openai');
+  const [aiProvider, setAiProvider] = useState<'openai' | 'gemini'>(initialProvider);
   
   const [formData, setFormData] = useState({
     name: '',
