@@ -374,20 +374,22 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
 
   return (
     <div className="w-full">
-        {customTrigger ? (
+        {customTrigger && (
             <>
                 <div onClick={() => setShowModal(true)} className="cursor-pointer">{customTrigger}</div>
                 {showModal && typeof document !== 'undefined' && createPortal(modalContent, document.body)}
-                {/* 
-                   AJUSTE CRÍTICO DE CORTE LATERAL:
-                   Posicionamento absoluto com z-index negativo at top 0 left 0.
-                   Fixed Width 794px to ensure A4 proportions at 96 DPI.
-                */}
-                <div style={{ position: 'absolute', top: 0, left: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none', width: '794px' }}>
-                    <div ref={pdfRef} className="bg-white">{renderContent(true)}</div>
-                </div>
             </>
-        ) : null}
+        )}
+        
+        {/* 
+           AJUSTE CRÍTICO DE CORTE LATERAL:
+           Posicionamento absoluto com z-index negativo at top 0 left 0.
+           Fixed Width 794px to ensure A4 proportions at 96 DPI.
+           Always render this to allow ref.current.download() to work even without customTrigger
+        */}
+        <div style={{ position: 'absolute', top: 0, left: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none', width: '794px' }}>
+            <div ref={pdfRef} className="bg-white">{renderContent(true)}</div>
+        </div>
     </div>
   );
 });

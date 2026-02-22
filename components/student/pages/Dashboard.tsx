@@ -4,9 +4,10 @@ import { Activity, Calendar, Trophy, ArrowUpRight, Clock } from 'lucide-react';
 
 interface Props {
   data: ProtocolData;
+  onNavigate: (page: string) => void;
 }
 
-const StudentDashboard: React.FC<Props> = ({ data }) => {
+const StudentDashboard: React.FC<Props> = ({ data, onNavigate }) => {
   const nextUpdate = new Date();
   nextUpdate.setDate(nextUpdate.getDate() + 15); // Mock date
 
@@ -129,7 +130,10 @@ const StudentDashboard: React.FC<Props> = ({ data }) => {
               <p className="text-white/60 text-sm mb-6 line-clamp-2">
                 Foco: {data.trainingDays[0].focus}
               </p>
-              <button className="w-full bg-white text-black py-3 rounded-xl font-bold uppercase text-xs hover:bg-[#d4af37] transition-colors">
+              <button 
+                onClick={() => onNavigate('workout')}
+                className="w-full bg-white text-black py-3 rounded-xl font-bold uppercase text-xs hover:bg-[#d4af37] transition-colors"
+              >
                 Ver Treino Completo
               </button>
             </div>

@@ -100,12 +100,6 @@ const StudentProtocol: React.FC<Props> = ({ data }) => {
                     {meal.details}
                   </p>
                 </div>
-                
-                {/* Substitutions Hint */}
-                <div className="mt-4 flex items-start gap-3 text-xs text-white/40 italic px-2">
-                  <AlertCircle size={14} className="mt-0.5 shrink-0" />
-                  <p>Para substituições, consulte a lista de equivalentes ou entre em contato com o suporte.</p>
-                </div>
               </div>
             )}
           </div>

@@ -8,15 +8,6 @@ interface Props {
 
 const StudentWorkout: React.FC<Props> = ({ data }) => {
   const [activeDay, setActiveDay] = useState(0);
-  const [completedExercises, setCompletedExercises] = useState<string[]>([]);
-
-  const toggleExercise = (id: string) => {
-    if (completedExercises.includes(id)) {
-      setCompletedExercises(prev => prev.filter(exId => exId !== id));
-    } else {
-      setCompletedExercises(prev => [...prev, id]);
-    }
-  };
 
   if (!data.trainingDays || data.trainingDays.length === 0) {
     return (
@@ -65,30 +56,18 @@ const StudentWorkout: React.FC<Props> = ({ data }) => {
         
         <div className="space-y-4 relative z-10">
           {currentWorkout.exercises.map((exercise, idx) => {
-            const uniqueId = `${activeDay}-${idx}`;
-            const isCompleted = completedExercises.includes(uniqueId);
-
             return (
               <div 
                 key={idx}
-                onClick={() => toggleExercise(uniqueId)}
-                className={`
-                  p-5 rounded-2xl border transition-all duration-300 cursor-pointer group select-none
-                  ${isCompleted 
-                    ? 'bg-green-500/5 border-green-500/20 opacity-60' 
-                    : 'bg-black/40 border-white/5 hover:border-[#d4af37]/30 hover:bg-white/5'}
-                `}
+                className="p-5 rounded-2xl border transition-all duration-300 bg-black/40 border-white/5 hover:border-[#d4af37]/30 hover:bg-white/5"
               >
                 <div className="flex items-center gap-5">
-                  <div className={`
-                    w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors
-                    ${isCompleted ? 'bg-green-500 border-green-500 text-black' : 'border-white/20 text-transparent group-hover:border-[#d4af37]'}
-                  `}>
-                    <CheckCircle2 size={14} />
+                  <div className="w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors border-white/20 text-transparent">
+                    <Circle size={14} />
                   </div>
                   
                   <div className="flex-1">
-                    <h4 className={`text-base font-bold uppercase mb-2 ${isCompleted ? 'text-green-500 line-through' : 'text-white'}`}>
+                    <h4 className="text-base font-bold uppercase mb-2 text-white">
                       {exercise.name}
                     </h4>
                     
