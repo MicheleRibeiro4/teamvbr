@@ -45,6 +45,40 @@ const StudentPortal: React.FC<StudentPortalProps> = ({ studentData, onLogout }) 
   };
 
   const isExpired = checkPlanExpiration();
+  const isAvulso = studentData.contract.planType === 'Avulso';
+
+  if (isAvulso) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] text-white font-sans flex items-center justify-center p-4">
+        <div className="max-w-md w-full text-center space-y-8 animate-in fade-in zoom-in duration-700">
+          <img src={LOGO_VBR_BLACK} alt="Team VBR" className="h-24 mx-auto opacity-50 mb-8" />
+          
+          <div className="bg-[#111] border border-[#d4af37]/20 p-8 rounded-[2rem] relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1 bg-[#d4af37]"></div>
+            
+            <div className="w-16 h-16 bg-[#d4af37]/10 rounded-full flex items-center justify-center mx-auto mb-6 text-[#d4af37]">
+              <LogOut size={32} />
+            </div>
+            
+            <h2 className="text-2xl font-black uppercase text-white mb-2">Acesso Restrito</h2>
+            <p className="text-white/40 text-sm font-medium mb-8">
+              O plano <span className="text-white font-bold">Avulso</span> não possui acesso à plataforma.
+              <br/>Para utilizar o portal do aluno, faça um upgrade do seu plano.
+            </p>
+
+            <button 
+              onClick={onLogout}
+              className="w-full bg-white text-black py-4 rounded-xl font-black uppercase text-xs tracking-[0.2em] hover:bg-gray-200 transition-colors"
+            >
+              Voltar ao Login
+            </button>
+          </div>
+          
+          <p className="text-[10px] font-black uppercase text-white/20 tracking-[0.3em]">Team VBR System</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isExpired) {
     return (

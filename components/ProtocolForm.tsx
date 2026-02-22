@@ -683,6 +683,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                     if (val === 'Avulso') price = '119,99';
                     else if (val === 'Trimestral') price = '289,99';
                     else if (val === 'Semestral') price = '499,99';
+                    else if (val === 'Anual') price = '899,99';
                     
                     const newData = JSON.parse(JSON.stringify(data));
                     newData.contract.planType = val;

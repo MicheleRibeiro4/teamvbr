@@ -11,6 +11,9 @@ const StudentDashboard: React.FC<Props> = ({ data, onNavigate }) => {
   // Lógica de Próxima Atualização
   const calculateNextUpdate = () => {
     if (data.contract.planType === 'Avulso') return null;
+    // Apenas planos Semestral, Trimestral e Anual mostram a atualização
+    if (!['Semestral', 'Trimestral', 'Anual'].includes(data.contract.planType)) return null;
+    
     if (!data.lastSentDate) return null;
 
     const [y, m, d] = data.lastSentDate.split('-');

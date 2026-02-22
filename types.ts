@@ -74,7 +74,7 @@ export interface ContractInfo {
   city: string;
   state: string; // UF separado
   // Vigência
-  planType: 'Trimestral' | 'Semestral' | 'Avulso'; 
+  planType: 'Trimestral' | 'Semestral' | 'Avulso' | 'Anual'; 
   startDate: string;
   endDate: string;
   durationDays: string;
