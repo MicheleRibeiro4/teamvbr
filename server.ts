@@ -11,19 +11,25 @@ async function startServer() {
 
   app.use(express.json());
 
-  // OpenAI Client
-  const openai = new OpenAI({
-    apiKey: process.env.OPENIA_KEY_API,
-  });
+  let openaiClient: OpenAI | null = null;
+
+  function getOpenAI(): OpenAI {
+    if (!openaiClient) {
+      const key = process.env.OPENIA_API_KEY;
+      if (!key) {
+        throw new Error("OPENIA_API_KEY não configurada no servidor.");
+      }
+      openaiClient = new OpenAI({ apiKey: key });
+    }
+    return openaiClient;
+  }
 
   // API routes
   app.post("/api/generate-protocol", async (req, res) => {
     try {
       const { prompt } = req.body;
 
-      if (!process.env.OPENIA_KEY_API) {
-        return res.status(500).json({ error: "OPENIA_KEY_API não configurada no servidor." });
-      }
+      const openai = getOpenAI();
 
       const response = await openai.chat.completions.create({
         model: "gpt-4o", // Using a standard high-quality model

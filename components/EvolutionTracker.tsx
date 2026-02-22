@@ -163,7 +163,7 @@ const EvolutionTracker: React.FC<Props> = ({
   const handleGenerateProtocolAI = async () => {
      setIsGeneratingAI(true);
      try {
-         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+         const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
          const prompt = `
             Atue como treinador do Team VBR.
             O aluno ${currentProtocol.clientName} está iniciando uma nova fase.

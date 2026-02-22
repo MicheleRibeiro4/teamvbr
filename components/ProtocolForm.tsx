@@ -203,7 +203,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
     setIsGenerating(true);
 
     try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
         
         // Extract frequency number from "5x na semana" or similar
         const freqMatch = (data.trainingFrequency || '').match(/\d+/);
