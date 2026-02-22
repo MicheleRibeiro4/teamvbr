@@ -60,12 +60,12 @@ const ContractPreview = forwardRef<ContractPreviewHandle, Props>(({ data, onBack
     if (!targetRef) return;
     setIsGenerating(true);
     const opt = {
-      margin: [15, 15, 15, 15], 
+      margin: 0, 
       filename: `Contrato_VBR_${clientName.replace(/\s+/g, '_')}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 },
+      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', windowWidth: 800 },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      pagebreak: { mode: ['css', 'legacy'] }
     };
     try {
       // @ts-ignore
@@ -86,26 +86,26 @@ const ContractPreview = forwardRef<ContractPreviewHandle, Props>(({ data, onBack
       const fullAddress = street ? detailedAddress : (contract.address || '__________________________________________________');
 
       return (
-        <div className="bg-white text-black px-[15mm] py-[10mm] w-[210mm] min-h-[297mm] mx-auto font-sans leading-[1.5] text-[10pt] shadow-2xl print:shadow-none print:w-full h-auto flex flex-col">
-            <div className="mb-6 flex-none">
+        <div className="bg-white text-black px-[15mm] py-[10mm] w-[210mm] min-h-[297mm] mx-auto font-sans leading-[1.5] text-[10pt] shadow-2xl print:shadow-none print:w-full h-auto block">
+            <div className="mb-6">
                 <h1 className="font-bold text-center text-sm mb-6 uppercase">CONTRATO DE ASSESSORIA EM ESTILO DE VIDA SAUDÁVEL</h1>
                 <div className="mb-4 text-justify"><p className="font-bold mb-1">CONTRATANTE:</p><p>Nome: {clientName}</p><p>CPF: {contract.cpf || '__________'}</p><p>Telefone: {contract.phone || '__________'}</p><p>Endereço: {fullAddress}</p></div>
                 <div className="mb-6 text-justify"><p className="font-bold mb-1">CONTRATADO:</p><p>Nome: {CONSULTANT_DEFAULT.consultantName}</p><p>CPF: {CONSULTANT_DEFAULT.consultantCpf}</p><p>E-mail: {CONSULTANT_DEFAULT.consultantEmail}</p><p>Endereço: {CONSULTANT_DEFAULT.consultantAddress}</p></div>
                 <p className="mb-4 text-justify">As partes acima identificadas celebram o presente contrato, mediante as seguintes cláusulas e condições:</p>
             </div>
 
-            <div className="mb-8 text-justify flex-1">
+            <div className="mb-8 text-justify">
             {getCleanContractText().split('\n').map((line, i) => {
                 if (line.trim() === '') return <div key={i} className="h-3"></div>;
                 const upperLine = line.toUpperCase();
                 const isTitle = upperLine.startsWith('CLÁUSULA') || upperLine.startsWith('CLAUSULA');
                 return (
-                <p key={i} className={`mb-1 break-inside-avoid ${isTitle ? 'font-bold' : ''}`}>{line}</p>
+                <p key={i} className={`mb-1 break-inside-avoid ${isTitle ? 'font-bold mt-4' : ''}`}>{line}</p>
                 );
             })}
             </div>
 
-            <div className="flex-none">
+            <div className="mt-8">
                 <p className="mb-8 text-justify">E, por estarem justas e contratadas, as partes assinam o presente instrumento em 2 (duas) vias de igual teor e forma.</p>
                 <div className="mb-8"><p>Vespasiano, Minas Gerais</p><p>Data: {new Date().toLocaleDateString('pt-BR')}</p></div>
                 <div className="mt-8 space-y-10">
