@@ -7,8 +7,8 @@ import UnifiedEditor from './components/UnifiedEditor';
 import MainDashboard from './components/MainDashboard';
 import StudentSearch from './components/StudentSearch';
 import StudentDashboard from './components/StudentDashboard';
-import EvolutionTracker from './components/EvolutionTracker';
 import StudentEntryForm from './components/StudentEntryForm';
+import EvolutionTracker from './components/EvolutionTracker';
 import ProtocolGenerator from './components/ProtocolGenerator';
 import StudentLogin from './components/student/StudentLogin';
 import StudentPortal from './components/student/StudentPortal';
@@ -26,15 +26,16 @@ import {
 type ViewMode = 'home' | 'search' | 'manage' | 'settings' | 'student-dashboard' | 'evolution' | 'generator';
 
 const App: React.FC = () => {
-  const checkIsStudent = () => {
+  const getPageType = () => {
     if (typeof window !== 'undefined') {
        const h = window.location.hash;
-       return h.includes('student') || h.includes('portal');
+       if (h.includes('portal')) return 'portal';
+       if (h.includes('student') || h.includes('cadastro')) return 'register';
     }
-    return false;
+    return 'admin';
   };
 
-  const [isStudentPage, setIsStudentPage] = useState(checkIsStudent);
+  const [pageType, setPageType] = useState(getPageType);
   const [data, setData] = useState<ProtocolData>(EMPTY_DATA);
   const [activeView, setActiveView] = useState<ViewMode>('home');
   const [savedProtocols, setSavedProtocols] = useState<ProtocolData[]>([]);
@@ -55,7 +56,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const handleHashChange = () => {
-      setIsStudentPage(checkIsStudent());
+      setPageType(getPageType());
     };
     window.addEventListener('hashchange', handleHashChange);
     handleHashChange();
@@ -106,7 +107,7 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    if (isStudentPage) {
+    if (pageType === 'portal') {
       const studentAuth = localStorage.getItem('vbr_student_auth');
       if (studentAuth) {
         try {
@@ -119,12 +120,14 @@ const App: React.FC = () => {
       return;
     }
 
-    const auth = localStorage.getItem('vbr_auth');
-    if (auth === 'true') {
-      setIsAuthenticated(true);
-      loadData();
+    if (pageType === 'admin') {
+        const auth = localStorage.getItem('vbr_auth');
+        if (auth === 'true') {
+        setIsAuthenticated(true);
+        loadData();
+        }
     }
-  }, [isStudentPage]);
+  }, [pageType]);
 
   const loadData = async () => {
     setIsSyncing(true);
@@ -233,8 +236,15 @@ GRANT ALL ON TABLE public.protocols TO anon;
 GRANT ALL ON TABLE public.protocols TO authenticated;
 GRANT ALL ON TABLE public.protocols TO service_role;`;
 
+  // ROTA DE CADASTRO (NOVO ALUNO)
+  if (pageType === 'register') {
+     return <StudentEntryForm onCancel={() => {
+        window.location.hash = ''; 
+     }} />;
+  }
+
   // ROTA DO ALUNO (PORTAL)
-  if (isStudentPage) {
+  if (pageType === 'portal') {
     if (!isStudentAuthenticated || !studentData) {
       return <StudentLogin onLogin={handleStudentLogin} />;
     }

@@ -19,7 +19,8 @@ import {
   Loader2,
   Eye,
   ChevronLeft,
-  Sparkles
+  Sparkles,
+  Lock
 } from 'lucide-react';
 
 interface Props {
@@ -579,7 +580,13 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
         <div className="relative z-10 flex flex-wrap justify-center gap-2 w-full md:w-auto">
           <button onClick={onNew} className="bg-[#d4af37] text-black px-4 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-[0.2em] hover:scale-105 transition-all shadow-[0_0_30px_rgba(212,175,55,0.2)] flex items-center justify-center gap-2 group"><UserPlus size={14}/> Novo</button>
           <button onClick={onList} className="bg-white/5 border border-white/10 text-white px-4 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-[0.2em] hover:bg-white/10 transition-all flex items-center justify-center gap-2"><Search size={14}/> Buscar</button>
-          <button onClick={handleCopyLink} className="bg-[#111] border border-white/10 text-[#d4af37] px-4 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-[0.2em] hover:bg-white/5 transition-all flex items-center justify-center gap-2 shadow-lg" title="Copiar Link de Cadastro"><LinkIcon size={14}/> Link Aluno</button>
+          <button onClick={() => {
+             const origin = typeof window !== 'undefined' ? window.location.origin : '';
+             const link = `${origin}/#portal`;
+             navigator.clipboard.writeText(link);
+             alert("Link do Portal do Aluno copiado!\n\nEnvie este link para o aluno acessar seu perfil:\n" + link);
+          }} className="bg-[#111] border border-white/10 text-white px-4 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-[0.2em] hover:bg-white/5 transition-all flex items-center justify-center gap-2 shadow-lg" title="Copiar Link do Portal"><Lock size={14}/> Portal</button>
+          <button onClick={handleCopyLink} className="bg-[#111] border border-white/10 text-[#d4af37] px-4 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-[0.2em] hover:bg-white/5 transition-all flex items-center justify-center gap-2 shadow-lg" title="Copiar Link de Cadastro"><LinkIcon size={14}/> Cadastro</button>
         </div>
       </div>
 
