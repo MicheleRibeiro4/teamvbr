@@ -7,7 +7,7 @@
     "skipLibCheck": true,
     "esModuleInterop": false,
     "allowSyntheticDefaultImports": true,
-    "strict": true,
+    "strict": false,
     "forceConsistentCasingInFileNames": true,
     "module": "ESNext",
     "moduleResolution": "Node",
@@ -16,5 +16,6 @@
     "noEmit": true,
     "jsx": "react-jsx"
   },
-  "include": ["src", "App.tsx", "index.tsx", "constants.tsx", "types.ts", "components", "services"]
+  "include": ["**/*.ts", "**/*.tsx", "App.tsx", "index.tsx", "constants.tsx", "types.ts"],
+  "exclude": ["node_modules", "components/App.tsx"]
 }

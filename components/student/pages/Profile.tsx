@@ -1,6 +1,6 @@
 import React from 'react';
 import { ProtocolData } from '../../../types';
-import { User, Mail, Phone, MapPin, Shield } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Shield, Calendar } from 'lucide-react';
 
 interface Props {
   data: ProtocolData;

@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { ProtocolData } from '../types';
 import { EMPTY_DATA } from '../constants';
 import { Loader2, Sparkles, User, Target, ChevronLeft, Activity, Calendar, AlertCircle } from 'lucide-react';
-import { GoogleGenAI, Type } from "@google/genai";
 
 interface Props {
   onGenerate: (data: ProtocolData) => void;
@@ -39,8 +38,6 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
     setLoading(true);
 
     try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-        
         // Cálculo de água padrão (45ml/kg) para garantir que temos um valor
         const weight = parseFloat(formData.weight.replace(',', '.'));
         const calculatedWater = !isNaN(weight) ? (weight * 0.045).toFixed(1).replace('.', ',') : "3,5";
@@ -107,89 +104,19 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
           4. O campo waterGoal deve ser APENAS O NÚMERO em Litros (ex: "3,5").
         `;
 
-        const response = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
-            contents: prompt,
-            config: {
-                responseMimeType: 'application/json',
-                responseSchema: {
-                    type: Type.OBJECT,
-                    properties: {
-                        nutritionalStrategy: { type: Type.STRING },
-                        kcalGoal: { type: Type.STRING },
-                        waterGoal: { type: Type.STRING },
-                        macros: {
-                            type: Type.OBJECT,
-                            properties: {
-                                protein: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } }, required: ["value", "ratio"] },
-                                carbs: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } }, required: ["value", "ratio"] },
-                                fats: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } }, required: ["value", "ratio"] }
-                            },
-                            required: ["protein", "carbs", "fats"]
-                        },
-                        meals: {
-                            type: Type.ARRAY,
-                            items: {
-                                type: Type.OBJECT,
-                                properties: {
-                                    time: { type: Type.STRING },
-                                    name: { type: Type.STRING },
-                                    details: { type: Type.STRING }
-                                },
-                                required: ["time", "name", "details"]
-                            }
-                        },
-                        supplements: {
-                            type: Type.ARRAY,
-                            items: {
-                                type: Type.OBJECT,
-                                properties: {
-                                    name: { type: Type.STRING },
-                                    dosage: { type: Type.STRING },
-                                    timing: { type: Type.STRING }
-                                },
-                                required: ["name", "dosage", "timing"]
-                            }
-                        },
-                        trainingDays: {
-                            type: Type.ARRAY,
-                            items: {
-                                type: Type.OBJECT,
-                                properties: {
-                                    title: { type: Type.STRING },
-                                    focus: { type: Type.STRING },
-                                    exercises: {
-                                        type: Type.ARRAY,
-                                        items: {
-                                            type: Type.OBJECT,
-                                            properties: {
-                                                name: { type: Type.STRING },
-                                                sets: { type: Type.STRING }
-                                            },
-                                            required: ["name", "sets"]
-                                        }
-                                    }
-                                },
-                                required: ["title", "focus", "exercises"]
-                            }
-                        },
-                        tips: { type: Type.ARRAY, items: { type: Type.STRING } }
-                    },
-                    required: ["nutritionalStrategy", "kcalGoal", "macros", "meals", "supplements", "trainingDays", "tips"]
-                }
-            }
+        const response = await fetch('/api/generate-protocol', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt })
         });
 
-        // Limpeza robusta do JSON
-        let jsonStr = response.text || "{}";
-        jsonStr = jsonStr.trim();
-        if (jsonStr.startsWith('```json')) {
-            jsonStr = jsonStr.replace(/^```json/, '').replace(/```$/, '');
-        } else if (jsonStr.startsWith('```')) {
-            jsonStr = jsonStr.replace(/^```/, '').replace(/```$/, '');
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Erro na comunicação com o servidor');
         }
-        
-        const aiData = JSON.parse(jsonStr);
+
+        const aiData = await response.json();
+
 
         const timestamp = new Date().toISOString();
         const newId = "vbr-" + Math.random().toString(36).substr(2, 9);
@@ -250,7 +177,7 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
             gender: formData.gender as any,
           },
           // Usa a estratégia retornada pela IA (que deve conter a original + melhorias) ou a original como fallback
-          nutritionalStrategy: aiData.nutritionalStrategy || formData.nutritionalStrategy || "Estratégia personalizada.",
+          nutritionalStrategy: aiData.nutritionalStrategy || "Estratégia personalizada.",
           kcalGoal: aiData.kcalGoal || "Calculando...",
           waterGoal: finalWaterGoal,
           macros: aiData.macros || EMPTY_DATA.macros,
@@ -271,13 +198,7 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
           generalObservations: "", // Removido pois agora está na anamnese
           anamnesis: {
              ...EMPTY_DATA.anamnesis,
-             mainObjective: formData.anamnesis.mainObjective || formData.goal,
-             routine: formData.anamnesis.routine,
-             trainingHistory: formData.anamnesis.trainingHistory,
-             ergogenics: formData.anamnesis.ergogenics,
-             foodPreferences: formData.anamnesis.foodPreferences,
-             injuries: formData.anamnesis.injuries,
-             medications: formData.anamnesis.medications
+             mainObjective: formData.goal,
           }
         };
 
@@ -312,7 +233,7 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
             </div>
             <div>
               <h1 className="text-3xl font-black text-white uppercase tracking-tighter leading-none">Gerador de Protocolo IA</h1>
-              <p className="text-white/40 text-xs font-bold uppercase tracking-widest mt-1">Criação Inteligente com Google Gemini</p>
+              <p className="text-white/40 text-xs font-bold uppercase tracking-widest mt-1">Criação Inteligente com OpenAI</p>
             </div>
           </div>
 
