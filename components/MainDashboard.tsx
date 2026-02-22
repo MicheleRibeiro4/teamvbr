@@ -94,71 +94,299 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
     }
   ];
 
+  const [currentTab, setCurrentTab] = useState<'agenda' | 'pending'>('agenda');
   const [confirmSendId, setConfirmSendId] = useState<string | null>(null);
   const [sendDate, setSendDate] = useState<string>(new Date().toISOString().split('T')[0]);
 
-  // --- LÓGICA DE AGENDA REFORMULADA ---
-  const scheduledUpdates = useMemo(() => {
-    return uniqueStudents.map((student: any) => {
-      // Ignora Avulso e Pendentes
-      if (student.contract.planType === 'Avulso') return null;
-      if (student.contract.status !== 'Ativo') return null;
+  // --- LÓGICA DE FILTRAGEM E CLASSIFICAÇÃO ---
+  const { agendaStudents, pendingEvaluationStudents, summary } = useMemo(() => {
+    const agenda: any[] = [];
+    const pending: any[] = [];
+    
+    let countOverdue = 0;
+    let countDueToday = 0;
+    let countThisWeek = 0;
 
-      // Verifica se o protocolo está "vazio" (sem refeições e sem treinos)
-      const isMissingProtocol = (student.meals?.length || 0) === 0 && (student.trainingDays?.length || 0) === 0;
+    uniqueStudents.forEach((student: any) => {
+        // Ignora Avulso
+        if (student.contract.planType === 'Avulso') return;
 
-      // Data Base: Último envio OU Data de Início (fallback)
-      const baseDateStr = student.lastSentDate || student.contract.startDate;
-      if (!baseDateStr) return null;
-
-      // Converte string DD/MM/AAAA (startDate) ou YYYY-MM-DD (lastSentDate) para Date
-      let baseDate = new Date();
-      if (baseDateStr.includes('/')) {
-          const [d, m, y] = baseDateStr.split('/');
-          baseDate = new Date(`${y}-${m}-${d}T00:00:00`);
-      } else {
-          baseDate = new Date(`${baseDateStr}T00:00:00`);
-      }
-
-      const today = new Date();
-      today.setHours(0,0,0,0);
-      baseDate.setHours(0,0,0,0);
-
-      // Ciclo de 15 dias
-      const checkinInterval = 15;
-      
-      // Próxima data = Base + 15 dias
-      const nextDate = new Date(baseDate);
-      nextDate.setDate(baseDate.getDate() + checkinInterval);
-      
-      // Dias restantes = Próxima - Hoje
-      const diffTime = nextDate.getTime() - today.getTime();
-      const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-      // Status
-      const isOverdue = daysLeft < 0; // Venceu ontem ou antes
-      const isUrgent = daysLeft >= 0 && daysLeft <= 3; // Vence hoje ou em até 3 dias
-
-      return {
-        ...student,
-        schedule: {
-          daysLeft,
-          nextDate: nextDate.toLocaleDateString('pt-BR'),
-          baseDate: baseDate.toLocaleDateString('pt-BR'),
-          isOverdue,
-          isUrgent,
-          isMissingProtocol,
-          status: isMissingProtocol ? 'PENDENTE' : (isOverdue ? 'ATRASADO' : (isUrgent ? 'VENCENDO' : 'EM DIA'))
+        // Aguardando Avaliação:
+        // 1. Status do contrato é 'Aguardando' (Solicitações)
+        // 2. Status é 'Ativo' MAS não tem data de envio (Protocolo em criação/não enviado)
+        if (student.contract.status === 'Aguardando' || (student.contract.status === 'Ativo' && !student.lastSentDate)) {
+            pending.push(student);
+            return;
         }
-      };
-    })
-    .filter(Boolean)
-    // Ordenação: Pendentes -> Atrasados -> Vencendo -> Em dia (mais próximos primeiro)
-    .sort((a: any, b: any) => {
-        if (a.schedule.isMissingProtocol !== b.schedule.isMissingProtocol) return a.schedule.isMissingProtocol ? -1 : 1;
-        return a.schedule.daysLeft - b.schedule.daysLeft;
+
+        // Agenda de Atualizações:
+        // 1. Status 'Ativo' E tem data de envio
+        if (student.contract.status === 'Ativo' && student.lastSentDate) {
+            // Cálculo de Datas
+            // Data Base: Último envio
+            const [y, m, d] = student.lastSentDate.split('-');
+            const baseDate = new Date(parseInt(y), parseInt(m)-1, parseInt(d));
+            baseDate.setHours(0,0,0,0);
+
+            const today = new Date();
+            today.setHours(0,0,0,0);
+
+            // Ciclo de 15 dias
+            const checkinInterval = 15;
+            
+            // Próxima data = Base + 15 dias
+            const nextDate = new Date(baseDate);
+            nextDate.setDate(baseDate.getDate() + checkinInterval);
+            
+            // Dias restantes = Próxima - Hoje
+            const diffTime = nextDate.getTime() - today.getTime();
+            const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            // Status
+            let status = 'EM DIA';
+            let statusColor = 'bg-green-500/10 text-green-500 border-green-500/20';
+            
+            if (daysLeft < 0) {
+                status = 'ATRASADO';
+                statusColor = 'bg-red-500/10 text-red-500 border-red-500/20';
+                countOverdue++;
+            } else if (daysLeft === 0) {
+                status = 'VENCE HOJE';
+                statusColor = 'bg-orange-500/10 text-orange-500 border-orange-500/20';
+                countDueToday++;
+            } else if (daysLeft <= 3) {
+                status = 'PRÓXIMO';
+                statusColor = 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
+                countThisWeek++; // Considerando "Próximo" como parte da semana/atenção
+            } else {
+                // Em dia
+            }
+            
+            // Se estiver entre 4 e 7 dias, também conta como "Esta semana" para o resumo
+            if (daysLeft > 3 && daysLeft <= 7) {
+                countThisWeek++;
+            }
+
+            agenda.push({
+                ...student,
+                schedule: {
+                    daysLeft,
+                    nextDate: nextDate.toLocaleDateString('pt-BR'),
+                    baseDate: baseDate.toLocaleDateString('pt-BR'),
+                    status,
+                    statusColor,
+                    nextDateObj: nextDate // Para ordenação
+                }
+            });
+        }
     });
+
+    // Ordenação da Agenda:
+    // 1. Atrasados (menor daysLeft)
+    // 2. Vence Hoje
+    // 3. Próximos
+    // 4. Distantes
+    agenda.sort((a, b) => a.schedule.daysLeft - b.schedule.daysLeft);
+
+    // Ordenação de Pendentes: Mais antigos primeiro (FIFO)
+    pending.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+    return { 
+        agendaStudents: agenda, 
+        pendingEvaluationStudents: pending,
+        summary: { countOverdue, countDueToday, countThisWeek }
+    };
   }, [uniqueStudents]);
+
+  // ... (rest of the component logic)
+
+  // RENDERIZAÇÃO DA AGENDA
+  const renderAgendaTab = () => (
+    <div className="flex flex-col h-full">
+        {/* RESUMO DE PRIORIDADES */}
+        <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-xl flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                <div>
+                    <p className="text-2xl font-black text-red-500 leading-none">{summary.countOverdue}</p>
+                    <p className="text-[9px] font-bold text-red-500/60 uppercase tracking-widest">Atrasados</p>
+                </div>
+            </div>
+            <div className="bg-orange-500/10 border border-orange-500/20 p-4 rounded-xl flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+                <div>
+                    <p className="text-2xl font-black text-orange-500 leading-none">{summary.countDueToday}</p>
+                    <p className="text-[9px] font-bold text-orange-500/60 uppercase tracking-widest">Vencem Hoje</p>
+                </div>
+            </div>
+            <div className="bg-yellow-500/10 border border-yellow-500/20 p-4 rounded-xl flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                <div>
+                    <p className="text-2xl font-black text-yellow-500 leading-none">{summary.countThisWeek}</p>
+                    <p className="text-[9px] font-bold text-yellow-500/60 uppercase tracking-widest">Esta Semana</p>
+                </div>
+            </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 pr-2">
+            {agendaStudents.length > 0 ? (
+                agendaStudents.map((student: any) => {
+                    const { daysLeft, status, statusColor, nextDate } = student.schedule;
+                    
+                    // Lógica de Botão de Confirmação (Mantida e Ajustada)
+                    const updatedAtDate = new Date(student.updatedAt);
+                    updatedAtDate.setHours(0,0,0,0);
+                    
+                    let lastSentDate = null;
+                    if (student.lastSentDate) {
+                        const [y, m, d] = student.lastSentDate.split('-');
+                        lastSentDate = new Date(parseInt(y), parseInt(m)-1, parseInt(d));
+                        lastSentDate.setHours(0,0,0,0);
+                    }
+
+                    const showConfirmButton = !lastSentDate || (updatedAtDate.getTime() > lastSentDate.getTime());
+
+                    return (
+                        <div key={student.id} className="bg-white/5 p-5 rounded-2xl border border-white/5 hover:border-white/10 transition-all group">
+                            <div className="flex flex-col md:flex-row items-center gap-6">
+                                {/* STATUS INDICATOR */}
+                                <div className={`w-16 h-16 rounded-2xl flex flex-col items-center justify-center border shrink-0 ${statusColor}`}>
+                                    <span className="text-xl font-black">{daysLeft === 0 ? 'HOJE' : (daysLeft < 0 ? daysLeft : daysLeft)}</span>
+                                    <span className="text-[8px] font-bold uppercase">{daysLeft === 0 ? 'Vence' : 'Dias'}</span>
+                                </div>
+
+                                {/* INFO */}
+                                <div className="flex-1 min-w-0 text-center md:text-left">
+                                    <h4 className="text-lg font-black text-white uppercase tracking-tight truncate">{student.clientName}</h4>
+                                    <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-1">
+                                        <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border ${statusColor}`}>{status}</span>
+                                        <span className="text-[10px] font-bold text-white/40 uppercase flex items-center gap-1">
+                                            <CalendarClock size={10} /> Próxima: {nextDate}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* ACTIONS */}
+                                <div className="flex items-center gap-2 w-full md:w-auto justify-center md:justify-end">
+                                    {confirmSendId === student.id ? (
+                                        <div className="flex items-center gap-2 bg-black/40 p-1 rounded-lg border border-white/10 animate-in fade-in slide-in-from-right-5" onClick={(e) => e.stopPropagation()}>
+                                            <input 
+                                                type="date" 
+                                                value={sendDate} 
+                                                onChange={(e) => setSendDate(e.target.value)}
+                                                className="bg-transparent text-white text-[10px] p-1.5 rounded border border-white/10 outline-none focus:border-[#d4af37] w-24"
+                                            />
+                                            <button onClick={() => handleConfirmSend(student)} className="p-1.5 bg-green-500 text-white rounded hover:bg-green-600"><Check size={12} /></button>
+                                            <button onClick={() => setConfirmSendId(null)} className="p-1.5 bg-red-500 text-white rounded hover:bg-red-600"><X size={12} /></button>
+                                        </div>
+                                    ) : (
+                                        <button 
+                                            onClick={(e) => { e.stopPropagation(); setConfirmSendId(student.id); setSendDate(new Date().toISOString().split('T')[0]); }}
+                                            className="px-4 py-2 bg-[#d4af37] text-black rounded-xl font-black uppercase text-[10px] tracking-widest hover:scale-105 transition-all shadow-lg flex items-center gap-2"
+                                            title="Confirmar que enviou a atualização"
+                                        >
+                                            <CheckCircle2 size={14} /> Confirmar
+                                        </button>
+                                    )}
+
+                                    <button 
+                                        onClick={() => onLoadStudent(student, 'manage')}
+                                        className="px-4 py-2 bg-white/5 text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-white/10 transition-all border border-white/5 flex items-center gap-2"
+                                        title="Gerar Novo Protocolo / Visualizar"
+                                    >
+                                        <FileText size={14} /> Visualizar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })
+            ) : (
+                <div className="h-full flex flex-col items-center justify-center text-white/20 py-20">
+                    <CheckCircle2 size={64} className="mb-6 opacity-20 text-green-500" />
+                    <p className="text-sm font-black uppercase tracking-widest">Todos os alunos estão em dia.</p>
+                </div>
+            )}
+        </div>
+    </div>
+  );
+
+  const renderPendingTab = () => (
+    <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 pr-2 h-full">
+        {pendingEvaluationStudents.length > 0 ? (
+            pendingEvaluationStudents.map((student: any) => {
+                const isRequest = student.contract.status === 'Aguardando';
+                const statusLabel = isRequest ? 'Solicitação de Cadastro' : 'Aguardando Envio';
+                const statusColor = isRequest ? 'text-blue-400 bg-blue-500/10 border-blue-500/20' : 'text-orange-400 bg-orange-500/10 border-orange-500/20';
+
+                return (
+                    <div key={student.id} className="bg-white/5 p-5 rounded-2xl border border-white/5 hover:border-white/10 transition-all group">
+                         <div className="flex flex-col md:flex-row items-center gap-6">
+                            <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center border border-white/10 shrink-0">
+                                <UserPlus size={20} className="text-white/40" />
+                            </div>
+                            
+                            <div className="flex-1 min-w-0 text-center md:text-left">
+                                <h4 className="text-lg font-black text-white uppercase tracking-tight truncate">{student.clientName}</h4>
+                                <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-1">
+                                    <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border ${statusColor}`}>{statusLabel}</span>
+                                    <span className="text-[10px] font-bold text-white/40 uppercase">
+                                        Desde: {new Date(student.createdAt).toLocaleDateString('pt-BR')}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 w-full md:w-auto justify-center md:justify-end">
+                                {isRequest ? (
+                                    <>
+                                        <button onClick={() => setPreviewStudent(student)} className="p-2 bg-blue-500/10 text-blue-400 rounded-lg hover:bg-blue-500 hover:text-white transition-all" title="Visualizar"><Eye size={16} /></button>
+                                        <button onClick={() => handleAcceptStudent(student)} disabled={processingId === student.id} className="p-2 bg-green-500/10 text-green-500 rounded-lg hover:bg-green-500 hover:text-white transition-all disabled:opacity-50" title="Aceitar"><Check size={16} /></button>
+                                        <button onClick={() => handleRejectStudent(student.id, student.clientName)} disabled={processingId === student.id} className="p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all disabled:opacity-50" title="Recusar"><X size={16} /></button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <button 
+                                            onClick={() => onLoadStudent(student, 'manage')}
+                                            className="px-4 py-2 bg-[#d4af37] text-black rounded-xl font-black uppercase text-[10px] tracking-widest hover:scale-105 transition-all shadow-lg flex items-center gap-2"
+                                        >
+                                            <Sparkles size={14} /> Criar Protocolo
+                                        </button>
+                                        {/* Botão de confirmação de envio também aqui, caso já tenha criado mas não enviado */}
+                                        {confirmSendId === student.id ? (
+                                            <div className="flex items-center gap-2 bg-black/40 p-1 rounded-lg border border-white/10 animate-in fade-in slide-in-from-right-5" onClick={(e) => e.stopPropagation()}>
+                                                <input 
+                                                    type="date" 
+                                                    value={sendDate} 
+                                                    onChange={(e) => setSendDate(e.target.value)}
+                                                    className="bg-transparent text-white text-[10px] p-1.5 rounded border border-white/10 outline-none focus:border-[#d4af37] w-24"
+                                                />
+                                                <button onClick={() => handleConfirmSend(student)} className="p-1.5 bg-green-500 text-white rounded hover:bg-green-600"><Check size={12} /></button>
+                                                <button onClick={() => setConfirmSendId(null)} className="p-1.5 bg-red-500 text-white rounded hover:bg-red-600"><X size={12} /></button>
+                                            </div>
+                                        ) : (
+                                            <button 
+                                                onClick={(e) => { e.stopPropagation(); setConfirmSendId(student.id); setSendDate(new Date().toISOString().split('T')[0]); }}
+                                                className="px-4 py-2 bg-green-500/10 text-green-500 border border-green-500/20 rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-green-500 hover:text-white transition-all flex items-center gap-2"
+                                                title="Marcar como Enviado"
+                                            >
+                                                <CheckCircle2 size={14} /> Já Enviei
+                                            </button>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                         </div>
+                    </div>
+                );
+            })
+        ) : (
+            <div className="h-full flex flex-col items-center justify-center text-white/20 py-20">
+                <UserPlus size={64} className="mb-6 opacity-20" />
+                <p className="text-sm font-black uppercase tracking-widest">Nenhuma avaliação pendente.</p>
+            </div>
+        )}
+    </div>
+  );
 
   // Helper para pegar data local YYYY-MM-DD de um ISO string UTC
   const getLocalDateFromISO = (isoStr: string) => {
@@ -355,33 +583,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
         </div>
       </div>
 
-      {/* PENDING REQUESTS */}
-      {pendingStudents.length > 0 && (
-        <div className="bg-[#d4af37]/10 border border-[#d4af37]/30 rounded-[2rem] p-6 animate-in slide-in-from-top-4">
-            <div className="flex items-center gap-3 mb-4">
-                <div className="bg-[#d4af37] text-black p-2 rounded-lg"><Bell size={18} className="animate-pulse" /></div>
-                <h3 className="font-black uppercase text-sm text-[#d4af37] tracking-widest">Solicitações de Cadastro ({pendingStudents.length})</h3>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {pendingStudents.map((student) => (
-                    <div key={student.id} className="bg-[#111] p-4 rounded-2xl border border-white/10 flex items-center justify-between gap-4 shadow-lg group hover:border-[#d4af37]/50 transition-colors">
-                        <div className="flex items-center gap-3 overflow-hidden">
-                             <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center border border-white/10 shrink-0"><UserPlus size={18} className="text-white/40" /></div>
-                             <div className="min-w-0">
-                                 <h4 className="text-sm font-bold text-white truncate">{student.clientName}</h4>
-                                 <p className="text-[10px] text-white/40 uppercase font-bold tracking-wider">{new Date(student.createdAt).toLocaleDateString('pt-BR')}</p>
-                             </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                             <button onClick={() => setPreviewStudent(student)} className="p-2 bg-blue-500/10 text-blue-400 rounded-lg hover:bg-blue-500 hover:text-white transition-all"><Eye size={16} /></button>
-                            <button onClick={() => handleRejectStudent(student.id, student.clientName)} disabled={processingId === student.id} className="p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all disabled:opacity-50">{processingId === student.id ? <Loader2 size={16} className="animate-spin" /> : <X size={16} />}</button>
-                            <button onClick={() => handleAcceptStudent(student)} disabled={processingId === student.id} className="p-2 bg-green-500/10 text-green-500 rounded-lg hover:bg-green-500 hover:text-white transition-all disabled:opacity-50">{processingId === student.id ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}</button>
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </div>
-      )}
+      {/* PENDING REQUESTS REMOVED - INTEGRATED INTO TABS */}
 
       {/* MODAL PREVIEW */}
       {previewStudent && (
@@ -435,127 +637,29 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
             ))}
         </div>
 
-        {/* AGENDA */}
-        <div className="lg:col-span-3 w-full bg-[#111] border border-white/10 rounded-[2rem] p-6 flex flex-col min-h-[65vh]">
-          <div className="flex items-center justify-between mb-6">
-             <h3 className="text-lg font-black uppercase tracking-tighter flex items-center gap-3 text-white"><CalendarClock size={24} className="text-[#d4af37]" /> Agenda de Atualizações</h3>
-             <span className="text-[10px] font-black text-white/30 uppercase tracking-widest bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">Ciclo: 15 Dias Pós-Ajuste</span>
+        {/* AGENDA & PENDING TABS */}
+        <div className="lg:col-span-3 w-full bg-[#111] border border-white/10 rounded-[2rem] p-6 flex flex-col min-h-[65vh] overflow-hidden">
+          
+          {/* TABS HEADER */}
+          <div className="flex items-center gap-4 mb-6 border-b border-white/5 pb-4">
+              <button 
+                  onClick={() => setCurrentTab('agenda')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${currentTab === 'agenda' ? 'bg-[#d4af37] text-black shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+              >
+                  <CalendarClock size={14} /> Agenda de Atualizações
+              </button>
+              <button 
+                  onClick={() => setCurrentTab('pending')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${currentTab === 'pending' ? 'bg-[#d4af37] text-black shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+              >
+                  <UserPlus size={14} /> Aguardando Avaliação
+                  {pendingEvaluationStudents.length > 0 && <span className="bg-red-500 text-white px-1.5 py-0.5 rounded text-[8px]">{pendingEvaluationStudents.length}</span>}
+              </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-2">
-            {scheduledUpdates.length > 0 ? (
-              scheduledUpdates.map((student: any) => {
-                const { isOverdue, isUrgent, isMissingProtocol, daysLeft, status, baseDate, nextDate } = student.schedule;
-                
-                // Configuração visual dinâmica
-                let statusColor = 'bg-green-500/10 text-green-500 border-green-500/20';
-                let daysColor = 'text-white/40';
-
-                if (isMissingProtocol) {
-                    statusColor = 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20';
-                    daysColor = 'text-indigo-400';
-                } else if (isOverdue) {
-                    statusColor = 'bg-red-500/10 text-red-500 border-red-500/20';
-                    daysColor = 'text-red-500 font-bold';
-                } else if (isUrgent) {
-                    statusColor = 'bg-yellow-500/10 text-[#d4af37] border-yellow-500/20';
-                    daysColor = 'text-[#d4af37] font-bold';
-                }
-
-                // Lógica de Botão de Confirmação
-                // Compara datas zeradas (apenas dia/mês/ano) para evitar problemas de hora/timezone
-                const updatedAtDate = new Date(student.updatedAt);
-                updatedAtDate.setHours(0,0,0,0);
-                
-                let lastSentDate = null;
-                if (student.lastSentDate) {
-                    // Garante que a string YYYY-MM-DD seja interpretada como data local meia-noite
-                    const [y, m, d] = student.lastSentDate.split('-');
-                    lastSentDate = new Date(parseInt(y), parseInt(m)-1, parseInt(d));
-                    lastSentDate.setHours(0,0,0,0);
-                }
-
-                // Mostra botão se: Nunca enviado OU Editado DEPOIS do último envio (Data Edição > Data Envio)
-                const showConfirmButton = !lastSentDate || (updatedAtDate.getTime() > lastSentDate.getTime());
-
-                return (
-                  <div key={`${student.id}-${student.lastSentDate}-${status}`} className="bg-white/5 p-4 rounded-xl border border-white/5 hover:border-white/10 transition-all flex flex-col md:flex-row items-center gap-4 group">
-                    
-                    {/* INFO ALUNO */}
-                    <div className="flex items-center gap-4 flex-1 w-full md:w-auto" onClick={() => onLoadStudent(student, 'manage')}>
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center border text-[10px] font-black shrink-0 ${statusColor}`}>
-                            {isMissingProtocol ? <Sparkles size={16} /> : (daysLeft === 0 ? 'HOJE' : (isOverdue ? `-${Math.abs(daysLeft)}` : `${daysLeft}`))}
-                        </div>
-                        <div className="min-w-0">
-                            <h4 className="font-black text-sm text-white leading-tight truncate flex items-center gap-2">
-                                {student.clientName}
-                                {isMissingProtocol && <span className="bg-indigo-500 text-white text-[8px] px-1.5 py-0.5 rounded uppercase">Novo</span>}
-                            </h4>
-                            <div className="flex items-center gap-3 text-[10px] text-white/40 uppercase font-bold mt-1">
-                                <span className="flex items-center gap-1"><CalendarClock size={10}/> Base: {baseDate}</span>
-                                <span className="w-1 h-1 bg-white/10 rounded-full"></span>
-                                <span className={daysColor}>Próximo: {nextDate}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* STATUS BADGE */}
-                    <div className="w-full md:w-auto flex justify-start md:justify-center">
-                        <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${statusColor}`}>
-                            {status}
-                        </span>
-                    </div>
-
-                    {/* ACTIONS */}
-                    <div className="flex items-center justify-end gap-2 w-full md:w-auto border-t border-white/5 pt-3 md:pt-0 md:border-0">
-                        {confirmSendId === student.id ? (
-                            <div className="flex items-center gap-2 bg-black/40 p-1 rounded-lg border border-white/10 animate-in fade-in slide-in-from-right-5" onClick={(e) => e.stopPropagation()}>
-                                <input 
-                                    type="date" 
-                                    value={sendDate} 
-                                    onChange={(e) => setSendDate(e.target.value)}
-                                    className="bg-transparent text-white text-[10px] p-1.5 rounded border border-white/10 outline-none focus:border-[#d4af37] w-24"
-                                />
-                                <button onClick={() => handleConfirmSend(student)} className="p-1.5 bg-green-500 text-white rounded hover:bg-green-600"><Check size={12} /></button>
-                                <button onClick={() => setConfirmSendId(null)} className="p-1.5 bg-red-500 text-white rounded hover:bg-red-600"><X size={12} /></button>
-                            </div>
-                        ) : (
-                            showConfirmButton ? (
-                                <button 
-                                    onClick={(e) => { e.stopPropagation(); setConfirmSendId(student.id); setSendDate(new Date().toISOString().split('T')[0]); }}
-                                    className="px-3 py-2 bg-white/5 hover:bg-[#d4af37] hover:text-black border border-white/10 hover:border-[#d4af37] rounded-lg text-white/60 font-black text-[9px] uppercase tracking-widest transition-all flex items-center gap-2"
-                                >
-                                    <span>Confirmar</span>
-                                    <CheckCircle2 size={12} />
-                                </button>
-                            ) : (
-                                <button 
-                                    onClick={(e) => { e.stopPropagation(); setConfirmSendId(student.id); setSendDate(student.lastSentDate || new Date().toISOString().split('T')[0]); }}
-                                    className="flex items-center gap-1.5 px-3 py-2 bg-green-500/10 hover:bg-green-500/20 rounded-xl border border-green-500/20 transition-all group/sent"
-                                    title="Clique para alterar a data de envio"
-                                >
-                                    <CheckCircle2 size={12} className="text-green-500" />
-                                    <span className="text-[9px] font-black uppercase text-green-500 tracking-widest">Enviado</span>
-                                    <span className="hidden group-hover/sent:inline text-[9px] text-green-500 ml-1"> (Editar)</span>
-                                </button>
-                            )
-                        )}
-                        
-                        <button onClick={() => onLoadStudent(student, 'manage')} className="p-2 hover:bg-white/10 rounded-lg text-white/20 hover:text-white transition-colors">
-                            <ChevronRight size={16} />
-                        </button>
-                    </div>
-
-                  </div>
-                );
-              })
-            ) : (
-              <div className="h-full flex flex-col items-center justify-center text-white/20">
-                 <CheckCircle2 size={48} className="mb-4 opacity-20" />
-                 <p className="text-xs font-black uppercase tracking-widest">Nenhuma atualização pendente</p>
-              </div>
-            )}
-          </div>
+          {/* CONTENT */}
+          {currentTab === 'agenda' ? renderAgendaTab() : renderPendingTab()}
+          
         </div>
       </div>
     </div>
