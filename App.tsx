@@ -10,6 +10,8 @@ import StudentDashboard from './components/StudentDashboard';
 import EvolutionTracker from './components/EvolutionTracker';
 import StudentEntryForm from './components/StudentEntryForm';
 import ProtocolGenerator from './components/ProtocolGenerator';
+import StudentLogin from './components/student/StudentLogin';
+import StudentPortal from './components/student/StudentPortal';
 import { 
   RefreshCw,
   CheckCircle2,
@@ -27,7 +29,7 @@ const App: React.FC = () => {
   const checkIsStudent = () => {
     if (typeof window !== 'undefined') {
        const h = window.location.hash;
-       return h.includes('student') || h.includes('cadastro');
+       return h.includes('student') || h.includes('portal');
     }
     return false;
   };
@@ -39,7 +41,12 @@ const App: React.FC = () => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [cloudStatus, setCloudStatus] = useState<'online' | 'error'>('online');
   const [showToast, setShowToast] = useState(false);
+  
+  // Auth States
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isStudentAuthenticated, setIsStudentAuthenticated] = useState(false);
+  const [studentData, setStudentData] = useState<ProtocolData | null>(null);
+  
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState(false);
 
@@ -67,8 +74,51 @@ const App: React.FC = () => {
     }
   };
 
+  const handleStudentLogin = async (email: string) => {
+    setIsSyncing(true);
+    try {
+      // Busca aluno pelo email no banco de dados
+      const protocols = await db.getAll();
+      const student = protocols.find(p => 
+        p.contract?.email?.toLowerCase() === email.toLowerCase() || 
+        p.consultantEmail?.toLowerCase() === email.toLowerCase() // Fallback para testes
+      );
+
+      if (student) {
+        setStudentData(student);
+        setIsStudentAuthenticated(true);
+        localStorage.setItem('vbr_student_auth', JSON.stringify({ email, id: student.id }));
+      } else {
+        alert('E-mail não encontrado. Verifique com seu consultor.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Erro ao conectar. Tente novamente.');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleStudentLogout = () => {
+    setIsStudentAuthenticated(false);
+    setStudentData(null);
+    localStorage.removeItem('vbr_student_auth');
+  };
+
   useEffect(() => {
-    if (isStudentPage) return;
+    if (isStudentPage) {
+      const studentAuth = localStorage.getItem('vbr_student_auth');
+      if (studentAuth) {
+        try {
+          const { email } = JSON.parse(studentAuth);
+          handleStudentLogin(email);
+        } catch (e) {
+          localStorage.removeItem('vbr_student_auth');
+        }
+      }
+      return;
+    }
+
     const auth = localStorage.getItem('vbr_auth');
     if (auth === 'true') {
       setIsAuthenticated(true);
@@ -183,12 +233,15 @@ GRANT ALL ON TABLE public.protocols TO anon;
 GRANT ALL ON TABLE public.protocols TO authenticated;
 GRANT ALL ON TABLE public.protocols TO service_role;`;
 
+  // ROTA DO ALUNO (PORTAL)
   if (isStudentPage) {
-     return <StudentEntryForm onCancel={() => {
-        window.location.hash = ''; 
-     }} />;
+    if (!isStudentAuthenticated || !studentData) {
+      return <StudentLogin onLogin={handleStudentLogin} />;
+    }
+    return <StudentPortal studentData={studentData} onLogout={handleStudentLogout} />;
   }
 
+  // ROTA DO CONSULTOR (ADMIN)
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-4 text-center overflow-y-auto">
@@ -205,6 +258,12 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
                 <button type="submit" className="w-full bg-[#d4af37] text-black py-4 rounded-xl font-black uppercase text-xs tracking-[0.2em] hover:scale-105 transition-all">Entrar</button>
               </form>
             </div>
+          </div>
+
+          <div className="mt-8 flex justify-center gap-4">
+            <a href="#portal" className="text-white/30 text-[10px] uppercase font-bold tracking-widest hover:text-[#d4af37] transition-colors">
+              Acesso do Aluno
+            </a>
           </div>
 
           <p className="mt-8 text-white/20 text-[10px] uppercase font-bold tracking-widest">Team VBR System © 2026</p>
