@@ -62,10 +62,6 @@ const StudentWorkout: React.FC<Props> = ({ data }) => {
                 className="p-5 rounded-2xl border transition-all duration-300 bg-black/40 border-white/5 hover:border-[#d4af37]/30 hover:bg-white/5"
               >
                 <div className="flex items-center gap-5">
-                  <div className="w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors border-white/20 text-transparent">
-                    <Circle size={14} />
-                  </div>
-                  
                   <div className="flex-1">
                     <h4 className="text-base font-bold uppercase mb-2 text-white">
                       {exercise.name}

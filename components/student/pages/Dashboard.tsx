@@ -8,10 +8,31 @@ interface Props {
 }
 
 const StudentDashboard: React.FC<Props> = ({ data, onNavigate }) => {
-  const nextUpdate = new Date();
-  nextUpdate.setDate(nextUpdate.getDate() + 15); // Mock date
+  // Lógica de Próxima Atualização
+  const calculateNextUpdate = () => {
+    if (data.contract.planType === 'Avulso') return null;
+    if (!data.lastSentDate) return null;
 
-  const daysLeft = 15;
+    const [y, m, d] = data.lastSentDate.split('-');
+    const lastDate = new Date(parseInt(y), parseInt(m)-1, parseInt(d));
+    
+    const nextDate = new Date(lastDate);
+    nextDate.setDate(lastDate.getDate() + 15); // Ciclo de 15 dias
+
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    nextDate.setHours(0,0,0,0);
+
+    const diffTime = nextDate.getTime() - today.getTime();
+    const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    return {
+      date: nextDate.toLocaleDateString('pt-BR'),
+      daysLeft: daysLeft
+    };
+  };
+
+  const nextUpdateInfo = calculateNextUpdate();
 
   return (
     <div className="space-y-8">
@@ -43,21 +64,25 @@ const StudentDashboard: React.FC<Props> = ({ data, onNavigate }) => {
           </div>
         </div>
 
-        <div className="bg-[#111] p-6 rounded-3xl border border-white/5 relative overflow-hidden group hover:border-[#d4af37]/30 transition-all">
-          <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-            <Calendar size={80} />
-          </div>
-          <div className="relative z-10">
-            <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500 mb-4">
-              <Clock size={24} />
+        {nextUpdateInfo && (
+          <div className="bg-[#111] p-6 rounded-3xl border border-white/5 relative overflow-hidden group hover:border-[#d4af37]/30 transition-all">
+            <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+              <Calendar size={80} />
             </div>
-            <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-1">Próxima Atualização</p>
-            <h3 className="text-xl font-bold text-white">{nextUpdate.toLocaleDateString('pt-BR')}</h3>
-            <div className="mt-4 text-xs text-blue-400 font-bold">
-              Faltam {daysLeft} dias
+            <div className="relative z-10">
+              <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500 mb-4">
+                <Clock size={24} />
+              </div>
+              <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-1">Próxima Atualização</p>
+              <h3 className="text-xl font-bold text-white">{nextUpdateInfo.date}</h3>
+              <div className={`mt-4 text-xs font-bold ${nextUpdateInfo.daysLeft <= 3 ? 'text-orange-500' : 'text-blue-400'}`}>
+                {nextUpdateInfo.daysLeft < 0 
+                  ? `Atrasado ${Math.abs(nextUpdateInfo.daysLeft)} dias` 
+                  : (nextUpdateInfo.daysLeft === 0 ? 'Atualiza Hoje' : `Faltam ${nextUpdateInfo.daysLeft} dias`)}
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         <div className="bg-[#d4af37] p-6 rounded-3xl border border-[#d4af37] relative overflow-hidden text-black group">
           <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">

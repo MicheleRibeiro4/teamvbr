@@ -31,6 +31,54 @@ const StudentPortal: React.FC<StudentPortalProps> = ({ studentData, onLogout }) 
   const [activePage, setActivePage] = useState<Page>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  // Verificação de Vencimento do Plano
+  const checkPlanExpiration = () => {
+    if (!studentData.contract.endDate) return false;
+    
+    // Converte DD/MM/YYYY para Date
+    const [day, month, year] = studentData.contract.endDate.split('/');
+    const endDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    endDate.setHours(23, 59, 59, 999); // Final do dia de vencimento
+
+    const today = new Date();
+    return today > endDate;
+  };
+
+  const isExpired = checkPlanExpiration();
+
+  if (isExpired) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] text-white font-sans flex items-center justify-center p-4">
+        <div className="max-w-md w-full text-center space-y-8 animate-in fade-in zoom-in duration-700">
+          <img src={LOGO_VBR_BLACK} alt="Team VBR" className="h-24 mx-auto opacity-50 mb-8" />
+          
+          <div className="bg-[#111] border border-red-500/20 p-8 rounded-[2rem] relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1 bg-red-500"></div>
+            
+            <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6 text-red-500">
+              <LogOut size={32} />
+            </div>
+            
+            <h2 className="text-2xl font-black uppercase text-white mb-2">Acesso Expirado</h2>
+            <p className="text-white/40 text-sm font-medium mb-8">
+              Seu plano encerrou em <span className="text-white font-bold">{studentData.contract.endDate}</span>.
+              <br/>Para continuar acessando seu protocolo e evoluindo, renove sua consultoria.
+            </p>
+
+            <button 
+              onClick={onLogout}
+              className="w-full bg-white text-black py-4 rounded-xl font-black uppercase text-xs tracking-[0.2em] hover:bg-gray-200 transition-colors"
+            >
+              Voltar ao Login
+            </button>
+          </div>
+          
+          <p className="text-[10px] font-black uppercase text-white/20 tracking-[0.3em]">Team VBR System</p>
+        </div>
+      </div>
+    );
+  }
+
   const menuItems = [
     { id: 'dashboard', label: 'Meu Painel', icon: LayoutDashboard },
     { id: 'protocol', label: 'Meu Protocolo', icon: Utensils },
