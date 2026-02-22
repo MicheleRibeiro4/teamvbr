@@ -3,7 +3,7 @@ import { Lock, ArrowRight, AlertCircle } from 'lucide-react';
 import { LOGO_VBR_BLACK } from '../../constants';
 
 interface StudentLoginProps {
-  onLogin: (email: string) => void;
+  onLogin: (email: string, password?: string) => void;
 }
 
 const StudentLogin: React.FC<StudentLoginProps> = ({ onLogin }) => {
@@ -20,7 +20,7 @@ const StudentLogin: React.FC<StudentLoginProps> = ({ onLogin }) => {
     // Simulação de login
     setTimeout(() => {
       if (email && password) {
-        onLogin(email);
+        onLogin(email, password);
       } else {
         setError('Credenciais inválidas. Tente novamente.');
         setIsLoading(false);
@@ -55,13 +55,13 @@ const StudentLogin: React.FC<StudentLoginProps> = ({ onLogin }) => {
             </div>
 
             <div>
-              <label className="block text-[10px] font-black text-[#d4af37] uppercase tracking-widest mb-2 ml-1">Senha</label>
+              <label className="block text-[10px] font-black text-[#d4af37] uppercase tracking-widest mb-2 ml-1">Senha (CPF - Apenas números)</label>
               <input 
                 type="password" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white placeholder-white/20 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] transition-all outline-none text-sm"
-                placeholder="••••••••"
+                placeholder="Apenas números"
               />
             </div>
 
@@ -83,9 +83,13 @@ const StudentLogin: React.FC<StudentLoginProps> = ({ onLogin }) => {
           </form>
 
           <div className="mt-8 text-center">
-            <a href="#" className="text-[10px] text-white/30 hover:text-[#d4af37] transition-colors uppercase font-bold tracking-wider border-b border-transparent hover:border-[#d4af37]">
+            <button 
+              type="button"
+              onClick={() => alert('Sua senha é o seu CPF (apenas números).\n\nCaso tenha problemas para acessar, entre em contato com seu consultor.')}
+              className="text-[10px] text-white/30 hover:text-[#d4af37] transition-colors uppercase font-bold tracking-wider border-b border-transparent hover:border-[#d4af37] bg-transparent outline-none"
+            >
               Esqueci minha senha
-            </a>
+            </button>
           </div>
         </div>
 

@@ -75,7 +75,7 @@ const App: React.FC = () => {
     }
   };
 
-  const handleStudentLogin = async (email: string) => {
+  const handleStudentLogin = async (email: string, password?: string) => {
     setIsSyncing(true);
     try {
       // Busca aluno pelo email no banco de dados
@@ -86,6 +86,19 @@ const App: React.FC = () => {
       );
 
       if (student) {
+        // Verifica a senha (CPF - apenas números)
+        // Se não tiver senha (login automático via localStorage), passa direto
+        if (password) {
+            const cleanCpf = student.contract.cpf.replace(/\D/g, '');
+            const cleanPassword = password.replace(/\D/g, '');
+            
+            if (cleanPassword !== cleanCpf) {
+                alert('Senha incorreta. A senha é o seu CPF (apenas números).');
+                setIsSyncing(false);
+                return;
+            }
+        }
+
         setStudentData(student);
         setIsStudentAuthenticated(true);
         localStorage.setItem('vbr_student_auth', JSON.stringify({ email, id: student.id }));
