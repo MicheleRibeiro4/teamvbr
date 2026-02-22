@@ -368,7 +368,10 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ prompt })
             });
-            if (!res.ok) throw new Error('Falha ao gerar com OpenAI');
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.error || 'Falha ao gerar com OpenAI');
+            }
             aiData = await res.json();
         }
 
