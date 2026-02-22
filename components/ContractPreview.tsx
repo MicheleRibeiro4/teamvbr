@@ -50,8 +50,6 @@ const ContractPreview = forwardRef<ContractPreviewHandle, Props>(({ data, onBack
 
     text = text.replace(/\(\s*\)\s*Boleto bancário/gi, "");
     text = text.replace(/\(\s*\)\s*Outro:[\s_]*/gi, "");
-    text = text.replace(/1\.3\. NÃO constitui objeto deste contrato:\s*[\r\n]+/g, "1.3. NÃO constitui objeto deste contrato:\n");
-    text = text.replace(/3\.2\. Forma de pagamento:\s*[\r\n]+\s*/g, "3.2. Forma de pagamento: ");
     text = text.replace(/\n\s*\n\s*\n/g, "\n\n");
 
     return text;
