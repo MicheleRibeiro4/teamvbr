@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ProtocolData } from '../../../types';
-import { FileDown, ChevronDown, ChevronUp, Droplets, AlertCircle } from 'lucide-react';
+import { FileDown, Droplets, AlertCircle } from 'lucide-react';
 import ProtocolPreview from '../../ProtocolPreview';
 
 interface Props {
@@ -83,12 +83,6 @@ const StudentProtocol: React.FC<Props> = ({ data }) => {
                     {meal.details.split('\n')[0]}
                   </p>
                 </div>
-              </div>
-              <div className={`
-                w-8 h-8 rounded-full flex items-center justify-center transition-colors
-                ${expandedMeal === index.toString() ? 'bg-[#d4af37]/20 text-[#d4af37]' : 'bg-white/5 text-white/40'}
-              `}>
-                {expandedMeal === index.toString() ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
               </div>
             </button>
 
