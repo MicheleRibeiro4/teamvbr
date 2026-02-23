@@ -8,13 +8,11 @@ import { GoogleGenAI, Type } from "@google/genai";
 interface Props {
   onGenerate: (data: ProtocolData) => void;
   onCancel: () => void;
-  initialProvider?: 'openai' | 'gemini';
 }
 
-const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel, initialProvider = 'openai' }) => {
+const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [aiProvider, setAiProvider] = useState<'openai' | 'gemini'>(initialProvider);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -109,103 +107,87 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel, initialProvi
 
         let aiData: any;
 
-        if (aiProvider === 'openai') {
-            const response = await fetch('/api/generate-protocol', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Erro na comunicação com o servidor');
-            }
-
-            aiData = await response.json();
-        } else {
-            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-            const response = await ai.models.generateContent({
-                model: 'gemini-3-flash-preview',
-                contents: prompt,
-                config: {
-                    responseMimeType: 'application/json',
-                    responseSchema: {
-                        type: Type.OBJECT,
-                        properties: {
-                            nutritionalStrategy: { type: Type.STRING },
-                            kcalGoal: { type: Type.STRING },
-                            waterGoal: { type: Type.STRING },
-                            macros: {
+        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: prompt,
+            config: {
+                responseMimeType: 'application/json',
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        nutritionalStrategy: { type: Type.STRING },
+                        kcalGoal: { type: Type.STRING },
+                        waterGoal: { type: Type.STRING },
+                        macros: {
+                            type: Type.OBJECT,
+                            properties: {
+                                protein: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } }, required: ["value", "ratio"] },
+                                carbs: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } }, required: ["value", "ratio"] },
+                                fats: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } }, required: ["value", "ratio"] }
+                            },
+                            required: ["protein", "carbs", "fats"]
+                        },
+                        meals: {
+                            type: Type.ARRAY,
+                            items: {
                                 type: Type.OBJECT,
                                 properties: {
-                                    protein: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } }, required: ["value", "ratio"] },
-                                    carbs: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } }, required: ["value", "ratio"] },
-                                    fats: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } }, required: ["value", "ratio"] }
+                                    time: { type: Type.STRING },
+                                    name: { type: Type.STRING },
+                                    details: { type: Type.STRING }
                                 },
-                                required: ["protein", "carbs", "fats"]
-                            },
-                            meals: {
-                                type: Type.ARRAY,
-                                items: {
-                                    type: Type.OBJECT,
-                                    properties: {
-                                        time: { type: Type.STRING },
-                                        name: { type: Type.STRING },
-                                        details: { type: Type.STRING }
-                                    },
-                                    required: ["time", "name", "details"]
-                                }
-                            },
-                            supplements: {
-                                type: Type.ARRAY,
-                                items: {
-                                    type: Type.OBJECT,
-                                    properties: {
-                                        name: { type: Type.STRING },
-                                        dosage: { type: Type.STRING },
-                                        timing: { type: Type.STRING }
-                                    },
-                                    required: ["name", "dosage", "timing"]
-                                }
-                            },
-                            trainingDays: {
-                                type: Type.ARRAY,
-                                items: {
-                                    type: Type.OBJECT,
-                                    properties: {
-                                        title: { type: Type.STRING },
-                                        focus: { type: Type.STRING },
-                                        exercises: {
-                                            type: Type.ARRAY,
-                                            items: {
-                                                type: Type.OBJECT,
-                                                properties: {
-                                                    name: { type: Type.STRING },
-                                                    sets: { type: Type.STRING }
-                                                },
-                                                required: ["name", "sets"]
-                                            }
-                                        }
-                                    },
-                                    required: ["title", "focus", "exercises"]
-                                }
-                            },
-                            tips: { type: Type.ARRAY, items: { type: Type.STRING } }
+                                required: ["time", "name", "details"]
+                            }
                         },
-                        required: ["nutritionalStrategy", "kcalGoal", "macros", "meals", "supplements", "trainingDays", "tips"]
-                    }
+                        supplements: {
+                            type: Type.ARRAY,
+                            items: {
+                                type: Type.OBJECT,
+                                properties: {
+                                    name: { type: Type.STRING },
+                                    dosage: { type: Type.STRING },
+                                    timing: { type: Type.STRING }
+                                },
+                                required: ["name", "dosage", "timing"]
+                            }
+                        },
+                        trainingDays: {
+                            type: Type.ARRAY,
+                            items: {
+                                type: Type.OBJECT,
+                                properties: {
+                                    title: { type: Type.STRING },
+                                    focus: { type: Type.STRING },
+                                    exercises: {
+                                        type: Type.ARRAY,
+                                        items: {
+                                            type: Type.OBJECT,
+                                            properties: {
+                                                name: { type: Type.STRING },
+                                                sets: { type: Type.STRING }
+                                            },
+                                            required: ["name", "sets"]
+                                        }
+                                    }
+                                },
+                                required: ["title", "focus", "exercises"]
+                            }
+                        },
+                        tips: { type: Type.ARRAY, items: { type: Type.STRING } }
+                    },
+                    required: ["nutritionalStrategy", "kcalGoal", "macros", "meals", "supplements", "trainingDays", "tips"]
                 }
-            });
-
-            let jsonStr = response.text || "{}";
-            jsonStr = jsonStr.trim();
-            if (jsonStr.startsWith('```json')) {
-                jsonStr = jsonStr.replace(/^```json/, '').replace(/```$/, '');
-            } else if (jsonStr.startsWith('```')) {
-                jsonStr = jsonStr.replace(/^```/, '').replace(/```$/, '');
             }
-            aiData = JSON.parse(jsonStr);
+        });
+        let jsonStr = response.text || "{}";
+        jsonStr = jsonStr.trim();
+        if (jsonStr.startsWith('```json')) {
+            jsonStr = jsonStr.replace(/^```json/, '').replace(/```$/, '');
+        } else if (jsonStr.startsWith('```')) {
+            jsonStr = jsonStr.replace(/^```/, '').replace(/```$/, '');
         }
+        aiData = JSON.parse(jsonStr);
 
 
         const timestamp = new Date().toISOString();
@@ -323,24 +305,8 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel, initialProvi
             </div>
             <div>
               <h1 className="text-3xl font-black text-white uppercase tracking-tighter leading-none">Gerador de Protocolo IA</h1>
-              <p className="text-white/40 text-xs font-bold uppercase tracking-widest mt-1">Criação Inteligente com {aiProvider === 'openai' ? 'OpenAI' : 'Gemini'}</p>
+              <p className="text-white/40 text-xs font-bold uppercase tracking-widest mt-1">Criação Inteligente com Gemini</p>
             </div>
-          </div>
-
-          {/* AI Provider Selector */}
-          <div className="flex gap-2 mb-8 p-1 bg-white/5 rounded-2xl border border-white/10">
-            <button 
-              onClick={() => setAiProvider('openai')}
-              className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${aiProvider === 'openai' ? 'bg-[#d4af37] text-black shadow-lg' : 'text-white/40 hover:text-white'}`}
-            >
-              <Cpu size={14} /> OpenAI (GPT-4o)
-            </button>
-            <button 
-              onClick={() => setAiProvider('gemini')}
-              className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${aiProvider === 'gemini' ? 'bg-[#d4af37] text-black shadow-lg' : 'text-white/40 hover:text-white'}`}
-            >
-              <Sparkles size={14} /> Google Gemini
-            </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">

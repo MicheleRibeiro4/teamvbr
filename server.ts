@@ -14,14 +14,16 @@ async function startServer() {
   let openaiClient: OpenAI | null = null;
 
   function getOpenAI(): OpenAI {
-    if (!openaiClient) {
-      const key = process.env.OPENIA_API_KEY;
-      if (!key) {
-        throw new Error("OPENIA_API_KEY não configurada no servidor.");
-      }
-      openaiClient = new OpenAI({ apiKey: key });
+    // Tenta pegar com o nome padrão ou com o erro de digitação comum
+    const key = process.env.OPENAI_API_KEY || process.env.OPENIA_API_KEY;
+    
+    if (!key) {
+      throw new Error("API Key da OpenAI não encontrada. Configure OPENAI_API_KEY nas variáveis de ambiente.");
     }
-    return openaiClient;
+    
+    // Não guardamos em cache para garantir que trocas de chave no ambiente 
+    // sejam refletidas sem precisar de reinicialização complexa
+    return new OpenAI({ apiKey: key });
   }
 
   // API routes

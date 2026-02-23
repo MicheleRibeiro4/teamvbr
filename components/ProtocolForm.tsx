@@ -194,7 +194,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
     }
   };
 
-  const handleGenerateAI = async (provider: 'openai' | 'gemini' = 'openai') => {
+  const handleGenerateNutritionAI = async () => {
     if (!data.clientName || !data.physicalData.weight) {
         alert("Preencha pelo menos o Nome e o Peso do aluno na aba de Identificação/Medidas.");
         return;
@@ -203,18 +203,9 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
     setIsGenerating(true);
 
     try {
-        const freqMatch = (data.trainingFrequency || '').match(/\d+/);
-        const freqNum = freqMatch ? parseInt(freqMatch[0]) : 5;
-        
-        const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
-        const requiredDaysList = Array.from({ length: freqNum }, (_, i) => {
-            const letter = letters[i] || (i + 1).toString();
-            return `Treino ${letter}`;
-        }).join(', ');
-
         const prompt = `
-          Aja como um treinador e nutricionista de elite do 'Team VBR'.
-          Crie um protocolo completo para o aluno baseado nos dados abaixo:
+          Aja como um nutricionista de elite do 'Team VBR'.
+          Crie uma estratégia nutricional e dieta baseada nos dados abaixo:
           
           DADOS DO ALUNO:
           - Nome: ${data.clientName}
@@ -223,29 +214,19 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
           - Peso: ${data.physicalData.weight}kg
           - Altura: ${data.physicalData.height}m
           - Objetivo Atual: ${data.protocolTitle}
-          - Frequência de Treino: ${freqNum} vezes na semana.
           
-          ANAMNESE COMPLETA (CONSIDERAR TODOS OS DETALHES):
+          ANAMNESE COMPLETA:
           - Objetivo Principal: ${data.anamnesis.mainObjective}
           - Rotina Diária: ${data.anamnesis.routine}
-          - Histórico de Treino/Dieta: ${data.anamnesis.trainingHistory}
           - Preferências Alimentares: ${data.anamnesis.foodPreferences}
-          - Lesões/Limitações: ${data.anamnesis.injuries}
           - Ergogênicos/Medicamentos: ${data.anamnesis.ergogenics} | ${data.anamnesis.medications}
 
           ESTRATÉGIA NUTRICIONAL JÁ DEFINIDA (SE HOUVER):
           "${data.nutritionalStrategy || "Nenhuma definida ainda."}"
           
-          INSTRUÇÃO:
-          Se já houver uma estratégia nutricional acima, NÃO a ignore. Gere uma complementação ou uma nova visão que se some a ela.
-          
-          REQUISITO CRÍTICO DE TREINO:
-          Gere EXATAMENTE ${freqNum} treinos no array 'trainingDays'.
-          Títulos esperados: ${requiredDaysList}.
-          
-          Gere um JSON com a seguinte estrutura estrita:
+          Gere um JSON com a seguinte estrutura:
           {
-            "nutritionalStrategy": "Texto curto e direto sobre a estratégia (ex: Carb Cycling, Normocalórica, etc)",
+            "nutritionalStrategy": "Texto curto e direto sobre a estratégia",
             "kcalGoal": "Ex: 2500 kcal",
             "waterGoal": "Ex: 3,5", 
             "macros": {
@@ -259,167 +240,190 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
             "supplements": [
               { "name": "Nome", "dosage": "Dose", "timing": "Horário" }
             ],
+            "tips": ["Dica 1", "Dica 2"]
+          }
+        `;
+
+        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: prompt,
+            config: {
+                responseMimeType: 'application/json',
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        nutritionalStrategy: { type: Type.STRING },
+                        kcalGoal: { type: Type.STRING },
+                        waterGoal: { type: Type.STRING },
+                        macros: {
+                            type: Type.OBJECT,
+                            properties: {
+                                protein: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } }, required: ["value", "ratio"] },
+                                carbs: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } }, required: ["value", "ratio"] },
+                                fats: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } }, required: ["value", "ratio"] }
+                            },
+                            required: ["protein", "carbs", "fats"]
+                        },
+                        meals: {
+                            type: Type.ARRAY,
+                            items: {
+                                type: Type.OBJECT,
+                                properties: {
+                                    time: { type: Type.STRING },
+                                    name: { type: Type.STRING },
+                                    details: { type: Type.STRING }
+                                },
+                                required: ["time", "name", "details"]
+                            }
+                        },
+                        supplements: {
+                            type: Type.ARRAY,
+                            items: {
+                                type: Type.OBJECT,
+                                properties: {
+                                    name: { type: Type.STRING },
+                                    dosage: { type: Type.STRING },
+                                    timing: { type: Type.STRING }
+                                },
+                                required: ["name", "dosage", "timing"]
+                            }
+                        },
+                        tips: { type: Type.ARRAY, items: { type: Type.STRING } }
+                    },
+                    required: ["nutritionalStrategy", "kcalGoal", "macros", "meals", "supplements", "tips"]
+                }
+            }
+        });
+
+        let jsonStr = response.text || "{}";
+        jsonStr = jsonStr.trim();
+        if (jsonStr.startsWith('```json')) jsonStr = jsonStr.replace(/^```json/, '').replace(/```$/, '');
+        else if (jsonStr.startsWith('```')) jsonStr = jsonStr.replace(/^```/, '').replace(/```$/, '');
+        
+        const aiData = JSON.parse(jsonStr);
+        const newData = JSON.parse(JSON.stringify(data));
+        
+        if (aiData.nutritionalStrategy) {
+            if (!newData.nutritionalStrategy || newData.nutritionalStrategy.trim() === "") {
+                newData.nutritionalStrategy = aiData.nutritionalStrategy;
+            }
+        }
+        if (aiData.kcalGoal) newData.kcalGoal = aiData.kcalGoal;
+        if (aiData.waterGoal) newData.waterGoal = aiData.waterGoal.replace('L', '').trim();
+        if (aiData.macros) newData.macros = aiData.macros;
+        if (aiData.meals) newData.meals = aiData.meals.map((m: any) => ({ ...m, id: Math.random().toString(36).substr(2, 9) }));
+        if (aiData.supplements) newData.supplements = aiData.supplements.map((s: any) => ({ ...s, id: Math.random().toString(36).substr(2, 9) }));
+        if (aiData.tips) newData.tips = aiData.tips;
+        
+        onChange(newData);
+        alert("Dieta gerada com sucesso!");
+    } catch (err: any) {
+        console.error(err);
+        alert("Erro ao gerar dieta: " + err.message);
+    } finally {
+        setIsGenerating(false);
+    }
+  };
+
+  const handleGenerateTrainingAI = async () => {
+    if (!data.clientName || !data.physicalData.weight) {
+        alert("Preencha pelo menos o Nome e o Peso do aluno na aba de Identificação/Medidas.");
+        return;
+    }
+
+    setIsGenerating(true);
+
+    try {
+        const freqMatch = (data.trainingFrequency || '').match(/\d+/);
+        const freqNum = freqMatch ? parseInt(freqMatch[0]) : 5;
+        const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+        const requiredDaysList = Array.from({ length: freqNum }, (_, i) => letters[i] || (i + 1).toString()).map(l => `Treino ${l}`).join(', ');
+
+        const prompt = `
+          Aja como um treinador de elite do 'Team VBR'.
+          Crie um plano de treino baseado nos dados abaixo:
+          
+          DADOS DO ALUNO:
+          - Nome: ${data.clientName}
+          - Objetivo Atual: ${data.protocolTitle}
+          - Frequência de Treino: ${freqNum} vezes na semana.
+          
+          ANAMNESE:
+          - Objetivo Principal: ${data.anamnesis.mainObjective}
+          - Histórico de Treino: ${data.anamnesis.trainingHistory}
+          - Lesões/Limitações: ${data.anamnesis.injuries}
+          
+          REQUISITO:
+          Gere EXATAMENTE ${freqNum} treinos.
+          Títulos: ${requiredDaysList}.
+          
+          Gere um JSON:
+          {
             "trainingDays": [
               {
                 "title": "Treino A",
                 "focus": "Grupo Muscular",
                 "exercises": [
-                   { "name": "Nome do Exercício", "sets": "4x12" }
+                   { "name": "Nome", "sets": "4x12" }
                 ]
               }
-            ],
-            "tips": ["Dica 1", "Dica 2"]
+            ]
           }
-          
-          Regras:
-          1. Use português do Brasil.
-          2. Seja específico nas quantidades dos alimentos.
-          3. O treino deve ser coerente com o objetivo e anamnesis.
-          4. O campo waterGoal deve ser APENAS O NÚMERO em Litros (ex: "3,5").
         `;
 
-        let aiData: any;
-
-        if (provider === 'gemini') {
-            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-            const response = await ai.models.generateContent({
-                model: 'gemini-3-flash-preview',
-                contents: prompt,
-                config: {
-                    responseMimeType: 'application/json',
-                    responseSchema: {
-                        type: Type.OBJECT,
-                        properties: {
-                            nutritionalStrategy: { type: Type.STRING },
-                            kcalGoal: { type: Type.STRING },
-                            waterGoal: { type: Type.STRING },
-                            macros: {
+        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: prompt,
+            config: {
+                responseMimeType: 'application/json',
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        trainingDays: {
+                            type: Type.ARRAY,
+                            items: {
                                 type: Type.OBJECT,
                                 properties: {
-                                    protein: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } }, required: ["value", "ratio"] },
-                                    carbs: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } }, required: ["value", "ratio"] },
-                                    fats: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } }, required: ["value", "ratio"] }
-                                },
-                                required: ["protein", "carbs", "fats"]
-                            },
-                            meals: {
-                                type: Type.ARRAY,
-                                items: {
-                                    type: Type.OBJECT,
-                                    properties: {
-                                        time: { type: Type.STRING },
-                                        name: { type: Type.STRING },
-                                        details: { type: Type.STRING }
-                                    },
-                                    required: ["time", "name", "details"]
-                                }
-                            },
-                            supplements: {
-                                type: Type.ARRAY,
-                                items: {
-                                    type: Type.OBJECT,
-                                    properties: {
-                                        name: { type: Type.STRING },
-                                        dosage: { type: Type.STRING },
-                                        timing: { type: Type.STRING }
-                                    },
-                                    required: ["name", "dosage", "timing"]
-                                }
-                            },
-                            trainingDays: {
-                                type: Type.ARRAY,
-                                items: {
-                                    type: Type.OBJECT,
-                                    properties: {
-                                        title: { type: Type.STRING },
-                                        focus: { type: Type.STRING },
-                                        exercises: {
-                                            type: Type.ARRAY,
-                                            items: {
-                                                type: Type.OBJECT,
-                                                properties: {
-                                                    name: { type: Type.STRING },
-                                                    sets: { type: Type.STRING }
-                                                },
-                                                required: ["name", "sets"]
-                                            }
+                                    title: { type: Type.STRING },
+                                    focus: { type: Type.STRING },
+                                    exercises: {
+                                        type: Type.ARRAY,
+                                        items: {
+                                            type: Type.OBJECT,
+                                            properties: {
+                                                name: { type: Type.STRING },
+                                                sets: { type: Type.STRING }
+                                            },
+                                            required: ["name", "sets"]
                                         }
-                                    },
-                                    required: ["title", "focus", "exercises"]
-                                }
-                            },
-                            tips: { type: Type.ARRAY, items: { type: Type.STRING } }
-                        },
-                        required: ["nutritionalStrategy", "kcalGoal", "macros", "meals", "supplements", "trainingDays", "tips"]
-                    }
+                                    }
+                                },
+                                required: ["title", "focus", "exercises"]
+                            }
+                        }
+                    },
+                    required: ["trainingDays"]
                 }
-            });
-            let jsonStr = response.text || "{}";
-            jsonStr = jsonStr.trim();
-            if (jsonStr.startsWith('```json')) {
-                jsonStr = jsonStr.replace(/^```json/, '').replace(/```$/, '');
-            } else if (jsonStr.startsWith('```')) {
-                jsonStr = jsonStr.replace(/^```/, '').replace(/```$/, '');
             }
-            aiData = JSON.parse(jsonStr);
-        } else {
-            const res = await fetch('/api/generate-protocol', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt })
-            });
-            if (!res.ok) {
-                const errorData = await res.json().catch(() => ({}));
-                throw new Error(errorData.error || 'Falha ao gerar com OpenAI');
-            }
-            aiData = await res.json();
-        }
+        });
 
-        // Merge com dados existentes
+        let jsonStr = response.text || "{}";
+        jsonStr = jsonStr.trim();
+        if (jsonStr.startsWith('```json')) jsonStr = jsonStr.replace(/^```json/, '').replace(/```$/, '');
+        else if (jsonStr.startsWith('```')) jsonStr = jsonStr.replace(/^```/, '').replace(/```$/, '');
+        
+        const aiData = JSON.parse(jsonStr);
         const newData = JSON.parse(JSON.stringify(data));
         
-        // PRESERVA A ESTRATÉGIA ORIGINAL (NÃO CONCATENA NEM SUBSTITUI SE JÁ EXISTIR)
-        if (aiData.nutritionalStrategy) {
-            if (!newData.nutritionalStrategy || newData.nutritionalStrategy.trim() === "") {
-                newData.nutritionalStrategy = aiData.nutritionalStrategy;
-            }
-            // Se já existir, mantém a original e ignora a da IA, conforme solicitado.
-        }
-        if (aiData.kcalGoal) newData.kcalGoal = aiData.kcalGoal;
-        
-        // Atualiza waterGoal se a IA retornou, senão recalcula
-        if (aiData.waterGoal) {
-            newData.waterGoal = aiData.waterGoal.replace('L', '').trim();
-        } else {
-             const weight = parseFloat(data.physicalData.weight.replace(',', '.'));
-             if (!isNaN(weight)) newData.waterGoal = (weight * 0.045).toFixed(1).replace('.', ',');
-        }
-
-        if (aiData.macros) newData.macros = aiData.macros;
-        
-        if (aiData.meals && Array.isArray(aiData.meals)) {
-            newData.meals = aiData.meals.map((m: any) => ({ ...m, id: Math.random().toString(36).substr(2, 9) }));
-        }
-        
-        if (aiData.supplements && Array.isArray(aiData.supplements)) {
-            newData.supplements = aiData.supplements.map((s: any) => ({ ...s, id: Math.random().toString(36).substr(2, 9) }));
-        }
-        
-        // --- LOGICA DE CORREÇÃO DE TREINOS ---
         let generatedTrainingDays = aiData.trainingDays || [];
-        if (!Array.isArray(generatedTrainingDays)) generatedTrainingDays = [];
-
-        // Garante que o número de dias seja exatamente o solicitado (backfill ou slice)
         if (generatedTrainingDays.length < freqNum) {
             for (let i = generatedTrainingDays.length; i < freqNum; i++) {
                 generatedTrainingDays.push({
                     title: `Treino ${letters[i] || (i + 1)}`,
-                    focus: "Foco a definir (Gerado automaticamente)",
-                    exercises: [
-                        { name: "Exercício Principal", sets: "4x10" },
-                        { name: "Exercício Auxiliar", sets: "3x12" },
-                        { name: "Exercício Isolado", sets: "3x15" }
-                    ]
+                    focus: "Foco a definir",
+                    exercises: [{ name: "Exercício Principal", sets: "4x10" }]
                 });
             }
         } else if (generatedTrainingDays.length > freqNum) {
@@ -436,17 +440,12 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                     sets: e.sets || "3x10"
                 }))
         }));
-
-        if (aiData.tips && Array.isArray(aiData.tips)) {
-            newData.tips = aiData.tips;
-        }
-
+        
         onChange(newData);
-        alert("Protocolo gerado com sucesso! Revise os dados.");
-
+        alert("Treino gerado com sucesso!");
     } catch (err: any) {
         console.error(err);
-        alert("Erro ao gerar com IA: " + err.message);
+        alert("Erro ao gerar treino: " + err.message);
     } finally {
         setIsGenerating(false);
     }
@@ -887,8 +886,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                 </div>
                 <div className="flex gap-2 w-full md:w-auto flex-wrap">
                     <button onClick={handleClearNutrition} className={btnClearClass}><Eraser size={14} /> Limpar</button>
-                    <button onClick={() => handleGenerateAI('openai')} disabled={isGenerating} className="px-4 py-3 bg-[#d4af37] text-black rounded-xl font-black uppercase text-xs tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap h-auto">{isGenerating ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}{isGenerating ? 'Gerando...' : 'IA (OpenAI)'}</button>
-                    <button onClick={() => handleGenerateAI('gemini')} disabled={isGenerating} className="px-4 py-3 bg-[#d4af37] text-black rounded-xl font-black uppercase text-xs tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap h-auto">{isGenerating ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}{isGenerating ? 'Gerando...' : 'IA (Gemini)'}</button>
+                    <button onClick={handleGenerateNutritionAI} disabled={isGenerating} className="px-4 py-3 bg-[#d4af37] text-black rounded-xl font-black uppercase text-xs tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap h-auto">{isGenerating ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}{isGenerating ? 'Gerando...' : 'Gerar Dieta (Gemini)'}</button>
                 </div>
             </div>
           </section>
@@ -987,6 +985,28 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                     } />
                 </div>
             </div>
+
+            <section className="bg-gradient-to-r from-[#d4af37]/10 to-transparent p-6 rounded-2xl border border-[#d4af37]/20 relative overflow-hidden group mb-8">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[#d4af37] blur-[80px] opacity-10"></div>
+              {isGenerating && (
+                 <div className="absolute inset-0 bg-black/80 z-20 flex flex-col items-center justify-center rounded-2xl backdrop-blur-sm">
+                    <Loader2 size={40} className="text-[#d4af37] animate-spin mb-2" />
+                    <p className="text-[#d4af37] font-black uppercase tracking-widest text-xs animate-pulse">CRIANDO TREINO...</p>
+                 </div>
+              )}
+              <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 bg-[#d4af37] text-black rounded-xl shrink-0"><Sparkles size={24} /></div>
+                    <div>
+                        <h3 className="text-xl font-black text-white uppercase tracking-tighter">Gerador de Treino IA</h3>
+                        <p className="text-sm text-white/60 max-w-lg">A IA criará uma periodização completa baseada na frequência e nível do aluno.</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 w-full md:w-auto flex-wrap">
+                      <button onClick={handleGenerateTrainingAI} disabled={isGenerating} className="px-4 py-3 bg-[#d4af37] text-black rounded-xl font-black uppercase text-xs tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap h-auto">{isGenerating ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}{isGenerating ? 'Gerando...' : 'Gerar Treino (Gemini)'}</button>
+                  </div>
+              </div>
+            </section>
 
             <div className="mb-6"><label className={labelClass}>Frequência Semanal</label><input className={inputClass} value={data.trainingFrequency} onChange={(e) => handleChange('trainingFrequency', e.target.value)} placeholder="Ex: 5x na semana" /></div>
             <div className="space-y-8">

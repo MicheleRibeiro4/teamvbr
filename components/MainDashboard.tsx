@@ -25,7 +25,7 @@ import {
 
 interface Props {
   protocols: ProtocolData[];
-  onNew: (provider: 'openai' | 'gemini') => void;
+  onNew: () => void;
   onList: () => void;
   onLoadStudent: (student: ProtocolData, view: 'manage' | 'student-dashboard') => void;
   onUpdateStudent: (student: ProtocolData) => Promise<void>;
@@ -578,8 +578,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
           <h1 className="text-xl md:text-3xl font-black text-white uppercase tracking-tighter leading-none">Team VBR</h1>
         </div>
         <div className="relative z-10 flex flex-wrap justify-center gap-2 w-full md:w-auto">
-          <button onClick={() => onNew('openai')} className="bg-[#d4af37] text-black px-4 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-[0.2em] hover:scale-105 transition-all shadow-[0_0_30px_rgba(212,175,55,0.2)] flex items-center justify-center gap-2 group"><UserPlus size={14}/> Novo (OpenAI)</button>
-          <button onClick={() => onNew('gemini')} className="bg-[#d4af37] text-black px-4 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-[0.2em] hover:scale-105 transition-all shadow-[0_0_30px_rgba(212,175,55,0.2)] flex items-center justify-center gap-2 group"><UserPlus size={14}/> Novo (Gemini)</button>
+          <button onClick={() => onNew()} className="bg-[#d4af37] text-black px-4 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-[0.2em] hover:scale-105 transition-all shadow-[0_0_30px_rgba(212,175,55,0.2)] flex items-center justify-center gap-2 group"><UserPlus size={14}/> Novo Aluno</button>
           <button onClick={onList} className="bg-white/5 border border-white/10 text-white px-4 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-[0.2em] hover:bg-white/10 transition-all flex items-center justify-center gap-2"><Search size={14}/> Buscar</button>
           <button onClick={() => {
              const origin = typeof window !== 'undefined' ? window.location.origin : '';

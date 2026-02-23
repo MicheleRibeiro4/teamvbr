@@ -160,7 +160,73 @@ const EvolutionTracker: React.FC<Props> = ({
       setMode('new_protocol');
   };
 
-  const handleGenerateProtocolAI = async (provider: 'openai' | 'gemini' = 'openai') => {
+  const handleGenerateNutritionAI = async () => {
+     setIsGeneratingAI(true);
+     try {
+         const prompt = `
+            Atue como nutricionista do Team VBR.
+            O aluno ${currentProtocol.clientName} está iniciando uma nova fase.
+            
+            DADOS ATUAIS:
+            - Peso Atual: ${editData.weight}kg
+            - Peso Anterior: ${currentProtocol.physicalData.weight}kg
+            - Objetivo da Nova Fase: ${editTitle}
+            
+            Gere uma sugestão de nova Estratégia Nutricional.
+            
+            Retorne JSON:
+            {
+                "nutritionalStrategy": "Nova estratégia...",
+                "kcalGoal": "Nova meta calórica...",
+                "macros": {
+                    "protein": { "value": "...", "ratio": "..." },
+                    "carbs": { "value": "...", "ratio": "..." },
+                    "fats": { "value": "...", "ratio": "..." }
+                }
+            }
+         `;
+         
+         const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+         const response = await ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: prompt,
+            config: {
+                responseMimeType: 'application/json',
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        nutritionalStrategy: { type: Type.STRING },
+                        kcalGoal: { type: Type.STRING },
+                        macros: {
+                            type: Type.OBJECT,
+                            properties: {
+                                protein: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } },
+                                carbs: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } },
+                                fats: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } }
+                            }
+                        }
+                    }
+                }
+            }
+         });
+
+         let jsonStr = response.text || "{}";
+         jsonStr = jsonStr.trim();
+         if (jsonStr.startsWith('```json')) jsonStr = jsonStr.replace(/^```json/, '').replace(/```$/, '');
+         else if (jsonStr.startsWith('```')) jsonStr = jsonStr.replace(/^```/, '').replace(/```$/, '');
+         
+         const aiData = JSON.parse(jsonStr);
+         setAiGeneratedData(prev => ({ ...prev, ...aiData }));
+         alert("Sugestão de dieta gerada!");
+     } catch (err: any) {
+         console.error(err);
+         alert("Erro ao gerar dieta: " + err.message);
+     } finally {
+         setIsGeneratingAI(false);
+     }
+  };
+
+  const handleGenerateTrainingAI = async () => {
      setIsGeneratingAI(true);
      try {
          const prompt = `
@@ -169,57 +235,47 @@ const EvolutionTracker: React.FC<Props> = ({
             
             DADOS ATUAIS:
             - Peso Atual: ${editData.weight}kg
-            - Peso Anterior: ${currentProtocol.physicalData.weight}kg
             - Objetivo da Nova Fase: ${editTitle}
             
-            Gere uma sugestão de nova Estratégia Nutricional e Treino.
+            Gere uma sugestão de novo Treino.
             
-            Retorne JSON estrito:
+            Retorne JSON:
             {
-                "nutritionalStrategy": "Nova estratégia...",
-                "kcalGoal": "Nova meta calórica...",
-                "macros": { ... },
-                "trainingDays": [ ... ]
+                "trainingDays": [
+                    {
+                        "title": "Treino A",
+                        "focus": "Foco",
+                        "exercises": [
+                            { "name": "Exercício", "sets": "4x10" }
+                        ]
+                    }
+                ]
             }
          `;
          
-         let aiData: any;
-
-         if (provider === 'gemini') {
-             const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-             const response = await ai.models.generateContent({
-                model: 'gemini-3-flash-preview',
-                contents: prompt,
-                config: {
-                    responseMimeType: 'application/json',
-                    responseSchema: {
-                        type: Type.OBJECT,
-                        properties: {
-                            nutritionalStrategy: { type: Type.STRING },
-                            kcalGoal: { type: Type.STRING },
-                            macros: {
+         const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+         const response = await ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: prompt,
+            config: {
+                responseMimeType: 'application/json',
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        trainingDays: {
+                            type: Type.ARRAY,
+                            items: {
                                 type: Type.OBJECT,
                                 properties: {
-                                    protein: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } },
-                                    carbs: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } },
-                                    fats: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } } }
-                                }
-                            },
-                            trainingDays: {
-                                type: Type.ARRAY,
-                                items: {
-                                    type: Type.OBJECT,
-                                    properties: {
-                                        title: { type: Type.STRING },
-                                        focus: { type: Type.STRING },
-                                        exercises: {
-                                            type: Type.ARRAY,
-                                            items: {
-                                                type: Type.OBJECT,
-                                                properties: {
-                                                    name: { type: Type.STRING },
-                                                    sets: { type: Type.STRING }
-                                                }
+                                    title: { type: Type.STRING },
+                                    focus: { type: Type.STRING },
+                                    exercises: {
+                                        type: Type.ARRAY,
+                                        items: {
+                                            type: Type.OBJECT,
+                                            properties: {
+                                                name: { type: Type.STRING },
+                                                sets: { type: Type.STRING }
                                             }
                                         }
                                     }
@@ -228,25 +284,15 @@ const EvolutionTracker: React.FC<Props> = ({
                         }
                     }
                 }
-             });
-             let jsonStr = response.text || "{}";
-             jsonStr = jsonStr.trim();
-             if (jsonStr.startsWith('```json')) jsonStr = jsonStr.replace(/^```json/, '').replace(/```$/, '');
-             else if (jsonStr.startsWith('```')) jsonStr = jsonStr.replace(/^```/, '').replace(/```$/, '');
-             aiData = JSON.parse(jsonStr);
-         } else {
-             const res = await fetch('/api/generate-protocol', {
-                 method: 'POST',
-                 headers: { 'Content-Type': 'application/json' },
-                 body: JSON.stringify({ prompt })
-             });
-             if (!res.ok) {
-                 const errorData = await res.json().catch(() => ({}));
-                 throw new Error(errorData.error || 'Falha ao gerar com OpenAI');
-             }
-             aiData = await res.json();
-         }
+            }
+         });
+
+         let jsonStr = response.text || "{}";
+         jsonStr = jsonStr.trim();
+         if (jsonStr.startsWith('```json')) jsonStr = jsonStr.replace(/^```json/, '').replace(/```$/, '');
+         else if (jsonStr.startsWith('```')) jsonStr = jsonStr.replace(/^```/, '').replace(/```$/, '');
          
+         const aiData = JSON.parse(jsonStr);
          if (aiData.trainingDays) {
              aiData.trainingDays = aiData.trainingDays.map((d: any) => ({
                  id: Math.random().toString(36).substr(2, 9),
@@ -256,12 +302,11 @@ const EvolutionTracker: React.FC<Props> = ({
             }));
          }
          
-         setAiGeneratedData(aiData);
-         alert("Sugestão gerada! Ao salvar, os novos dados de dieta e treino serão aplicados.");
-
+         setAiGeneratedData(prev => ({ ...prev, trainingDays: aiData.trainingDays }));
+         alert("Sugestão de treino gerada!");
      } catch (err: any) {
          console.error(err);
-         alert("Erro ao gerar sugestão: " + err.message);
+         alert("Erro ao gerar treino: " + err.message);
      } finally {
          setIsGeneratingAI(false);
      }
@@ -400,8 +445,8 @@ const EvolutionTracker: React.FC<Props> = ({
                       <div className="p-3 bg-blue-500 text-white rounded-lg"><Target size={20} /></div>
                       <div className="flex-1 w-full"><label className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1 block">Objetivo desta Nova Fase</label><input className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white font-bold focus:border-blue-500 outline-none" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} placeholder="Ex: Cutting Radical, Bulking Limpo..." /></div>
                       <div className="flex gap-2">
-                        <button onClick={() => handleGenerateProtocolAI('openai')} disabled={isGeneratingAI} className="px-4 py-3 rounded-xl bg-purple-600/20 hover:bg-purple-600 text-purple-400 hover:text-white border border-purple-600/30 font-black uppercase text-[10px] tracking-widest transition-all flex items-center gap-2 h-full shadow-lg disabled:opacity-50">{isGeneratingAI ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />} OpenAI</button>
-                        <button onClick={() => handleGenerateProtocolAI('gemini')} disabled={isGeneratingAI} className="px-4 py-3 rounded-xl bg-purple-600/20 hover:bg-purple-600 text-purple-400 hover:text-white border border-purple-600/30 font-black uppercase text-[10px] tracking-widest transition-all flex items-center gap-2 h-full shadow-lg disabled:opacity-50">{isGeneratingAI ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />} Gemini</button>
+                        <button onClick={handleGenerateNutritionAI} disabled={isGeneratingAI} className="px-4 py-3 rounded-xl bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-600/30 font-black uppercase text-[10px] tracking-widest transition-all flex items-center gap-2 h-full shadow-lg disabled:opacity-50">{isGeneratingAI ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />} Dieta (Gemini)</button>
+                        <button onClick={handleGenerateTrainingAI} disabled={isGeneratingAI} className="px-4 py-3 rounded-xl bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-600/30 font-black uppercase text-[10px] tracking-widest transition-all flex items-center gap-2 h-full shadow-lg disabled:opacity-50">{isGeneratingAI ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />} Treino (Gemini)</button>
                       </div>
                   </div>
               </div>

@@ -38,7 +38,6 @@ const App: React.FC = () => {
   const [pageType, setPageType] = useState(getPageType);
   const [data, setData] = useState<ProtocolData>(EMPTY_DATA);
   const [activeView, setActiveView] = useState<ViewMode>('home');
-  const [selectedProvider, setSelectedProvider] = useState<'openai' | 'gemini'>('openai');
   const [savedProtocols, setSavedProtocols] = useState<ProtocolData[]>([]);
   const [isSyncing, setIsSyncing] = useState(false);
   const [cloudStatus, setCloudStatus] = useState<'online' | 'error'>('online');
@@ -210,8 +209,7 @@ const App: React.FC = () => {
     }
   };
 
-  const handleNew = (provider: 'openai' | 'gemini' = 'openai') => {
-    setSelectedProvider(provider);
+  const handleNew = () => {
     setActiveView('generator');
   };
 
@@ -387,7 +385,6 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
            <ProtocolGenerator 
              onGenerate={handleGeneratedProtocol} 
              onCancel={() => setActiveView('home')} 
-             initialProvider={selectedProvider}
            />
         )}
 
