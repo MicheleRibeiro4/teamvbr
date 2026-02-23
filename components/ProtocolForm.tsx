@@ -25,12 +25,13 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
   const protocolRef = useRef<ProtocolPreviewHandle>(null);
 
   const handleChange = (path: string, value: any) => {
-    const newData = JSON.parse(JSON.stringify(data));
     const keys = path.split('.');
+    const newData = { ...data };
     let current: any = newData;
     for (let i = 0; i < keys.length - 1; i++) {
-        if (!current[keys[i]]) current[keys[i]] = {};
-        current = current[keys[i]];
+        const key = keys[i];
+        current[key] = Array.isArray(current[key]) ? [...current[key]] : { ...current[key] };
+        current = current[key];
     }
     current[keys[keys.length - 1]] = value;
     onChange(newData);
@@ -38,31 +39,19 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
 
   // Sincronização automática: Meta de Água -> Dicas
   useEffect(() => {
+    if (!data.waterGoal) return;
+    
     // Normaliza o valor da meta (remove letras, mantem numeros e virgula/ponto)
-    const goalVal = data.waterGoal ? data.waterGoal.replace(/[^0-9.,]/g, '').trim() : '';
+    const goalVal = data.waterGoal.replace(/[^0-9.,]/g, '').trim();
+    if (!goalVal) return;
+
     const currentTips = data.tips || [];
+    const waterTipText = `Beber no mínimo ${data.waterGoal}L de água por dia.`;
     
     // Procura se já existe uma dica de água
     const waterTipIndex = currentTips.findIndex(t => 
         t.toLowerCase().includes('água') || t.toLowerCase().includes('hidratação')
     );
-
-    // Se a meta foi apagada
-    if (!goalVal) {
-        // Se existe dica e a meta foi limpa, removemos a dica para manter coerência
-        if (waterTipIndex !== -1) {
-            const newTips = [...currentTips];
-            newTips.splice(waterTipIndex, 1);
-            // Evita loop infinito verificando se realmente mudou
-            if (newTips.length !== currentTips.length) {
-                // Atualiza diretamente o estado sem depender de handleChange para evitar deps circulares
-                onChange({ ...data, tips: newTips });
-            }
-        }
-        return;
-    }
-
-    const waterTipText = `Beber no mínimo ${data.waterGoal}L de água por dia.`;
 
     if (waterTipIndex !== -1) {
         // Se existe, mas o texto é diferente (ex: valor antigo), atualiza
@@ -302,7 +291,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
         else if (jsonStr.startsWith('```')) jsonStr = jsonStr.replace(/^```/, '').replace(/```$/, '');
         
         const aiData = JSON.parse(jsonStr);
-        const newData = JSON.parse(JSON.stringify(data));
+        const newData = { ...data };
         
         if (aiData.nutritionalStrategy) {
             if (!newData.nutritionalStrategy || newData.nutritionalStrategy.trim() === "") {
@@ -415,7 +404,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
         else if (jsonStr.startsWith('```')) jsonStr = jsonStr.replace(/^```/, '').replace(/```$/, '');
         
         const aiData = JSON.parse(jsonStr);
-        const newData = JSON.parse(JSON.stringify(data));
+        const newData = { ...data };
         
         let generatedTrainingDays = aiData.trainingDays || [];
         if (generatedTrainingDays.length < freqNum) {
@@ -514,9 +503,14 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
     const finalDuration = String(diffDays);
 
     if (data.contract.endDate !== formattedEndDate || data.contract.durationDays !== finalDuration) {
-         const newData = JSON.parse(JSON.stringify(data));
-         newData.contract.endDate = formattedEndDate;
-         newData.contract.durationDays = finalDuration;
+         const newData = {
+             ...data,
+             contract: {
+                 ...data.contract,
+                 endDate: formattedEndDate,
+                 durationDays: finalDuration
+             }
+         };
          onChange(newData);
     }
   }, [data.contract.startDate, data.contract.planType]);
@@ -1041,4 +1035,4 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
   );
 };
 
-export default ProtocolForm;
+export default React.memo(ProtocolForm);

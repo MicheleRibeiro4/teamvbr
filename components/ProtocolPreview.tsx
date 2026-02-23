@@ -18,7 +18,7 @@ interface Props {
   customTrigger?: React.ReactNode; 
 }
 
-const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack, hideFloatingButton, customTrigger }, ref) => {
+const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack, hideFloatingButton, customTrigger }, ref) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const pdfRef = useRef<HTMLDivElement>(null);
@@ -392,6 +392,6 @@ const ProtocolPreview = forwardRef<ProtocolPreviewHandle, Props>(({ data, onBack
         </div>
     </div>
   );
-});
+}));
 
 export default ProtocolPreview;

@@ -14,7 +14,7 @@ interface Props {
   customTrigger?: React.ReactNode;
 }
 
-const ContractPreview = forwardRef<ContractPreviewHandle, Props>(({ data, onBack, hideFloatingButton, customTrigger }, ref) => {
+const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ data, onBack, hideFloatingButton, customTrigger }, ref) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const contractRef = useRef<HTMLDivElement>(null);
@@ -199,6 +199,6 @@ const ContractPreview = forwardRef<ContractPreviewHandle, Props>(({ data, onBack
         ) : null}
     </div>
   );
-});
+}));
 
 export default ContractPreview;

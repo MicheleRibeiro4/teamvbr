@@ -17,7 +17,7 @@ interface Props {
   customTrigger?: React.ReactNode;
 }
 
-const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBack, hideFloatingButton, customTrigger }, ref) => {
+const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBack, hideFloatingButton, customTrigger }, ref) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const pdfRef = useRef<HTMLDivElement>(null);
@@ -173,6 +173,6 @@ const AnamnesisPreview = forwardRef<AnamnesisPreviewHandle, Props>(({ data, onBa
         ) : null}
     </div>
   );
-});
+}));
 
 export default AnamnesisPreview;
