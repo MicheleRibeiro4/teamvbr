@@ -31,7 +31,14 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
       margin: [0, 0, 0, 0],
       filename: `Anamnese_${clientName.replace(/\s+/g, '_')}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, letterRendering: true, backgroundColor: '#ffffff', scrollY: 0 },
+      html2canvas: { 
+        scale: 2, 
+        useCORS: true, 
+        letterRendering: true, 
+        backgroundColor: '#ffffff', 
+        scrollY: 0,
+        windowWidth: 794
+      },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     };
@@ -168,7 +175,9 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
             <>
                 <div onClick={() => setShowModal(true)} className="cursor-pointer">{customTrigger}</div>
                 {showModal && typeof document !== 'undefined' && createPortal(modalContent, document.body)}
-                <div className="fixed left-[-9999px] top-0"><div ref={pdfRef} className="bg-white">{renderContent(true)}</div></div>
+                <div style={{ position: 'absolute', top: 0, left: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none', width: '794px' }}>
+                    <div ref={pdfRef} className="bg-white">{renderContent(true)}</div>
+                </div>
             </>
         ) : null}
     </div>

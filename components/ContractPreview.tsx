@@ -70,7 +70,8 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
         useCORS: true, 
         backgroundColor: '#ffffff', 
         scrollX: 0,
-        scrollY: 0
+        scrollY: 0,
+        windowWidth: 794
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
@@ -194,7 +195,9 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
                         </div>
                     </div>
                 )}
-                <div className="fixed left-[-9999px] top-0"><div ref={contractRef} className="bg-white">{renderContent(true)}</div></div>
+                <div style={{ position: 'absolute', top: 0, left: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none', width: '794px' }}>
+                    <div ref={contractRef} className="bg-white">{renderContent(true)}</div>
+                </div>
             </>
         ) : null}
     </div>
