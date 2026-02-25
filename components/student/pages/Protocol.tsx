@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { ProtocolData } from '../../../types';
 import { FileDown, Droplets, AlertCircle } from 'lucide-react';
 import ProtocolPreview from '../../ProtocolPreview';
@@ -8,12 +8,7 @@ interface Props {
 }
 
 const StudentProtocol: React.FC<Props> = ({ data }) => {
-  const [expandedMeal, setExpandedMeal] = useState<string | null>(null);
   const previewRef = React.useRef<any>(null);
-
-  const toggleMeal = (id: string) => {
-    setExpandedMeal(expandedMeal === id ? null : id);
-  };
 
   return (
     <div className="space-y-8">
@@ -54,48 +49,31 @@ const StudentProtocol: React.FC<Props> = ({ data }) => {
       </div>
 
       {/* Meals List */}
-      <div className="space-y-4">
+      <div className="space-y-6">
         {data.meals.map((meal, index) => (
           <div 
             key={index}
-            className={`
-              bg-[#111] border rounded-2xl overflow-hidden transition-all duration-300
-              ${expandedMeal === index.toString() ? 'border-[#d4af37]/50 shadow-[0_0_30px_rgba(0,0,0,0.5)]' : 'border-white/5 hover:border-white/10'}
-            `}
+            className="bg-[#111] border border-white/5 rounded-2xl overflow-hidden"
           >
-            <button 
-              onClick={() => toggleMeal(index.toString())}
-              className="w-full p-6 flex items-center justify-between text-left"
-            >
-              <div className="flex items-center gap-6">
-                <div className={`
-                  w-16 h-16 rounded-xl flex flex-col items-center justify-center border
-                  ${expandedMeal === index.toString() ? 'bg-[#d4af37] border-[#d4af37] text-black' : 'bg-black border-white/10 text-white'}
-                `}>
+            <div className="p-6">
+              <div className="flex items-center gap-6 mb-6">
+                <div className="w-16 h-16 rounded-xl flex flex-col items-center justify-center border bg-black border-white/10 text-white">
                   <span className="text-[10px] font-black uppercase tracking-wider opacity-70">Horário</span>
                   <span className="text-lg font-bold">{meal.time}</span>
                 </div>
                 <div>
-                  <h3 className={`text-lg font-bold uppercase mb-1 ${expandedMeal === index.toString() ? 'text-[#d4af37]' : 'text-white'}`}>
+                  <h3 className="text-lg font-bold uppercase text-[#d4af37]">
                     {meal.name}
                   </h3>
-                  <p className="text-white/40 text-xs font-medium line-clamp-1">
-                    {meal.details.split('\n')[0]}
-                  </p>
                 </div>
               </div>
-            </button>
-
-            {expandedMeal === index.toString() && (
-              <div className="px-6 pb-6 pt-0 animate-in slide-in-from-top-2">
-                <div className="w-full h-px bg-white/5 mb-6"></div>
-                <div className="bg-black/30 rounded-xl p-6 border border-white/5">
-                  <p className="text-white/80 whitespace-pre-wrap leading-relaxed text-sm">
-                    {meal.details}
-                  </p>
-                </div>
+              
+              <div className="bg-black/30 rounded-xl p-6 border border-white/5">
+                <p className="text-white/80 whitespace-pre-wrap leading-relaxed text-sm">
+                  {meal.details}
+                </p>
               </div>
-            )}
+            </div>
           </div>
         ))}
       </div>
