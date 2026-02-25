@@ -70,7 +70,9 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
         useCORS: true, 
         backgroundColor: '#ffffff', 
         scrollX: 0,
-        scrollY: 0
+        scrollY: 0,
+        windowWidth: 794,
+        width: 794
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
@@ -103,7 +105,9 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
           color: 'black',
           fontFamily: 'Inter, sans-serif',
           fontSize: '12px',
-          lineHeight: '1.6'
+          lineHeight: '1.6',
+          WebkitTextSizeAdjust: '100%',
+          textSizeAdjust: '100%'
       };
 
       // Internal Content Wrapper for Padding (Margins)

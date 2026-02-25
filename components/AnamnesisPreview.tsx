@@ -36,7 +36,9 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
         useCORS: true, 
         letterRendering: true, 
         backgroundColor: '#ffffff', 
-        scrollY: 0
+        scrollY: 0,
+        windowWidth: 794,
+        width: 794
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
@@ -74,7 +76,9 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
         position: 'relative', 
         display: 'block', 
         margin: isPdfMode ? '0' : '0 auto',
-        boxShadow: isPdfMode ? 'none' : '0 10px 30px rgba(0,0,0,0.1)'
+        boxShadow: isPdfMode ? 'none' : '0 10px 30px rgba(0,0,0,0.1)',
+        WebkitTextSizeAdjust: '100%',
+        textSizeAdjust: '100%'
     };
 
     const contentWrapperStyle: React.CSSProperties = {

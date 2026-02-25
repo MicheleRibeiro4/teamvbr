@@ -45,6 +45,8 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
         backgroundColor: '#ffffff',
         scrollY: 0,
         scrollX: 0,
+        windowWidth: 794,
+        width: 794,
         // Remove pixel width/height options to let it auto-detect the element size which we fixed via CSS
         x: 0,
         y: 0
@@ -85,6 +87,8 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
         position: 'relative',
         fontFamily: "'Inter', sans-serif",
         margin: '0', 
+        WebkitTextSizeAdjust: '100%',
+        textSizeAdjust: '100%'
     };
 
     const contentWrapperStyle: React.CSSProperties = {
