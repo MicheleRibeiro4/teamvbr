@@ -88,6 +88,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
         fontFamily: "'Inter', sans-serif",
         overflow: 'visible',
         margin: '0', 
+        wordBreak: 'break-word'
     };
 
     const coverPageStyle: React.CSSProperties = {

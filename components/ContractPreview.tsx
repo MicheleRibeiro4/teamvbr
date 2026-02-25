@@ -62,7 +62,7 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
     
     // Configuração OTIMIZADA para A4 sem cortes
     const opt = {
-      margin: 10, // 10mm margin
+      margin: 0, // Handle margins inside HTML for better control
       filename: `Contrato_VBR_${clientName.replace(/\s+/g, '_')}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { 
@@ -73,7 +73,7 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
         scrollY: 0,
         windowWidth: 794
       },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      jsPDF: { unit: 'px', format: [794, 1123], orientation: 'portrait' },
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
@@ -98,20 +98,21 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
       // PDF Mode: Strict A4 Container (794px)
       const pdfContainerStyle: React.CSSProperties = {
           width: '794px',
+          minHeight: '1123px',
           backgroundColor: 'white',
           color: 'black',
           fontFamily: 'Inter, sans-serif',
-          fontSize: '11px',
-          lineHeight: '1.5',
-          overflow: 'hidden',
+          fontSize: '12px',
+          lineHeight: '1.6',
           boxSizing: 'border-box'
       };
 
-      // Internal Content Wrapper for Padding
+      // Internal Content Wrapper for Padding (Margins)
       const pdfContentStyle: React.CSSProperties = {
-          padding: '40px',
+          padding: '60px 50px',
           width: '100%',
-          boxSizing: 'border-box'
+          boxSizing: 'border-box',
+          wordBreak: 'break-word'
       };
 
       // Screen Mode: Visual preview

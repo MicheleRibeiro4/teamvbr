@@ -28,7 +28,7 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
     setIsGenerating(true);
     const clientName = data?.clientName || "Aluno";
     const opt = {
-      margin: [0, 0, 0, 0],
+      margin: 0,
       filename: `Anamnese_${clientName.replace(/\s+/g, '_')}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { 
@@ -39,7 +39,7 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
         scrollY: 0,
         windowWidth: 794
       },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      jsPDF: { unit: 'px', format: [794, 1123], orientation: 'portrait' },
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     };
     try {
@@ -67,16 +67,17 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
     const clientName = safeData.clientName || "Aluno";
 
     const pageStyle: React.CSSProperties = { 
-        width: '210mm', 
-        minHeight: '296mm', 
-        padding: '15mm', 
+        width: isPdfMode ? '794px' : '210mm', 
+        minHeight: isPdfMode ? '1123px' : '296mm', 
+        padding: isPdfMode ? '50px' : '15mm', 
         backgroundColor: '#ffffff', 
         color: 'black', 
         position: 'relative', 
         boxSizing: 'border-box', 
         display: 'block', 
         margin: isPdfMode ? '0' : '0 auto',
-        boxShadow: isPdfMode ? 'none' : '0 10px 30px rgba(0,0,0,0.1)'
+        boxShadow: isPdfMode ? 'none' : '0 10px 30px rgba(0,0,0,0.1)',
+        wordBreak: 'break-word'
     };
     
     const sectionTitle = "text-lg font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-1 mb-4 uppercase mt-6";
