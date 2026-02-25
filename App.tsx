@@ -76,15 +76,16 @@ const App: React.FC = () => {
     }
   };
 
-  const handleStudentLogin = async (email: string, password?: string) => {
+  const handleStudentLogin = async (phone: string, password?: string) => {
     setIsSyncing(true);
     try {
-      // Busca aluno pelo email no banco de dados
+      // Busca aluno pelo telefone no banco de dados
       const protocols = await db.getAll();
-      const student = protocols.find(p => 
-        p.contract?.email?.toLowerCase() === email.toLowerCase() || 
-        p.consultantEmail?.toLowerCase() === email.toLowerCase() // Fallback para testes
-      );
+      const student = protocols.find(p => {
+        const studentPhone = p.contract?.phone?.replace(/\D/g, '') || '';
+        const searchPhone = phone.replace(/\D/g, '');
+        return studentPhone === searchPhone && searchPhone !== '';
+      });
 
       if (student) {
         // Verifica a senha (CPF - apenas números)
@@ -102,9 +103,9 @@ const App: React.FC = () => {
 
         setStudentData(student);
         setIsStudentAuthenticated(true);
-        localStorage.setItem('vbr_student_auth', JSON.stringify({ email, id: student.id }));
+        localStorage.setItem('vbr_student_auth', JSON.stringify({ phone, id: student.id }));
       } else {
-        alert('E-mail não encontrado. Verifique com seu consultor.');
+        alert('Número de celular não encontrado. Verifique com seu consultor.');
       }
     } catch (err) {
       console.error(err);
@@ -125,8 +126,8 @@ const App: React.FC = () => {
       const studentAuth = localStorage.getItem('vbr_student_auth');
       if (studentAuth) {
         try {
-          const { email } = JSON.parse(studentAuth);
-          handleStudentLogin(email);
+          const { phone } = JSON.parse(studentAuth);
+          handleStudentLogin(phone);
         } catch (e) {
           localStorage.removeItem('vbr_student_auth');
         }

@@ -3,11 +3,11 @@ import { Lock, ArrowRight, AlertCircle } from 'lucide-react';
 import { LOGO_VBR_BLACK } from '../../constants';
 
 interface StudentLoginProps {
-  onLogin: (email: string, password?: string) => void;
+  onLogin: (phone: string, password?: string) => void;
 }
 
 const StudentLogin: React.FC<StudentLoginProps> = ({ onLogin }) => {
-  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -19,8 +19,8 @@ const StudentLogin: React.FC<StudentLoginProps> = ({ onLogin }) => {
 
     // Simulação de login
     setTimeout(() => {
-      if (email && password) {
-        onLogin(email, password);
+      if (phone && password) {
+        onLogin(phone, password);
       } else {
         setError('Credenciais inválidas. Tente novamente.');
         setIsLoading(false);
@@ -44,13 +44,13 @@ const StudentLogin: React.FC<StudentLoginProps> = ({ onLogin }) => {
         <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-[2rem] shadow-2xl">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-[10px] font-black text-[#d4af37] uppercase tracking-widest mb-2 ml-1">E-mail de Acesso</label>
+              <label className="block text-[10px] font-black text-[#d4af37] uppercase tracking-widest mb-2 ml-1">Celular de Acesso</label>
               <input 
-                type="email" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="tel" 
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
                 className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white placeholder-white/20 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] transition-all outline-none text-sm"
-                placeholder="seu@email.com"
+                placeholder="(00) 00000-0000"
               />
             </div>
 
