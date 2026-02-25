@@ -180,7 +180,7 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
 
   return (
     <div className="w-full animate-in fade-in duration-500">
-        {customTrigger ? (
+        {customTrigger && (
             <>
                 <div onClick={() => setShowModal(true)} className="cursor-pointer">{customTrigger}</div>
                 {showModal && (
@@ -200,11 +200,11 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
                         </div>
                     </div>
                 )}
-                <div style={{ position: 'absolute', top: 0, left: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none', width: '210mm' }}>
-                    <div ref={contractRef} className="bg-white">{renderContent(true)}</div>
-                </div>
             </>
-        ) : null}
+        )}
+        <div style={{ position: 'absolute', top: 0, left: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none', width: '210mm' }}>
+            <div ref={contractRef} className="bg-white">{renderContent(true)}</div>
+        </div>
     </div>
   );
 }));

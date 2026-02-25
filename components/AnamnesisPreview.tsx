@@ -249,15 +249,15 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
 
   return (
     <div className="w-full">
-        {customTrigger ? (
+        {customTrigger && (
             <>
                 <div onClick={() => setShowModal(true)} className="cursor-pointer">{customTrigger}</div>
                 {showModal && typeof document !== 'undefined' && createPortal(modalContent, document.body)}
-                <div style={{ position: 'absolute', top: 0, left: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none', width: '794px' }}>
-                    <div ref={pdfRef} className="bg-white">{renderContent(true)}</div>
-                </div>
             </>
-        ) : null}
+        )}
+        <div style={{ position: 'absolute', top: 0, left: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none', width: '210mm' }}>
+            <div ref={pdfRef} className="bg-white">{renderContent(true)}</div>
+        </div>
     </div>
   );
 }));
