@@ -62,17 +62,17 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
     
     // Configuração OTIMIZADA para A4 sem cortes
     const opt = {
-      margin: 10,
+      margin: 0,
       filename: `Contrato_VBR_${clientName.replace(/\s+/g, '_')}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { 
         scale: 2, 
         useCORS: true, 
+        letterRendering: true,
         backgroundColor: '#ffffff', 
         scrollX: 0,
         scrollY: 0,
-        windowWidth: 794,
-        width: 794
+        windowWidth: 1200, // Force a wider window to avoid mobile reflow
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
@@ -98,13 +98,14 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
 
       // PDF Mode: Strict A4 Container (794px)
       const pdfContainerStyle: React.CSSProperties = {
-          width: '794px',
+          width: '210mm', // Use mm for better A4 mapping
+          minHeight: '297mm',
           backgroundColor: 'white',
           overflow: 'hidden',
           boxSizing: 'border-box',
           color: 'black',
           fontFamily: 'Inter, sans-serif',
-          fontSize: '12px',
+          fontSize: '13px',
           lineHeight: '1.6',
           WebkitTextSizeAdjust: '100%',
           textSizeAdjust: '100%'
@@ -112,9 +113,10 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
 
       // Internal Content Wrapper for Padding (Margins)
       const pdfContentStyle: React.CSSProperties = {
-          padding: '40px',
+          padding: '20mm 15mm 30mm 15mm', // Increased bottom padding (30mm)
           width: '100%',
-          boxSizing: 'border-box'
+          boxSizing: 'border-box',
+          textAlign: 'justify'
       };
 
       // Screen Mode: Visual preview
@@ -198,7 +200,7 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
                         </div>
                     </div>
                 )}
-                <div style={{ position: 'absolute', top: 0, left: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none', width: '794px' }}>
+                <div style={{ position: 'absolute', top: 0, left: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none', width: '210mm' }}>
                     <div ref={contractRef} className="bg-white">{renderContent(true)}</div>
                 </div>
             </>

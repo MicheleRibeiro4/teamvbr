@@ -35,7 +35,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
     const A4_WIDTH_PX = 794; 
 
     const opt = {
-      margin: 10,
+      margin: 0,
       filename: `Protocolo_VBR_${clientName.replace(/\s+/g, '_')}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { 
@@ -45,8 +45,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
         backgroundColor: '#ffffff',
         scrollY: 0,
         scrollX: 0,
-        windowWidth: 794,
-        width: 794,
+        windowWidth: 1200,
         // Remove pixel width/height options to let it auto-detect the element size which we fixed via CSS
         x: 0,
         y: 0
@@ -80,7 +79,8 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
 
     // Configuração de Estilo para Página A4
     const pageStyle: React.CSSProperties = {
-        width: '794px', // STRICT PIXEL WIDTH for A4 (210mm @ 96 DPI)
+        width: '210mm', 
+        minHeight: '297mm',
         backgroundColor: 'white',
         overflow: 'hidden',
         boxSizing: 'border-box',
@@ -92,7 +92,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
     };
 
     const contentWrapperStyle: React.CSSProperties = {
-        padding: '40px',
+        padding: '20mm 15mm 30mm 15mm', // Increased bottom padding (30mm)
         width: '100%',
         boxSizing: 'border-box'
     };
@@ -400,7 +400,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
            Fixed Width 794px to ensure A4 proportions at 96 DPI.
            Always render this to allow ref.current.download() to work even without customTrigger
         */}
-        <div style={{ position: 'absolute', top: 0, left: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none', width: '794px' }}>
+        <div style={{ position: 'absolute', top: 0, left: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none', width: '210mm' }}>
             <div ref={pdfRef} className="bg-white">{renderContent(true)}</div>
         </div>
     </div>
