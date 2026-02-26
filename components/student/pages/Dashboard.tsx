@@ -142,7 +142,7 @@ const StudentDashboard: React.FC<Props> = ({ data, onNavigate }) => {
         <div className="bg-[#111] rounded-3xl border border-white/5 p-8">
           <h3 className="text-lg font-black text-white uppercase tracking-tight mb-6 flex items-center gap-3">
             <span className="w-1 h-6 bg-[#d4af37] rounded-full"></span>
-            Linha de Raciocínio de Treino
+            Treino de Hoje
           </h3>
           {data.trainingDays && data.trainingDays.length > 0 ? (
             <div className="bg-gradient-to-br from-[#d4af37]/20 to-transparent p-6 rounded-2xl border border-[#d4af37]/20">

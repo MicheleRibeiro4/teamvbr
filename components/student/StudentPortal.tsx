@@ -116,7 +116,7 @@ const StudentPortal: React.FC<StudentPortalProps> = ({ studentData, onLogout }) 
   const menuItems = [
     { id: 'dashboard', label: 'Meu Painel', icon: LayoutDashboard },
     { id: 'protocol', label: 'Meu Protocolo', icon: Utensils },
-    { id: 'workout', label: 'L. Raciocínio', icon: Dumbbell },
+    { id: 'workout', label: 'Meu Treino', icon: Dumbbell },
     { id: 'evolution', label: 'Evolução', icon: TrendingUp },
   ];
 

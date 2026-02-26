@@ -619,7 +619,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
             <TabButton id="anamnese" label="Anamnese" icon={BookOpen} />
             <TabButton id="medidas" label="Medidas" icon={Ruler} />
             <TabButton id="nutricao" label="Nutrição" icon={Utensils} />
-            <TabButton id="treino" label="L. Raciocínio" icon={Dumbbell} />
+            <TabButton id="treino" label="Treino" icon={Dumbbell} />
         </div>
       )}
 
@@ -969,7 +969,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                 <div className="flex items-center gap-4 relative z-10">
                     <div className="w-16 h-16 bg-[#d4af37] rounded-2xl flex items-center justify-center text-black shadow-lg"><Dumbbell size={32} strokeWidth={2.5} /></div>
                     <div>
-                        <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Linha de Raciocínio de Treino</h2>
+                        <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Programação de Treinos</h2>
                         <p className="text-xs font-bold text-[#d4af37] uppercase tracking-widest mt-1">Periodização e Exercícios</p>
                     </div>
                 </div>

@@ -24,7 +24,7 @@ const StudentWorkout: React.FC<Props> = ({ data }) => {
     <div className="space-y-8">
       <header className="mb-8">
         <h1 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter mb-2">
-          Linha de Raciocínio de Treino
+          Meu Treino
         </h1>
         <p className="text-white/40 text-sm font-medium">
           Foco: <span className="text-[#d4af37] font-bold uppercase">{currentWorkout.focus}</span>
