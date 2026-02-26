@@ -312,8 +312,17 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
             {trainingDays.length > 0 && (
                 <div style={{...pageStyle, pageBreakBefore: 'always'}}>
                     <div style={contentWrapperStyle}>
-                        <div className={sectionTitleStyle}>DIVISÃO DE TREINO</div>
+                        <div className={sectionTitleStyle}>LINHA DE RACIOCÍNIO DE TREINO</div>
                         <p className="text-xs text-gray-500 mb-6 uppercase font-bold">Frequência: {safeData.trainingFrequency || '5x na semana'}</p>
+
+                        {safeData.trainingReasoning && (
+                            <div className="bg-[#f8f8f8] p-4 rounded-xl border border-gray-200 mb-8 break-inside-avoid">
+                                <h4 className="text-[10px] font-black text-[#d4af37] uppercase tracking-widest mb-2">Linha de Raciocínio</h4>
+                                <p className="text-sm text-gray-700 leading-relaxed text-justify whitespace-pre-wrap">
+                                    {safeData.trainingReasoning}
+                                </p>
+                            </div>
+                        )}
 
                         <div className="space-y-8">
                             {trainingDays.map((day, dIdx) => (

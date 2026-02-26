@@ -24,12 +24,19 @@ const StudentWorkout: React.FC<Props> = ({ data }) => {
     <div className="space-y-8">
       <header className="mb-8">
         <h1 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter mb-2">
-          Meu Treino
+          Linha de Raciocínio de Treino
         </h1>
         <p className="text-white/40 text-sm font-medium">
           Foco: <span className="text-[#d4af37] font-bold uppercase">{currentWorkout.focus}</span>
         </p>
       </header>
+
+      {data.trainingReasoning && (
+        <div className="bg-[#d4af37]/10 border border-[#d4af37]/20 p-6 rounded-2xl mb-8">
+          <h3 className="text-[#d4af37] font-black uppercase text-xs tracking-widest mb-2">Linha de Raciocínio Adotada</h3>
+          <p className="text-white/80 text-sm leading-relaxed whitespace-pre-wrap">{data.trainingReasoning}</p>
+        </div>
+      )}
 
       {/* Day Selector */}
       <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar">

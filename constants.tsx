@@ -218,6 +218,7 @@ export const EMPTY_DATA: ProtocolData = {
     "Priorize o sono reparador."
   ],
   trainingFrequency: "",
+  trainingReasoning: "",
   trainingDays: [],
   generalObservations: "",
   contract: {

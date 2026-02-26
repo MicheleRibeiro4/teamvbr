@@ -349,6 +349,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
           
           Gere um JSON:
           {
+            "trainingReasoning": "Explicação detalhada da linha de raciocínio adotada para este aluno, considerando o objetivo, frequência e histórico.",
             "trainingDays": [
               {
                 "title": "Treino A",
@@ -370,6 +371,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                 responseSchema: {
                     type: Type.OBJECT,
                     properties: {
+                        trainingReasoning: { type: Type.STRING },
                         trainingDays: {
                             type: Type.ARRAY,
                             items: {
@@ -393,7 +395,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                             }
                         }
                     },
-                    required: ["trainingDays"]
+                    required: ["trainingReasoning", "trainingDays"]
                 }
             }
         });
@@ -406,6 +408,10 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
         const aiData = JSON.parse(jsonStr);
         const newData = { ...data };
         
+        if (aiData.trainingReasoning) {
+            newData.trainingReasoning = aiData.trainingReasoning;
+        }
+
         let generatedTrainingDays = aiData.trainingDays || [];
         if (generatedTrainingDays.length < freqNum) {
             for (let i = generatedTrainingDays.length; i < freqNum; i++) {
@@ -613,7 +619,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
             <TabButton id="anamnese" label="Anamnese" icon={BookOpen} />
             <TabButton id="medidas" label="Medidas" icon={Ruler} />
             <TabButton id="nutricao" label="Nutrição" icon={Utensils} />
-            <TabButton id="treino" label="Treino" icon={Dumbbell} />
+            <TabButton id="treino" label="L. Raciocínio" icon={Dumbbell} />
         </div>
       )}
 
@@ -963,7 +969,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                 <div className="flex items-center gap-4 relative z-10">
                     <div className="w-16 h-16 bg-[#d4af37] rounded-2xl flex items-center justify-center text-black shadow-lg"><Dumbbell size={32} strokeWidth={2.5} /></div>
                     <div>
-                        <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Programação de Treinos</h2>
+                        <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Linha de Raciocínio de Treino</h2>
                         <p className="text-xs font-bold text-[#d4af37] uppercase tracking-widest mt-1">Periodização e Exercícios</p>
                     </div>
                 </div>
@@ -1003,6 +1009,15 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
             </section>
 
             <div className="mb-6"><label className={labelClass}>Frequência Semanal</label><input className={inputClass} value={data.trainingFrequency} onChange={(e) => handleChange('trainingFrequency', e.target.value)} placeholder="Ex: 5x na semana" /></div>
+            <div className="mb-6">
+                <label className={labelClass}>Linha de Raciocínio</label>
+                <textarea 
+                    className={textAreaClass} 
+                    value={data.trainingReasoning || ''} 
+                    onChange={(e) => handleChange('trainingReasoning', e.target.value)} 
+                    placeholder="Explique a linha de raciocínio adotada para este treino..." 
+                />
+            </div>
             <div className="space-y-8">
               {data.trainingDays.map((day, dIndex) => (
                 <div key={day.id} className="bg-white/5 p-6 rounded-2xl border border-white/10">

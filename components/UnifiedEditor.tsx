@@ -52,7 +52,7 @@ const UnifiedEditor: React.FC<Props> = ({
                     { id: 'anamnese', label: 'Anamnese', fullLabel: 'Anamnese', icon: Activity },
                     { id: 'medidas', label: 'Medidas', fullLabel: 'Medidas', icon: Dumbbell },
                     { id: 'nutricao', label: 'Dieta', fullLabel: 'Nutrição', icon: Activity },
-                    { id: 'treino', label: 'Treino', fullLabel: 'Treino', icon: Dumbbell },
+                    { id: 'treino', label: 'L. Raciocínio', fullLabel: 'Linha de Raciocínio de Treino', icon: Dumbbell },
                 ].map((tab) => (
                     <button 
                         key={tab.id}

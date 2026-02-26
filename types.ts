@@ -122,6 +122,7 @@ export interface ProtocolData {
   supplements: Supplement[];
   tips: string[];
   trainingFrequency: string;
+  trainingReasoning: string; // Novo campo
   trainingDays: TrainingDay[];
   generalObservations: string;
   contract: ContractInfo;
