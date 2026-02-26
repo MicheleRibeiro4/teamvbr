@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { ProtocolData } from '../types';
 import ProtocolForm from './ProtocolForm';
 import { ChevronLeft, Settings2, FileText, Activity, Dumbbell } from 'lucide-react';
@@ -24,6 +24,33 @@ const UnifiedEditor: React.FC<Props> = ({
   onDeleteHistory = () => {}
 }) => {
   const [activeTab, setActiveTab] = useState<'identificacao' | 'anamnese' | 'medidas' | 'nutricao' | 'treino'>('identificacao');
+  const [localData, setLocalData] = useState<ProtocolData>(data);
+  const localDataRef = useRef(data);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setLocalData(data);
+    localDataRef.current = data;
+  }, [data.id]);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        onChange(localDataRef.current);
+      }
+    };
+  }, [onChange]);
+
+  const handleLocalChange = useCallback((newData: ProtocolData) => {
+    setLocalData(newData);
+    localDataRef.current = newData;
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      onChange(newData);
+      timerRef.current = null;
+    }, 400);
+  }, [onChange]);
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 w-full">
@@ -67,8 +94,8 @@ const UnifiedEditor: React.FC<Props> = ({
             </div>
 
             <ProtocolForm 
-                data={data} 
-                onChange={onChange} 
+                data={localData} 
+                onChange={handleLocalChange} 
                 activeTab={activeTab as any}
                 onTabChange={(t) => setActiveTab(t)}
                 hideTabs={true} 

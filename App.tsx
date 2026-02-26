@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef, useTransition } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ProtocolData } from './types';
 import { EMPTY_DATA, LOGO_VBR_BLACK } from './constants';
 import { db } from './services/db';
@@ -26,7 +26,6 @@ import {
 type ViewMode = 'home' | 'search' | 'manage' | 'settings' | 'student-dashboard' | 'evolution' | 'generator';
 
 const App: React.FC = () => {
-  const [isPending, startTransition] = useTransition();
   const getPageType = () => {
     if (typeof window !== 'undefined') {
        const h = window.location.hash;
@@ -406,7 +405,7 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
         {activeView === 'manage' && (
           <UnifiedEditor 
             data={data} 
-            onChange={(newData) => startTransition(() => setData(newData))} 
+            onChange={(newData) => setData(newData)} 
             onBack={() => setActiveView('student-dashboard')} 
           />
         )}
@@ -415,7 +414,7 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
           <EvolutionTracker 
               currentProtocol={data} 
               history={savedProtocols.filter(p => p.clientName === data.clientName)} 
-              onNotesChange={(n) => startTransition(() => setData({...data, privateNotes: n}))} 
+              onNotesChange={(n) => setData({...data, privateNotes: n})} 
               onUpdateData={(newData, createHistory) => handleSave(false, newData, createHistory)}
               onDeleteHistory={(id) => deleteStudent(id)}
               onOpenEditor={() => setActiveView('manage')}

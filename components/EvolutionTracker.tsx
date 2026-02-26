@@ -134,14 +134,25 @@ const EvolutionTracker: React.FC<Props> = ({
 
   const [editData, setEditData] = useState<PhysicalData>(currentProtocol.physicalData);
   const [editTitle, setEditTitle] = useState(currentProtocol.protocolTitle);
+  const [localNotes, setLocalNotes] = useState(currentProtocol.privateNotes || '');
+  const notesTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleNotesChange = (val: string) => {
+    setLocalNotes(val);
+    if (notesTimerRef.current) clearTimeout(notesTimerRef.current);
+    notesTimerRef.current = setTimeout(() => {
+      onNotesChange(val);
+    }, 400);
+  };
 
   React.useEffect(() => {
     if (mode === 'view') {
         setEditData(currentProtocol.physicalData);
         setEditTitle(currentProtocol.protocolTitle);
+        setLocalNotes(currentProtocol.privateNotes || '');
         setAiGeneratedData(null);
     }
-  }, [currentProtocol.id, mode]);
+  }, [currentProtocol.id, mode, currentProtocol.privateNotes]);
 
   const handleStartNewCheckin = () => {
       setEditData({ 
@@ -484,7 +495,7 @@ const EvolutionTracker: React.FC<Props> = ({
                     </div>
                     <div>
                         <label className="text-[10px] font-bold text-white/40 uppercase block mb-1">Observações</label>
-                        <textarea className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white font-medium focus:border-[#d4af37] outline-none min-h-[80px]" placeholder="..." value={currentProtocol.privateNotes} onChange={(e) => onNotesChange(e.target.value)} />
+                        <textarea className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white font-medium focus:border-[#d4af37] outline-none min-h-[80px]" placeholder="..." value={localNotes} onChange={(e) => handleNotesChange(e.target.value)} />
                     </div>
                   </div>
               )}
