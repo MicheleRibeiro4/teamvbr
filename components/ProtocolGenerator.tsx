@@ -64,11 +64,6 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
           - Frequência de Treino Solicitada: ${freqNum} dias na semana
           - Observações/Restrições: ${formData.observations || "Nenhuma"}
 
-          REQUISITO CRÍTICO DE TREINO (IMPORTANTE):
-          Você deve gerar EXATAMENTE ${freqNum} objetos dentro do array 'trainingDays'.
-          Os títulos dos treinos DEVEM ser obrigatóriamente: ${requiredDaysList}.
-          NÃO agrupe treinos. NÃO crie menos que ${freqNum} dias.
-
           Gere um JSON com a seguinte estrutura estrita:
           {
             "nutritionalStrategy": "Texto curto descrevendo a estratégia da dieta",
@@ -85,24 +80,13 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
             "supplements": [
               { "name": "Nome", "dosage": "Dose", "timing": "Horário" }
             ],
-            "trainingDays": [
-              {
-                "title": "Treino A",
-                "focus": "Grupo Muscular (ex: Peito e Tríceps)",
-                "exercises": [
-                   { "name": "Supino Reto", "sets": "4x12" },
-                   { "name": "Crucifixo", "sets": "3x15" }
-                ]
-              }
-            ],
             "tips": ["Dica 1", "Dica 2"]
           }
           
           Regras:
           1. Use português do Brasil.
           2. Seja específico nas quantidades dos alimentos.
-          3. O treino DEVE conter exercícios reais e séries (ex: 4x10).
-          4. O campo waterGoal deve ser APENAS O NÚMERO em Litros (ex: "3,5").
+          3. O campo waterGoal deve ser APENAS O NÚMERO em Litros (ex: "3,5").
         `;
 
         let aiData: any;
@@ -152,31 +136,9 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
                                 required: ["name", "dosage", "timing"]
                             }
                         },
-                        trainingDays: {
-                            type: Type.ARRAY,
-                            items: {
-                                type: Type.OBJECT,
-                                properties: {
-                                    title: { type: Type.STRING },
-                                    focus: { type: Type.STRING },
-                                    exercises: {
-                                        type: Type.ARRAY,
-                                        items: {
-                                            type: Type.OBJECT,
-                                            properties: {
-                                                name: { type: Type.STRING },
-                                                sets: { type: Type.STRING }
-                                            },
-                                            required: ["name", "sets"]
-                                        }
-                                    }
-                                },
-                                required: ["title", "focus", "exercises"]
-                            }
-                        },
                         tips: { type: Type.ARRAY, items: { type: Type.STRING } }
                     },
-                    required: ["nutritionalStrategy", "kcalGoal", "macros", "meals", "supplements", "trainingDays", "tips"]
+                    required: ["nutritionalStrategy", "kcalGoal", "macros", "meals", "supplements", "tips"]
                 }
             }
         });
@@ -211,28 +173,6 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
              });
         }
 
-        // Validação e Preenchimento de Treinos (Fallback System)
-        let generatedTrainingDays = aiData.trainingDays || [];
-        if (!Array.isArray(generatedTrainingDays)) generatedTrainingDays = [];
-
-        // Se a IA gerou menos dias que o mínimo esperado (3), preenchemos
-        const minFreq = 3;
-        if (generatedTrainingDays.length < minFreq) {
-            const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
-            for (let i = generatedTrainingDays.length; i < minFreq; i++) {
-                generatedTrainingDays.push({
-                    title: `Treino ${letters[i] || (i + 1)}`,
-                    focus: "Foco a definir (Gerado automaticamente)",
-                    exercises: [
-                        { name: "Exercício Principal", sets: "4x10" },
-                        { name: "Exercício Auxiliar", sets: "3x12" },
-                        { name: "Exercício Isolado", sets: "3x15" },
-                        { name: "Abdômen", sets: "3x20" }
-                    ]
-                });
-            }
-        }
-
         // Merge AI Data with Protocol Structure
         const finalProtocol: ProtocolData = {
           ...EMPTY_DATA,
@@ -255,17 +195,8 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
           macros: aiData.macros || EMPTY_DATA.macros,
           meals: (aiData.meals || []).map((m: any) => ({ ...m, id: Math.random().toString(36).substr(2, 9) })),
           supplements: (aiData.supplements || []).map((s: any) => ({ ...s, id: Math.random().toString(36).substr(2, 9) })),
-          trainingFrequency: `${generatedTrainingDays.length}x na semana`,
-          trainingDays: generatedTrainingDays.map((d: any) => ({
-             id: Math.random().toString(36).substr(2, 9),
-             title: d.title || "Treino",
-             focus: d.focus || "Geral",
-             exercises: (d.exercises || []).map((e: any) => ({ 
-                 id: Math.random().toString(36).substr(2, 9),
-                 name: e.name || "Exercício",
-                 sets: e.sets || "3x10"
-             }))
-          })),
+          trainingFrequency: formData.frequency + "x na semana",
+          trainingDays: [],
           tips: finalTips,
           generalObservations: "", // Removido pois agora está na anamnese
           anamnesis: {
