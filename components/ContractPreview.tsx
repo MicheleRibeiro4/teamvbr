@@ -99,43 +99,45 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
 
       const content = (
         <ContractPDFLayout>
-            <div className="mb-6 break-inside-avoid" style={{ color: 'black', fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '12pt', lineHeight: '1.5', textAlign: 'justify' }}>
-                <h1 className="font-bold text-center text-[12pt] mb-6 uppercase pdf-title">CONTRATO DE ASSESSORIA EM ESTILO DE VIDA SAUDÁVEL</h1>
-                <div className="mb-4 text-justify"><p className="font-bold mb-1">CONTRATANTE:</p><p>Nome: {clientName}</p><p>CPF: {contract.cpf || '__________'}</p><p>Telefone: {contract.phone || '__________'}</p><p>Endereço: {fullAddress}</p></div>
-                <div className="mb-6 text-justify"><p className="font-bold mb-1">CONTRATADO:</p><p>Nome: {CONSULTANT_DEFAULT.consultantName}</p><p>CPF: {CONSULTANT_DEFAULT.consultantCpf}</p><p>E-mail: {CONSULTANT_DEFAULT.consultantEmail}</p><p>Endereço: {CONSULTANT_DEFAULT.consultantAddress}</p></div>
-                <p className="mb-4 text-justify">As partes acima identificadas celebram o presente contrato, mediante as seguintes cláusulas e condições:</p>
-            </div>
+            <div className="pdf-page" style={{ padding: '20mm 15mm' }}>
+                <div className="mb-6 break-inside-avoid" style={{ color: 'black', fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '12pt', lineHeight: '1.5', textAlign: 'justify' }}>
+                    <h1 className="font-bold text-center text-[12pt] mb-6 uppercase pdf-title">CONTRATO DE ASSESSORIA EM ESTILO DE VIDA SAUDÁVEL</h1>
+                    <div className="mb-4 text-justify"><p className="font-bold mb-1">CONTRATANTE:</p><p>Nome: {clientName}</p><p>CPF: {contract.cpf || '__________'}</p><p>Telefone: {contract.phone || '__________'}</p><p>Endereço: {fullAddress}</p></div>
+                    <div className="mb-6 text-justify"><p className="font-bold mb-1">CONTRATADO:</p><p>Nome: {CONSULTANT_DEFAULT.consultantName}</p><p>CPF: {CONSULTANT_DEFAULT.consultantCpf}</p><p>E-mail: {CONSULTANT_DEFAULT.consultantEmail}</p><p>Endereço: {CONSULTANT_DEFAULT.consultantAddress}</p></div>
+                    <p className="mb-4 text-justify">As partes acima identificadas celebram o presente contrato, mediante as seguintes cláusulas e condições:</p>
+                </div>
 
-            <div className="mb-8 text-justify leading-[1.5]" style={{ color: 'black', fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '12pt', lineHeight: '1.5', textAlign: 'justify' }}>
-            {getCleanContractText().split('\n').map((line, i) => {
-                const trimmed = line.trim();
-                if (trimmed === '') return <div key={i} className="h-4"></div>;
-                
-                const upperLine = trimmed.toUpperCase();
-                const isTitle = upperLine.startsWith('CLÁUSULA') || upperLine.startsWith('CLAUSULA');
-                const isListItem = /^[a-z]\)|^\d+\./i.test(trimmed);
+                <div className="mb-8 text-justify leading-[1.5]" style={{ color: 'black', fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '12pt', lineHeight: '1.5', textAlign: 'justify' }}>
+                {getCleanContractText().split('\n').map((line, i) => {
+                    const trimmed = line.trim();
+                    if (trimmed === '') return <div key={i} className="h-4"></div>;
+                    
+                    const upperLine = trimmed.toUpperCase();
+                    const isTitle = upperLine.startsWith('CLÁUSULA') || upperLine.startsWith('CLAUSULA');
+                    const isListItem = /^[a-z]\)|^\d+\./i.test(trimmed);
 
-                return (
-                    <p 
-                        key={i} 
-                        className={`${isTitle ? 'font-bold break-inside-avoid pdf-title' : ''} ${isListItem ? 'pl-8' : ''}`}
-                        style={{ 
-                            textAlign: 'justify',
-                            marginBottom: 0
-                        }}
-                    >
-                        {line}
-                    </p>
-                );
-            })}
-            </div>
+                    return (
+                        <p 
+                            key={i} 
+                            className={`${isTitle ? 'font-bold break-inside-avoid pdf-title' : ''} ${isListItem ? 'pl-8' : ''}`}
+                            style={{ 
+                                textAlign: 'justify',
+                                marginBottom: 0
+                            }}
+                        >
+                            {line}
+                        </p>
+                    );
+                })}
+                </div>
 
-            <div className="break-inside-avoid" style={{ color: 'black', fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '12pt', lineHeight: '1.5', textAlign: 'justify' }}>
-                <p className="mb-8 text-justify">E, por estarem justas e contratadas, as partes assinam o presente instrumento em 2 (duas) vias de igual teor e forma.</p>
-                <div className="mb-8"><p>Vespasiano, Minas Gerais</p><p>Data: {new Date().toLocaleDateString('pt-BR')}</p></div>
-                <div className="mt-8 space-y-10">
-                    <div className="break-inside-avoid"><p className="font-bold mb-4">CONTRATANTE:</p><div className="border-b border-black w-2/3 mb-1"></div><p>Assinatura</p><p>Nome: {clientName}</p><p>CPF: {contract.cpf}</p></div>
-                    <div className="break-inside-avoid"><p className="font-bold mb-4">CONTRATADO:</p><div className="border-b border-black w-2/3 mb-1"></div><p>Assinatura</p><p>{CONSULTANT_DEFAULT.consultantName}</p></div>
+                <div className="break-inside-avoid" style={{ color: 'black', fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '12pt', lineHeight: '1.5', textAlign: 'justify' }}>
+                    <p className="mb-8 text-justify">E, por estarem justas e contratadas, as partes assinam o presente instrumento em 2 (duas) vias de igual teor e forma.</p>
+                    <div className="mb-8"><p>Vespasiano, Minas Gerais</p><p>Data: {new Date().toLocaleDateString('pt-BR')}</p></div>
+                    <div className="mt-8 space-y-10">
+                        <div className="break-inside-avoid"><p className="font-bold mb-4">CONTRATANTE:</p><div className="border-b border-black w-2/3 mb-1"></div><p>Assinatura</p><p>Nome: {clientName}</p><p>CPF: {contract.cpf}</p></div>
+                        <div className="break-inside-avoid"><p className="font-bold mb-4">CONTRATADO:</p><div className="border-b border-black w-2/3 mb-1"></div><p>Assinatura</p><p>{CONSULTANT_DEFAULT.consultantName}</p></div>
+                    </div>
                 </div>
             </div>
         </ContractPDFLayout>

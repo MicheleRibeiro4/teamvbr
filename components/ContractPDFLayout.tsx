@@ -21,6 +21,7 @@ const ContractPDFLayout: React.FC<Props> = ({ children }) => {
             font-size: 12pt;
             line-height: 1.5;
             text-align: justify;
+            display: block;
           }
           .pdf-page:last-child {
             page-break-after: auto;
@@ -34,9 +35,7 @@ const ContractPDFLayout: React.FC<Props> = ({ children }) => {
           }
         `}
       </style>
-      <div className="pdf-page">
-        {children}
-      </div>
+      {children}
     </div>
   );
 };

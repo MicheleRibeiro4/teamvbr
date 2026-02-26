@@ -92,26 +92,7 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
     const gridItemStyle = "break-inside-avoid";
 
     return (
-        <div className="bg-white print:bg-transparent w-[794px]" style={{ margin: 0, padding: 0, display: 'block' }}>
-            <style>
-                {`
-                .pdf-page {
-                    width: 794px;
-                    min-height: 1123px;
-                    page-break-after: always;
-                    box-sizing: border-box;
-                    background: white;
-                }
-                .pdf-page:last-child {
-                    page-break-after: auto;
-                }
-                .break-inside-avoid {
-                    page-break-inside: avoid;
-                    break-inside: avoid;
-                }
-                `}
-            </style>
-
+        <ContractPDFLayout>
             <div className="pdf-page" style={pageStyle}>
                 <div style={contentWrapperStyle}>
                     <div className="flex justify-between items-center mb-8 border-b border-gray-200 pb-6">
@@ -177,7 +158,7 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
                     </div>
                 </div>
             </div>
-        </div>
+        </ContractPDFLayout>
     );
   };
 
