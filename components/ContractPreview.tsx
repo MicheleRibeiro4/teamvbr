@@ -1,6 +1,7 @@
 import React, { useRef, useState, useImperativeHandle, forwardRef } from 'react';
 import { ProtocolData } from '../types';
 import { CONSULTANT_DEFAULT, EMPTY_DATA } from '../constants';
+import { Loader2, FileText, X, FileDown, ShieldCheck } from 'lucide-react';
 import ContractPDFLayout from './ContractPDFLayout';
 
 export interface ContractPreviewHandle {

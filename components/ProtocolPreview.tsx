@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import { ProtocolData } from '../types';
 import { EMPTY_DATA } from '../constants';
 import { Loader2, FileText, X, FileDown, AlertTriangle } from 'lucide-react';
+import ContractPDFLayout from './ContractPDFLayout';
 
 const LOGO_VBR_GOLD = "https://xqwzmvzfemjkvaquxedz.supabase.co/storage/v1/object/public/LOGO/DOURADO.png";
 
@@ -35,7 +36,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
     const A4_WIDTH_PX = 794; 
 
     const opt = {
-      margin: [10, 10, 10, 10],
+      margin: [15, 15, 15, 15],
       filename: `Protocolo_VBR_${clientName.replace(/\s+/g, '_')}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { 
@@ -43,7 +44,9 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
         useCORS: true, 
         backgroundColor: '#ffffff',
         windowWidth: 794,
-        windowHeight: 1123
+        windowHeight: 1123,
+        scrollX: 0,
+        scrollY: 0
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak: { mode: ['css'] }
@@ -82,7 +85,8 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
         fontFamily: "'Inter', sans-serif",
         margin: '0', 
         WebkitTextSizeAdjust: '100%',
-        textSizeAdjust: '100%'
+        textSizeAdjust: '100%',
+        color: 'black'
     };
 
     const contentWrapperStyle: React.CSSProperties = {
@@ -116,22 +120,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
     const kcalValue = (safeData.kcalGoal || "0").toString().replace(/kcal/gi, '').trim();
 
     return (
-        <div ref={isPdfMode ? pdfRef : null} className="bg-white print:bg-transparent w-[794px]" style={{ margin: 0, padding: 0, display: 'block' }}>
-            <style>
-                {`
-                .pdf-page {
-                    width: 794px;
-                    min-height: 1123px;
-                    page-break-after: always;
-                    box-sizing: border-box;
-                    background: white;
-                }
-                .pdf-page:last-child {
-                    page-break-after: auto;
-                }
-                `}
-            </style>
-            
+        <ContractPDFLayout>
             {/* CAPA (Page 1) */}
             <div className="pdf-page" style={coverPageStyle}>
                 <div style={{ ...contentWrapperStyle, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
@@ -382,8 +371,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
                     </div>
                  </div>
             </div>
-
-        </div>
+        </ContractPDFLayout>
     );
   };
 
@@ -424,7 +412,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
            Always render this to allow ref.current.download() to work even without customTrigger
         */}
         <div style={{ position: 'fixed', top: 0, left: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none', width: '794px' }}>
-            {renderContent(true)}
+            <div ref={pdfRef} className="bg-white">{renderContent(true)}</div>
         </div>
     </div>
   );
