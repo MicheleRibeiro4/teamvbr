@@ -16,6 +16,11 @@ const ContractPDFLayout: React.FC<Props> = ({ children }) => {
             box-sizing: border-box;
             background: white;
             position: relative;
+            color: black;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12pt;
+            line-height: 1.5;
+            text-align: justify;
           }
           .pdf-page:last-child {
             page-break-after: auto;
