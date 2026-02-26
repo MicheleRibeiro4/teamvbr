@@ -41,17 +41,12 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
       html2canvas: { 
         scale: 2, 
         useCORS: true, 
-        letterRendering: true, 
         backgroundColor: '#ffffff',
-        scrollY: 0,
-        scrollX: 0,
         windowWidth: 794,
-        width: 794,
-        x: 0,
-        y: 0
+        windowHeight: 1123
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: ['css', 'legacy'] }
+      pagebreak: { mode: ['css'] }
     };
 
     try {
@@ -80,8 +75,8 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
     // Configuração de Estilo para Página A4
     const pageStyle: React.CSSProperties = {
         width: '794px', 
+        minHeight: '1123px',
         backgroundColor: 'white',
-        overflow: 'hidden',
         boxSizing: 'border-box',
         position: 'relative',
         fontFamily: "'Inter', sans-serif",
@@ -98,7 +93,6 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
 
     const coverPageStyle: React.CSSProperties = {
         ...pageStyle,
-        height: '296mm',
         backgroundColor: '#050505',
         color: '#ffffff',
         display: 'flex',
@@ -106,14 +100,11 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
         alignItems: 'center',
         justifyContent: 'center',
         padding: 0,
-        overflow: 'hidden',
         position: 'relative'
     };
 
     const endPageStyle: React.CSSProperties = {
-        ...coverPageStyle,
-        pageBreakBefore: 'always',
-        pageBreakAfter: 'auto'
+        ...coverPageStyle
     };
 
     // Estilos utilitários baseados no modelo
@@ -125,10 +116,24 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
     const kcalValue = (safeData.kcalGoal || "0").toString().replace(/kcal/gi, '').trim();
 
     return (
-        <div className="bg-white print:bg-transparent w-[794px]" style={{ margin: 0, padding: 0 }}>
+        <div className="bg-white print:bg-transparent w-[794px]" style={{ margin: 0, padding: 0, display: 'block' }}>
+            <style>
+                {`
+                .pdf-page {
+                    width: 794px;
+                    min-height: 1123px;
+                    page-break-after: always;
+                    box-sizing: border-box;
+                    background: white;
+                }
+                .pdf-page:last-child {
+                    page-break-after: auto;
+                }
+                `}
+            </style>
             
             {/* CAPA (Page 1) */}
-            <div style={coverPageStyle}>
+            <div className="pdf-page" style={coverPageStyle}>
                 <div style={{ ...contentWrapperStyle, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                     <img src={LOGO_VBR_GOLD} alt="Team VBR" className="w-64 h-auto mb-12" />
                     
@@ -154,7 +159,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
             </div>
 
             {/* DADOS E ESTRATÉGIA (Page 2) */}
-            <div style={pageStyle}>
+            <div className="pdf-page" style={pageStyle}>
                 <div style={contentWrapperStyle}>
                     <div className={sectionTitleStyle}>DADOS FÍSICOS — {physical.date}</div>
                     
@@ -236,7 +241,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
 
             {/* PLANO ALIMENTAR (Page 3) */}
             {meals.length > 0 && (
-                <div style={{...pageStyle, pageBreakBefore: 'always'}}>
+                <div className="pdf-page" style={pageStyle}>
                     <div style={contentWrapperStyle}>
                         <div className={sectionTitleStyle}>PLANO ALIMENTAR DIÁRIO</div>
                     
@@ -269,7 +274,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
 
             {/* SUPLEMENTAÇÃO E DICAS (Page 4) */}
             {(supplements.length > 0 || tips.length > 0) && (
-                <div style={{...pageStyle, pageBreakBefore: 'always'}}>
+                <div className="pdf-page" style={pageStyle}>
                     <div style={contentWrapperStyle}>
                         <div className={sectionTitleStyle}>SUPLEMENTAÇÃO E RECOMENDAÇÕES</div>
                     
@@ -310,7 +315,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
 
             {/* TREINO (Page 5+) */}
             {trainingDays.length > 0 && (
-                <div style={{...pageStyle, pageBreakBefore: 'always'}}>
+                <div className="pdf-page" style={pageStyle}>
                     <div style={contentWrapperStyle}>
                         <div className={sectionTitleStyle}>DIVISÃO DE TREINO</div>
                         <p className="text-xs text-gray-500 mb-6 uppercase font-bold">Frequência: {safeData.trainingFrequency || '5x na semana'}</p>
@@ -353,7 +358,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
             )}
 
             {/* PAGE FINAL (Atenção) */}
-            <div style={endPageStyle}>
+            <div className="pdf-page" style={endPageStyle}>
                  <div style={{ ...contentWrapperStyle, border: '4px solid #d4af37', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', borderRadius: '40px', position: 'relative', margin: '15mm' }}>
                     <AlertTriangle size={80} className="text-[#d4af37] mb-8" strokeWidth={1.5} />
                     <h2 className="text-6xl font-black uppercase tracking-tighter mb-4 text-white">Atenção</h2>
