@@ -35,7 +35,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
     const A4_WIDTH_PX = 794; 
 
     const opt = {
-      margin: 0,
+      margin: [10, 10, 10, 10],
       filename: `Protocolo_VBR_${clientName.replace(/\s+/g, '_')}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { 
@@ -116,7 +116,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
     const kcalValue = (safeData.kcalGoal || "0").toString().replace(/kcal/gi, '').trim();
 
     return (
-        <div className="bg-white print:bg-transparent w-[794px]" style={{ margin: 0, padding: 0, display: 'block' }}>
+        <div ref={isPdfMode ? pdfRef : null} className="bg-white print:bg-transparent w-[794px]" style={{ margin: 0, padding: 0, display: 'block' }}>
             <style>
                 {`
                 .pdf-page {
@@ -424,7 +424,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
            Always render this to allow ref.current.download() to work even without customTrigger
         */}
         <div style={{ position: 'fixed', top: 0, left: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none', width: '794px' }}>
-            <div ref={pdfRef} className="bg-white">{renderContent(true)}</div>
+            {renderContent(true)}
         </div>
     </div>
   );

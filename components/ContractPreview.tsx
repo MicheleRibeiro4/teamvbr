@@ -1,7 +1,7 @@
 import React, { useRef, useState, useImperativeHandle, forwardRef } from 'react';
 import { ProtocolData } from '../types';
 import { CONSULTANT_DEFAULT, EMPTY_DATA } from '../constants';
-import { Download, Loader2, FileText, Maximize2, X, FileDown, ShieldCheck } from 'lucide-react';
+import ContractPDFLayout from './ContractPDFLayout';
 
 export interface ContractPreviewHandle {
   download: () => Promise<void>;
@@ -62,23 +62,20 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
     
     // Configuração OTIMIZADA para A4 sem cortes
     const opt = {
-      margin: [20, 15, 20, 15],
+      margin: [15, 15, 15, 15],
       filename: `Contrato_VBR_${clientName.replace(/\s+/g, '_')}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { 
         scale: 2, 
         useCORS: true, 
-        letterRendering: true,
         backgroundColor: '#ffffff', 
         scrollX: 0,
         scrollY: 0,
         windowWidth: 794,
-        width: 794,
-        x: 0,
-        y: 0
+        windowHeight: 1123
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      pagebreak: { mode: ['css'] }
     };
 
     try {
@@ -99,41 +96,16 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
       const detailedAddress = `${street}, ${number} - ${neighbor}, ${city}/${state}`;
       const fullAddress = street ? detailedAddress : (contract.address || '__________________________________________________');
 
-      // PDF Mode: Strict A4 Container (794px)
-      const pdfContainerStyle: React.CSSProperties = {
-          width: '794px',
-          backgroundColor: 'white',
-          overflow: 'hidden',
-          boxSizing: 'border-box',
-          color: 'black',
-          fontFamily: 'Arial, Helvetica, sans-serif',
-          fontSize: '12pt',
-          lineHeight: '1.5',
-          WebkitTextSizeAdjust: '100%',
-          textSizeAdjust: '100%'
-      };
-
-      // Internal Content Wrapper for Padding (Margins)
-      const pdfContentStyle: React.CSSProperties = {
-          padding: 0,
-          width: '100%',
-          boxSizing: 'border-box',
-          textAlign: 'justify'
-      };
-
-      // Screen Mode: Visual preview
-      const previewClass = "bg-white text-black px-[20mm] py-[15mm] w-[794px] min-h-[297mm] mx-auto font-[Arial] leading-[1.5] text-[12pt] shadow-2xl print:shadow-none print:w-full h-auto block";
-
       const content = (
-        <>
-            <div className="mb-6 flex-none break-inside-avoid">
+        <ContractPDFLayout>
+            <div className="mb-6 flex-none break-inside-avoid" style={{ color: 'black', fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '12pt', lineHeight: '1.5', textAlign: 'justify' }}>
                 <h1 className="font-bold text-center text-[12pt] mb-6 uppercase pdf-title">CONTRATO DE ASSESSORIA EM ESTILO DE VIDA SAUDÁVEL</h1>
                 <div className="mb-4 text-justify"><p className="font-bold mb-1">CONTRATANTE:</p><p>Nome: {clientName}</p><p>CPF: {contract.cpf || '__________'}</p><p>Telefone: {contract.phone || '__________'}</p><p>Endereço: {fullAddress}</p></div>
                 <div className="mb-6 text-justify"><p className="font-bold mb-1">CONTRATADO:</p><p>Nome: {CONSULTANT_DEFAULT.consultantName}</p><p>CPF: {CONSULTANT_DEFAULT.consultantCpf}</p><p>E-mail: {CONSULTANT_DEFAULT.consultantEmail}</p><p>Endereço: {CONSULTANT_DEFAULT.consultantAddress}</p></div>
                 <p className="mb-4 text-justify">As partes acima identificadas celebram o presente contrato, mediante as seguintes cláusulas e condições:</p>
             </div>
 
-            <div className="mb-8 text-justify flex-1 leading-[1.5]">
+            <div className="mb-8 text-justify flex-1 leading-[1.5]" style={{ color: 'black', fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '12pt', lineHeight: '1.5', textAlign: 'justify' }}>
             {getCleanContractText().split('\n').map((line, i) => {
                 const trimmed = line.trim();
                 if (trimmed === '') return <div key={i} className="h-4"></div>;
@@ -157,7 +129,7 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
             })}
             </div>
 
-            <div className="flex-none break-inside-avoid">
+            <div className="flex-none break-inside-avoid" style={{ color: 'black', fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '12pt', lineHeight: '1.5', textAlign: 'justify' }}>
                 <p className="mb-8 text-justify">E, por estarem justas e contratadas, as partes assinam o presente instrumento em 2 (duas) vias de igual teor e forma.</p>
                 <div className="mb-8"><p>Vespasiano, Minas Gerais</p><p>Data: {new Date().toLocaleDateString('pt-BR')}</p></div>
                 <div className="mt-8 space-y-10">
@@ -165,32 +137,10 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
                     <div className="break-inside-avoid"><p className="font-bold mb-4">CONTRATADO:</p><div className="border-b border-black w-2/3 mb-1"></div><p>Assinatura</p><p>{CONSULTANT_DEFAULT.consultantName}</p></div>
                 </div>
             </div>
-        </>
+        </ContractPDFLayout>
       );
 
-      if (isPdf) {
-          return (
-            <div style={pdfContainerStyle}>
-                <style>{`
-                    .pdf-page { page-break-after: auto; }
-                    .break-inside-avoid { page-break-inside: avoid; break-inside: avoid; }
-                    .page-break { page-break-before: always; }
-                    p { orphans: 3; widows: 3; }
-                    h1, h2, h3, .pdf-title { page-break-after: avoid; }
-                    * { max-width: 100%; box-sizing: border-box; }
-                `}</style>
-                <div style={pdfContentStyle}>
-                    {content}
-                </div>
-            </div>
-          );
-      }
-
-      return (
-        <div className={previewClass}>
-            {content}
-        </div>
-      );
+      return content;
   }
 
   return (
@@ -206,7 +156,7 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
                                 <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-500"><X size={24} /></button>
                             </div>
                             <div className="flex-1 overflow-auto bg-gray-500/20 p-8 custom-scrollbar-light flex justify-center items-start">
-                                {renderContent(false)}
+                                {renderContent()}
                             </div>
                             <div className="bg-white p-6 border-t border-gray-200 flex justify-end gap-4 shrink-0">
                                 <button onClick={() => setShowModal(false)} className="px-6 py-3 rounded-xl font-bold uppercase text-xs text-gray-500 hover:bg-gray-100 transition-colors">Fechar</button>
@@ -218,7 +168,7 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
             </>
         )}
         <div style={{ position: 'fixed', top: 0, left: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none', width: '794px' }}>
-            <div ref={contractRef} className="bg-white">{renderContent(true)}</div>
+            <div ref={contractRef} className="bg-white">{renderContent()}</div>
         </div>
     </div>
   );

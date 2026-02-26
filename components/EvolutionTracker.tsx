@@ -365,11 +365,18 @@ const EvolutionTracker: React.FC<Props> = ({
       if (!targetRef) return;
       setIsGeneratingReport(true);
       const opt = {
-        margin: 10,
+        margin: [10, 10, 10, 10],
         filename: `Relatorio_VBR_${currentProtocol.clientName.replace(/\s+/g, '_')}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+        html2canvas: { 
+          scale: 2, 
+          useCORS: true, 
+          backgroundColor: '#ffffff',
+          windowWidth: 1123,
+          windowHeight: 794
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+        pagebreak: { mode: ['css'] }
       };
       try {
         // @ts-ignore
@@ -393,7 +400,7 @@ const EvolutionTracker: React.FC<Props> = ({
   const resultColor = isGoodResult ? 'text-green-500' : 'text-red-500';
 
   const renderReportContent = (isPdfMode = false) => (
-    <div className={`bg-white text-black p-10 ${isPdfMode ? 'w-[297mm]' : 'w-full max-w-[297mm] mx-auto shadow-2xl rounded-xl'}`}>
+    <div className={`bg-white text-black p-10 ${isPdfMode ? 'w-[1123px]' : 'w-full max-w-[1123px] mx-auto shadow-2xl rounded-xl'}`}>
         <div className="flex justify-between items-center border-b-4 border-black pb-6 mb-8">
             <img src={LOGO_VBR_GOLD} className="h-20" alt="Logo" />
             <div className="text-right">
