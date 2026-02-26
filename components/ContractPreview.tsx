@@ -62,7 +62,7 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
     
     // Configuração OTIMIZADA para A4 sem cortes
     const opt = {
-      margin: 0,
+      margin: [20, 15, 20, 15],
       filename: `Contrato_VBR_${clientName.replace(/\s+/g, '_')}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { 
@@ -72,7 +72,10 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
         backgroundColor: '#ffffff', 
         scrollX: 0,
         scrollY: 0,
-        windowWidth: 1200, // Force a wider window to avoid mobile reflow
+        windowWidth: 794,
+        width: 794,
+        x: 0,
+        y: 0
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
@@ -98,46 +101,58 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
 
       // PDF Mode: Strict A4 Container (794px)
       const pdfContainerStyle: React.CSSProperties = {
-          width: '210mm', // Use mm for better A4 mapping
-          minHeight: '297mm',
+          width: '794px',
           backgroundColor: 'white',
           overflow: 'hidden',
           boxSizing: 'border-box',
           color: 'black',
-          fontFamily: 'Inter, sans-serif',
-          fontSize: '13px',
-          lineHeight: '1.6',
+          fontFamily: 'Arial, Helvetica, sans-serif',
+          fontSize: '12pt',
+          lineHeight: '1.5',
           WebkitTextSizeAdjust: '100%',
           textSizeAdjust: '100%'
       };
 
       // Internal Content Wrapper for Padding (Margins)
       const pdfContentStyle: React.CSSProperties = {
-          padding: '20mm 15mm 30mm 15mm', // Increased bottom padding (30mm)
+          padding: 0,
           width: '100%',
           boxSizing: 'border-box',
           textAlign: 'justify'
       };
 
       // Screen Mode: Visual preview
-      const previewClass = "bg-white text-black px-[15mm] py-[10mm] w-[210mm] min-h-[297mm] mx-auto font-sans leading-[1.5] text-[10pt] shadow-2xl print:shadow-none print:w-full h-auto block";
+      const previewClass = "bg-white text-black px-[20mm] py-[15mm] w-[794px] min-h-[297mm] mx-auto font-[Arial] leading-[1.5] text-[12pt] shadow-2xl print:shadow-none print:w-full h-auto block";
 
       const content = (
         <>
             <div className="mb-6 flex-none break-inside-avoid">
-                <h1 className="font-bold text-center text-sm mb-6 uppercase pdf-title">CONTRATO DE ASSESSORIA EM ESTILO DE VIDA SAUDÁVEL</h1>
+                <h1 className="font-bold text-center text-[12pt] mb-6 uppercase pdf-title">CONTRATO DE ASSESSORIA EM ESTILO DE VIDA SAUDÁVEL</h1>
                 <div className="mb-4 text-justify"><p className="font-bold mb-1">CONTRATANTE:</p><p>Nome: {clientName}</p><p>CPF: {contract.cpf || '__________'}</p><p>Telefone: {contract.phone || '__________'}</p><p>Endereço: {fullAddress}</p></div>
                 <div className="mb-6 text-justify"><p className="font-bold mb-1">CONTRATADO:</p><p>Nome: {CONSULTANT_DEFAULT.consultantName}</p><p>CPF: {CONSULTANT_DEFAULT.consultantCpf}</p><p>E-mail: {CONSULTANT_DEFAULT.consultantEmail}</p><p>Endereço: {CONSULTANT_DEFAULT.consultantAddress}</p></div>
                 <p className="mb-4 text-justify">As partes acima identificadas celebram o presente contrato, mediante as seguintes cláusulas e condições:</p>
             </div>
 
-            <div className="mb-8 text-justify flex-1">
+            <div className="mb-8 text-justify flex-1 leading-[1.5]">
             {getCleanContractText().split('\n').map((line, i) => {
-                if (line.trim() === '') return <div key={i} className="h-3"></div>;
-                const upperLine = line.toUpperCase();
+                const trimmed = line.trim();
+                if (trimmed === '') return <div key={i} className="h-4"></div>;
+                
+                const upperLine = trimmed.toUpperCase();
                 const isTitle = upperLine.startsWith('CLÁUSULA') || upperLine.startsWith('CLAUSULA');
+                const isListItem = /^[a-z]\)|^\d+\./i.test(trimmed);
+
                 return (
-                <p key={i} className={`mb-1 ${isTitle ? 'font-bold mt-4 break-inside-avoid pdf-title' : ''}`}>{line}</p>
+                    <p 
+                        key={i} 
+                        className={`${isTitle ? 'font-bold break-inside-avoid pdf-title' : ''} ${isListItem ? 'pl-8' : ''}`}
+                        style={{ 
+                            textAlign: 'justify',
+                            marginBottom: 0
+                        }}
+                    >
+                        {line}
+                    </p>
                 );
             })}
             </div>
@@ -202,7 +217,7 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
                 )}
             </>
         )}
-        <div style={{ position: 'absolute', top: 0, left: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none', width: '210mm' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none', width: '794px' }}>
             <div ref={contractRef} className="bg-white">{renderContent(true)}</div>
         </div>
     </div>

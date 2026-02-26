@@ -37,7 +37,11 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
         letterRendering: true, 
         backgroundColor: '#ffffff', 
         scrollY: 0,
-        windowWidth: 1200
+        scrollX: 0,
+        windowWidth: 794,
+        width: 794,
+        x: 0,
+        y: 0
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
@@ -67,8 +71,7 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
     const clientName = safeData.clientName || "Aluno";
 
     const pageStyle: React.CSSProperties = { 
-        width: '210mm', 
-        minHeight: '297mm',
+        width: '794px', 
         backgroundColor: '#ffffff', 
         overflow: 'hidden',
         boxSizing: 'border-box',
@@ -93,136 +96,66 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
     const gridItemStyle = "break-inside-avoid";
 
     return (
-        <div className="bg-white flex flex-col items-center print:bg-transparent w-full">
-            <div style={{ position: 'absolute', top: 0, left: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none', width: '210mm' }}>
-                <div ref={pdfRef} className="bg-white">
-                    <div style={pageStyle} className="h-auto">
-                        <div style={contentWrapperStyle}>
-                            <div className="flex justify-between items-center mb-8 border-b border-gray-200 pb-6">
-                                <div><h1 className="text-3xl font-black text-gray-900 uppercase tracking-tighter">Ficha de Anamnese</h1><p className="text-sm text-gray-500 font-bold uppercase tracking-widest mt-1">Team VBR</p></div>
-                                <img src={LOGO_ANAMNESIS} alt="Team VBR" className="w-32 h-auto" />
-                            </div>
+        <div style={pageStyle} className="h-auto">
+            <div style={contentWrapperStyle}>
+                <div className="flex justify-between items-center mb-8 border-b border-gray-200 pb-6">
+                    <div><h1 className="text-3xl font-black text-gray-900 uppercase tracking-tighter">Ficha de Anamnese</h1><p className="text-sm text-gray-500 font-bold uppercase tracking-widest mt-1">Team VBR</p></div>
+                    <img src={LOGO_ANAMNESIS} alt="Team VBR" className="w-32 h-auto" />
+                </div>
 
-                            <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                                <div><span className="text-xs font-bold text-gray-400 uppercase">Aluno</span><h2 className="text-2xl font-black text-gray-900 uppercase">{clientName}</h2></div>
-                                <div className="text-right"><span className="text-xs font-bold text-gray-400 uppercase">Data do Cadastro</span><p className="text-sm font-bold text-gray-900">{registrationDate}</p></div>
-                            </div>
+                <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div><span className="text-xs font-bold text-gray-400 uppercase">Aluno</span><h2 className="text-2xl font-black text-gray-900 uppercase">{clientName}</h2></div>
+                    <div className="text-right"><span className="text-xs font-bold text-gray-400 uppercase">Data do Cadastro</span><p className="text-sm font-bold text-gray-900">{registrationDate}</p></div>
+                </div>
 
-                            <div className="grid grid-cols-4 gap-4 mb-6">
-                                <div className="col-span-1"><span className={labelStyle}>Idade</span><span className={valueStyle}>{physical.age || '-'} anos</span></div>
-                                <div className="col-span-1"><span className={labelStyle}>Gênero</span><span className={valueStyle}>{physical.gender || '-'}</span></div>
-                                <div className="col-span-1"><span className={labelStyle}>Peso</span><span className={valueStyle}>{physical.weight || '-'} kg</span></div>
-                                <div className="col-span-1"><span className={labelStyle}>Altura</span><span className={valueStyle}>{physical.height || '-'} m</span></div>
-                            </div>
+                <div className="grid grid-cols-4 gap-4 mb-6">
+                    <div className="col-span-1"><span className={labelStyle}>Idade</span><span className={valueStyle}>{physical.age || '-'} anos</span></div>
+                    <div className="col-span-1"><span className={labelStyle}>Gênero</span><span className={valueStyle}>{physical.gender || '-'}</span></div>
+                    <div className="col-span-1"><span className={labelStyle}>Peso</span><span className={valueStyle}>{physical.weight || '-'} kg</span></div>
+                    <div className={gridItemStyle}><span className={labelStyle}>Altura</span><span className={valueStyle}>{physical.height || '-'} m</span></div>
+                </div>
 
-                            <h3 className={sectionTitle}>Histórico & Objetivos</h3>
-                            <div className="space-y-4">
-                                <div className={gridItemStyle}><span className={labelStyle}>Objetivo Principal</span><p className={valueStyle}>{anamnesis.mainObjective || 'Não informado'}</p></div>
-                                <div className={gridItemStyle}><span className={labelStyle}>Rotina Diária</span><p className={`${valueStyle} whitespace-pre-wrap`}>{anamnesis.routine || 'Não informado'}</p></div>
-                                <div className={gridItemStyle}><span className={labelStyle}>Histórico de Treino / Lesões</span><p className={`${valueStyle} whitespace-pre-wrap`}>{anamnesis.trainingHistory || 'Não informado'}</p></div>
-                                <div className={gridItemStyle}><span className={labelStyle}>Preferências Alimentares / Alergias</span><p className={`${valueStyle} whitespace-pre-wrap`}>{anamnesis.foodPreferences || 'Não informado'}</p></div>
-                                <div className={gridItemStyle}><span className={labelStyle}>Medicamentos / Ergogênicos</span><p className={`${valueStyle} whitespace-pre-wrap`}>{anamnesis.ergogenics || 'Não informado'}</p></div>
-                            </div>
+                <h3 className={sectionTitle}>Histórico & Objetivos</h3>
+                <div className="space-y-4">
+                    <div className={gridItemStyle}><span className={labelStyle}>Objetivo Principal</span><p className={valueStyle}>{anamnesis.mainObjective || 'Não informado'}</p></div>
+                    <div className={gridItemStyle}><span className={labelStyle}>Rotina Diária</span><p className={`${valueStyle} whitespace-pre-wrap`}>{anamnesis.routine || 'Não informado'}</p></div>
+                    <div className={gridItemStyle}><span className={labelStyle}>Histórico de Treino / Lesões</span><p className={`${valueStyle} whitespace-pre-wrap`}>{anamnesis.trainingHistory || 'Não informado'}</p></div>
+                    <div className={gridItemStyle}><span className={labelStyle}>Preferências Alimentares / Alergias</span><p className={`${valueStyle} whitespace-pre-wrap`}>{anamnesis.foodPreferences || 'Não informado'}</p></div>
+                    <div className={gridItemStyle}><span className={labelStyle}>Medicamentos / Ergogênicos</span><p className={`${valueStyle} whitespace-pre-wrap`}>{anamnesis.ergogenics || 'Não informado'}</p></div>
+                </div>
 
-                            <div className="html2pdf__page-break"></div>
+                <div className="html2pdf__page-break"></div>
 
-                            <h3 className={sectionTitle}>Medidas Corporais</h3>
-                            <div className="grid grid-cols-4 gap-4 mb-8">
-                                <div className={gridItemStyle}><span className={labelStyle}>Gordura (BF)</span><span className={valueStyle}>{physical.bodyFat || '-'} %</span></div>
-                                <div className={gridItemStyle}><span className={labelStyle}>Massa Muscular</span><span className={valueStyle}>{physical.muscleMass || '-'} kg</span></div>
-                                <div className={gridItemStyle}><span className={labelStyle}>G. Visceral</span><span className={valueStyle}>{physical.visceralFat || '-'}</span></div>
-                                <div className={gridItemStyle}><span className={labelStyle}>IMC</span><span className={valueStyle}>{physical.imc || '-'}</span></div>
-                            </div>
+                <h3 className={sectionTitle}>Medidas Corporais</h3>
+                <div className="grid grid-cols-4 gap-4 mb-8">
+                    <div className={gridItemStyle}><span className={labelStyle}>Gordura (BF)</span><span className={valueStyle}>{physical.bodyFat || '-'} %</span></div>
+                    <div className={gridItemStyle}><span className={labelStyle}>Massa Muscular</span><span className={valueStyle}>{physical.muscleMass || '-'} kg</span></div>
+                    <div className={gridItemStyle}><span className={labelStyle}>G. Visceral</span><span className={valueStyle}>{physical.visceralFat || '-'}</span></div>
+                    <div className={gridItemStyle}><span className={labelStyle}>IMC</span><span className={valueStyle}>{physical.imc || '-'}</span></div>
+                </div>
 
-                            <div className="border border-gray-200 rounded-lg overflow-hidden break-inside-avoid">
-                                <div className="bg-gray-100 p-2 text-center text-xs font-black uppercase tracking-widest text-gray-500 border-b border-gray-200">Circunferências (cm)</div>
-                                <div className="grid grid-cols-4 divide-x divide-y divide-gray-200 text-center">
-                                    <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Tórax</span><span className="font-bold text-gray-900">{measurements.thorax || '-'}</span></div>
-                                    <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Cintura</span><span className="font-bold text-gray-900">{measurements.waist || '-'}</span></div>
-                                    <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Abdômen</span><span className="font-bold text-gray-900">{measurements.abdomen || '-'}</span></div>
-                                    <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Glúteo</span><span className="font-bold text-gray-900">{measurements.glutes || '-'}</span></div>
-                                    
-                                    <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Braço Dir (R)</span><span className="font-bold text-gray-900">{measurements.rightArmRelaxed || '-'}</span></div>
-                                    <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Braço Esq (R)</span><span className="font-bold text-gray-900">{measurements.leftArmRelaxed || '-'}</span></div>
-                                    <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Braço Dir (C)</span><span className="font-bold text-gray-900">{measurements.rightArmContracted || '-'}</span></div>
-                                    <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Braço Esq (C)</span><span className="font-bold text-gray-900">{measurements.leftArmContracted || '-'}</span></div>
-                                    
-                                    <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Coxa Dir</span><span className="font-bold text-gray-900">{measurements.rightThigh || '-'}</span></div>
-                                    <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Coxa Esq</span><span className="font-bold text-gray-900">{measurements.leftThigh || '-'}</span></div>
-                                    <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Pantur. Dir</span><span className="font-bold text-gray-900">{measurements.rightCalf || '-'}</span></div>
-                                    <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Pantur. Esq</span><span className="font-bold text-gray-900">{measurements.leftCalf || '-'}</span></div>
-                                </div>
-                            </div>
-
-                            <div className="mt-12 text-center border-t border-gray-100 pt-8">
-                                <p className="text-[10px] font-black uppercase text-gray-300 tracking-[0.3em]">Team VBR System © 2026</p>
-                            </div>
-                        </div>
+                <div className="border border-gray-200 rounded-lg overflow-hidden break-inside-avoid">
+                    <div className="bg-gray-100 p-2 text-center text-xs font-black uppercase tracking-widest text-gray-500 border-b border-gray-200">Circunferências (cm)</div>
+                    <div className="grid grid-cols-4 divide-x divide-y divide-gray-200 text-center">
+                        <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Tórax</span><span className="font-bold text-gray-900">{measurements.thorax || '-'}</span></div>
+                        <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Cintura</span><span className="font-bold text-gray-900">{measurements.waist || '-'}</span></div>
+                        <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Abdômen</span><span className="font-bold text-gray-900">{measurements.abdomen || '-'}</span></div>
+                        <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Glúteo</span><span className="font-bold text-gray-900">{measurements.glutes || '-'}</span></div>
+                        
+                        <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Braço Dir (R)</span><span className="font-bold text-gray-900">{measurements.rightArmRelaxed || '-'}</span></div>
+                        <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Braço Esq (R)</span><span className="font-bold text-gray-900">{measurements.leftArmRelaxed || '-'}</span></div>
+                        <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Braço Dir (C)</span><span className="font-bold text-gray-900">{measurements.rightArmContracted || '-'}</span></div>
+                        <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Braço Esq (C)</span><span className="font-bold text-gray-900">{measurements.leftArmContracted || '-'}</span></div>
+                        
+                        <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Coxa Dir</span><span className="font-bold text-gray-900">{measurements.rightThigh || '-'}</span></div>
+                        <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Coxa Esq</span><span className="font-bold text-gray-900">{measurements.leftThigh || '-'}</span></div>
+                        <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Pantur. Dir</span><span className="font-bold text-gray-900">{measurements.rightCalf || '-'}</span></div>
+                        <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Pantur. Esq</span><span className="font-bold text-gray-900">{measurements.leftCalf || '-'}</span></div>
                     </div>
                 </div>
-            </div>
-            
-            <div style={pageStyle} className="h-auto">
-                <div style={contentWrapperStyle}>
-                    <div className="flex justify-between items-center mb-8 border-b border-gray-200 pb-6">
-                        <div><h1 className="text-3xl font-black text-gray-900 uppercase tracking-tighter">Ficha de Anamnese</h1><p className="text-sm text-gray-500 font-bold uppercase tracking-widest mt-1">Team VBR</p></div>
-                        <img src={LOGO_ANAMNESIS} alt="Team VBR" className="w-32 h-auto" />
-                    </div>
 
-                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                        <div><span className="text-xs font-bold text-gray-400 uppercase">Aluno</span><h2 className="text-2xl font-black text-gray-900 uppercase">{clientName}</h2></div>
-                        <div className="text-right"><span className="text-xs font-bold text-gray-400 uppercase">Data do Cadastro</span><p className="text-sm font-bold text-gray-900">{registrationDate}</p></div>
-                    </div>
-
-                    <div className="grid grid-cols-4 gap-4 mb-6">
-                        <div className="col-span-1"><span className={labelStyle}>Idade</span><span className={valueStyle}>{physical.age || '-'} anos</span></div>
-                        <div className="col-span-1"><span className={labelStyle}>Gênero</span><span className={valueStyle}>{physical.gender || '-'}</span></div>
-                        <div className="col-span-1"><span className={labelStyle}>Peso</span><span className={valueStyle}>{physical.weight || '-'} kg</span></div>
-                        <div className={gridItemStyle}><span className={labelStyle}>Altura</span><span className={valueStyle}>{physical.height || '-'} m</span></div>
-                    </div>
-
-                    <h3 className={sectionTitle}>Histórico & Objetivos</h3>
-                    <div className="space-y-4">
-                        <div className={gridItemStyle}><span className={labelStyle}>Objetivo Principal</span><p className={valueStyle}>{anamnesis.mainObjective || 'Não informado'}</p></div>
-                        <div className={gridItemStyle}><span className={labelStyle}>Rotina Diária</span><p className={`${valueStyle} whitespace-pre-wrap`}>{anamnesis.routine || 'Não informado'}</p></div>
-                        <div className={gridItemStyle}><span className={labelStyle}>Histórico de Treino / Lesões</span><p className={`${valueStyle} whitespace-pre-wrap`}>{anamnesis.trainingHistory || 'Não informado'}</p></div>
-                        <div className={gridItemStyle}><span className={labelStyle}>Preferências Alimentares / Alergias</span><p className={`${valueStyle} whitespace-pre-wrap`}>{anamnesis.foodPreferences || 'Não informado'}</p></div>
-                        <div className={gridItemStyle}><span className={labelStyle}>Medicamentos / Ergogênicos</span><p className={`${valueStyle} whitespace-pre-wrap`}>{anamnesis.ergogenics || 'Não informado'}</p></div>
-                    </div>
-
-                    <div className="html2pdf__page-break"></div>
-
-                    <h3 className={sectionTitle}>Medidas Corporais</h3>
-                    <div className="grid grid-cols-4 gap-4 mb-8">
-                        <div className={gridItemStyle}><span className={labelStyle}>Gordura (BF)</span><span className={valueStyle}>{physical.bodyFat || '-'} %</span></div>
-                        <div className={gridItemStyle}><span className={labelStyle}>Massa Muscular</span><span className={valueStyle}>{physical.muscleMass || '-'} kg</span></div>
-                        <div className={gridItemStyle}><span className={labelStyle}>G. Visceral</span><span className={valueStyle}>{physical.visceralFat || '-'}</span></div>
-                        <div className={gridItemStyle}><span className={labelStyle}>IMC</span><span className={valueStyle}>{physical.imc || '-'}</span></div>
-                    </div>
-
-                    <div className="border border-gray-200 rounded-lg overflow-hidden break-inside-avoid">
-                        <div className="bg-gray-100 p-2 text-center text-xs font-black uppercase tracking-widest text-gray-500 border-b border-gray-200">Circunferências (cm)</div>
-                        <div className="grid grid-cols-4 divide-x divide-y divide-gray-200 text-center">
-                            <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Tórax</span><span className="font-bold text-gray-900">{measurements.thorax || '-'}</span></div>
-                            <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Cintura</span><span className="font-bold text-gray-900">{measurements.waist || '-'}</span></div>
-                            <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Abdômen</span><span className="font-bold text-gray-900">{measurements.abdomen || '-'}</span></div>
-                            <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Glúteo</span><span className="font-bold text-gray-900">{measurements.glutes || '-'}</span></div>
-                            
-                            <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Braço Dir (R)</span><span className="font-bold text-gray-900">{measurements.rightArmRelaxed || '-'}</span></div>
-                            <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Braço Esq (R)</span><span className="font-bold text-gray-900">{measurements.leftArmRelaxed || '-'}</span></div>
-                            <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Braço Dir (C)</span><span className="font-bold text-gray-900">{measurements.rightArmContracted || '-'}</span></div>
-                            <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Braço Esq (C)</span><span className="font-bold text-gray-900">{measurements.leftArmContracted || '-'}</span></div>
-                            
-                            <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Coxa Dir</span><span className="font-bold text-gray-900">{measurements.rightThigh || '-'}</span></div>
-                            <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Coxa Esq</span><span className="font-bold text-gray-900">{measurements.leftThigh || '-'}</span></div>
-                            <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Pantur. Dir</span><span className="font-bold text-gray-900">{measurements.rightCalf || '-'}</span></div>
-                            <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Pantur. Esq</span><span className="font-bold text-gray-900">{measurements.leftCalf || '-'}</span></div>
-                        </div>
-                    </div>
-
-                    <div className="mt-12 text-center border-t border-gray-100 pt-8">
-                        <p className="text-[10px] font-black uppercase text-gray-300 tracking-[0.3em]">Team VBR System © 2026</p>
-                    </div>
+                <div className="mt-12 text-center border-t border-gray-100 pt-8">
+                    <p className="text-[10px] font-black uppercase text-gray-300 tracking-[0.3em]">Team VBR System © 2026</p>
                 </div>
             </div>
         </div>
@@ -255,7 +188,7 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
                 {showModal && typeof document !== 'undefined' && createPortal(modalContent, document.body)}
             </>
         )}
-        <div style={{ position: 'absolute', top: 0, left: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none', width: '210mm' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none', width: '794px' }}>
             <div ref={pdfRef} className="bg-white">{renderContent(true)}</div>
         </div>
     </div>

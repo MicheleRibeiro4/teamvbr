@@ -45,10 +45,13 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
         backgroundColor: '#ffffff',
         scrollY: 0,
         scrollX: 0,
-        windowWidth: 1200, // Force desktop viewport
+        windowWidth: 794,
+        width: 794,
+        x: 0,
+        y: 0
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      pagebreak: { mode: ['css', 'legacy'] }
     };
 
     try {
@@ -65,10 +68,10 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
     const physical = safeData.physicalData || EMPTY_DATA.physicalData;
     const contract = safeData.contract || EMPTY_DATA.contract;
     const macros = safeData.macros || { protein: { value: '0', ratio: '' }, carbs: { value: '0', ratio: '' }, fats: { value: '0', ratio: '' } };
-    const meals = safeData.meals || [];
-    const supplements = safeData.supplements || [];
-    const trainingDays = safeData.trainingDays || [];
-    const tips = (safeData.tips && safeData.tips.length > 0) ? safeData.tips : EMPTY_DATA.tips;
+    const meals = (safeData.meals || []).filter(m => m.name || m.details || m.time);
+    const supplements = (safeData.supplements || []).filter(s => s.name || s.dosage || s.timing);
+    const trainingDays = (safeData.trainingDays || []).filter(d => d.title || d.focus || (d.exercises && d.exercises.length > 0));
+    const tips = (safeData.tips || []).filter(t => t.trim() !== '');
     
     const protocolTitle = safeData.protocolTitle || "HIPERTROFIA";
     const clientName = safeData.clientName || "ALUNO";
@@ -77,7 +80,6 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
     // Configuração de Estilo para Página A4
     const pageStyle: React.CSSProperties = {
         width: '794px', 
-        minHeight: '1123px',
         backgroundColor: 'white',
         overflow: 'hidden',
         boxSizing: 'border-box',
@@ -96,6 +98,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
 
     const coverPageStyle: React.CSSProperties = {
         ...pageStyle,
+        height: '296mm',
         backgroundColor: '#050505',
         color: '#ffffff',
         display: 'flex',
@@ -103,12 +106,13 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
         alignItems: 'center',
         justifyContent: 'center',
         padding: 0,
-        // pageBreakAfter removed to avoid double break with next page's pageBreakBefore
+        overflow: 'hidden',
+        position: 'relative'
     };
 
     const endPageStyle: React.CSSProperties = {
         ...coverPageStyle,
-        pageBreakBefore: 'always', // Ensure it starts on a new page
+        pageBreakBefore: 'always',
         pageBreakAfter: 'auto'
     };
 
@@ -121,7 +125,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
     const kcalValue = (safeData.kcalGoal || "0").toString().replace(/kcal/gi, '').trim();
 
     return (
-        <div className="flex flex-col items-center bg-white print:bg-transparent">
+        <div className="bg-white print:bg-transparent w-[794px]" style={{ margin: 0, padding: 0 }}>
             
             {/* CAPA (Page 1) */}
             <div style={coverPageStyle}>
@@ -150,9 +154,9 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
             </div>
 
             {/* DADOS E ESTRATÉGIA (Page 2) */}
-            <div style={{...pageStyle, pageBreakBefore: 'always'}}>
+            <div style={pageStyle}>
                 <div style={contentWrapperStyle}>
-                    <div className={sectionTitleStyle}>1. DADOS FÍSICOS — {physical.date}</div>
+                    <div className={sectionTitleStyle}>DADOS FÍSICOS — {physical.date}</div>
                     
                     <div className="grid grid-cols-3 gap-4 mb-8">
                         <div className={cardDataStyle}>
@@ -189,7 +193,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
                         </div>
                     </div>
 
-                    <div className={sectionTitleStyle}>2. ESTRATÉGIA NUTRICIONAL</div>
+                    <div className={sectionTitleStyle}>ESTRATÉGIA NUTRICIONAL</div>
                     
                     <div className="bg-gray-100 p-4 rounded-lg border-l-4 border-gray-300 mb-8">
                         <span className="font-bold text-gray-900 text-xs uppercase block mb-2">Observação:</span>
@@ -231,9 +235,10 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
             </div>
 
             {/* PLANO ALIMENTAR (Page 3) */}
-            <div style={{...pageStyle, pageBreakBefore: 'always'}}>
-                <div style={contentWrapperStyle}>
-                    <div className={sectionTitleStyle}>3. PLANO ALIMENTAR DIÁRIO</div>
+            {meals.length > 0 && (
+                <div style={{...pageStyle, pageBreakBefore: 'always'}}>
+                    <div style={contentWrapperStyle}>
+                        <div className={sectionTitleStyle}>PLANO ALIMENTAR DIÁRIO</div>
                     
                     {/* Header Tabela */}
                     <div className="grid grid-cols-12 bg-[#d4af37] text-white font-bold text-xs uppercase py-2 px-3 rounded-t-lg mb-0">
@@ -260,11 +265,13 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
                     </div>
                 </div>
             </div>
+            )}
 
             {/* SUPLEMENTAÇÃO E DICAS (Page 4) */}
-            <div style={{...pageStyle, pageBreakBefore: 'always'}}>
-                <div style={contentWrapperStyle}>
-                    <div className={sectionTitleStyle}>4. SUPLEMENTAÇÃO E RECOMENDAÇÕES</div>
+            {(supplements.length > 0 || tips.length > 0) && (
+                <div style={{...pageStyle, pageBreakBefore: 'always'}}>
+                    <div style={contentWrapperStyle}>
+                        <div className={sectionTitleStyle}>SUPLEMENTAÇÃO E RECOMENDAÇÕES</div>
                     
                     <div className="space-y-4 mb-10">
                         {supplements.map((s, idx) => {
@@ -299,12 +306,13 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
                     </div>
                 </div>
             </div>
+            )}
 
             {/* TREINO (Page 5+) */}
             {trainingDays.length > 0 && (
                 <div style={{...pageStyle, pageBreakBefore: 'always'}}>
                     <div style={contentWrapperStyle}>
-                        <div className={sectionTitleStyle}>5. DIVISÃO DE TREINO</div>
+                        <div className={sectionTitleStyle}>DIVISÃO DE TREINO</div>
                         <p className="text-xs text-gray-500 mb-6 uppercase font-bold">Frequência: {safeData.trainingFrequency || '5x na semana'}</p>
 
                         <div className="space-y-8">
@@ -337,7 +345,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
 
             {/* PAGE FINAL (Atenção) */}
             <div style={endPageStyle}>
-                 <div style={{ ...contentWrapperStyle, border: '3px solid #d4af37', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', borderRadius: '24px', position: 'relative' }}>
+                 <div style={{ ...contentWrapperStyle, border: '4px solid #d4af37', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', borderRadius: '40px', position: 'relative', margin: '15mm' }}>
                     <AlertTriangle size={80} className="text-[#d4af37] mb-8" strokeWidth={1.5} />
                     <h2 className="text-6xl font-black uppercase tracking-tighter mb-4 text-white">Atenção</h2>
                     <div className="w-24 h-2 bg-[#d4af37] mb-12"></div>
@@ -350,6 +358,10 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
                     <p className="text-[#d4af37] text-2xl font-black italic uppercase tracking-widest">
                         "A consistência vence a intensidade."
                     </p>
+                    
+                    <div className="mt-12">
+                         <img src={LOGO_VBR_GOLD} alt="Team VBR" className="w-32 h-auto opacity-50" />
+                    </div>
 
                     <div className="absolute bottom-8 text-[10px] font-black uppercase text-gray-600 tracking-[0.5em]">
                         TEAM VBR © 2026
