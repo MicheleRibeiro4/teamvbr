@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ProtocolData } from './types';
 import { EMPTY_DATA, LOGO_VBR_BLACK } from './constants';
 import { db } from './services/db';
@@ -43,7 +43,6 @@ const App: React.FC = () => {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState(false);
 
-  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const MASTER_PASSWORD = "vbr-master-2025";
 
   useEffect(() => {
