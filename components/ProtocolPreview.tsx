@@ -78,7 +78,6 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
     // Configuração de Estilo para Página A4
     const pageStyle: React.CSSProperties = {
         width: '794px', 
-        minHeight: '1123px',
         backgroundColor: 'white',
         boxSizing: 'border-box',
         position: 'relative',
@@ -104,11 +103,14 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
         alignItems: 'center',
         justifyContent: 'center',
         padding: 0,
-        position: 'relative'
+        position: 'relative',
+        height: '1123px',
+        overflow: 'hidden'
     };
 
     const endPageStyle: React.CSSProperties = {
-        ...coverPageStyle
+        ...coverPageStyle,
+        padding: '10mm'
     };
 
     // Estilos utilitários baseados no modelo
@@ -122,8 +124,8 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
     return (
         <ContractPDFLayout>
             {/* CAPA (Page 1) */}
-            <div className="pdf-page" style={{ ...coverPageStyle, display: 'block' }}>
-                <div style={{ ...contentWrapperStyle, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="pdf-page" style={{ ...coverPageStyle }}>
+                <div style={{ ...contentWrapperStyle, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
                     <img src={LOGO_VBR_GOLD} alt="Team VBR" className="w-64 h-auto mb-12" />
                     
                     <h1 className="text-3xl font-black text-[#d4af37] uppercase tracking-widest text-center leading-tight mb-12">
@@ -353,8 +355,8 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
             )}
 
             {/* PAGE FINAL (Atenção) */}
-            <div className="pdf-page" style={{ ...endPageStyle, display: 'block' }}>
-                 <div style={{ ...contentWrapperStyle, border: '4px solid #d4af37', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', borderRadius: '40px', position: 'relative' }}>
+            <div className="pdf-page" style={{ ...endPageStyle }}>
+                 <div style={{ border: '4px solid #d4af37', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', borderRadius: '40px', position: 'relative', width: '100%', height: '100%', padding: '20mm' }}>
                     <AlertTriangle size={80} className="text-[#d4af37] mb-8" strokeWidth={1.5} />
                     <h2 className="text-6xl font-black uppercase tracking-tighter mb-4 text-white">Atenção</h2>
                     <div className="w-24 h-2 bg-[#d4af37] mb-12"></div>

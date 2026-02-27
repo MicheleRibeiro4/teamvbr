@@ -110,7 +110,7 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
                 <div className="mb-8 text-justify leading-[1.5] clause-text" style={{ color: 'black', fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '12pt', lineHeight: '1.5', textAlign: 'justify' }}>
                 {getCleanContractText().split('\n').map((line, i) => {
                     const trimmed = line.trim();
-                    if (trimmed === '') return <div key={i} className="h-4"></div>;
+                    if (trimmed === '') return null;
                     
                     const upperLine = trimmed.toUpperCase();
                     const isTitle = upperLine.startsWith('CLÁUSULA') || upperLine.startsWith('CLAUSULA');
@@ -122,7 +122,7 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
                             className={`${isTitle ? 'font-bold break-inside-avoid pdf-title clause-title' : 'clause-text'}`}
                             style={{ 
                                 textAlign: 'justify',
-                                marginBottom: 0
+                                marginBottom: '1rem'
                             }}
                         >
                             {line}

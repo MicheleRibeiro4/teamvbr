@@ -19,7 +19,6 @@ const ContractPDFLayout: React.FC<Props> = ({ children, width = '794px' }) => {
         {`
           .pdf-page {
             width: 794px;
-            min-height: 1123px;
             box-sizing: border-box;
             background: #ffffff;
             font-family: Arial, Helvetica, sans-serif;
@@ -27,13 +26,12 @@ const ContractPDFLayout: React.FC<Props> = ({ children, width = '794px' }) => {
             line-height: 1.5;
             color: black;
             display: block;
-            page-break-after: always;
-            break-after: page;
+            break-inside: avoid;
+            page-break-inside: avoid;
           }
 
           .pdf-page-landscape {
             width: 1123px;
-            min-height: 794px;
             box-sizing: border-box;
             background: #ffffff;
             font-family: Arial, Helvetica, sans-serif;
@@ -41,14 +39,16 @@ const ContractPDFLayout: React.FC<Props> = ({ children, width = '794px' }) => {
             line-height: 1.5;
             color: black;
             display: block;
-            page-break-after: always;
-            break-after: page;
+            break-inside: avoid;
+            page-break-inside: avoid;
           }
 
-          .pdf-page:last-child,
-          .pdf-page-landscape:last-child {
-            page-break-after: auto;
-            break-after: auto;
+          .pdf-page + .pdf-page,
+          .pdf-page-landscape + .pdf-page-landscape,
+          .pdf-page + .pdf-page-landscape,
+          .pdf-page-landscape + .pdf-page {
+            page-break-before: always;
+            break-before: page;
           }
 
           p,

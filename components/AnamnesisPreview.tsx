@@ -70,7 +70,6 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
 
     const pageStyle: React.CSSProperties = { 
         width: '794px', 
-        minHeight: '1123px',
         backgroundColor: '#ffffff', 
         boxSizing: 'border-box',
         color: 'black', 
