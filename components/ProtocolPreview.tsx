@@ -44,6 +44,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
         useCORS: true, 
         backgroundColor: '#ffffff',
         windowWidth: 794,
+        windowHeight: 1123,
         scrollX: 0,
         scrollY: 0
       },
@@ -89,7 +90,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
     };
 
     const contentWrapperStyle: React.CSSProperties = {
-        padding: '20mm 15mm 30mm 15mm', // Increased bottom padding (30mm)
+        padding: '10mm 10mm 20mm 10mm', // Reduced padding because of mandatory 15mm PDF margin
         width: '100%',
         boxSizing: 'border-box'
     };
@@ -122,7 +123,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
         <ContractPDFLayout>
             {/* CAPA (Page 1) */}
             <div className="pdf-page" style={{ ...coverPageStyle, display: 'block' }}>
-                <div style={{ ...contentWrapperStyle, height: '1123px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ ...contentWrapperStyle, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                     <img src={LOGO_VBR_GOLD} alt="Team VBR" className="w-64 h-auto mb-12" />
                     
                     <h1 className="text-3xl font-black text-[#d4af37] uppercase tracking-widest text-center leading-tight mb-12">
@@ -353,7 +354,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
 
             {/* PAGE FINAL (Atenção) */}
             <div className="pdf-page" style={{ ...endPageStyle, display: 'block' }}>
-                 <div style={{ ...contentWrapperStyle, border: '4px solid #d4af37', minHeight: '900px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', borderRadius: '40px', position: 'relative' }}>
+                 <div style={{ ...contentWrapperStyle, border: '4px solid #d4af37', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', borderRadius: '40px', position: 'relative' }}>
                     <AlertTriangle size={80} className="text-[#d4af37] mb-8" strokeWidth={1.5} />
                     <h2 className="text-6xl font-black uppercase tracking-tighter mb-4 text-white">Atenção</h2>
                     <div className="w-24 h-2 bg-[#d4af37] mb-12"></div>
@@ -416,8 +417,18 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
            Fixed Width 794px to ensure A4 proportions at 96 DPI.
            Always render this to allow ref.current.download() to work even without customTrigger
         */}
-        <div style={{ position: 'fixed', top: 0, left: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none', width: '794px' }}>
-            <div ref={pdfRef} className="bg-white">{renderContent(true)}</div>
+        <div style={{ position: 'absolute', top: 0, left: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none', width: '794px' }}>
+            <div 
+                ref={pdfRef} 
+                style={{
+                    width: '794px',
+                    margin: 0,
+                    padding: 0,
+                    background: '#ffffff'
+                }}
+            >
+                {renderContent(true)}
+            </div>
         </div>
     </div>
   );

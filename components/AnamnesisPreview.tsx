@@ -38,7 +38,8 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
         backgroundColor: '#ffffff', 
         scrollY: 0,
         scrollX: 0,
-        windowWidth: 794
+        windowWidth: 794,
+        windowHeight: 1123
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak: { mode: ['css'] }
@@ -80,7 +81,7 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
     };
 
     const contentWrapperStyle: React.CSSProperties = {
-        padding: '20mm 15mm 30mm 15mm', // Increased bottom padding (30mm)
+        padding: '10mm 10mm 20mm 10mm', // Reduced padding because of mandatory 15mm PDF margin
         width: '100%',
         boxSizing: 'border-box'
     };
@@ -186,8 +187,18 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
                 {showModal && typeof document !== 'undefined' && createPortal(modalContent, document.body)}
             </>
         )}
-        <div style={{ position: 'fixed', top: 0, left: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none', width: '794px' }}>
-            <div ref={pdfRef} className="bg-white">{renderContent(true)}</div>
+        <div style={{ position: 'absolute', top: 0, left: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none', width: '794px' }}>
+            <div 
+                ref={pdfRef} 
+                style={{
+                    width: '794px',
+                    margin: 0,
+                    padding: 0,
+                    background: '#ffffff'
+                }}
+            >
+                {renderContent(true)}
+            </div>
         </div>
     </div>
   );

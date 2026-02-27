@@ -72,7 +72,8 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
         backgroundColor: '#ffffff', 
         scrollX: 0,
         scrollY: 0,
-        windowWidth: 794
+        windowWidth: 794,
+        windowHeight: 1123
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak: { mode: ['css'] }
@@ -98,15 +99,15 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
 
       const content = (
         <ContractPDFLayout>
-            <div className="pdf-page" style={{ padding: '20mm 15mm' }}>
-                <div className="mb-6 break-inside-avoid" style={{ color: 'black', fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '12pt', lineHeight: '1.5', textAlign: 'justify' }}>
-                    <h1 className="font-bold text-center text-[12pt] mb-6 uppercase pdf-title">CONTRATO DE ASSESSORIA EM ESTILO DE VIDA SAUDÁVEL</h1>
-                    <div className="mb-4 text-justify"><p className="font-bold mb-1">CONTRATANTE:</p><p>Nome: {clientName}</p><p>CPF: {contract.cpf || '__________'}</p><p>Telefone: {contract.phone || '__________'}</p><p>Endereço: {fullAddress}</p></div>
-                    <div className="mb-6 text-justify"><p className="font-bold mb-1">CONTRATADO:</p><p>Nome: {CONSULTANT_DEFAULT.consultantName}</p><p>CPF: {CONSULTANT_DEFAULT.consultantCpf}</p><p>E-mail: {CONSULTANT_DEFAULT.consultantEmail}</p><p>Endereço: {CONSULTANT_DEFAULT.consultantAddress}</p></div>
-                    <p className="mb-4 text-justify">As partes acima identificadas celebram o presente contrato, mediante as seguintes cláusulas e condições:</p>
+            <div className="pdf-page" style={{ padding: '10mm 10mm' }}>
+                <div className="mb-6 break-inside-avoid clause-text" style={{ color: 'black', fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '12pt', lineHeight: '1.5', textAlign: 'justify' }}>
+                    <h1 className="font-bold text-center text-[12pt] mb-6 uppercase pdf-title clause-title">CONTRATO DE ASSESSORIA EM ESTILO DE VIDA SAUDÁVEL</h1>
+                    <div className="mb-4 text-justify clause-text"><p className="font-bold mb-1 clause-title">CONTRATANTE:</p><p className="clause-text">Nome: {clientName}</p><p className="clause-text">CPF: {contract.cpf || '__________'}</p><p className="clause-text">Telefone: {contract.phone || '__________'}</p><p className="clause-text">Endereço: {fullAddress}</p></div>
+                    <div className="mb-6 text-justify clause-text"><p className="font-bold mb-1 clause-title">CONTRATADO:</p><p className="clause-text">Nome: {CONSULTANT_DEFAULT.consultantName}</p><p className="clause-text">CPF: {CONSULTANT_DEFAULT.consultantCpf}</p><p className="clause-text">E-mail: {CONSULTANT_DEFAULT.consultantEmail}</p><p className="clause-text">Endereço: {CONSULTANT_DEFAULT.consultantAddress}</p></div>
+                    <p className="mb-4 text-justify clause-text">As partes acima identificadas celebram o presente contrato, mediante as seguintes cláusulas e condições:</p>
                 </div>
 
-                <div className="mb-8 text-justify leading-[1.5]" style={{ color: 'black', fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '12pt', lineHeight: '1.5', textAlign: 'justify' }}>
+                <div className="mb-8 text-justify leading-[1.5] clause-text" style={{ color: 'black', fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '12pt', lineHeight: '1.5', textAlign: 'justify' }}>
                 {getCleanContractText().split('\n').map((line, i) => {
                     const trimmed = line.trim();
                     if (trimmed === '') return <div key={i} className="h-4"></div>;
@@ -118,7 +119,7 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
                     return (
                         <p 
                             key={i} 
-                            className={`${isTitle ? 'font-bold break-inside-avoid pdf-title' : ''}`}
+                            className={`${isTitle ? 'font-bold break-inside-avoid pdf-title clause-title' : 'clause-text'}`}
                             style={{ 
                                 textAlign: 'justify',
                                 marginBottom: 0
@@ -130,12 +131,12 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
                 })}
                 </div>
 
-                <div className="break-inside-avoid" style={{ color: 'black', fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '12pt', lineHeight: '1.5', textAlign: 'justify' }}>
-                    <p className="mb-8 text-justify">E, por estarem justas e contratadas, as partes assinam o presente instrumento em 2 (duas) vias de igual teor e forma.</p>
-                    <div className="mb-8"><p>Vespasiano, Minas Gerais</p><p>Data: {new Date().toLocaleDateString('pt-BR')}</p></div>
-                    <div className="mt-8 space-y-10">
-                        <div className="break-inside-avoid"><p className="font-bold mb-4">CONTRATANTE:</p><div className="border-b border-black w-2/3 mb-1"></div><p>Assinatura</p><p>Nome: {clientName}</p><p>CPF: {contract.cpf}</p></div>
-                        <div className="break-inside-avoid"><p className="font-bold mb-4">CONTRATADO:</p><div className="border-b border-black w-2/3 mb-1"></div><p>Assinatura</p><p>{CONSULTANT_DEFAULT.consultantName}</p></div>
+                <div className="break-inside-avoid clause-text" style={{ color: 'black', fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '12pt', lineHeight: '1.5', textAlign: 'justify' }}>
+                    <p className="mb-8 text-justify clause-text">E, por estarem justas e contratadas, as partes assinam o presente instrumento em 2 (duas) vias de igual teor e forma.</p>
+                    <div className="mb-8 clause-text"><p className="clause-text">Vespasiano, Minas Gerais</p><p className="clause-text">Data: {new Date().toLocaleDateString('pt-BR')}</p></div>
+                    <div className="mt-8 space-y-10 clause-text">
+                        <div className="break-inside-avoid clause-text"><p className="font-bold mb-4 clause-title">CONTRATANTE:</p><div className="border-b border-black w-2/3 mb-1"></div><p className="clause-text">Assinatura</p><p className="clause-text">Nome: {clientName}</p><p className="clause-text">CPF: {contract.cpf}</p></div>
+                        <div className="break-inside-avoid clause-text"><p className="font-bold mb-4 clause-title">CONTRATADO:</p><div className="border-b border-black w-2/3 mb-1"></div><p className="clause-text">Assinatura</p><p className="clause-text">{CONSULTANT_DEFAULT.consultantName}</p></div>
                     </div>
                 </div>
             </div>
@@ -169,8 +170,18 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
                 )}
             </>
         )}
-        <div style={{ position: 'fixed', top: 0, left: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none', width: '794px' }}>
-            <div ref={contractRef} className="bg-white">{renderContent()}</div>
+        <div style={{ position: 'absolute', top: 0, left: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none', width: '794px' }}>
+            <div 
+                ref={contractRef} 
+                style={{
+                    width: '794px',
+                    margin: 0,
+                    padding: 0,
+                    background: '#ffffff'
+                }}
+            >
+                {renderContent()}
+            </div>
         </div>
     </div>
   );
