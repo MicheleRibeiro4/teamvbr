@@ -36,7 +36,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
     const A4_WIDTH_PX = 794; 
 
     const opt = {
-      margin: [15, 15, 15, 15],
+      margin: 0,
       filename: `Protocolo_VBR_${clientName.replace(/\s+/g, '_')}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { 
@@ -44,7 +44,6 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
         useCORS: true, 
         backgroundColor: '#ffffff',
         windowWidth: 794,
-        windowHeight: 1123,
         scrollX: 0,
         scrollY: 0
       },
@@ -122,8 +121,8 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
     return (
         <ContractPDFLayout>
             {/* CAPA (Page 1) */}
-            <div className="pdf-page" style={coverPageStyle}>
-                <div style={{ ...contentWrapperStyle, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="pdf-page" style={{ ...coverPageStyle, display: 'block' }}>
+                <div style={{ ...contentWrapperStyle, height: '1123px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                     <img src={LOGO_VBR_GOLD} alt="Team VBR" className="w-64 h-auto mb-12" />
                     
                     <h1 className="text-3xl font-black text-[#d4af37] uppercase tracking-widest text-center leading-tight mb-12">
@@ -230,130 +229,136 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
 
             {/* PLANO ALIMENTAR (Page 3) */}
             {meals.length > 0 && (
-                <div className="pdf-page" style={pageStyle}>
-                    <div style={contentWrapperStyle}>
-                        <div className={sectionTitleStyle}>PLANO ALIMENTAR DIÁRIO</div>
-                    
-                    {/* Header Tabela */}
-                    <div className="grid grid-cols-12 bg-[#d4af37] text-white font-bold text-xs uppercase py-2 px-3 rounded-t-lg mb-0">
-                        <div className="col-span-2">Horário</div>
-                        <div className="col-span-10">Refeição & Detalhes</div>
-                    </div>
+                <>
+                    <div className="pdf-page" style={pageStyle}>
+                        <div style={contentWrapperStyle}>
+                            <div className={sectionTitleStyle}>PLANO ALIMENTAR DIÁRIO</div>
+                        
+                        {/* Header Tabela */}
+                        <div className="grid grid-cols-12 bg-[#d4af37] text-white font-bold text-xs uppercase py-2 px-3 rounded-t-lg mb-0">
+                            <div className="col-span-2">Horário</div>
+                            <div className="col-span-10">Refeição & Detalhes</div>
+                        </div>
 
-                    <div className="flex flex-col gap-0 divide-y divide-gray-100 border border-gray-100 rounded-b-lg mb-8">
-                        {meals.map((meal, index) => (
-                            <div key={index} className="grid grid-cols-12 p-4 items-start odd:bg-white even:bg-gray-50 break-inside-avoid">
-                                <div className="col-span-2 text-[#d4af37] font-black text-sm pt-0.5">
-                                    {meal.time}
+                        <div className="flex flex-col gap-0 divide-y divide-gray-100 border border-gray-100 rounded-b-lg mb-8">
+                            {meals.map((meal, index) => (
+                                <div key={index} className="grid grid-cols-12 p-4 items-start odd:bg-white even:bg-gray-50 break-inside-avoid">
+                                    <div className="col-span-2 text-[#d4af37] font-black text-sm pt-0.5">
+                                        {meal.time}
+                                    </div>
+                                    <div className="col-span-10">
+                                        <p className="font-bold text-gray-900 text-sm mb-1 uppercase">{meal.name}</p>
+                                        <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">{meal.details}</p>
+                                    </div>
                                 </div>
-                                <div className="col-span-10">
-                                    <p className="font-bold text-gray-900 text-sm mb-1 uppercase">{meal.name}</p>
-                                    <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">{meal.details}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
 
-                    <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center mt-auto mb-4 break-inside-avoid">
-                        <p className="text-gray-500 text-sm italic font-medium">Lembre-se de manter a hidratação ao longo do dia (mínimo {safeData.waterGoal || '3.5'}L de água).</p>
+                        <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center mt-auto mb-4 break-inside-avoid">
+                            <p className="text-gray-500 text-sm italic font-medium">Lembre-se de manter a hidratação ao longo do dia (mínimo {safeData.waterGoal || '3.5'}L de água).</p>
+                        </div>
                     </div>
                 </div>
-            </div>
+                </>
             )}
 
             {/* SUPLEMENTAÇÃO E DICAS (Page 4) */}
             {(supplements.length > 0 || tips.length > 0) && (
-                <div className="pdf-page" style={pageStyle}>
-                    <div style={contentWrapperStyle}>
-                        <div className={sectionTitleStyle}>SUPLEMENTAÇÃO E RECOMENDAÇÕES</div>
-                    
-                    <div className="space-y-4 mb-10">
-                        {supplements.map((s, idx) => {
-                            // Cores alternadas baseadas no modelo (Dourado, Azul, Escuro)
-                            let bgClass = "bg-[#111]";
-                            let textClass = "text-white";
-                            if (idx % 3 === 0) { bgClass = "bg-[#d4af37]"; textClass = "text-white"; }
-                            else if (idx % 3 === 1) { bgClass = "bg-[#2563eb]"; textClass = "text-white"; }
+                <>
+                    <div className="pdf-page" style={pageStyle}>
+                        <div style={contentWrapperStyle}>
+                            <div className={sectionTitleStyle}>SUPLEMENTAÇÃO E RECOMENDAÇÕES</div>
+                        
+                        <div className="space-y-4 mb-10">
+                            {supplements.map((s, idx) => {
+                                // Cores alternadas baseadas no modelo (Dourado, Azul, Escuro)
+                                let bgClass = "bg-[#111]";
+                                let textClass = "text-white";
+                                if (idx % 3 === 0) { bgClass = "bg-[#d4af37]"; textClass = "text-white"; }
+                                else if (idx % 3 === 1) { bgClass = "bg-[#2563eb]"; textClass = "text-white"; }
 
-                            return (
-                                <div key={idx} className={`${bgClass} ${textClass} p-4 rounded-xl flex items-center justify-between shadow-sm break-inside-avoid`}>
-                                    <div>
-                                        <p className="font-black text-lg uppercase leading-none mb-1">{s.name}</p>
-                                        <p className="text-xs font-medium opacity-90">{s.dosage}</p>
+                                return (
+                                    <div key={idx} className={`${bgClass} ${textClass} p-4 rounded-xl flex items-center justify-between shadow-sm break-inside-avoid`}>
+                                        <div>
+                                            <p className="font-black text-lg uppercase leading-none mb-1">{s.name}</p>
+                                            <p className="text-xs font-medium opacity-90">{s.dosage}</p>
+                                        </div>
+                                        <div className="text-right bg-black/20 px-3 py-2 rounded text-[10px] font-bold uppercase tracking-wider min-w-[120px]">
+                                            {s.timing}
+                                        </div>
                                     </div>
-                                    <div className="text-right bg-black/20 px-3 py-2 rounded text-[10px] font-bold uppercase tracking-wider min-w-[120px]">
-                                        {s.timing}
-                                    </div>
-                                </div>
-                            )
-                        })}
-                    </div>
+                                )
+                            })}
+                        </div>
 
-                    <h4 className="text-lg font-black text-gray-900 mb-6 uppercase">Dicas:</h4>
-                    <div className="space-y-3">
-                        {tips.map((tip, index) => (
-                            <div key={index} className="flex gap-3 items-start break-inside-avoid">
-                                <div className="w-1.5 h-1.5 bg-black rounded-full mt-2 shrink-0"></div>
-                                <p className="text-sm font-medium text-gray-800 leading-relaxed">{tip}</p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-            )}
-
-            {/* TREINO (Page 5+) */}
-            {trainingDays.length > 0 && (
-                <div className="pdf-page" style={pageStyle}>
-                    <div style={contentWrapperStyle}>
-                        <div className={sectionTitleStyle}>DIVISÃO DE TREINO</div>
-                        <p className="text-xs text-gray-500 mb-6 uppercase font-bold">Frequência: {safeData.trainingFrequency || '5x na semana'}</p>
-
-                        {safeData.trainingReasoning && (
-                            <div className="bg-[#f8f8f8] p-4 rounded-xl border border-gray-200 mb-8 break-inside-avoid">
-                                <h4 className="text-[10px] font-black text-[#d4af37] uppercase tracking-widest mb-2">Linha de Raciocínio</h4>
-                                <p className="text-sm text-gray-700 leading-relaxed text-justify whitespace-pre-wrap">
-                                    {safeData.trainingReasoning}
-                                </p>
-                            </div>
-                        )}
-
-                        <div className="space-y-8">
-                            {trainingDays.map((day, dIdx) => (
-                                <div key={dIdx} className="break-inside-avoid mb-6">
-                                    {/* Header Treino Preto/Dourado */}
-                                    <div className="bg-[#0a0a0a] text-white p-3 flex justify-between items-center rounded-t-lg">
-                                        <h4 className="font-black uppercase text-[#d4af37] tracking-wider">{day.title}</h4>
-                                        <span className="text-[10px] font-bold uppercase text-gray-400 tracking-widest">FOCO: {day.focus}</span>
-                                    </div>
-                                    
-                                    <div className="border border-gray-200 border-t-0 rounded-b-lg overflow-hidden bg-white">
-                                        <table className="w-full text-left text-xs">
-                                            <tbody className="divide-y divide-gray-100">
-                                                {day.exercises.map((ex, eIdx) => (
-                                                    <tr key={eIdx} className="hover:bg-gray-50">
-                                                        <td className="p-3 font-bold text-gray-800 uppercase">{ex.name}</td>
-                                                        <td className="p-3 text-right font-black text-gray-900 w-24">{ex.sets}</td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
+                        <h4 className="text-lg font-black text-gray-900 mb-6 uppercase">Dicas:</h4>
+                        <div className="space-y-3">
+                            {tips.map((tip, index) => (
+                                <div key={index} className="flex gap-3 items-start break-inside-avoid">
+                                    <div className="w-1.5 h-1.5 bg-black rounded-full mt-2 shrink-0"></div>
+                                    <p className="text-sm font-medium text-gray-800 leading-relaxed">{tip}</p>
                                 </div>
                             ))}
                         </div>
                     </div>
                 </div>
+                </>
+            )}
+
+            {/* TREINO (Page 5+) */}
+            {trainingDays.length > 0 && (
+                <>
+                    <div className="pdf-page" style={pageStyle}>
+                        <div style={contentWrapperStyle}>
+                            <div className={sectionTitleStyle}>DIVISÃO DE TREINO</div>
+                            <p className="text-xs text-gray-500 mb-6 uppercase font-bold">Frequência: {safeData.trainingFrequency || '5x na semana'}</p>
+
+                            {safeData.trainingReasoning && (
+                                <div className="bg-[#f8f8f8] p-4 rounded-xl border border-gray-200 mb-8 break-inside-avoid">
+                                    <h4 className="text-[10px] font-black text-[#d4af37] uppercase tracking-widest mb-2">Linha de Raciocínio</h4>
+                                    <p className="text-sm text-gray-700 leading-relaxed text-justify whitespace-pre-wrap">
+                                        {safeData.trainingReasoning}
+                                    </p>
+                                </div>
+                            )}
+
+                            <div className="space-y-8">
+                                {trainingDays.map((day, dIdx) => (
+                                    <div key={dIdx} className="break-inside-avoid mb-6">
+                                        {/* Header Treino Preto/Dourado */}
+                                        <div className="bg-[#0a0a0a] text-white p-3 flex justify-between items-center rounded-t-lg">
+                                            <h4 className="font-black uppercase text-[#d4af37] tracking-wider">{day.title}</h4>
+                                            <span className="text-[10px] font-bold uppercase text-gray-400 tracking-widest">FOCO: {day.focus}</span>
+                                        </div>
+                                        
+                                        <div className="border border-gray-200 border-t-0 rounded-b-lg overflow-hidden bg-white">
+                                            <table className="w-full text-left text-xs">
+                                                <tbody className="divide-y divide-gray-100">
+                                                    {day.exercises.map((ex, eIdx) => (
+                                                        <tr key={eIdx} className="hover:bg-gray-50">
+                                                            <td className="p-3 font-bold text-gray-800 uppercase">{ex.name}</td>
+                                                            <td className="p-3 text-right font-black text-gray-900 w-24">{ex.sets}</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </>
             )}
 
             {/* PAGE FINAL (Atenção) */}
-            <div className="pdf-page" style={endPageStyle}>
-                 <div style={{ ...contentWrapperStyle, border: '4px solid #d4af37', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', borderRadius: '40px', position: 'relative', margin: '15mm' }}>
+            <div className="pdf-page" style={{ ...endPageStyle, display: 'block' }}>
+                 <div style={{ ...contentWrapperStyle, border: '4px solid #d4af37', minHeight: '900px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', borderRadius: '40px', position: 'relative' }}>
                     <AlertTriangle size={80} className="text-[#d4af37] mb-8" strokeWidth={1.5} />
                     <h2 className="text-6xl font-black uppercase tracking-tighter mb-4 text-white">Atenção</h2>
                     <div className="w-24 h-2 bg-[#d4af37] mb-12"></div>
                     
-                    <p className="text-xl text-white/90 leading-relaxed max-w-4xl mx-auto mb-16 font-medium">
+                    <p className="text-xl text-white/90 leading-relaxed max-w-4xl mx-auto mb-16 font-medium px-8">
                         Este protocolo foi desenhado especificamente para você, {firstName}. 
                         Ajustes de carga, dieta e cardio serão feitos conforme sua evolução e feedbacks.
                     </p>
@@ -369,7 +374,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
                     <div className="absolute bottom-8 text-[10px] font-black uppercase text-gray-600 tracking-[0.5em]">
                         TEAM VBR © 2026
                     </div>
-                 </div>
+                </div>
             </div>
         </ContractPDFLayout>
     );

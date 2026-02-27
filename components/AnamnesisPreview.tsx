@@ -29,7 +29,7 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
     setIsGenerating(true);
     const clientName = data?.clientName || "Aluno";
     const opt = {
-      margin: [15, 15, 15, 15],
+      margin: 0,
       filename: `Anamnese_${clientName.replace(/\s+/g, '_')}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { 
@@ -38,8 +38,7 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
         backgroundColor: '#ffffff', 
         scrollY: 0,
         scrollX: 0,
-        windowWidth: 794,
-        windowHeight: 1123
+        windowWidth: 794
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak: { mode: ['css'] }
@@ -122,7 +121,6 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
                     </div>
                 </div>
             </div>
-
             <div className="pdf-page" style={pageStyle}>
                 <div style={contentWrapperStyle}>
                     <h3 className={sectionTitle}>Medidas Corporais</h3>

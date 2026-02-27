@@ -12,7 +12,6 @@ const ContractPDFLayout: React.FC<Props> = ({ children }) => {
           .pdf-page {
             width: 794px;
             min-height: 1123px;
-            page-break-after: always;
             box-sizing: border-box;
             background: white;
             position: relative;
@@ -22,6 +21,7 @@ const ContractPDFLayout: React.FC<Props> = ({ children }) => {
             line-height: 1.5;
             text-align: justify;
             display: block;
+            page-break-after: always;
           }
           .pdf-page:last-child {
             page-break-after: auto;

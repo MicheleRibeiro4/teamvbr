@@ -63,7 +63,7 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
     
     // Configuração OTIMIZADA para A4 sem cortes
     const opt = {
-      margin: [15, 15, 15, 15],
+      margin: 0,
       filename: `Contrato_VBR_${clientName.replace(/\s+/g, '_')}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { 
@@ -72,8 +72,7 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
         backgroundColor: '#ffffff', 
         scrollX: 0,
         scrollY: 0,
-        windowWidth: 794,
-        windowHeight: 1123
+        windowWidth: 794
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak: { mode: ['css'] }
@@ -119,7 +118,7 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
                     return (
                         <p 
                             key={i} 
-                            className={`${isTitle ? 'font-bold break-inside-avoid pdf-title' : ''} ${isListItem ? 'pl-8' : ''}`}
+                            className={`${isTitle ? 'font-bold break-inside-avoid pdf-title' : ''}`}
                             style={{ 
                                 textAlign: 'justify',
                                 marginBottom: 0

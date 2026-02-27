@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { LOGO_VBR_BLACK, MEASUREMENT_LABELS } from '../constants';
 import ProtocolPreview from './ProtocolPreview';
+import ContractPDFLayout from './ContractPDFLayout';
 import { GoogleGenAI, Type } from "@google/genai";
 
 const LOGO_VBR_GOLD = "https://xqwzmvzfemjkvaquxedz.supabase.co/storage/v1/object/public/LOGO/DOURADO.png";
@@ -365,15 +366,14 @@ const EvolutionTracker: React.FC<Props> = ({
       if (!targetRef) return;
       setIsGeneratingReport(true);
       const opt = {
-        margin: [10, 10, 10, 10],
+        margin: 0,
         filename: `Relatorio_VBR_${currentProtocol.clientName.replace(/\s+/g, '_')}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { 
           scale: 2, 
           useCORS: true, 
           backgroundColor: '#ffffff',
-          windowWidth: 1123,
-          windowHeight: 794
+          windowWidth: 1123
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
         pagebreak: { mode: ['css'] }
@@ -400,39 +400,41 @@ const EvolutionTracker: React.FC<Props> = ({
   const resultColor = isGoodResult ? 'text-green-500' : 'text-red-500';
 
   const renderReportContent = (isPdfMode = false) => (
-    <div className={`bg-white text-black p-10 ${isPdfMode ? 'w-[1123px]' : 'w-full max-w-[1123px] mx-auto shadow-2xl rounded-xl'}`}>
-        <div className="flex justify-between items-center border-b-4 border-black pb-6 mb-8">
-            <img src={LOGO_VBR_GOLD} className="h-20" alt="Logo" />
-            <div className="text-right">
-                <h1 className="text-4xl font-black uppercase tracking-tighter mb-1">Relatório de Evolução</h1>
-                <p className="text-xl font-medium text-gray-600">{currentProtocol.clientName}</p>
-                <p className="text-sm text-gray-400 font-bold uppercase mt-2">Gerado em {new Date().toLocaleDateString('pt-BR')}</p>
+    <ContractPDFLayout>
+        <div className={`pdf-page bg-white text-black p-10 ${isPdfMode ? 'w-[1123px]' : 'w-full max-w-[1123px] mx-auto shadow-2xl rounded-xl'}`} style={{ minHeight: '794px', width: isPdfMode ? '1123px' : '100%' }}>
+            <div className="flex justify-between items-center border-b-4 border-black pb-6 mb-8">
+                <img src={LOGO_VBR_GOLD} className="h-20" alt="Logo" />
+                <div className="text-right">
+                    <h1 className="text-4xl font-black uppercase tracking-tighter mb-1">Relatório de Evolução</h1>
+                    <p className="text-xl font-medium text-gray-600">{currentProtocol.clientName}</p>
+                    <p className="text-sm text-gray-400 font-bold uppercase mt-2">Gerado em {new Date().toLocaleDateString('pt-BR')}</p>
+                </div>
             </div>
+            <div className="grid grid-cols-4 gap-4 mb-10">
+                <div className="bg-gray-100 p-4 rounded-lg text-center"><p className="text-xs font-bold text-gray-500 uppercase">Início</p><p className="text-lg font-black">{startDate.toLocaleDateString('pt-BR')}</p></div>
+                <div className="bg-gray-100 p-4 rounded-lg text-center"><p className="text-xs font-bold text-gray-500 uppercase">Duração</p><p className="text-lg font-black">{diffDays} dias</p></div>
+                <div className="bg-gray-100 p-4 rounded-lg text-center"><p className="text-xs font-bold text-gray-500 uppercase">Peso Inicial</p><p className="text-lg font-black">{startWeight.toFixed(1)} kg</p></div>
+                <div className="bg-black text-white p-4 rounded-lg text-center"><p className="text-xs font-bold text-[#d4af37] uppercase">Resultado</p><p className="text-lg font-black">{weightChange > 0 ? '+' : ''}{weightChange.toFixed(1)} kg</p></div>
+            </div>
+            <div className="mb-10 h-64 border border-gray-200 rounded-lg p-4"><EvolutionChart history={sortedHistory} /></div>
+            <table className="w-full text-sm border-collapse mb-8">
+                <thead><tr className="bg-black text-white"><th className="p-4 text-left rounded-tl-lg">Data</th><th className="p-4 text-center">Peso (kg)</th><th className="p-4 text-center">BF (%)</th><th className="p-4 text-center">Massa (kg)</th><th className="p-4 text-center">Cintura (cm)</th><th className="p-4 text-left rounded-tr-lg">Fase / Observações</th></tr></thead>
+                <tbody>
+                    {sortedHistory.map((p, i) => (
+                        <tr key={p.id} className={i % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                            <td className="p-4 font-bold border-b border-gray-200">{new Date(p.updatedAt).toLocaleDateString('pt-BR')}</td>
+                            <td className="p-4 text-center border-b border-gray-200 font-medium">{p.physicalData.weight}</td>
+                            <td className="p-4 text-center border-b border-gray-200">{p.physicalData.bodyFat || '-'}</td>
+                            <td className="p-4 text-center border-b border-gray-200">{p.physicalData.muscleMass || '-'}</td>
+                            <td className="p-4 text-center border-b border-gray-200">{p.physicalData.measurements?.waist || '-'}</td>
+                            <td className="p-4 text-xs italic text-gray-500 border-b border-gray-200 max-w-[200px] truncate"><span className="font-bold text-black block">{p.protocolTitle}</span>{p.privateNotes || '-'}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+            <div className="text-center pt-8 border-t border-gray-200"><p className="text-xs font-bold text-gray-400 uppercase tracking-[0.2em]">Team VBR System © 2026</p></div>
         </div>
-        <div className="grid grid-cols-4 gap-4 mb-10">
-            <div className="bg-gray-100 p-4 rounded-lg text-center"><p className="text-xs font-bold text-gray-500 uppercase">Início</p><p className="text-lg font-black">{startDate.toLocaleDateString('pt-BR')}</p></div>
-            <div className="bg-gray-100 p-4 rounded-lg text-center"><p className="text-xs font-bold text-gray-500 uppercase">Duração</p><p className="text-lg font-black">{diffDays} dias</p></div>
-            <div className="bg-gray-100 p-4 rounded-lg text-center"><p className="text-xs font-bold text-gray-500 uppercase">Peso Inicial</p><p className="text-lg font-black">{startWeight.toFixed(1)} kg</p></div>
-            <div className="bg-black text-white p-4 rounded-lg text-center"><p className="text-xs font-bold text-[#d4af37] uppercase">Resultado</p><p className="text-lg font-black">{weightChange > 0 ? '+' : ''}{weightChange.toFixed(1)} kg</p></div>
-        </div>
-        <div className="mb-10 h-64 border border-gray-200 rounded-lg p-4"><EvolutionChart history={sortedHistory} /></div>
-        <table className="w-full text-sm border-collapse mb-8">
-            <thead><tr className="bg-black text-white"><th className="p-4 text-left rounded-tl-lg">Data</th><th className="p-4 text-center">Peso (kg)</th><th className="p-4 text-center">BF (%)</th><th className="p-4 text-center">Massa (kg)</th><th className="p-4 text-center">Cintura (cm)</th><th className="p-4 text-left rounded-tr-lg">Fase / Observações</th></tr></thead>
-            <tbody>
-                {sortedHistory.map((p, i) => (
-                    <tr key={p.id} className={i % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-                        <td className="p-4 font-bold border-b border-gray-200">{new Date(p.updatedAt).toLocaleDateString('pt-BR')}</td>
-                        <td className="p-4 text-center border-b border-gray-200 font-medium">{p.physicalData.weight}</td>
-                        <td className="p-4 text-center border-b border-gray-200">{p.physicalData.bodyFat || '-'}</td>
-                        <td className="p-4 text-center border-b border-gray-200">{p.physicalData.muscleMass || '-'}</td>
-                        <td className="p-4 text-center border-b border-gray-200">{p.physicalData.measurements?.waist || '-'}</td>
-                        <td className="p-4 text-xs italic text-gray-500 border-b border-gray-200 max-w-[200px] truncate"><span className="font-bold text-black block">{p.protocolTitle}</span>{p.privateNotes || '-'}</td>
-                    </tr>
-                ))}
-            </tbody>
-        </table>
-        <div className="text-center pt-8 border-t border-gray-200"><p className="text-xs font-bold text-gray-400 uppercase tracking-[0.2em]">Team VBR System © 2026</p></div>
-    </div>
+    </ContractPDFLayout>
   );
 
   const docBtnClass = "p-3 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 hover:text-white border border-white/5 transition-all flex flex-col items-center justify-center gap-1 min-w-[70px]";
