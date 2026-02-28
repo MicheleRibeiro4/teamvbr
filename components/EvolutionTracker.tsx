@@ -25,7 +25,6 @@ import {
 } from 'lucide-react';
 import { LOGO_VBR_BLACK, MEASUREMENT_LABELS } from '../constants';
 import ProtocolPreview from './ProtocolPreview';
-import ContractPDFLayout from './ContractPDFLayout';
 import { GoogleGenAI, Type } from "@google/genai";
 
 const LOGO_VBR_GOLD = "https://xqwzmvzfemjkvaquxedz.supabase.co/storage/v1/object/public/LOGO/DOURADO.png";
@@ -368,20 +367,19 @@ const EvolutionTracker: React.FC<Props> = ({
       const opt = {
         margin: 0,
         filename: `Relatorio_VBR_${currentProtocol.clientName.replace(/\s+/g, '_')}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
+        image: { type: 'jpeg', quality: 1 },
         html2canvas: { 
           scale: 2, 
           useCORS: true, 
-          backgroundColor: '#ffffff',
-          windowWidth: 1123,
-          windowHeight: 794,
           scrollX: 0,
-          scrollY: 0
+          scrollY: 0,
+          windowWidth: 1123 // 297mm at 96dpi
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
-        pagebreak: { mode: ['css'] }
+        pagebreak: { mode: ['css', 'legacy'], before: '.pdf-page-landscape' }
       };
       try {
+        await new Promise(resolve => setTimeout(resolve, 500));
         // @ts-ignore
         await html2pdf().set(opt).from(targetRef).save();
       } catch (err) { alert("Erro ao gerar PDF."); } 
@@ -403,8 +401,8 @@ const EvolutionTracker: React.FC<Props> = ({
   const resultColor = isGoodResult ? 'text-green-500' : 'text-red-500';
 
   const renderReportContent = (isPdfMode = false) => (
-    <ContractPDFLayout width={isPdfMode ? '1123px' : '100%'}>
-        <div className={`${isPdfMode ? 'pdf-page-landscape' : ''} bg-white text-black p-10 ${isPdfMode ? 'w-[1123px]' : 'w-full max-w-[1123px] mx-auto shadow-2xl rounded-xl'}`} style={{ width: isPdfMode ? '1123px' : '100%' }}>
+    <>
+        <div className={`${isPdfMode ? 'pdf-page-landscape' : ''} bg-white text-black p-10 ${isPdfMode ? 'w-[297mm]' : 'w-full max-w-[297mm] mx-auto shadow-2xl rounded-xl'}`} style={{ width: isPdfMode ? '297mm' : '100%', flex: isPdfMode ? 1 : 'none' }}>
             <div className="flex justify-between items-center border-b-4 border-black pb-6 mb-8">
                 <img src={LOGO_VBR_GOLD} className="h-20" alt="Logo" />
                 <div className="text-right">
@@ -437,7 +435,7 @@ const EvolutionTracker: React.FC<Props> = ({
             </table>
             <div className="text-center pt-8 border-t border-gray-200"><p className="text-xs font-bold text-gray-400 uppercase tracking-[0.2em]">Team VBR System © 2026</p></div>
         </div>
-    </ContractPDFLayout>
+    </>
   );
 
   const docBtnClass = "p-3 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 hover:text-white border border-white/5 transition-all flex flex-col items-center justify-center gap-1 min-w-[70px]";
@@ -526,14 +524,12 @@ const EvolutionTracker: React.FC<Props> = ({
               <div className="w-full max-w-5xl h-[90vh] relative"><button onClick={() => setHistoryPreview(null)} className="absolute -top-10 right-0 text-white flex items-center gap-2 font-bold uppercase text-xs">Fechar <X size={20} /></button><div className="bg-[#111] rounded-[2rem] h-full overflow-hidden border border-white/10 shadow-2xl flex flex-col"><div className="bg-[#d4af37] p-4"><h3 className="text-black font-black uppercase tracking-tighter">Histórico: {new Date(historyPreview.updatedAt).toLocaleDateString('pt-BR')}</h3></div><div className="flex-1 overflow-y-auto p-4 custom-scrollbar bg-white"><ProtocolPreview data={historyPreview} customTrigger={<div className="w-full h-full flex flex-col items-center justify-center text-black py-20"><button className="bg-[#d4af37] px-6 py-3 rounded-xl font-black uppercase shadow-lg">Ver Visualização</button></div>} /></div></div></div>
           </div>
       )}
-      <div style={{ position: 'absolute', top: 0, left: -9999, zIndex: -9999, opacity: 0, pointerEvents: 'none', width: '1123px' }}>
+      <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
         <div 
             ref={reportRef} 
+            className="bg-white"
             style={{
-                width: '1123px',
-                margin: 0,
-                padding: 0,
-                background: '#ffffff'
+                width: '297mm'
             }}
         >
             {renderReportContent(true)}

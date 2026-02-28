@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom';
 import { ProtocolData } from '../types';
 import { EMPTY_DATA } from '../constants';
 import { Loader2, FileText, X, FileDown, Activity } from 'lucide-react';
-import ContractPDFLayout from './ContractPDFLayout';
 
 const LOGO_ANAMNESIS = "https://xqwzmvzfemjkvaquxedz.supabase.co/storage/v1/object/public/LOGO/DOURADO.png";
 
@@ -31,20 +30,19 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
     const opt = {
       margin: 0,
       filename: `Anamnese_${clientName.replace(/\s+/g, '_')}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
+      image: { type: 'jpeg', quality: 1 },
       html2canvas: { 
         scale: 2, 
         useCORS: true, 
-        backgroundColor: '#ffffff', 
         scrollY: 0,
         scrollX: 0,
-        windowWidth: 794,
-        windowHeight: 1123
+        windowWidth: 794
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: ['css'] }
+      pagebreak: { mode: ['css', 'legacy'], before: '.pdf-page' }
     };
     try {
+      await new Promise(resolve => setTimeout(resolve, 500));
       // @ts-ignore
       await html2pdf().set(opt).from(targetRef).save();
     } catch (err) { alert("Erro ao gerar PDF."); console.error(err); } 
@@ -69,7 +67,7 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
     const clientName = safeData.clientName || "Aluno";
 
     const pageStyle: React.CSSProperties = { 
-        width: '794px', 
+        width: '100%', 
         backgroundColor: '#ffffff', 
         boxSizing: 'border-box',
         color: 'black', 
@@ -80,7 +78,6 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
     };
 
     const contentWrapperStyle: React.CSSProperties = {
-        padding: '10mm 10mm 20mm 10mm', // Reduced padding because of mandatory 15mm PDF margin
         width: '100%',
         boxSizing: 'border-box'
     };
@@ -88,12 +85,12 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
     const sectionTitle = "text-lg font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-1 mb-4 uppercase mt-6";
     const labelStyle = "text-xs font-bold text-gray-500 uppercase block mb-1";
     const valueStyle = "text-sm font-medium text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100 block";
-    const gridItemStyle = "break-inside-avoid";
+    const gridItemStyle = "";
 
     return (
-        <ContractPDFLayout>
+        <>
             <div className="pdf-page" style={pageStyle}>
-                <div style={contentWrapperStyle}>
+                <div style={{ ...contentWrapperStyle, flex: 1 }}>
                     <div className="flex justify-between items-center mb-8 border-b border-gray-200 pb-6">
                         <div><h1 className="text-3xl font-black text-gray-900 uppercase tracking-tighter">Ficha de Anamnese</h1><p className="text-sm text-gray-500 font-bold uppercase tracking-widest mt-1">Team VBR</p></div>
                         <img src={LOGO_ANAMNESIS} alt="Team VBR" className="w-32 h-auto" />
@@ -131,7 +128,7 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
                         <div className={gridItemStyle}><span className={labelStyle}>IMC</span><span className={valueStyle}>{physical.imc || '-'}</span></div>
                     </div>
 
-                    <div className="border border-gray-200 rounded-lg overflow-hidden break-inside-avoid">
+                    <div className="border border-gray-200 rounded-lg overflow-hidden">
                         <div className="bg-gray-100 p-2 text-center text-xs font-black uppercase tracking-widest text-gray-500 border-b border-gray-200">Circunferências (cm)</div>
                         <div className="grid grid-cols-4 divide-x divide-y divide-gray-200 text-center">
                             <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Tórax</span><span className="font-bold text-gray-900">{measurements.thorax || '-'}</span></div>
@@ -156,7 +153,7 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
                     </div>
                 </div>
             </div>
-        </ContractPDFLayout>
+        </>
     );
   };
 
@@ -186,14 +183,12 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
                 {showModal && typeof document !== 'undefined' && createPortal(modalContent, document.body)}
             </>
         )}
-        <div style={{ position: 'absolute', top: 0, left: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none', width: '794px' }}>
+        <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
             <div 
                 ref={pdfRef} 
+                className="bg-white"
                 style={{
-                    width: '794px',
-                    margin: 0,
-                    padding: 0,
-                    background: '#ffffff'
+                    width: '210mm'
                 }}
             >
                 {renderContent(true)}

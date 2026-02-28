@@ -4,7 +4,6 @@ import { createPortal } from 'react-dom';
 import { ProtocolData } from '../types';
 import { EMPTY_DATA } from '../constants';
 import { Loader2, FileText, X, FileDown, AlertTriangle } from 'lucide-react';
-import ContractPDFLayout from './ContractPDFLayout';
 
 const LOGO_VBR_GOLD = "https://xqwzmvzfemjkvaquxedz.supabase.co/storage/v1/object/public/LOGO/DOURADO.png";
 
@@ -31,28 +30,27 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
     const clientName = data?.clientName || "Aluno";
     
     // A4 Dimensions in Pixels (96 DPI)
-    // 210mm = 793.7px (approx 794px)
-    // 297mm = 1122.5px (approx 1123px)
-    const A4_WIDTH_PX = 794; 
+    // 210mm = 793.7px (approx 793px)
+    // 297mm = 1122.5px (approx 1122px)
+    const A4_WIDTH_PX = 793; 
 
     const opt = {
       margin: 0,
       filename: `Protocolo_VBR_${clientName.replace(/\s+/g, '_')}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
+      image: { type: 'jpeg', quality: 1 },
       html2canvas: { 
         scale: 2, 
         useCORS: true, 
-        backgroundColor: '#ffffff',
-        windowWidth: 794,
-        windowHeight: 1123,
         scrollX: 0,
-        scrollY: 0
+        scrollY: 0,
+        windowWidth: 794
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: ['css'] }
+      pagebreak: { mode: ['css', 'legacy'], before: '.pdf-page' }
     };
 
     try {
+      await new Promise(resolve => setTimeout(resolve, 500));
       // @ts-ignore
       await html2pdf().set(opt).from(targetRef).save();
     } catch (err) { alert("Erro ao gerar PDF."); console.error(err); } 
@@ -77,7 +75,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
 
     // Configuração de Estilo para Página A4
     const pageStyle: React.CSSProperties = {
-        width: '794px', 
+        width: '100%', 
         backgroundColor: 'white',
         boxSizing: 'border-box',
         position: 'relative',
@@ -89,7 +87,6 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
     };
 
     const contentWrapperStyle: React.CSSProperties = {
-        padding: '10mm 10mm 20mm 10mm', // Reduced padding because of mandatory 15mm PDF margin
         width: '100%',
         boxSizing: 'border-box'
     };
@@ -103,9 +100,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
         alignItems: 'center',
         justifyContent: 'center',
         padding: 0,
-        position: 'relative',
-        height: '1123px',
-        overflow: 'hidden'
+        position: 'relative'
     };
 
     const endPageStyle: React.CSSProperties = {
@@ -122,10 +117,10 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
     const kcalValue = (safeData.kcalGoal || "0").toString().replace(/kcal/gi, '').trim();
 
     return (
-        <ContractPDFLayout>
+        <>
             {/* CAPA (Page 1) */}
             <div className="pdf-page" style={{ ...coverPageStyle }}>
-                <div style={{ ...contentWrapperStyle, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+                <div style={{ ...contentWrapperStyle, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
                     <img src={LOGO_VBR_GOLD} alt="Team VBR" className="w-64 h-auto mb-12" />
                     
                     <h1 className="text-3xl font-black text-[#d4af37] uppercase tracking-widest text-center leading-tight mb-12">
@@ -146,7 +141,6 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
                         </p>
                     </div>
                 </div>
-                <div className="absolute bottom-0 w-full h-4 bg-[#d4af37]"></div>
             </div>
 
             {/* DADOS E ESTRATÉGIA (Page 2) */}
@@ -245,7 +239,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
 
                         <div className="flex flex-col gap-0 divide-y divide-gray-100 border border-gray-100 rounded-b-lg mb-8">
                             {meals.map((meal, index) => (
-                                <div key={index} className="grid grid-cols-12 p-4 items-start odd:bg-white even:bg-gray-50 break-inside-avoid">
+                                <div key={index} className="grid grid-cols-12 p-4 items-start odd:bg-white even:bg-gray-50">
                                     <div className="col-span-2 text-[#d4af37] font-black text-sm pt-0.5">
                                         {meal.time}
                                     </div>
@@ -257,7 +251,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
                             ))}
                         </div>
 
-                        <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center mt-auto mb-4 break-inside-avoid">
+                        <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center mt-auto mb-4">
                             <p className="text-gray-500 text-sm italic font-medium">Lembre-se de manter a hidratação ao longo do dia (mínimo {safeData.waterGoal || '3.5'}L de água).</p>
                         </div>
                     </div>
@@ -281,7 +275,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
                                 else if (idx % 3 === 1) { bgClass = "bg-[#2563eb]"; textClass = "text-white"; }
 
                                 return (
-                                    <div key={idx} className={`${bgClass} ${textClass} p-4 rounded-xl flex items-center justify-between shadow-sm break-inside-avoid`}>
+                                    <div key={idx} className={`${bgClass} ${textClass} p-4 rounded-xl flex items-center justify-between shadow-sm`}>
                                         <div>
                                             <p className="font-black text-lg uppercase leading-none mb-1">{s.name}</p>
                                             <p className="text-xs font-medium opacity-90">{s.dosage}</p>
@@ -297,7 +291,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
                         <h4 className="text-lg font-black text-gray-900 mb-6 uppercase">Dicas:</h4>
                         <div className="space-y-3">
                             {tips.map((tip, index) => (
-                                <div key={index} className="flex gap-3 items-start break-inside-avoid">
+                                <div key={index} className="flex gap-3 items-start">
                                     <div className="w-1.5 h-1.5 bg-black rounded-full mt-2 shrink-0"></div>
                                     <p className="text-sm font-medium text-gray-800 leading-relaxed">{tip}</p>
                                 </div>
@@ -317,7 +311,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
                             <p className="text-xs text-gray-500 mb-6 uppercase font-bold">Frequência: {safeData.trainingFrequency || '5x na semana'}</p>
 
                             {safeData.trainingReasoning && (
-                                <div className="bg-[#f8f8f8] p-4 rounded-xl border border-gray-200 mb-8 break-inside-avoid">
+                                <div className="bg-[#f8f8f8] p-4 rounded-xl border border-gray-200 mb-8">
                                     <h4 className="text-[10px] font-black text-[#d4af37] uppercase tracking-widest mb-2">Linha de Raciocínio</h4>
                                     <p className="text-sm text-gray-700 leading-relaxed text-justify whitespace-pre-wrap">
                                         {safeData.trainingReasoning}
@@ -327,7 +321,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
 
                             <div className="space-y-8">
                                 {trainingDays.map((day, dIdx) => (
-                                    <div key={dIdx} className="break-inside-avoid mb-6">
+                                    <div key={dIdx} className="mb-6">
                                         {/* Header Treino Preto/Dourado */}
                                         <div className="bg-[#0a0a0a] text-white p-3 flex justify-between items-center rounded-t-lg">
                                             <h4 className="font-black uppercase text-[#d4af37] tracking-wider">{day.title}</h4>
@@ -356,7 +350,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
 
             {/* PAGE FINAL (Atenção) */}
             <div className="pdf-page" style={{ ...endPageStyle }}>
-                 <div style={{ border: '4px solid #d4af37', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', borderRadius: '40px', position: 'relative', width: '100%', height: '100%', padding: '20mm' }}>
+                 <div style={{ border: '4px solid #d4af37', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', borderRadius: '40px', position: 'relative', width: '100%', flex: 1, padding: '20mm' }}>
                     <AlertTriangle size={80} className="text-[#d4af37] mb-8" strokeWidth={1.5} />
                     <h2 className="text-6xl font-black uppercase tracking-tighter mb-4 text-white">Atenção</h2>
                     <div className="w-24 h-2 bg-[#d4af37] mb-12"></div>
@@ -379,7 +373,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
                     </div>
                 </div>
             </div>
-        </ContractPDFLayout>
+        </>
     );
   };
 
@@ -416,17 +410,15 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
         {/* 
            AJUSTE CRÍTICO DE CORTE LATERAL:
            Posicionamento absoluto com z-index negativo at top 0 left 0.
-           Fixed Width 794px to ensure A4 proportions at 96 DPI.
+           Fixed Width 210mm to ensure A4 proportions at 96 DPI.
            Always render this to allow ref.current.download() to work even without customTrigger
         */}
-        <div style={{ position: 'absolute', top: 0, left: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none', width: '794px' }}>
+        <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
             <div 
                 ref={pdfRef} 
+                className="bg-white"
                 style={{
-                    width: '794px',
-                    margin: 0,
-                    padding: 0,
-                    background: '#ffffff'
+                    width: '210mm'
                 }}
             >
                 {renderContent(true)}

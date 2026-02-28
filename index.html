@@ -54,6 +54,7 @@
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
           color-adjust: exact !important;
+          box-sizing: border-box !important;
         }
       }
 
@@ -67,6 +68,74 @@
       .scrollbar-hide {
         -ms-overflow-style: none;
         scrollbar-width: none;
+      }
+
+      /* PDF UNIVERSAL STYLES */
+      .pdf-page {
+        width: 210mm;
+        min-height: 297mm;
+        padding: 15mm;
+        background: #ffffff;
+        box-sizing: border-box;
+        page-break-after: always;
+        break-after: page;
+        overflow: visible;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 12pt;
+        line-height: 1.5;
+        color: black;
+        display: flex;
+        flex-direction: column;
+        margin: 0 !important;
+      }
+
+      .pdf-page:last-child {
+        page-break-after: avoid !important;
+        break-after: avoid !important;
+      }
+
+      .pdf-page-landscape {
+        width: 297mm;
+        min-height: 210mm;
+        padding: 15mm;
+        background: #ffffff;
+        box-sizing: border-box;
+        page-break-after: always;
+        break-after: page;
+        overflow: visible;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 12pt;
+        line-height: 1.5;
+        color: black;
+        display: flex;
+        flex-direction: column;
+        margin: 0 !important;
+      }
+
+      .pdf-page-landscape:last-child {
+        page-break-after: avoid !important;
+        break-after: avoid !important;
+      }
+
+      .section,
+      .signature-block,
+      .table-wrapper {
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+
+      .clause-title {
+        font-weight: bold;
+        margin: 0;
+        padding: 0;
+        text-indent: 0;
+      }
+
+      .clause-text {
+        margin: 0;
+        padding: 0;
+        text-indent: 0;
+        text-align: justify;
       }
     </style>
     <script>
