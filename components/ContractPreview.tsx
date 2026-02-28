@@ -73,7 +73,7 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
         windowWidth: 794
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: ['css', 'legacy'], before: '.pdf-page' }
+      pagebreak: { mode: 'css' }
     };
 
     try {
@@ -167,12 +167,13 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
                 )}
             </>
         )}
-        <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
+        <div style={{ position: 'absolute', left: 0, top: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none' }}>
             <div 
                 ref={contractRef} 
                 className="bg-white"
                 style={{
-                    width: '210mm'
+                    width: '210mm',
+                    padding: '15mm' // Add padding for the HTML view
                 }}
             >
                 {renderContent()}

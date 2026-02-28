@@ -35,7 +35,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
     const A4_WIDTH_PX = 793; 
 
     const opt = {
-      margin: 0,
+      margin: [0, 0, 0, 0],
       filename: `Protocolo_VBR_${clientName.replace(/\s+/g, '_')}.pdf`,
       image: { type: 'jpeg', quality: 1 },
       html2canvas: { 
@@ -46,7 +46,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
         windowWidth: 794
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: ['css', 'legacy'], before: '.pdf-page' }
+      pagebreak: { mode: 'css' }
     };
 
     try {
@@ -74,17 +74,20 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
     const firstName = clientName.split(' ')[0];
 
     // Configuração de Estilo para Página A4
-    const pageStyle: React.CSSProperties = {
+    const pageStyle = (isFirst: boolean = false): React.CSSProperties => ({
         width: '100%', 
         backgroundColor: 'white',
         boxSizing: 'border-box',
         position: 'relative',
         fontFamily: "'Inter', sans-serif",
         margin: '0', 
+        padding: '15mm',
         WebkitTextSizeAdjust: '100%',
         textSizeAdjust: '100%',
-        color: 'black'
-    };
+        color: 'black',
+        pageBreakBefore: isFirst ? 'auto' : 'always',
+        pageBreakInside: 'avoid'
+    });
 
     const contentWrapperStyle: React.CSSProperties = {
         width: '100%',
@@ -92,7 +95,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
     };
 
     const coverPageStyle: React.CSSProperties = {
-        ...pageStyle,
+        ...pageStyle(true),
         backgroundColor: '#050505',
         color: '#ffffff',
         display: 'flex',
@@ -100,12 +103,21 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
         alignItems: 'center',
         justifyContent: 'center',
         padding: 0,
-        position: 'relative'
+        position: 'relative',
+        minHeight: '297mm'
     };
 
     const endPageStyle: React.CSSProperties = {
-        ...coverPageStyle,
-        padding: '10mm'
+        ...pageStyle(false),
+        backgroundColor: '#050505',
+        color: '#ffffff',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '10mm',
+        position: 'relative',
+        minHeight: '297mm'
     };
 
     // Estilos utilitários baseados no modelo
@@ -144,7 +156,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
             </div>
 
             {/* DADOS E ESTRATÉGIA (Page 2) */}
-            <div className="pdf-page" style={pageStyle}>
+            <div className="pdf-page" style={pageStyle(false)}>
                 <div style={contentWrapperStyle}>
                     <div className={sectionTitleStyle}>DADOS FÍSICOS — {physical.date}</div>
                     
@@ -227,7 +239,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
             {/* PLANO ALIMENTAR (Page 3) */}
             {meals.length > 0 && (
                 <>
-                    <div className="pdf-page" style={pageStyle}>
+                    <div className="pdf-page" style={pageStyle(false)}>
                         <div style={contentWrapperStyle}>
                             <div className={sectionTitleStyle}>PLANO ALIMENTAR DIÁRIO</div>
                         
@@ -262,7 +274,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
             {/* SUPLEMENTAÇÃO E DICAS (Page 4) */}
             {(supplements.length > 0 || tips.length > 0) && (
                 <>
-                    <div className="pdf-page" style={pageStyle}>
+                    <div className="pdf-page" style={pageStyle(false)}>
                         <div style={contentWrapperStyle}>
                             <div className={sectionTitleStyle}>SUPLEMENTAÇÃO E RECOMENDAÇÕES</div>
                         
@@ -305,7 +317,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
             {/* TREINO (Page 5+) */}
             {trainingDays.length > 0 && (
                 <>
-                    <div className="pdf-page" style={pageStyle}>
+                    <div className="pdf-page" style={pageStyle(false)}>
                         <div style={contentWrapperStyle}>
                             <div className={sectionTitleStyle}>DIVISÃO DE TREINO</div>
                             <p className="text-xs text-gray-500 mb-6 uppercase font-bold">Frequência: {safeData.trainingFrequency || '5x na semana'}</p>
@@ -413,7 +425,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
            Fixed Width 210mm to ensure A4 proportions at 96 DPI.
            Always render this to allow ref.current.download() to work even without customTrigger
         */}
-        <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
+        <div style={{ position: 'absolute', left: 0, top: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none' }}>
             <div 
                 ref={pdfRef} 
                 className="bg-white"

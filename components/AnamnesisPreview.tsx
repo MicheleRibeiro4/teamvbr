@@ -39,7 +39,7 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
         windowWidth: 794
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: ['css', 'legacy'], before: '.pdf-page' }
+      pagebreak: { mode: 'css' }
     };
     try {
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -66,16 +66,19 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
     const registrationDate = new Date(safeData.createdAt || safeData.updatedAt || Date.now()).toLocaleDateString('pt-BR');
     const clientName = safeData.clientName || "Aluno";
 
-    const pageStyle: React.CSSProperties = { 
+    const pageStyle = (isFirst: boolean = false): React.CSSProperties => ({ 
         width: '100%', 
         backgroundColor: '#ffffff', 
         boxSizing: 'border-box',
         color: 'black', 
         position: 'relative', 
         display: 'block', 
+        padding: '15mm',
         WebkitTextSizeAdjust: '100%',
-        textSizeAdjust: '100%'
-    };
+        textSizeAdjust: '100%',
+        pageBreakBefore: isFirst ? 'auto' : 'always',
+        pageBreakInside: 'avoid'
+    });
 
     const contentWrapperStyle: React.CSSProperties = {
         width: '100%',
@@ -89,7 +92,7 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
 
     return (
         <>
-            <div className="pdf-page" style={pageStyle}>
+            <div className="pdf-page" style={pageStyle(true)}>
                 <div style={{ ...contentWrapperStyle, flex: 1 }}>
                     <div className="flex justify-between items-center mb-8 border-b border-gray-200 pb-6">
                         <div><h1 className="text-3xl font-black text-gray-900 uppercase tracking-tighter">Ficha de Anamnese</h1><p className="text-sm text-gray-500 font-bold uppercase tracking-widest mt-1">Team VBR</p></div>
@@ -118,7 +121,7 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
                     </div>
                 </div>
             </div>
-            <div className="pdf-page" style={pageStyle}>
+            <div className="pdf-page" style={pageStyle(false)}>
                 <div style={contentWrapperStyle}>
                     <h3 className={sectionTitle}>Medidas Corporais</h3>
                     <div className="grid grid-cols-4 gap-4 mb-8">
@@ -183,7 +186,7 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
                 {showModal && typeof document !== 'undefined' && createPortal(modalContent, document.body)}
             </>
         )}
-        <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
+        <div style={{ position: 'absolute', left: 0, top: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none' }}>
             <div 
                 ref={pdfRef} 
                 className="bg-white"

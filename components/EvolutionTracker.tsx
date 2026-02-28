@@ -376,7 +376,7 @@ const EvolutionTracker: React.FC<Props> = ({
           windowWidth: 1123 // 297mm at 96dpi
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
-        pagebreak: { mode: ['css', 'legacy'], before: '.pdf-page-landscape' }
+        pagebreak: { mode: 'css' }
       };
       try {
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -402,7 +402,7 @@ const EvolutionTracker: React.FC<Props> = ({
 
   const renderReportContent = (isPdfMode = false) => (
     <>
-        <div className={`${isPdfMode ? 'pdf-page-landscape' : ''} bg-white text-black p-10 ${isPdfMode ? 'w-[297mm]' : 'w-full max-w-[297mm] mx-auto shadow-2xl rounded-xl'}`} style={{ width: isPdfMode ? '297mm' : '100%', flex: isPdfMode ? 1 : 'none' }}>
+        <div className={`${isPdfMode ? 'pdf-page-landscape' : ''} bg-white text-black p-10 ${isPdfMode ? 'w-[297mm]' : 'w-full max-w-[297mm] mx-auto shadow-2xl rounded-xl'}`} style={{ width: isPdfMode ? '297mm' : '100%', flex: isPdfMode ? 1 : 'none', boxSizing: 'border-box', pageBreakInside: 'avoid' }}>
             <div className="flex justify-between items-center border-b-4 border-black pb-6 mb-8">
                 <img src={LOGO_VBR_GOLD} className="h-20" alt="Logo" />
                 <div className="text-right">
@@ -524,7 +524,7 @@ const EvolutionTracker: React.FC<Props> = ({
               <div className="w-full max-w-5xl h-[90vh] relative"><button onClick={() => setHistoryPreview(null)} className="absolute -top-10 right-0 text-white flex items-center gap-2 font-bold uppercase text-xs">Fechar <X size={20} /></button><div className="bg-[#111] rounded-[2rem] h-full overflow-hidden border border-white/10 shadow-2xl flex flex-col"><div className="bg-[#d4af37] p-4"><h3 className="text-black font-black uppercase tracking-tighter">Histórico: {new Date(historyPreview.updatedAt).toLocaleDateString('pt-BR')}</h3></div><div className="flex-1 overflow-y-auto p-4 custom-scrollbar bg-white"><ProtocolPreview data={historyPreview} customTrigger={<div className="w-full h-full flex flex-col items-center justify-center text-black py-20"><button className="bg-[#d4af37] px-6 py-3 rounded-xl font-black uppercase shadow-lg">Ver Visualização</button></div>} /></div></div></div>
           </div>
       )}
-      <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
+      <div style={{ position: 'absolute', left: 0, top: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none' }}>
         <div 
             ref={reportRef} 
             className="bg-white"
