@@ -69,7 +69,6 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
         scale: 2, 
         useCORS: true, 
         letterRendering: true,
-        scrollY: 0,
         windowWidth: 794
       },
       jsPDF: { unit: 'px', format: [794, 1123], orientation: 'portrait' }, // 1123px is closer to A4 height at 96dpi
@@ -161,8 +160,10 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
                                 <h2 className="text-black font-black uppercase tracking-tighter text-lg flex items-center gap-2"><ShieldCheck size={20} className="text-[#d4af37]" /> Contrato</h2>
                                 <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-500"><X size={24} /></button>
                             </div>
-                            <div className="flex-1 overflow-auto bg-gray-500/20 p-8 custom-scrollbar-light flex justify-center items-start">
-                                {renderContent()}
+                            <div className="flex-1 overflow-auto bg-gray-500/20 custom-scrollbar-light flex">
+                                <div className="m-auto p-8">
+                                    {renderContent()}
+                                </div>
                             </div>
                             <div className="bg-white p-6 border-t border-gray-200 flex justify-end gap-4 shrink-0">
                                 <button onClick={() => setShowModal(false)} className="px-6 py-3 rounded-xl font-bold uppercase text-xs text-gray-500 hover:bg-gray-100 transition-colors">Fechar</button>
