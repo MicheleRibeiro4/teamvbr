@@ -64,16 +64,18 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
     const opt = {
       margin: 0,
       filename: `Contrato_VBR_${clientName.replace(/\s+/g, '_')}.pdf`,
-      image: { type: 'jpeg', quality: 1 },
+      image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { 
         scale: 2, 
         useCORS: true, 
+        letterRendering: true,
+        logging: false,
         scrollX: 0,
         scrollY: 0,
         windowWidth: 794
       },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: 'css' }
+      jsPDF: { unit: 'px', format: [794, 1122], orientation: 'portrait' },
+      pagebreak: { mode: ['css'], avoid: ['.avoid-page-break'] }
     };
 
     try {
@@ -96,48 +98,43 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
       const fullAddress = street ? detailedAddress : (contract.address || '__________________________________________________');
 
       const content = (
-        <>
-            <div className="pdf-page">
-                <div className="mb-6 clause-text" style={{ color: 'black', fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '12pt', lineHeight: '1.5', textAlign: 'justify', flex: 1 }}>
-                    <h1 className="font-bold text-center text-[12pt] mb-6 uppercase pdf-title clause-title">CONTRATO DE ASSESSORIA EM ESTILO DE VIDA SAUDÁVEL</h1>
-                    <div className="mb-4 text-justify clause-text"><p className="font-bold mb-1 clause-title">CONTRATANTE:</p><p className="clause-text">Nome: {clientName}</p><p className="clause-text">CPF: {contract.cpf || '__________'}</p><p className="clause-text">Telefone: {contract.phone || '__________'}</p><p className="clause-text">Endereço: {fullAddress}</p></div>
-                    <div className="mb-6 text-justify clause-text"><p className="font-bold mb-1 clause-title">CONTRATADO:</p><p className="clause-text">Nome: {CONSULTANT_DEFAULT.consultantName}</p><p className="clause-text">CPF: {CONSULTANT_DEFAULT.consultantCpf}</p><p className="clause-text">E-mail: {CONSULTANT_DEFAULT.consultantEmail}</p><p className="clause-text">Endereço: {CONSULTANT_DEFAULT.consultantAddress}</p></div>
-                    <p className="mb-4 text-justify clause-text">As partes acima identificadas celebram o presente contrato, mediante as seguintes cláusulas e condições:</p>
-                </div>
+        <div className="pdf-page bg-white text-black" style={{ width: '794px', minHeight: '1120px', padding: '20mm', fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '12pt', lineHeight: '1.5' }}>
+            <div className="mb-6" style={{ textAlign: 'justify' }}>
+                <h1 className="font-bold text-center text-[14pt] mb-8 uppercase">CONTRATO DE ASSESSORIA EM ESTILO DE VIDA SAUDÁVEL</h1>
+                <div className="mb-4 text-justify"><p className="font-bold mb-1">CONTRATANTE:</p><p>Nome: {clientName}</p><p>CPF: {contract.cpf || '__________'}</p><p>Telefone: {contract.phone || '__________'}</p><p>Endereço: {fullAddress}</p></div>
+                <div className="mb-6 text-justify"><p className="font-bold mb-1">CONTRATADO:</p><p>Nome: {CONSULTANT_DEFAULT.consultantName}</p><p>CPF: {CONSULTANT_DEFAULT.consultantCpf}</p><p>E-mail: {CONSULTANT_DEFAULT.consultantEmail}</p><p>Endereço: {CONSULTANT_DEFAULT.consultantAddress}</p></div>
+                <p className="mb-4 text-justify">As partes acima identificadas celebram o presente contrato, mediante as seguintes cláusulas e condições:</p>
+            </div>
 
-                <div className="mb-8 text-justify leading-[1.5] clause-text" style={{ color: 'black', fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '12pt', lineHeight: '1.5', textAlign: 'justify' }}>
-                {getCleanContractText().split('\n').map((line, i) => {
-                    const trimmed = line.trim();
-                    if (trimmed === '') return null;
-                    
-                    const upperLine = trimmed.toUpperCase();
-                    const isTitle = upperLine.startsWith('CLÁUSULA') || upperLine.startsWith('CLAUSULA');
+            <div className="mb-8 text-justify leading-[1.5]">
+            {getCleanContractText().split('\n').map((line, i) => {
+                const trimmed = line.trim();
+                if (trimmed === '') return null;
+                
+                const upperLine = trimmed.toUpperCase();
+                const isTitle = upperLine.startsWith('CLÁUSULA') || upperLine.startsWith('CLAUSULA');
 
-                    return (
-                        <p 
-                            key={i} 
-                            className={`${isTitle ? 'font-bold pdf-title clause-title' : 'clause-text'}`}
-                            style={{ 
-                                textAlign: 'justify',
-                                marginBottom: '1rem'
-                            }}
-                        >
-                            {line}
-                        </p>
-                    );
-                })}
-                </div>
+                return (
+                    <p 
+                        key={i} 
+                        className={`${isTitle ? 'font-bold mt-6 mb-2' : 'mb-4'} avoid-page-break`}
+                        style={{ textAlign: 'justify' }}
+                    >
+                        {line}
+                    </p>
+                );
+            })}
+            </div>
 
-                <div className="signature-block clause-text" style={{ color: 'black', fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '12pt', lineHeight: '1.5', textAlign: 'justify' }}>
-                    <p className="mb-8 text-justify clause-text">E, por estarem justas e contratadas, as partes assinam o presente instrumento em 2 (duas) vias de igual teor e forma.</p>
-                    <div className="mb-8 clause-text"><p className="clause-text">Vespasiano, Minas Gerais</p><p className="clause-text">Data: {new Date().toLocaleDateString('pt-BR')}</p></div>
-                    <div className="mt-8 space-y-10 clause-text">
-                        <div className="clause-text"><p className="font-bold mb-4 clause-title">CONTRATANTE:</p><div className="border-b border-black w-2/3 mb-1"></div><p className="clause-text">Assinatura</p><p className="clause-text">Nome: {clientName}</p><p className="clause-text">CPF: {contract.cpf}</p></div>
-                        <div className="clause-text"><p className="font-bold mb-4 clause-title">CONTRATADO:</p><div className="border-b border-black w-2/3 mb-1"></div><p className="clause-text">Assinatura</p><p className="clause-text">{CONSULTANT_DEFAULT.consultantName}</p></div>
-                    </div>
+            <div className="signature-block avoid-page-break mt-12" style={{ pageBreakInside: 'avoid' }}>
+                <p className="mb-8 text-justify">E, por estarem justas e contratadas, as partes assinam o presente instrumento em 2 (duas) vias de igual teor e forma.</p>
+                <div className="mb-8"><p>Vespasiano, Minas Gerais</p><p>Data: {new Date().toLocaleDateString('pt-BR')}</p></div>
+                <div className="mt-12 space-y-12">
+                    <div><p className="font-bold mb-6">CONTRATANTE:</p><div className="border-b border-black w-2/3 mb-1"></div><p className="text-sm">Assinatura</p><p className="text-sm">Nome: {clientName}</p><p className="text-sm">CPF: {contract.cpf}</p></div>
+                    <div><p className="font-bold mb-6">CONTRATADO:</p><div className="border-b border-black w-2/3 mb-1"></div><p className="text-sm">Assinatura</p><p className="text-sm">{CONSULTANT_DEFAULT.consultantName}</p></div>
                 </div>
             </div>
-        </>
+        </div>
       );
 
       return content;
@@ -172,7 +169,7 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
                 ref={contractRef} 
                 className="bg-white"
                 style={{
-                    width: '210mm',
+                    width: '794px',
                     padding: '15mm' // Add padding for the HTML view
                 }}
             >

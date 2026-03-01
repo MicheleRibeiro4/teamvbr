@@ -375,8 +375,8 @@ const EvolutionTracker: React.FC<Props> = ({
           scrollY: 0,
           windowWidth: 1123 // 297mm at 96dpi
         },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
-        pagebreak: { mode: 'css' }
+        jsPDF: { unit: 'px', format: [1123, 794], orientation: 'landscape' },
+        pagebreak: { mode: ['css'] }
       };
       try {
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -402,7 +402,7 @@ const EvolutionTracker: React.FC<Props> = ({
 
   const renderReportContent = (isPdfMode = false) => (
     <>
-        <div className={`${isPdfMode ? 'pdf-page-landscape' : ''} bg-white text-black p-10 ${isPdfMode ? 'w-[297mm]' : 'w-full max-w-[297mm] mx-auto shadow-2xl rounded-xl'}`} style={{ width: isPdfMode ? '297mm' : '100%', flex: isPdfMode ? 1 : 'none', boxSizing: 'border-box', pageBreakInside: 'avoid' }}>
+        <div className={`${isPdfMode ? 'pdf-page-landscape' : ''} bg-white text-black p-10 ${isPdfMode ? 'w-[297mm]' : 'w-full max-w-[297mm] mx-auto shadow-2xl rounded-xl'}`} style={{ width: isPdfMode ? '297mm' : '100%', minHeight: isPdfMode ? '790px' : 'auto', flex: isPdfMode ? 1 : 'none', boxSizing: 'border-box' }}>
             <div className="flex justify-between items-center border-b-4 border-black pb-6 mb-8">
                 <img src={LOGO_VBR_GOLD} className="h-20" alt="Logo" />
                 <div className="text-right">

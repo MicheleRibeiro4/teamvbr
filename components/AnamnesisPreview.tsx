@@ -30,16 +30,18 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
     const opt = {
       margin: 0,
       filename: `Anamnese_${clientName.replace(/\s+/g, '_')}.pdf`,
-      image: { type: 'jpeg', quality: 1 },
+      image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { 
         scale: 2, 
         useCORS: true, 
+        letterRendering: true,
+        logging: false,
         scrollY: 0,
         scrollX: 0,
         windowWidth: 794
       },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: 'css' }
+      jsPDF: { unit: 'px', format: [794, 1122], orientation: 'portrait' },
+      pagebreak: { mode: ['css'], avoid: ['.avoid-page-break'] }
     };
     try {
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -66,18 +68,19 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
     const registrationDate = new Date(safeData.createdAt || safeData.updatedAt || Date.now()).toLocaleDateString('pt-BR');
     const clientName = safeData.clientName || "Aluno";
 
-    const pageStyle = (isFirst: boolean = false): React.CSSProperties => ({ 
-        width: '100%', 
+    const pageStyle = (isFirst: boolean = false, isLast: boolean = false): React.CSSProperties => ({ 
+        width: '794px', 
+        height: '1120px',
         backgroundColor: '#ffffff', 
         boxSizing: 'border-box',
         color: 'black', 
         position: 'relative', 
         display: 'block', 
-        padding: '15mm',
+        padding: '10mm 15mm',
         WebkitTextSizeAdjust: '100%',
         textSizeAdjust: '100%',
-        pageBreakBefore: isFirst ? 'auto' : 'always',
-        pageBreakInside: 'avoid'
+        overflow: 'hidden',
+        pageBreakAfter: isLast ? 'auto' : 'always'
     });
 
     const contentWrapperStyle: React.CSSProperties = {
@@ -92,7 +95,7 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
 
     return (
         <>
-            <div className="pdf-page" style={pageStyle(true)}>
+            <div className="pdf-page" style={pageStyle(true, false)}>
                 <div style={{ ...contentWrapperStyle, flex: 1 }}>
                     <div className="flex justify-between items-center mb-8 border-b border-gray-200 pb-6">
                         <div><h1 className="text-3xl font-black text-gray-900 uppercase tracking-tighter">Ficha de Anamnese</h1><p className="text-sm text-gray-500 font-bold uppercase tracking-widest mt-1">Team VBR</p></div>
@@ -113,15 +116,15 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
 
                     <h3 className={sectionTitle}>Histórico & Objetivos</h3>
                     <div className="space-y-4">
-                        <div className={gridItemStyle}><span className={labelStyle}>Objetivo Principal</span><p className={valueStyle}>{anamnesis.mainObjective || 'Não informado'}</p></div>
-                        <div className={gridItemStyle}><span className={labelStyle}>Rotina Diária</span><p className={`${valueStyle} whitespace-pre-wrap`}>{anamnesis.routine || 'Não informado'}</p></div>
-                        <div className={gridItemStyle}><span className={labelStyle}>Histórico de Treino / Lesões</span><p className={`${valueStyle} whitespace-pre-wrap`}>{anamnesis.trainingHistory || 'Não informado'}</p></div>
-                        <div className={gridItemStyle}><span className={labelStyle}>Preferências Alimentares / Alergias</span><p className={`${valueStyle} whitespace-pre-wrap`}>{anamnesis.foodPreferences || 'Não informado'}</p></div>
-                        <div className={gridItemStyle}><span className={labelStyle}>Medicamentos / Ergogênicos</span><p className={`${valueStyle} whitespace-pre-wrap`}>{anamnesis.ergogenics || 'Não informado'}</p></div>
+                        <div className={`${gridItemStyle} avoid-page-break`}><span className={labelStyle}>Objetivo Principal</span><p className={valueStyle}>{anamnesis.mainObjective || 'Não informado'}</p></div>
+                        <div className={`${gridItemStyle} avoid-page-break`}><span className={labelStyle}>Rotina Diária</span><p className={`${valueStyle} whitespace-pre-wrap`}>{anamnesis.routine || 'Não informado'}</p></div>
+                        <div className={`${gridItemStyle} avoid-page-break`}><span className={labelStyle}>Histórico de Treino / Lesões</span><p className={`${valueStyle} whitespace-pre-wrap`}>{anamnesis.trainingHistory || 'Não informado'}</p></div>
+                        <div className={`${gridItemStyle} avoid-page-break`}><span className={labelStyle}>Preferências Alimentares / Alergias</span><p className={`${valueStyle} whitespace-pre-wrap`}>{anamnesis.foodPreferences || 'Não informado'}</p></div>
+                        <div className={`${gridItemStyle} avoid-page-break`}><span className={labelStyle}>Medicamentos / Ergogênicos</span><p className={`${valueStyle} whitespace-pre-wrap`}>{anamnesis.ergogenics || 'Não informado'}</p></div>
                     </div>
                 </div>
             </div>
-            <div className="pdf-page" style={pageStyle(false)}>
+            <div className="pdf-page" style={pageStyle(false, true)}>
                 <div style={contentWrapperStyle}>
                     <h3 className={sectionTitle}>Medidas Corporais</h3>
                     <div className="grid grid-cols-4 gap-4 mb-8">
@@ -131,7 +134,7 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
                         <div className={gridItemStyle}><span className={labelStyle}>IMC</span><span className={valueStyle}>{physical.imc || '-'}</span></div>
                     </div>
 
-                    <div className="border border-gray-200 rounded-lg overflow-hidden">
+                    <div className="border border-gray-200 rounded-lg overflow-hidden avoid-page-break">
                         <div className="bg-gray-100 p-2 text-center text-xs font-black uppercase tracking-widest text-gray-500 border-b border-gray-200">Circunferências (cm)</div>
                         <div className="grid grid-cols-4 divide-x divide-y divide-gray-200 text-center">
                             <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Tórax</span><span className="font-bold text-gray-900">{measurements.thorax || '-'}</span></div>
@@ -191,7 +194,7 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
                 ref={pdfRef} 
                 className="bg-white"
                 style={{
-                    width: '210mm'
+                    width: '794px'
                 }}
             >
                 {renderContent(true)}
