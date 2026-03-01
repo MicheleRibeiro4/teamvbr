@@ -48,7 +48,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
         windowWidth: 794
       },
       jsPDF: { unit: 'px', format: [794, 1122], orientation: 'portrait' },
-      pagebreak: { mode: ['css'], avoid: ['.avoid-page-break'] }
+      pagebreak: { mode: ['css', 'legacy'], avoid: ['.avoid-page-break'] }
     };
 
     try {
@@ -78,17 +78,17 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
     // Configuração de Estilo para Página A4
     const pageStyle = (isFirst: boolean = false): React.CSSProperties => ({
         width: '794px', 
-        minHeight: '1100px',
+        minHeight: 'auto', // Changed from fixed height to auto as requested
         backgroundColor: 'white',
         boxSizing: 'border-box',
         position: 'relative',
         fontFamily: "'Inter', sans-serif",
         margin: '0', 
-        padding: '10mm 15mm',
+        padding: '38px 57px', // Converted from 10mm 15mm
         WebkitTextSizeAdjust: '100%',
         textSizeAdjust: '100%',
         color: 'black',
-        pageBreakAfter: 'always'
+        pageBreakBefore: isFirst ? 'auto' : 'always'
     });
 
     const contentWrapperStyle: React.CSSProperties = {
@@ -106,10 +106,10 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
         justifyContent: 'center',
         padding: 0,
         position: 'relative',
-        height: '1100px', // Reduced to prevent spillover
+        height: '1122px', // Full A4 height for cover
         overflow: 'hidden',
         pageBreakInside: 'avoid',
-        pageBreakAfter: 'always'
+        pageBreakBefore: 'auto'
     };
 
     const endPageStyle: React.CSSProperties = {
@@ -120,12 +120,12 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '10mm',
+        padding: '38px', // Converted from 10mm
         position: 'relative',
-        height: '1100px', // Reduced to prevent spillover
+        height: '1122px', // Full A4 height for end page
         overflow: 'hidden',
         pageBreakInside: 'avoid',
-        pageBreakAfter: 'auto' // Last page doesn't need a break after
+        pageBreakBefore: 'always'
     };
 
     // Estilos utilitários baseados no modelo
@@ -328,7 +328,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
                     <div className="pdf-page" style={{ 
                         ...pageStyle(false), 
                         minHeight: 'auto', // Allow natural height to prevent spillover blank pages
-                        pageBreakAfter: 'auto' // Let the next page force the break
+                        pageBreakBefore: 'always'
                     }}>
                         <div style={contentWrapperStyle}>
                             <div className={sectionTitleStyle}>DIVISÃO DE TREINO</div>
@@ -377,10 +377,10 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
                 ...endPageStyle,
                 pageBreakBefore: 'always', // Force break before this page
                 height: 'auto', // Allow expansion
-                minHeight: '1100px', // Maintain full page look
+                minHeight: '1122px', // Maintain full page look
                 overflow: 'visible' // Allow content to show
             }}>
-                 <div style={{ border: '4px solid #d4af37', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', borderRadius: '40px', position: 'relative', width: '100%', flex: 1, padding: '20mm' }}>
+                 <div style={{ border: '4px solid #d4af37', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', borderRadius: '40px', position: 'relative', width: '100%', flex: 1, padding: '76px' }}>
                     <AlertTriangle size={80} className="text-[#d4af37] mb-8" strokeWidth={1.5} />
                     <h2 className="text-6xl font-black uppercase tracking-tighter mb-4 text-white">Atenção</h2>
                     <div className="w-24 h-2 bg-[#d4af37] mb-12"></div>

@@ -70,7 +70,7 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
 
     const pageStyle = (isFirst: boolean = false, isLast: boolean = false): React.CSSProperties => ({ 
         width: '794px', 
-        height: '1120px',
+        height: '1122px',
         backgroundColor: '#ffffff', 
         boxSizing: 'border-box',
         color: 'black', 
@@ -80,7 +80,7 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
         WebkitTextSizeAdjust: '100%',
         textSizeAdjust: '100%',
         overflow: 'hidden',
-        pageBreakAfter: isLast ? 'auto' : 'always'
+        pageBreakBefore: isFirst ? 'auto' : 'always'
     });
 
     const contentWrapperStyle: React.CSSProperties = {
