@@ -36,6 +36,8 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
         useCORS: true, 
         letterRendering: true,
         scrollY: 0,
+        scrollX: 0,
+        x: 0,
         windowWidth: 794
       },
       jsPDF: { unit: 'px', format: [794, 1123], orientation: 'portrait' },
