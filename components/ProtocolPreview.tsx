@@ -23,7 +23,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
   const [showModal, setShowModal] = useState(false);
   const pdfRef = useRef<HTMLDivElement>(null);
 
-  const handleDownloadPDF = async () => {
+    const handleDownloadPDF = async () => {
     const targetRef = pdfRef.current;
     if (!targetRef) return;
     setIsGenerating(true);
@@ -35,19 +35,17 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
     const A4_WIDTH_PX = 793; 
 
     const opt = {
-      margin: 0,
+      margin: [0, 0, 0, 0],
       filename: `Protocolo_VBR_${clientName.replace(/\s+/g, '_')}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { 
         scale: 2, 
         useCORS: true, 
         letterRendering: true,
-        logging: false,
-        scrollX: 0,
         scrollY: 0,
         windowWidth: 794
       },
-      jsPDF: { unit: 'px', format: [794, 1122], orientation: 'portrait' },
+      jsPDF: { unit: 'px', format: [794, 1123], orientation: 'portrait' },
       pagebreak: { mode: ['css', 'legacy'], avoid: ['.avoid-page-break'] }
     };
 
@@ -78,17 +76,17 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
     // Configuração de Estilo para Página A4
     const pageStyle = (isFirst: boolean = false): React.CSSProperties => ({
         width: '794px', 
-        minHeight: 'auto', // Changed from fixed height to auto as requested
+        minHeight: 'auto', 
         backgroundColor: 'white',
         boxSizing: 'border-box',
         position: 'relative',
         fontFamily: "'Inter', sans-serif",
         margin: '0', 
-        padding: '38px 57px', // Converted from 10mm 15mm
+        padding: '10mm 15mm',
         WebkitTextSizeAdjust: '100%',
         textSizeAdjust: '100%',
         color: 'black',
-        pageBreakBefore: isFirst ? 'auto' : 'always'
+        pageBreakAfter: 'auto'
     });
 
     const contentWrapperStyle: React.CSSProperties = {
@@ -106,10 +104,10 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
         justifyContent: 'center',
         padding: 0,
         position: 'relative',
-        height: '1122px', // Full A4 height for cover
+        height: '1122px', 
         overflow: 'hidden',
         pageBreakInside: 'avoid',
-        pageBreakBefore: 'auto'
+        pageBreakAfter: 'always'
     };
 
     const endPageStyle: React.CSSProperties = {
@@ -120,21 +118,32 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '38px', // Converted from 10mm
+        padding: '10mm',
         position: 'relative',
-        height: '1122px', // Full A4 height for end page
+        minHeight: '1120px', // Slightly less than 1123 to avoid spillover
         overflow: 'hidden',
         pageBreakInside: 'avoid',
-        pageBreakBefore: 'always'
+        pageBreakBefore: 'always',
+        pageBreakAfter: 'auto'
     };
 
     // Estilos utilitários baseados no modelo
-    const sectionTitleStyle = "text-[#d4af37] font-black uppercase text-lg border-b-2 border-[#d4af37] pb-1 mb-6 flex items-center gap-2";
-    const cardDataStyle = "bg-[#f8f9fa] rounded-lg p-3 border border-gray-100 flex flex-col";
+    const sectionTitleStyle = "text-[#d4af37] font-black uppercase text-lg border-b-2 border-[#d4af37] pb-1 mb-6 flex items-center gap-2 mt-8 avoid-page-break";
+    const cardDataStyle = "bg-[#f8f9fa] rounded-lg p-3 border border-gray-100 flex flex-col avoid-page-break";
     const labelStyle = "text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1";
     const valueStyle = "text-xl font-black text-gray-900 leading-none";
 
     const kcalValue = (safeData.kcalGoal || "0").toString().replace(/kcal/gi, '').trim();
+
+    const renderHeader = (title: string) => (
+        <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4 avoid-page-break">
+            <div className="flex flex-col">
+                <h2 className="text-xl font-black text-gray-900 uppercase tracking-tighter">{title}</h2>
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Team VBR • {clientName}</p>
+            </div>
+            <img src={LOGO_VBR_GOLD} alt="Team VBR" className="w-16 h-auto opacity-80" />
+        </div>
+    );
 
     return (
         <>
@@ -163,12 +172,16 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
                 </div>
             </div>
 
-            {/* DADOS E ESTRATÉGIA (Page 2) */}
+            {/* CONTENT CONTAINER (Continuous Flow) */}
             <div className="pdf-page" style={pageStyle(false)}>
                 <div style={contentWrapperStyle}>
-                    <div className={sectionTitleStyle}>DADOS FÍSICOS — {physical.date}</div>
                     
-                    <div className="grid grid-cols-3 gap-4 mb-8">
+                    {/* DADOS E ESTRATÉGIA */}
+                    <div className="mb-8">
+                        {renderHeader("Dados Físicos & Estratégia")}
+                        {/* <div className={sectionTitleStyle}>DADOS FÍSICOS — {physical.date}</div> - Removed redundant title */}
+                        
+                        <div className="grid grid-cols-3 gap-4 mb-8">
                         <div className={cardDataStyle}>
                             <span className={labelStyle}>PESO ATUAL</span>
                             <span className={valueStyle}>{physical.weight || '-'} kg</span>
@@ -182,8 +195,9 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
                             <span className={valueStyle}>{physical.age || '-'} anos</span>
                         </div>
                     </div>
+                </div>
 
-                    <h4 className="text-xs font-black uppercase text-gray-900 mb-2">BIOIMPEDÂNCIA</h4>
+                    <h4 className="text-xs font-black uppercase text-gray-900 mb-2 avoid-page-break">BIOIMPEDÂNCIA</h4>
                     <div className="grid grid-cols-4 gap-4 mb-10">
                         <div className={cardDataStyle}>
                             <span className={labelStyle}>MASSA MUSC.</span>
@@ -205,143 +219,121 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
 
                     <div className={sectionTitleStyle}>ESTRATÉGIA NUTRICIONAL</div>
                     
-                    <div className="bg-gray-100 p-4 rounded-lg border-l-4 border-gray-300 mb-8">
+                    <div className="bg-gray-100 p-4 rounded-lg border-l-4 border-gray-300 mb-8 avoid-page-break">
                         <span className="font-bold text-gray-900 text-xs uppercase block mb-2">Observação:</span>
                         <p className="text-sm text-gray-700 leading-relaxed text-justify">
                             {safeData.nutritionalStrategy || "Estratégia personalizada de acordo com anamnese e objetivos."}
                         </p>
                     </div>
                     
-                    <div className="bg-[#111] text-center p-8 rounded-xl mb-10 mx-auto w-full">
+                    <div className="bg-[#111] text-center p-8 rounded-xl mb-10 mx-auto w-full avoid-page-break">
                         <p className="text-[10px] font-black text-white uppercase tracking-[0.2em] mb-2">META DIÁRIA (FOCO EM {protocolTitle})</p>
                         <p className="text-5xl font-black text-[#d4af37] whitespace-nowrap leading-none">
                             {kcalValue} <span className="text-xl text-white/50 ml-1">kcal</span>
                         </p>
                     </div>
 
-                    <h4 className="text-sm font-black text-gray-900 mb-4 uppercase">Distribuição de Macronutrientes</h4>
-                    <div className="grid grid-cols-3 gap-6">
-                        <div className="text-center p-4 border border-gray-100 rounded-lg shadow-sm">
+                    <h4 className="text-sm font-black text-gray-900 mb-4 uppercase avoid-page-break">Distribuição de Macronutrientes</h4>
+                    <div className="grid grid-cols-3 gap-6 mb-8">
+                        <div className="text-center p-4 border border-gray-100 rounded-lg shadow-sm avoid-page-break">
                             <p className="text-[#d4af37] font-black text-[10px] uppercase tracking-widest mb-1">PROTEÍNAS</p>
                             <p className="text-3xl font-black text-gray-900">{macros.protein?.value || '0'}g</p>
                             <p className="text-[9px] text-gray-400 font-bold">{macros.protein?.ratio || '0'}g/kg</p>
                         </div>
-                        <div className="text-center p-4 border border-gray-100 rounded-lg shadow-sm">
+                        <div className="text-center p-4 border border-gray-100 rounded-lg shadow-sm avoid-page-break">
                             <p className="text-[#d4af37] font-black text-[10px] uppercase tracking-widest mb-1">CARBOIDRATOS</p>
                             <p className="text-3xl font-black text-gray-900">{macros.carbs?.value || '0'}g</p>
                             <p className="text-[9px] text-gray-400 font-bold">{macros.carbs?.ratio || '0'}g/kg</p>
                         </div>
-                        <div className="text-center p-4 border border-gray-100 rounded-lg shadow-sm">
+                        <div className="text-center p-4 border border-gray-100 rounded-lg shadow-sm avoid-page-break">
                             <p className="text-[#d4af37] font-black text-[10px] uppercase tracking-widest mb-1">GORDURAS</p>
                             <p className="text-3xl font-black text-gray-900">{macros.fats?.value || '0'}g</p>
                             <p className="text-[9px] text-gray-400 font-bold">{macros.fats?.ratio || '0'}g/kg</p>
                         </div>
                     </div>
                     
-                    <div className="mt-8 bg-[#fffbe6] border border-[#d4af37]/20 p-3 rounded text-center">
+                    <div className="mt-8 bg-[#fffbe6] border border-[#d4af37]/20 p-3 rounded text-center avoid-page-break">
                         <p className="text-xs font-bold text-[#8c701c]">Nota Importante: Manter a consistência na pesagem dos alimentos.</p>
                     </div>
-                </div>
-            </div>
 
-            {/* PLANO ALIMENTAR (Page 3) */}
-            {meals.length > 0 && (
-                <>
-                    <div className="pdf-page" style={pageStyle(false)}>
-                        <div style={contentWrapperStyle}>
-                            <div className={sectionTitleStyle}>PLANO ALIMENTAR DIÁRIO</div>
-                        
-                        {/* Header Tabela */}
-                        <div className="grid grid-cols-12 bg-[#d4af37] text-white font-bold text-xs uppercase py-2 px-3 rounded-t-lg mb-0">
-                            <div className="col-span-2">Horário</div>
-                            <div className="col-span-10">Refeição & Detalhes</div>
-                        </div>
+                    {/* PLANO ALIMENTAR */}
+                    {meals.length > 0 && (
+                        <div style={{ pageBreakBefore: 'always' }}>
+                            {renderHeader("Plano Alimentar Diário")}
+                            {/* <div className={sectionTitleStyle.replace('mt-8', '')}>PLANO ALIMENTAR DIÁRIO</div> */}
+                            
+                            {/* Header Tabela */}
+                            <div className="grid grid-cols-12 bg-[#d4af37] text-white font-bold text-xs uppercase py-2 px-3 rounded-t-lg mb-0 avoid-page-break">
+                                <div className="col-span-2">Horário</div>
+                                <div className="col-span-10">Refeição & Detalhes</div>
+                            </div>
 
-                        <div className="flex flex-col gap-0 divide-y divide-gray-100 border border-gray-100 rounded-b-lg mb-8">
-                            {meals.map((meal, index) => (
-                                <div key={index} className="grid grid-cols-12 p-4 items-start odd:bg-white even:bg-gray-50 avoid-page-break" style={{ pageBreakInside: 'avoid' }}>
-                                    <div className="col-span-2 text-[#d4af37] font-black text-sm pt-0.5">
-                                        {meal.time}
-                                    </div>
-                                    <div className="col-span-10">
-                                        <p className="font-bold text-gray-900 text-sm mb-1 uppercase">{meal.name}</p>
-                                        <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">{meal.details}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-
-                        <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center mt-auto mb-4">
-                            <p className="text-gray-500 text-sm italic font-medium">Lembre-se de manter a hidratação ao longo do dia (mínimo {safeData.waterGoal || '3.5'}L de água).</p>
-                        </div>
-                    </div>
-                </div>
-                </>
-            )}
-
-            {/* SUPLEMENTAÇÃO E DICAS (Page 4) */}
-            {(supplements.length > 0 || tips.length > 0) && (
-                <>
-                    <div className="pdf-page" style={pageStyle(false)}>
-                        <div style={contentWrapperStyle}>
-                            <div className={sectionTitleStyle}>SUPLEMENTAÇÃO E RECOMENDAÇÕES</div>
-                        
-                        <div className="space-y-4 mb-10">
-                            {supplements.map((s, idx) => {
-                                // Cores alternadas baseadas no modelo (Dourado, Azul, Escuro)
-                                let bgClass = "bg-[#111]";
-                                let textClass = "text-white";
-                                if (idx % 3 === 0) { bgClass = "bg-[#d4af37]"; textClass = "text-white"; }
-                                else if (idx % 3 === 1) { bgClass = "bg-[#2563eb]"; textClass = "text-white"; }
-
-                                return (
-                                    <div key={idx} className={`${bgClass} ${textClass} p-4 rounded-xl flex items-center justify-between shadow-sm avoid-page-break`} style={{ pageBreakInside: 'avoid' }}>
-                                        <div>
-                                            <p className="font-black text-lg uppercase leading-none mb-1">{s.name}</p>
-                                            <p className="text-xs font-medium opacity-90">{s.dosage}</p>
+                            <div className="flex flex-col gap-0 divide-y divide-gray-100 border border-gray-100 rounded-b-lg mb-8">
+                                {meals.map((meal, index) => (
+                                    <div key={index} className="grid grid-cols-12 p-4 items-start odd:bg-white even:bg-gray-50 avoid-page-break" style={{ pageBreakInside: 'avoid' }}>
+                                        <div className="col-span-2 text-[#d4af37] font-black text-sm pt-0.5">
+                                            {meal.time}
                                         </div>
-                                        <div className="text-right bg-black/20 px-3 py-2 rounded text-[10px] font-bold uppercase tracking-wider min-w-[120px]">
-                                            {s.timing}
+                                        <div className="col-span-10">
+                                            <p className="font-bold text-gray-900 text-sm mb-1 uppercase">{meal.name}</p>
+                                            <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">{meal.details}</p>
                                         </div>
                                     </div>
-                                )
-                            })}
+                                ))}
+                            </div>
+
+                            <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center mt-4 mb-4 avoid-page-break">
+                                <p className="text-gray-500 text-sm italic font-medium">Lembre-se de manter a hidratação ao longo do dia (mínimo {safeData.waterGoal || '3.5'}L de água).</p>
+                            </div>
                         </div>
+                    )}
 
-                        <h4 className="text-lg font-black text-gray-900 mb-6 uppercase">Dicas:</h4>
-                        <div className="space-y-3">
-                            {tips.map((tip, index) => (
-                                <div key={index} className="flex gap-3 items-start">
-                                    <div className="w-1.5 h-1.5 bg-black rounded-full mt-2 shrink-0"></div>
-                                    <p className="text-sm font-medium text-gray-800 leading-relaxed">{tip}</p>
-                                </div>
-                            ))}
+                    {/* SUPLEMENTAÇÃO E DICAS */}
+                    {(supplements.length > 0 || tips.length > 0) && (
+                        <div style={{ pageBreakBefore: 'always' }}>
+                            {renderHeader("Suplementação & Recomendações")}
+                            {/* <div className={sectionTitleStyle.replace('mt-8', '')}>SUPLEMENTAÇÃO E RECOMENDAÇÕES</div> */}
+                            
+                            <div className="space-y-4 mb-10">
+                                {supplements.map((s, idx) => {
+                                    // Cores alternadas baseadas no modelo (Dourado, Azul, Escuro)
+                                    let bgClass = "bg-[#111]";
+                                    let textClass = "text-white";
+                                    if (idx % 3 === 0) { bgClass = "bg-[#d4af37]"; textClass = "text-white"; }
+                                    else if (idx % 3 === 1) { bgClass = "bg-[#2563eb]"; textClass = "text-white"; }
+
+                                    return (
+                                        <div key={idx} className={`${bgClass} ${textClass} p-4 rounded-xl flex items-center justify-between shadow-sm avoid-page-break`} style={{ pageBreakInside: 'avoid' }}>
+                                            <div>
+                                                <p className="font-black text-lg uppercase leading-none mb-1">{s.name}</p>
+                                                <p className="text-xs font-medium opacity-90">{s.dosage}</p>
+                                            </div>
+                                            <div className="text-right bg-black/20 px-3 py-2 rounded text-[10px] font-bold uppercase tracking-wider min-w-[120px]">
+                                                {s.timing}
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+
+                            <h4 className="text-lg font-black text-gray-900 mb-6 uppercase avoid-page-break">Dicas:</h4>
+                            <div className="space-y-3">
+                                {tips.map((tip, index) => (
+                                    <div key={index} className="flex gap-3 items-start avoid-page-break">
+                                        <div className="w-1.5 h-1.5 bg-black rounded-full mt-2 shrink-0"></div>
+                                        <p className="text-sm font-medium text-gray-800 leading-relaxed">{tip}</p>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-                    </div>
-                </div>
-                </>
-            )}
+                    )}
 
-            {/* TREINO (Page 5+) */}
-            {trainingDays.length > 0 && (
-                <>
-                    <div className="pdf-page" style={{ 
-                        ...pageStyle(false), 
-                        minHeight: 'auto', // Allow natural height to prevent spillover blank pages
-                        pageBreakBefore: 'always'
-                    }}>
-                        <div style={contentWrapperStyle}>
-                            <div className={sectionTitleStyle}>DIVISÃO DE TREINO</div>
-                            <p className="text-xs text-gray-500 mb-6 uppercase font-bold">Frequência: {safeData.trainingFrequency || '5x na semana'}</p>
-
-                            {/* {safeData.trainingReasoning && (
-                                <div className="bg-[#f8f8f8] p-4 rounded-xl border border-gray-200 mb-8">
-                                    <h4 className="text-[10px] font-black text-[#d4af37] uppercase tracking-widest mb-2">Linha de Raciocínio</h4>
-                                    <p className="text-sm text-gray-700 leading-relaxed text-justify whitespace-pre-wrap">
-                                        {safeData.trainingReasoning}
-                                    </p>
-                                </div>
-                            )} */}
+                    {/* TREINO */}
+                    {trainingDays.length > 0 && (
+                        <div style={{ pageBreakBefore: 'always' }}>
+                            {renderHeader("Divisão de Treino")}
+                            {/* <div className={sectionTitleStyle.replace('mt-8', '')}>DIVISÃO DE TREINO</div> */}
+                            <p className="text-xs text-gray-500 mb-6 uppercase font-bold avoid-page-break mt-2">Frequência: {safeData.trainingFrequency || '5x na semana'}</p>
 
                             <div className="space-y-8">
                                 {trainingDays.map((day, dIdx) => (
@@ -368,9 +360,9 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
                                 ))}
                             </div>
                         </div>
-                    </div>
-                </>
-            )}
+                    )}
+                </div>
+            </div>
 
             {/* PAGE FINAL (Atenção) */}
             <div className="pdf-page" style={{ 
@@ -380,7 +372,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
                 minHeight: '1122px', // Maintain full page look
                 overflow: 'visible' // Allow content to show
             }}>
-                 <div style={{ border: '4px solid #d4af37', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', borderRadius: '40px', position: 'relative', width: '100%', flex: 1, padding: '76px' }}>
+                 <div style={{ border: '4px solid #d4af37', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', borderRadius: '40px', position: 'relative', width: '100%', flex: 1, padding: '20mm' }}>
                     <AlertTriangle size={80} className="text-[#d4af37] mb-8" strokeWidth={1.5} />
                     <h2 className="text-6xl font-black uppercase tracking-tighter mb-4 text-white">Atenção</h2>
                     <div className="w-24 h-2 bg-[#d4af37] mb-12"></div>

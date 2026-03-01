@@ -22,26 +22,24 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
   const [showModal, setShowModal] = useState(false);
   const pdfRef = useRef<HTMLDivElement>(null);
 
-  const handleDownloadPDF = async () => {
+    const handleDownloadPDF = async () => {
     const targetRef = pdfRef.current;
     if (!targetRef) return;
     setIsGenerating(true);
     const clientName = data?.clientName || "Aluno";
     const opt = {
-      margin: 0,
+      margin: [0, 0, 0, 0],
       filename: `Anamnese_${clientName.replace(/\s+/g, '_')}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { 
         scale: 2, 
         useCORS: true, 
         letterRendering: true,
-        logging: false,
         scrollY: 0,
-        scrollX: 0,
         windowWidth: 794
       },
-      jsPDF: { unit: 'px', format: [794, 1122], orientation: 'portrait' },
-      pagebreak: { mode: ['css'], avoid: ['.avoid-page-break'] }
+      jsPDF: { unit: 'px', format: [794, 1123], orientation: 'portrait' },
+      pagebreak: { mode: ['css', 'legacy'], avoid: ['.avoid-page-break'] }
     };
     try {
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -70,17 +68,17 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
 
     const pageStyle = (isFirst: boolean = false, isLast: boolean = false): React.CSSProperties => ({ 
         width: '794px', 
-        height: '1122px',
+        minHeight: 'auto', 
         backgroundColor: '#ffffff', 
         boxSizing: 'border-box',
         color: 'black', 
         position: 'relative', 
         display: 'block', 
-        padding: '10mm 15mm',
+        padding: '20mm 15mm',
         WebkitTextSizeAdjust: '100%',
         textSizeAdjust: '100%',
-        overflow: 'hidden',
-        pageBreakBefore: isFirst ? 'auto' : 'always'
+        overflow: 'visible',
+        pageBreakAfter: 'auto'
     });
 
     const contentWrapperStyle: React.CSSProperties = {
@@ -88,53 +86,64 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
         boxSizing: 'border-box'
     };
     
-    const sectionTitle = "text-lg font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-1 mb-4 uppercase mt-6";
+    const sectionTitle = "text-lg font-bold text-[#d4af37] border-b-2 border-[#d4af37] pb-1 mb-4 uppercase mt-8 avoid-page-break";
     const labelStyle = "text-xs font-bold text-gray-500 uppercase block mb-1";
     const valueStyle = "text-sm font-medium text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100 block";
-    const gridItemStyle = "";
+    const gridItemStyle = "avoid-page-break";
+
+    const renderHeader = (title: string = "Ficha de Anamnese") => (
+        <div className="flex justify-between items-center mb-8 border-b border-gray-200 pb-4 avoid-page-break">
+            <div>
+                <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tighter">{title}</h1>
+                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">Team VBR • {clientName}</p>
+            </div>
+            <img src={LOGO_ANAMNESIS} alt="Team VBR" className="w-24 h-auto" />
+        </div>
+    );
 
     return (
-        <>
-            <div className="pdf-page" style={pageStyle(true, false)}>
-                <div style={{ ...contentWrapperStyle, flex: 1 }}>
-                    <div className="flex justify-between items-center mb-8 border-b border-gray-200 pb-6">
-                        <div><h1 className="text-3xl font-black text-gray-900 uppercase tracking-tighter">Ficha de Anamnese</h1><p className="text-sm text-gray-500 font-bold uppercase tracking-widest mt-1">Team VBR</p></div>
-                        <img src={LOGO_ANAMNESIS} alt="Team VBR" className="w-32 h-auto" />
-                    </div>
+        <div className="pdf-page" style={pageStyle(true, false)}>
+            <div style={{ ...contentWrapperStyle, flex: 1 }}>
+                {/* Header Section */}
+                {renderHeader()}
 
-                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                        <div><span className="text-xs font-bold text-gray-400 uppercase">Aluno</span><h2 className="text-2xl font-black text-gray-900 uppercase">{clientName}</h2></div>
-                        <div className="text-right"><span className="text-xs font-bold text-gray-400 uppercase">Data do Cadastro</span><p className="text-sm font-bold text-gray-900">{registrationDate}</p></div>
-                    </div>
-
-                    <div className="grid grid-cols-4 gap-4 mb-6">
-                        <div className="col-span-1"><span className={labelStyle}>Idade</span><span className={valueStyle}>{physical.age || '-'} anos</span></div>
-                        <div className="col-span-1"><span className={labelStyle}>Gênero</span><span className={valueStyle}>{physical.gender || '-'}</span></div>
-                        <div className="col-span-1"><span className={labelStyle}>Peso</span><span className={valueStyle}>{physical.weight || '-'} kg</span></div>
-                        <div className={gridItemStyle}><span className={labelStyle}>Altura</span><span className={valueStyle}>{physical.height || '-'} m</span></div>
-                    </div>
-
-                    <h3 className={sectionTitle}>Histórico & Objetivos</h3>
-                    <div className="space-y-4">
-                        <div className={`${gridItemStyle} avoid-page-break`}><span className={labelStyle}>Objetivo Principal</span><p className={valueStyle}>{anamnesis.mainObjective || 'Não informado'}</p></div>
-                        <div className={`${gridItemStyle} avoid-page-break`}><span className={labelStyle}>Rotina Diária</span><p className={`${valueStyle} whitespace-pre-wrap`}>{anamnesis.routine || 'Não informado'}</p></div>
-                        <div className={`${gridItemStyle} avoid-page-break`}><span className={labelStyle}>Histórico de Treino / Lesões</span><p className={`${valueStyle} whitespace-pre-wrap`}>{anamnesis.trainingHistory || 'Não informado'}</p></div>
-                        <div className={`${gridItemStyle} avoid-page-break`}><span className={labelStyle}>Preferências Alimentares / Alergias</span><p className={`${valueStyle} whitespace-pre-wrap`}>{anamnesis.foodPreferences || 'Não informado'}</p></div>
-                        <div className={`${gridItemStyle} avoid-page-break`}><span className={labelStyle}>Medicamentos / Ergogênicos</span><p className={`${valueStyle} whitespace-pre-wrap`}>{anamnesis.ergogenics || 'Não informado'}</p></div>
-                    </div>
+                {/* Client Info */}
+                <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 avoid-page-break">
+                    <div><span className="text-xs font-bold text-gray-400 uppercase">Aluno</span><h2 className="text-2xl font-black text-gray-900 uppercase">{clientName}</h2></div>
+                    <div className="text-right"><span className="text-xs font-bold text-gray-400 uppercase">Data do Cadastro</span><p className="text-sm font-bold text-gray-900">{registrationDate}</p></div>
                 </div>
-            </div>
-            <div className="pdf-page" style={pageStyle(false, true)}>
-                <div style={contentWrapperStyle}>
-                    <h3 className={sectionTitle}>Medidas Corporais</h3>
-                    <div className="grid grid-cols-4 gap-4 mb-8">
+
+                {/* Physical Stats Grid */}
+                <div className="grid grid-cols-4 gap-4 mb-6 avoid-page-break">
+                    <div className="col-span-1"><span className={labelStyle}>Idade</span><span className={valueStyle}>{physical.age || '-'} anos</span></div>
+                    <div className="col-span-1"><span className={labelStyle}>Gênero</span><span className={valueStyle}>{physical.gender || '-'}</span></div>
+                    <div className="col-span-1"><span className={labelStyle}>Peso</span><span className={valueStyle}>{physical.weight || '-'} kg</span></div>
+                    <div className={gridItemStyle}><span className={labelStyle}>Altura</span><span className={valueStyle}>{physical.height || '-'} m</span></div>
+                </div>
+
+                {/* History Section */}
+                <h3 className={sectionTitle}>Histórico & Objetivos</h3>
+                <div className="space-y-4">
+                    <div className={`${gridItemStyle}`}><span className={labelStyle}>Objetivo Principal</span><p className={valueStyle}>{anamnesis.mainObjective || 'Não informado'}</p></div>
+                    <div className={`${gridItemStyle}`}><span className={labelStyle}>Rotina Diária</span><p className={`${valueStyle} whitespace-pre-wrap`}>{anamnesis.routine || 'Não informado'}</p></div>
+                    <div className={`${gridItemStyle}`}><span className={labelStyle}>Histórico de Treino / Lesões</span><p className={`${valueStyle} whitespace-pre-wrap`}>{anamnesis.trainingHistory || 'Não informado'}</p></div>
+                    <div className={`${gridItemStyle}`}><span className={labelStyle}>Preferências Alimentares / Alergias</span><p className={`${valueStyle} whitespace-pre-wrap`}>{anamnesis.foodPreferences || 'Não informado'}</p></div>
+                    <div className={`${gridItemStyle}`}><span className={labelStyle}>Medicamentos / Ergogênicos</span><p className={`${valueStyle} whitespace-pre-wrap`}>{anamnesis.ergogenics || 'Não informado'}</p></div>
+                </div>
+
+                {/* Measurements Section - Forces new page */}
+                <div style={{ pageBreakBefore: 'always' }}>
+                    {renderHeader("Medidas Corporais")}
+                    {/* <h3 className={sectionTitle.replace('mt-8', '')}>Medidas Corporais</h3> - Removed redundant title since header covers it, or keep it? Header says "Medidas Corporais" now. */}
+                    
+                    <div className="grid grid-cols-4 gap-4 mb-8 avoid-page-break mt-6">
                         <div className={gridItemStyle}><span className={labelStyle}>Gordura (BF)</span><span className={valueStyle}>{physical.bodyFat || '-'} %</span></div>
                         <div className={gridItemStyle}><span className={labelStyle}>Massa Muscular</span><span className={valueStyle}>{physical.muscleMass || '-'} kg</span></div>
                         <div className={gridItemStyle}><span className={labelStyle}>G. Visceral</span><span className={valueStyle}>{physical.visceralFat || '-'}</span></div>
                         <div className={gridItemStyle}><span className={labelStyle}>IMC</span><span className={valueStyle}>{physical.imc || '-'}</span></div>
                     </div>
 
-                    <div className="border border-gray-200 rounded-lg overflow-hidden avoid-page-break">
+                    <div className="border border-gray-200 rounded-lg overflow-hidden avoid-page-break mb-8">
                         <div className="bg-gray-100 p-2 text-center text-xs font-black uppercase tracking-widest text-gray-500 border-b border-gray-200">Circunferências (cm)</div>
                         <div className="grid grid-cols-4 divide-x divide-y divide-gray-200 text-center">
                             <div className="p-3"><span className="block text-[10px] text-gray-400 uppercase">Tórax</span><span className="font-bold text-gray-900">{measurements.thorax || '-'}</span></div>
@@ -154,12 +163,12 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
                         </div>
                     </div>
 
-                    <div className="mt-12 text-center border-t border-gray-100 pt-8">
+                    <div className="mt-12 text-center border-t border-gray-100 pt-8 avoid-page-break">
                         <p className="text-[10px] font-black uppercase text-gray-300 tracking-[0.3em]">Team VBR System © 2026</p>
                     </div>
                 </div>
             </div>
-        </>
+        </div>
     );
   };
 
