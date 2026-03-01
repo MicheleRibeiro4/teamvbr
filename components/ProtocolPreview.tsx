@@ -46,8 +46,9 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
         windowWidth: 794
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: 'css' }
-    };
+pagebreak: {
+  mode: ['css', 'legacy'],
+  avoid: ['tr', '.avoid-break'] };
 
     try {
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -85,8 +86,10 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
         WebkitTextSizeAdjust: '100%',
         textSizeAdjust: '100%',
         color: 'black',
-        pageBreakBefore: isFirst ? 'auto' : 'always',
         pageBreakInside: 'avoid'
+        breakInside: 'avoid',
+});
+      
     });
 
     const contentWrapperStyle: React.CSSProperties = {
@@ -115,7 +118,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '10mm',
+        padding: '0',
         position: 'relative',
         minHeight: '297mm'
     };
