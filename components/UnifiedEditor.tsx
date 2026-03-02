@@ -55,13 +55,6 @@ const UnifiedEditor: React.FC<Props> = ({
   return (
     <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 w-full">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 no-print">
-        <button 
-          onClick={onBack}
-          className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-[#d4af37] transition-colors"
-        >
-          <ChevronLeft size={16} /> Voltar
-        </button>
-
         <div className="flex items-center gap-3 bg-white/5 px-4 py-2 rounded-xl border border-white/10 self-start md:self-auto">
           <Settings2 size={14} className="text-[#d4af37]" />
           <span className="text-[9px] font-black uppercase tracking-widest text-white/60">Editor de Protocolo</span>

@@ -71,31 +71,33 @@ const StudentDashboard: React.FC<Props> = ({ data, setView }) => {
       </div>
 
       {/* GRID DE AÇÕES */}
-      <div className="grid grid-cols-1 gap-4">
+      <div className="mt-8">
         
         {/* 1. GERENCIAR ALUNO */}
         <button 
           onClick={() => setView('manage')}
-          className={`group relative bg-[#111] p-8 rounded-[2rem] border border-white/5 ${hoverBorder} transition-all hover:bg-white/[0.02] text-left overflow-hidden h-[280px] flex flex-col justify-between cursor-pointer`}
+          className={`w-full group relative bg-[#111] p-10 rounded-[2.5rem] border border-white/5 ${hoverBorder} transition-all hover:bg-white/[0.02] text-left overflow-hidden h-[220px] flex flex-row items-center justify-between cursor-pointer shadow-2xl`}
         >
-          <div className="absolute -right-6 -bottom-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity duration-500 scale-150 pointer-events-none">
-             <Settings2 size={200} />
+          <div className="absolute -right-20 -bottom-20 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity duration-500 scale-150 pointer-events-none">
+             <Settings2 size={300} />
           </div>
 
-          <div>
-             <div className={`w-14 h-14 ${iconBg} text-black rounded-2xl flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(255,255,255,0.1)] group-hover:scale-110 transition-transform duration-300`}>
-               <Settings2 size={28} strokeWidth={2} />
+          <div className="flex items-center gap-8 relative z-10">
+             <div className={`w-20 h-20 ${iconBg} text-black rounded-3xl flex items-center justify-center shadow-[0_0_30px_rgba(212,175,55,0.2)] group-hover:scale-110 transition-transform duration-300`}>
+               <Settings2 size={40} strokeWidth={2} />
              </div>
-             <h3 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">
-               Painel do Aluno
-             </h3>
-             <p className="text-xs text-white/40 leading-relaxed font-medium max-w-md">
-               Acesse o editor completo de protocolos, anamnese, medidas e o novo acompanhamento 360º.
-             </p>
+             <div>
+                <h3 className="text-3xl font-black text-white uppercase tracking-tighter mb-2">
+                  Painel do Aluno
+                </h3>
+                <p className="text-sm text-white/40 leading-relaxed font-medium max-w-lg">
+                  Acesso centralizado para edição de protocolos, anamnese, registro de medidas e acompanhamento 360º.
+                </p>
+             </div>
           </div>
 
-          <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] ${accentColor} mt-4 group-hover:translate-x-2 transition-transform`}>
-            Acessar Painel <ArrowRight size={12} />
+          <div className={`hidden md:flex items-center gap-3 text-xs font-black uppercase tracking-[0.2em] ${accentColor} bg-white/5 px-6 py-4 rounded-2xl border border-white/5 group-hover:bg-[#d4af37] group-hover:text-black transition-all`}>
+            Acessar <ArrowRight size={16} />
           </div>
         </button>
 

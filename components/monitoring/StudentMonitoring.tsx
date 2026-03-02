@@ -73,21 +73,9 @@ const StudentMonitoring: React.FC<Props> = ({ studentId, currentProtocol, onUpda
   return (
     <div className="animate-in fade-in duration-500">
       {/* Header */}
-      <div className="bg-[#111] border border-white/10 rounded-[2.5rem] p-8 mb-8 shadow-2xl relative overflow-hidden">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-6 relative z-10">
-          <div className="flex items-center gap-6">
-            <div className="w-20 h-20 bg-[#d4af37] rounded-2xl flex items-center justify-center text-black shadow-[0_0_30px_rgba(212,175,55,0.3)]">
-              <User size={40} />
-            </div>
-            <div>
-              <h1 className="text-3xl font-black text-white uppercase tracking-tighter">{student?.name || currentProtocol.clientName}</h1>
-              <p className="text-white/40 text-xs font-bold uppercase tracking-widest mt-1">
-                Acompanhamento Contínuo • {versions.length} Protocolos • {feedbacks.length} Feedbacks
-              </p>
-            </div>
-          </div>
-          
-          <div className="flex gap-2 bg-black/40 p-1.5 rounded-xl border border-white/5">
+      <div className="bg-[#111] border border-white/10 rounded-[2.5rem] p-4 mb-8 shadow-2xl relative overflow-hidden">
+        <div className="flex justify-center relative z-10">
+          <div className="flex flex-wrap justify-center gap-2 bg-black/40 p-1.5 rounded-xl border border-white/5">
             {[
               { id: 'evolution', label: 'Evolução', icon: Activity },
               { id: 'feedbacks', label: 'Feedbacks', icon: MessageSquare },
