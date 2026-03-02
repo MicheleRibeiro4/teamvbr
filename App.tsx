@@ -324,11 +324,7 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
           
           {activeView !== 'home' && activeView !== 'generator' && (
             <button 
-              onClick={() => {
-                  if (activeView === 'student-dashboard') setActiveView('home');
-                  else if (activeView === 'manage' || activeView === 'evolution') setActiveView('student-dashboard');
-                  else setActiveView('home');
-              }}
+              onClick={() => setActiveView('home')}
               className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-[#d4af37] transition-colors"
             >
               <ChevronLeft size={16} /> Voltar
