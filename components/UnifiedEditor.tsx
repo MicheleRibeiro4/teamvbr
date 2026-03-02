@@ -1,8 +1,8 @@
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { ProtocolData } from '../types';
 import ProtocolForm from './ProtocolForm';
 import { ChevronLeft, Settings2, FileText, Activity, Dumbbell } from 'lucide-react';
+import StudentMonitoring from './monitoring/StudentMonitoring';
 
 interface Props {
   data: ProtocolData;
@@ -23,7 +23,7 @@ const UnifiedEditor: React.FC<Props> = ({
   onSelectHistory = () => {},
   onDeleteHistory = () => {}
 }) => {
-  const [activeTab, setActiveTab] = useState<'identificacao' | 'anamnese' | 'medidas' | 'nutricao' | 'treino'>('identificacao');
+  const [activeTab, setActiveTab] = useState<'identificacao' | 'anamnese' | 'medidas' | 'nutricao' | 'treino' | 'acompanhamento'>('identificacao');
   const [localData, setLocalData] = useState<ProtocolData>(data);
   const localDataRef = useRef(data);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -80,6 +80,7 @@ const UnifiedEditor: React.FC<Props> = ({
                     { id: 'medidas', label: 'Medidas', fullLabel: 'Medidas', icon: Dumbbell },
                     { id: 'nutricao', label: 'Dieta', fullLabel: 'Nutrição', icon: Activity },
                     { id: 'treino', label: 'Treino', fullLabel: 'Treino', icon: Dumbbell },
+                    { id: 'acompanhamento', label: '360º', fullLabel: 'Acompanhamento', icon: Activity },
                 ].map((tab) => (
                     <button 
                         key={tab.id}
@@ -93,13 +94,22 @@ const UnifiedEditor: React.FC<Props> = ({
                 ))}
             </div>
 
-            <ProtocolForm 
-                data={localData} 
-                onChange={handleLocalChange} 
-                activeTab={activeTab as any}
-                onTabChange={(t) => setActiveTab(t)}
-                hideTabs={true} 
-            />
+            {activeTab === 'acompanhamento' ? (
+                <StudentMonitoring 
+                    studentId={data.studentId || data.id} 
+                    currentProtocol={data}
+                    onUpdateProtocol={(p) => onChange(p)}
+                    onBack={() => {}} // No back button needed inside tab
+                />
+            ) : (
+                <ProtocolForm 
+                    data={localData} 
+                    onChange={handleLocalChange} 
+                    activeTab={activeTab as any}
+                    onTabChange={(t) => setActiveTab(t)}
+                    hideTabs={true} 
+                />
+            )}
           </div>
         </div>
       </div>

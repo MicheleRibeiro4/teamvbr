@@ -71,7 +71,7 @@ const StudentDashboard: React.FC<Props> = ({ data, setView }) => {
       </div>
 
       {/* GRID DE AÇÕES */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4">
         
         {/* 1. GERENCIAR ALUNO */}
         <button 
@@ -87,69 +87,15 @@ const StudentDashboard: React.FC<Props> = ({ data, setView }) => {
                <Settings2 size={28} strokeWidth={2} />
              </div>
              <h3 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">
-               Editor Completo
+               Painel do Aluno
              </h3>
-             <p className="text-xs text-white/40 leading-relaxed font-medium max-w-xs">
-               Ajuste treinos, dieta, suplementação e gere o contrato PDF.
+             <p className="text-xs text-white/40 leading-relaxed font-medium max-w-md">
+               Acesse o editor completo de protocolos, anamnese, medidas e o novo acompanhamento 360º.
              </p>
           </div>
 
           <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] ${accentColor} mt-4 group-hover:translate-x-2 transition-transform`}>
-            Acessar Editor <ArrowRight size={12} />
-          </div>
-        </button>
-
-        {/* 2. EVOLUÇÃO E CHECK-IN */}
-        <button 
-          onClick={() => setView('evolution')}
-          className={`group relative bg-[#111] p-8 rounded-[2rem] border border-white/5 ${hoverBorder} transition-all hover:bg-white/[0.02] text-left overflow-hidden h-[280px] flex flex-col justify-between cursor-pointer`}
-        >
-          <div className="absolute -right-6 -bottom-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity duration-500 scale-150 pointer-events-none">
-             <TrendingUp size={200} />
-          </div>
-
-          <div>
-             <div className={`w-14 h-14 bg-white/10 text-white rounded-2xl flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(255,255,255,0.05)] group-hover:scale-110 transition-transform duration-300 border border-white/10`}>
-               <Activity size={28} strokeWidth={2} className={accentColor} />
-             </div>
-             <h3 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">
-               Acompanhar Evolução
-             </h3>
-             <p className="text-xs text-white/40 leading-relaxed font-medium max-w-xs">
-               Registre novos check-ins, compare fotos, medidas e visualize gráficos de progresso.
-             </p>
-          </div>
-
-          <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] ${accentColor} mt-4 group-hover:translate-x-2 transition-transform`}>
-            Ver Progresso <ArrowRight size={12} />
-          </div>
-        </button>
-
-        {/* 3. NOVO: ACOMPANHAMENTO COMPLETO */}
-        <button 
-          onClick={() => setView('monitoring')}
-          className={`md:col-span-2 group relative bg-[#d4af37] p-8 rounded-[2rem] border border-[#d4af37] transition-all hover:scale-[1.01] text-left overflow-hidden h-[180px] flex flex-row items-center justify-between cursor-pointer shadow-[0_0_40px_rgba(212,175,55,0.15)]`}
-        >
-          <div className="absolute -right-10 -bottom-10 opacity-[0.1] group-hover:opacity-[0.15] transition-opacity duration-500 scale-150 pointer-events-none text-black">
-             <Activity size={250} />
-          </div>
-
-          <div className="relative z-10">
-             <div className="flex items-center gap-4 mb-2">
-               <div className="bg-black text-[#d4af37] p-3 rounded-xl">
-                 <Activity size={24} />
-               </div>
-               <h3 className="text-3xl font-black text-black uppercase tracking-tighter">
-                 Acompanhamento 360º
-               </h3>
-             </div>
-             <p className="text-sm text-black/60 font-bold max-w-lg leading-relaxed ml-1">
-               Nova central de monitoramento: Feedbacks, Histórico Completo, Linha do Tempo e Gestão de Protocolos.
-             </p>
-          </div>
-
-          <div className="bg-black text-[#d4af37] px-6 py-3 rounded-xl font-black uppercase text-xs tracking-widest flex items-center gap-2 group-hover:scale-105 transition-transform shadow-xl relative z-10">
-            Acessar Painel <ArrowRight size={14} />
+            Acessar Painel <ArrowRight size={12} />
           </div>
         </button>
 
