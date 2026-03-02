@@ -67,14 +67,21 @@ export const db = {
     const updatedAt = new Date().toISOString();
     const updatedProtocol = { ...protocol, updatedAt };
 
+    // Prepara o objeto para salvar, incluindo os novos campos relacionais se existirem
+    const payload: any = {
+      id: protocol.id,
+      client_name: protocol.clientName || 'Sem Nome',
+      updated_at: updatedAt,
+      data: updatedProtocol
+    };
+
+    if (protocol.studentId) payload.student_id = protocol.studentId;
+    if (protocol.version) payload.version = protocol.version;
+    if (protocol.isOriginal !== undefined) payload.is_original = protocol.isOriginal;
+
     const { error } = await supabase
       .from('protocols')
-      .upsert({
-        id: protocol.id,
-        client_name: protocol.clientName || 'Sem Nome',
-        updated_at: updatedAt,
-        data: updatedProtocol
-      }, { onConflict: 'id' });
+      .upsert(payload, { onConflict: 'id' });
 
     if (error) {
       console.error("Supabase Save Error:", error);
@@ -83,6 +90,114 @@ export const db = {
       }
       throw new Error(error.message);
     }
+  },
+
+  // --- NOVOS MÉTODOS PARA ACOMPANHAMENTO ---
+
+  async getStudent(studentId: string): Promise<any> {
+    if (!supabase) return null;
+    const { data, error } = await supabase.from('students').select('*').eq('id', studentId).single();
+    if (error) console.error("Erro ao buscar aluno:", error);
+    return data;
+  },
+
+  async createStudent(name: string): Promise<string | null> {
+    if (!supabase) return null;
+    const { data, error } = await supabase.from('students').insert({ name }).select('id').single();
+    if (error) {
+        console.error("Erro ao criar aluno:", error);
+        return null;
+    }
+    return data.id;
+  },
+
+  async getFeedbacks(studentId: string): Promise<any[]> {
+    if (!supabase) return [];
+    const { data, error } = await supabase
+        .from('feedbacks')
+        .select('*')
+        .eq('student_id', studentId)
+        .order('feedback_date', { ascending: false });
+    
+    if (error) {
+        console.error("Erro ao buscar feedbacks:", error);
+        return [];
+    }
+    return data || [];
+  },
+
+  async saveFeedback(feedback: any): Promise<void> {
+    if (!supabase) return;
+    const { error } = await supabase.from('feedbacks').upsert({
+        id: feedback.id,
+        student_id: feedback.studentId,
+        feedback_date: feedback.date,
+        diet_adherence: feedback.dietAdherence,
+        training_adherence: feedback.trainingAdherence,
+        sleep_quality: feedback.sleepQuality,
+        energy_level: feedback.energyLevel,
+        notes: feedback.notes,
+        created_at: feedback.createdAt || new Date().toISOString()
+    });
+    if (error) throw error;
+  },
+
+  async getMeasurements(studentId: string): Promise<any[]> {
+    if (!supabase) return [];
+    const { data, error } = await supabase
+        .from('body_measurements')
+        .select('*')
+        .eq('student_id', studentId)
+        .order('created_at', { ascending: true });
+    
+    if (error) {
+        console.error("Erro ao buscar medidas:", error);
+        return [];
+    }
+    return data || [];
+  },
+
+  async saveMeasurement(measurement: any): Promise<void> {
+    if (!supabase) return;
+    const { error } = await supabase.from('body_measurements').insert({
+        student_id: measurement.studentId,
+        weight: measurement.weight,
+        chest: measurement.chest,
+        waist: measurement.waist,
+        abdomen: measurement.abdomen,
+        hip: measurement.hip,
+        arm_right: measurement.armRight,
+        arm_left: measurement.armLeft,
+        thigh_right: measurement.thighRight,
+        thigh_left: measurement.thighLeft,
+        calf: measurement.calf,
+        body_fat: measurement.bodyFat,
+        created_at: measurement.date || new Date().toISOString()
+    });
+    if (error) throw error;
+  },
+
+  async getProtocolVersions(studentId: string): Promise<ProtocolData[]> {
+    if (!supabase) return [];
+    const { data, error } = await supabase
+        .from('protocols')
+        .select('*')
+        .eq('student_id', studentId)
+        .order('version', { ascending: false });
+
+    if (error) {
+        console.error("Erro ao buscar versões:", error);
+        return [];
+    }
+
+    return (data || []).map(item => ({
+        ...item.data,
+        id: item.id,
+        studentId: item.student_id,
+        version: item.version,
+        isOriginal: item.is_original,
+        updatedAt: item.updated_at
+    }));
   },
 
   async deleteProtocol(id: string): Promise<void> {

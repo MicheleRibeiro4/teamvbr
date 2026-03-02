@@ -125,6 +125,34 @@ const StudentDashboard: React.FC<Props> = ({ data, setView }) => {
           </div>
         </button>
 
+        {/* 3. NOVO: ACOMPANHAMENTO COMPLETO */}
+        <button 
+          onClick={() => setView('monitoring')}
+          className={`md:col-span-2 group relative bg-[#d4af37] p-8 rounded-[2rem] border border-[#d4af37] transition-all hover:scale-[1.01] text-left overflow-hidden h-[180px] flex flex-row items-center justify-between cursor-pointer shadow-[0_0_40px_rgba(212,175,55,0.15)]`}
+        >
+          <div className="absolute -right-10 -bottom-10 opacity-[0.1] group-hover:opacity-[0.15] transition-opacity duration-500 scale-150 pointer-events-none text-black">
+             <Activity size={250} />
+          </div>
+
+          <div className="relative z-10">
+             <div className="flex items-center gap-4 mb-2">
+               <div className="bg-black text-[#d4af37] p-3 rounded-xl">
+                 <Activity size={24} />
+               </div>
+               <h3 className="text-3xl font-black text-black uppercase tracking-tighter">
+                 Acompanhamento 360º
+               </h3>
+             </div>
+             <p className="text-sm text-black/60 font-bold max-w-lg leading-relaxed ml-1">
+               Nova central de monitoramento: Feedbacks, Histórico Completo, Linha do Tempo e Gestão de Protocolos.
+             </p>
+          </div>
+
+          <div className="bg-black text-[#d4af37] px-6 py-3 rounded-xl font-black uppercase text-xs tracking-widest flex items-center gap-2 group-hover:scale-105 transition-transform shadow-xl relative z-10">
+            Acessar Painel <ArrowRight size={14} />
+          </div>
+        </button>
+
       </div>
     </div>
   );

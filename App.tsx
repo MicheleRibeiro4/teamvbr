@@ -23,7 +23,9 @@ import {
   UserPlus
 } from 'lucide-react';
 
-type ViewMode = 'home' | 'search' | 'manage' | 'settings' | 'student-dashboard' | 'evolution' | 'generator';
+import StudentMonitoring from './components/monitoring/StudentMonitoring';
+
+type ViewMode = 'home' | 'search' | 'manage' | 'settings' | 'student-dashboard' | 'evolution' | 'generator' | 'monitoring';
 
 const App: React.FC = () => {
   const getPageType = () => {
@@ -419,6 +421,15 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
               onDeleteHistory={(id) => deleteStudent(id)}
               onOpenEditor={() => setActiveView('manage')}
           />
+        )}
+
+        {activeView === 'monitoring' && data.id && (
+           <StudentMonitoring 
+              studentId={data.studentId || data.id} 
+              currentProtocol={data}
+              onUpdateProtocol={(p) => { setData(p); handleSave(true, p); }}
+              onBack={() => setActiveView('student-dashboard')}
+           />
         )}
 
       </main>

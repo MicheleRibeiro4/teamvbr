@@ -99,8 +99,54 @@ export interface Anamnesis {
   medications: string; // Medicamentos de uso contínuo
 }
 
+export interface Feedback {
+  id?: string;
+  studentId: string;
+  date: string;
+  weight: string;
+  dietAdherence: 'Boa' | 'Média' | 'Baixa';
+  trainingAdherence: 'Boa' | 'Média' | 'Baixa';
+  sleepQuality: string;
+  energyLevel: string;
+  notes: string;
+  difficulties?: string;
+  strategies?: string;
+  author?: string; // Quem registrou
+  createdAt?: string;
+}
+
+export interface BodyMeasurementEntry {
+  id?: string;
+  studentId: string;
+  date: string;
+  weight: string;
+  chest: string;
+  waist: string;
+  abdomen: string;
+  hip: string;
+  armRight: string;
+  armLeft: string;
+  thighRight: string;
+  thighLeft: string;
+  calf: string;
+  bodyFat: string;
+  photoUrl?: string;
+  createdAt?: string;
+}
+
+export interface Student {
+  id: string;
+  name: string;
+  phone?: string;
+  email?: string;
+  createdAt: string;
+}
+
 export interface ProtocolData {
   id: string;
+  studentId?: string; // Link com a tabela students
+  version?: number; // Versão do protocolo
+  isOriginal?: boolean; // Se é o protocolo inicial
   createdAt: string; // Data de inclusão no sistema (imutável)
   updatedAt: string; // Data da última modificação
   privateNotes: string;
