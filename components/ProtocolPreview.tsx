@@ -436,11 +436,11 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
         
         {/* 
            AJUSTE CRÍTICO DE CORTE LATERAL:
-           Posicionamento absoluto com z-index negativo at top 0 left 0.
+           Posicionamento fixed com z-index negativo at top 0 left 0.
            Fixed Width 210mm to ensure A4 proportions at 96 DPI.
            Always render this to allow ref.current.download() to work even without customTrigger
         */}
-        <div style={{ position: 'absolute', left: 0, top: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none' }}>
+        <div style={{ position: 'fixed', left: 0, top: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none' }}>
             <div 
                 ref={pdfRef} 
                 className="bg-white"

@@ -203,7 +203,7 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
                 {showModal && typeof document !== 'undefined' && createPortal(modalContent, document.body)}
             </>
         )}
-        <div style={{ position: 'absolute', left: 0, top: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none' }}>
+        <div style={{ position: 'fixed', left: 0, top: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none' }}>
             <div 
                 ref={pdfRef} 
                 className="bg-white"
