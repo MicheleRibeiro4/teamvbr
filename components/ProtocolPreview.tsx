@@ -257,7 +257,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
 
                     {/* PLANO ALIMENTAR */}
                     {meals.length > 0 && (
-                        <div style={{ pageBreakBefore: 'always' }}>
+                        <div style={{ pageBreakBefore: 'always', paddingTop: '20mm' }}>
                             {renderHeader("Plano Alimentar Diário")}
                             {/* <div className={sectionTitleStyle.replace('mt-8', '')}>PLANO ALIMENTAR DIÁRIO</div> */}
                             
@@ -289,7 +289,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
 
                     {/* SUPLEMENTAÇÃO E DICAS */}
                     {(supplements.length > 0 || tips.length > 0) && (
-                        <div style={{ pageBreakBefore: 'always' }}>
+                        <div style={{ pageBreakBefore: 'always', paddingTop: '20mm' }}>
                             {renderHeader("Suplementação & Recomendações")}
                             {/* <div className={sectionTitleStyle.replace('mt-8', '')}>SUPLEMENTAÇÃO E RECOMENDAÇÕES</div> */}
                             
@@ -329,7 +329,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
 
                     {/* TREINO */}
                     {trainingDays.length > 0 && (
-                        <div style={{ pageBreakBefore: 'always' }}>
+                        <div style={{ pageBreakBefore: 'always', paddingTop: '20mm' }}>
                             {renderHeader("Divisão de Treino")}
                             {/* <div className={sectionTitleStyle.replace('mt-8', '')}>DIVISÃO DE TREINO</div> */}
                             <p className="text-xs text-gray-500 mb-6 uppercase font-bold avoid-page-break mt-2">Frequência: {safeData.trainingFrequency || '5x na semana'}</p>

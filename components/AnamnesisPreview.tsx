@@ -131,7 +131,7 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
                 </div>
 
                 {/* Measurements Section - Forces new page */}
-                <div style={{ pageBreakBefore: 'always' }}>
+                <div style={{ pageBreakBefore: 'always', paddingTop: '20mm' }}>
                     {renderHeader("Medidas Corporais")}
                     {/* <h3 className={sectionTitle.replace('mt-8', '')}>Medidas Corporais</h3> - Removed redundant title since header covers it, or keep it? Header says "Medidas Corporais" now. */}
                     

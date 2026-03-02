@@ -69,7 +69,11 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
         scale: 2, 
         useCORS: true, 
         letterRendering: true,
-        windowWidth: 794
+        windowWidth: 794,
+        scrollX: 0,
+        scrollY: 0,
+        x: 0,
+        y: 0
       },
       jsPDF: { unit: 'px', format: [794, 1123], orientation: 'portrait' }, // 1123px is closer to A4 height at 96dpi
       pagebreak: { mode: ['css', 'legacy'], avoid: ['.avoid-page-break'] }
@@ -99,6 +103,7 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
             className="pdf-page bg-white text-black" 
             style={{ 
                 width: '794px', 
+                minHeight: '1123px',
                 padding: '20mm 15mm', // Margens A4: Superior/Inferior 20mm, Laterais 15mm
                 boxSizing: 'border-box',
                 fontFamily: 'Arial, Helvetica, sans-serif', 
@@ -107,25 +112,29 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
                 textAlign: 'justify'
             }}
         >
-            <div className="mb-6 avoid-page-break" style={{ pageBreakInside: 'avoid' }}>
+            <div className="mb-4 avoid-page-break" style={{ pageBreakInside: 'avoid' }}>
                 <h1 className="font-bold text-center text-[14pt] mb-8 uppercase">CONTRATO DE ASSESSORIA EM ESTILO DE VIDA SAUDÁVEL</h1>
                 <div className="mb-4"><p className="font-bold mb-1">CONTRATANTE:</p><p>Nome: {clientName}</p><p>CPF: {contract.cpf || '__________'}</p><p>Telefone: {contract.phone || '__________'}</p><p>Endereço: {fullAddress}</p></div>
                 <div className="mb-6"><p className="font-bold mb-1">CONTRATADO:</p><p>Nome: {CONSULTANT_DEFAULT.consultantName}</p><p>CPF: {CONSULTANT_DEFAULT.consultantCpf}</p><p>E-mail: {CONSULTANT_DEFAULT.consultantEmail}</p><p>Endereço: {CONSULTANT_DEFAULT.consultantAddress}</p></div>
-                <p className="mb-4">As partes acima identificadas celebram o presente contrato, mediante as seguintes cláusulas e condições:</p>
+                <p className="mb-2">As partes acima identificadas celebram o presente contrato, mediante as seguintes cláusulas e condições:</p>
             </div>
 
-            <div className="mb-8">
+            <div className="mb-4">
             {getCleanContractText().split('\n').map((line, i) => {
                 const trimmed = line.trim();
                 if (trimmed === '') return null;
                 
                 const upperLine = trimmed.toUpperCase();
                 const isTitle = upperLine.startsWith('CLÁUSULA') || upperLine.startsWith('CLAUSULA');
+                
+                // If it's the very first line and it's a title, reduce margin top
+                const isFirstLine = i === 0;
+                const titleClass = isFirstLine ? 'font-bold mt-2 mb-2' : 'font-bold mt-4 mb-2';
 
                 return (
                     <p 
                         key={i} 
-                        className={`${isTitle ? 'font-bold mt-6 mb-2' : 'mb-3'} avoid-page-break`}
+                        className={`${isTitle ? titleClass : 'mb-2'} avoid-page-break`}
                         style={{ pageBreakInside: 'avoid' }}
                     >
                         {line}
@@ -134,7 +143,7 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
             })}
             </div>
 
-            <div className="signature-block avoid-page-break mt-12" style={{ pageBreakInside: 'avoid' }}>
+            <div className="signature-block avoid-page-break mt-6" style={{ pageBreakInside: 'avoid' }}>
                 <p className="mb-8">E, por estarem justas e contratadas, as partes assinam o presente instrumento em 2 (duas) vias de igual teor e forma.</p>
                 <div className="mb-8"><p>Vespasiano, Minas Gerais</p><p>Data: {new Date().toLocaleDateString('pt-BR')}</p></div>
                 <div className="mt-12 space-y-12">
@@ -161,7 +170,7 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
                                 <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-500"><X size={24} /></button>
                             </div>
                             <div className="flex-1 overflow-auto bg-gray-500/20 custom-scrollbar-light flex">
-                                <div className="m-auto p-8">
+                                <div className="m-auto p-4 md:p-8 min-w-max">
                                     {renderContent()}
                                 </div>
                             </div>
@@ -174,13 +183,12 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
                 )}
             </>
         )}
-        <div style={{ position: 'absolute', left: 0, top: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none' }}>
+        <div style={{ position: 'fixed', left: '-9999px', top: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none' }}>
             <div 
                 ref={contractRef} 
                 className="bg-white"
                 style={{
-                    width: '794px',
-                    // Removed padding here to avoid double padding. Padding is now inside renderContent.
+                    width: '794px'
                 }}
             >
                 {renderContent()}
