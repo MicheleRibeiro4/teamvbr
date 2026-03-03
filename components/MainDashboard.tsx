@@ -20,11 +20,8 @@ import {
   Eye,
   ChevronLeft,
   Sparkles,
-  Lock,
-  Database
+  Lock
 } from 'lucide-react';
-
-import DataImportModal from './DataImportModal';
 
 interface Props {
   protocols: ProtocolData[];
@@ -41,7 +38,6 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [previewStudent, setPreviewStudent] = useState<ProtocolData | null>(null);
   const [dashboardView, setDashboardView] = useState<'default' | 'active_protocols' | 'financial'>('default');
-  const [showImportModal, setShowImportModal] = useState(false);
 
   const activeProtocols = protocols
     .filter(p => p.contract?.status === 'Ativo')
@@ -586,7 +582,6 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
         </div>
         <div className="relative z-10 flex flex-wrap justify-center gap-2 w-full md:w-auto">
           <button onClick={() => onNew()} className="bg-[#d4af37] text-black px-4 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-[0.2em] hover:scale-105 transition-all shadow-[0_0_30px_rgba(212,175,55,0.2)] flex items-center justify-center gap-2 group"><UserPlus size={14}/> Novo Aluno</button>
-          <button onClick={() => setShowImportModal(true)} className="bg-white/5 border border-white/10 text-white px-4 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-[0.2em] hover:bg-white/10 transition-all flex items-center justify-center gap-2"><Database size={14}/> Importar</button>
           <button onClick={onList} className="bg-white/5 border border-white/10 text-white px-4 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-[0.2em] hover:bg-white/10 transition-all flex items-center justify-center gap-2"><Search size={14}/> Buscar</button>
           <button onClick={() => {
              const origin = typeof window !== 'undefined' ? window.location.origin : '';
@@ -597,18 +592,6 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
           <button onClick={handleCopyLink} className="bg-[#111] border border-white/10 text-[#d4af37] px-4 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-[0.2em] hover:bg-white/5 transition-all flex items-center justify-center gap-2 shadow-lg" title="Copiar Link de Cadastro"><LinkIcon size={14}/> Cadastro</button>
         </div>
       </div>
-
-      {/* MODAL IMPORT */}
-      {showImportModal && (
-          <DataImportModal 
-              onClose={() => setShowImportModal(false)} 
-              onSuccess={async () => {
-                  setShowImportModal(false);
-                  await onReload(); // Refresh data
-                  onList(); // Go to list view
-              }} 
-          />
-      )}
 
       {/* MODAL PREVIEW */}
       {previewStudent && (

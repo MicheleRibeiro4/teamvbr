@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Upload, Loader2, CheckCircle2, AlertTriangle, FileText } from 'lucide-react';
+import { X, Upload, Loader2, CheckCircle2, AlertTriangle, FileText, Copy } from 'lucide-react';
 import { db } from '../services/db';
 import { ProtocolData } from '../types';
 import Papa from 'papaparse';
@@ -14,8 +14,9 @@ const DataImportModal: React.FC<Props> = ({ onClose, onSuccess }) => {
   const [isImporting, setIsImporting] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0, success: 0, errors: 0 });
   const [logs, setLogs] = useState<string[]>([]);
+  const [generatedSql, setGeneratedSql] = useState('');
 
-  const [view, setView] = useState<'input' | 'processing'>('input');
+  const [view, setView] = useState<'input' | 'processing' | 'sql'>('input');
 
   const parseCSV = (text: string) => {
     const trimmed = text.trim();
@@ -36,12 +37,15 @@ const DataImportModal: React.FC<Props> = ({ onClose, onSuccess }) => {
                 // If there's a nested 'data' or 'json' field, try to use that
                 if (item.data || item.json) {
                         const rawData = item.data || item.json;
+                        // Remove raw data strings to avoid nesting/duplication
+                        const { data: _d, json: _j, ...cleanItem } = item;
+
                         if (typeof rawData === 'object') {
-                            protocolData = { ...rawData, ...item }; // Merge metadata
+                            protocolData = { ...rawData, ...cleanItem }; // Merge metadata
                         } else if (typeof rawData === 'string') {
                             try {
                                 const parsed = JSON.parse(rawData);
-                                protocolData = { ...parsed, ...item };
+                                protocolData = { ...parsed, ...cleanItem };
                             } catch (e) {
                                 // Keep item as is if parsing fails
                             }
@@ -60,9 +64,8 @@ const DataImportModal: React.FC<Props> = ({ onClose, onSuccess }) => {
             if (errorMsg.includes('Unexpected end of JSON input') || errorMsg.includes('Unterminated string')) {
                 setLogs(prev => [...prev, `❌ Erro de JSON: O conteúdo parece estar incompleto (cortado). Verifique se copiou todo o texto.`]);
             } else {
-                setLogs(prev => [...prev, `❌ Erro ao ler JSON: ${errorMsg}`]);
+                // Fallback to CSV parsing if JSON fails (maybe it just started with { but is CSV?)
             }
-            return []; // Stop processing if it looks like JSON but failed
         }
     }
 
@@ -141,6 +144,11 @@ const DataImportModal: React.FC<Props> = ({ onClose, onSuccess }) => {
             if (!jsonData.clientName && rowName) jsonData.clientName = rowName;
             if (!jsonData.updatedAt && rowDate) jsonData.updatedAt = rowDate;
 
+            // Validation Warning
+            if (!jsonData.meals && !jsonData.tips && !jsonData.anamnesis) {
+                setLogs(prev => [...prev, `⚠️ Aviso (Linha ${index + 1}): O registro de "${jsonData.clientName}" parece vazio (sem refeições/dicas).`]);
+            }
+
             parsedData.push(jsonData);
         } catch (e) {
             setLogs(prev => [...prev, `❌ Erro na linha ${index + 1}: ${(e as Error).message}`]);
@@ -150,10 +158,47 @@ const DataImportModal: React.FC<Props> = ({ onClose, onSuccess }) => {
     return parsedData;
   };
 
-  const handleImport = async () => {
+  const generateSQL = (data: any[]) => {
+      if (!data || data.length === 0) return '';
+      
+      let sql = `-- SCRIPT DE IMPORTAÇÃO GERADO EM ${new Date().toLocaleString()}\n`;
+      sql += `-- Execute este script no SQL Editor do Supabase\n\n`;
+      sql += `INSERT INTO public.protocols (id, client_name, updated_at, data)\nVALUES\n`;
+      
+      const values = data.map((item, index) => {
+          const id = item.id;
+          const name = (item.clientName || 'Sem Nome').replace(/'/g, "''"); // Escape quotes
+          const date = item.updatedAt || new Date().toISOString();
+          
+          // Clean up the object for JSONB storage
+          // Remove raw 'data'/'json' strings if they exist to prevent recursion/bloat
+          // Ensure we are saving the UNWRAPPED data (tips, meals, etc)
+          const { data: _d, json: _j, ...rest } = item;
+          const jsonObject = {
+              ...rest,
+              id,
+              clientName: item.clientName || 'Sem Nome',
+              updatedAt: date
+          };
+          
+          const json = JSON.stringify(jsonObject).replace(/'/g, "''"); // Escape quotes for SQL
+          
+          return `  ('${id}', '${name}', '${date}', '${json}'::jsonb)${index < data.length - 1 ? ',' : ''}`;
+      });
+      
+      sql += values.join('\n');
+      sql += `\nON CONFLICT (id) DO UPDATE SET\n`;
+      sql += `  client_name = EXCLUDED.client_name,\n`;
+      sql += `  updated_at = EXCLUDED.updated_at,\n`;
+      sql += `  data = EXCLUDED.data;\n`;
+      
+      return sql;
+  };
+
+  const handleProcess = async (mode: 'import' | 'sql') => {
     if (!csvContent.trim()) return;
     
-    console.log("Starting import process...");
+    console.log("Starting process...");
     setView('processing');
     setIsImporting(true);
     setLogs([]);
@@ -162,7 +207,7 @@ const DataImportModal: React.FC<Props> = ({ onClose, onSuccess }) => {
     await new Promise(resolve => setTimeout(resolve, 100));
 
     try {
-        console.log("Parsing CSV content...");
+        console.log("Parsing content...");
         const dataToImport = parseCSV(csvContent);
         console.log("Parsed data:", dataToImport.length, "records");
         
@@ -170,6 +215,14 @@ const DataImportModal: React.FC<Props> = ({ onClose, onSuccess }) => {
         
         if (dataToImport.length === 0) {
             setLogs(prev => [...prev, "⚠️ Nenhum dado válido encontrado para importar. Verifique o formato do CSV."]);
+            setIsImporting(false);
+            return;
+        }
+
+        if (mode === 'sql') {
+            const sql = generateSQL(dataToImport);
+            setGeneratedSql(sql);
+            setView('sql');
             setIsImporting(false);
             return;
         }
@@ -201,10 +254,6 @@ const DataImportModal: React.FC<Props> = ({ onClose, onSuccess }) => {
         if (errorCount === 0) {
             setTimeout(() => {
                 onSuccess();
-                // onClose is called by parent after onSuccess logic if needed, or we can call it here.
-                // But in MainDashboard, onSuccess calls onClose. So we don't need to call onClose here if onSuccess handles it.
-                // However, the original code called onClose inside setTimeout.
-                // Let's keep it consistent with the prop definition.
             }, 2000);
         }
 
@@ -228,7 +277,7 @@ const DataImportModal: React.FC<Props> = ({ onClose, onSuccess }) => {
                 </div>
                 <div>
                     <h2 className="text-xl font-black uppercase tracking-tighter text-white">Importar Dados</h2>
-                    <p className="text-xs text-white/40 font-bold uppercase tracking-widest">Cole o CSV do Supabase abaixo</p>
+                    <p className="text-xs text-white/40 font-bold uppercase tracking-widest">Cole o CSV ou JSON abaixo</p>
                 </div>
             </div>
             <button onClick={onClose} disabled={isImporting} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60 hover:text-white disabled:opacity-50">
@@ -241,10 +290,25 @@ const DataImportModal: React.FC<Props> = ({ onClose, onSuccess }) => {
             {view === 'input' ? (
                 <textarea 
                     className="w-full h-full bg-black/50 border border-white/10 rounded-xl p-4 text-xs font-mono text-white/80 outline-none focus:border-[#d4af37] resize-none custom-scrollbar"
-                    placeholder="Cole aqui o conteúdo CSV (id,client_name,updated_at,data...)"
+                    placeholder="Cole aqui o conteúdo CSV (id,client_name,updated_at,data...) ou JSON Array"
                     value={csvContent}
                     onChange={(e) => setCsvContent(e.target.value)}
                 />
+            ) : view === 'sql' ? (
+                <div className="flex-1 flex flex-col gap-4">
+                    <div className="bg-green-500/10 border border-green-500/20 p-4 rounded-xl flex items-center gap-3">
+                        <CheckCircle2 className="text-green-500" size={20} />
+                        <div>
+                            <h4 className="font-bold text-green-500 text-sm">SQL Gerado com Sucesso</h4>
+                            <p className="text-xs text-white/60">Copie o código abaixo e execute no SQL Editor do Supabase.</p>
+                        </div>
+                    </div>
+                    <textarea 
+                        className="flex-1 bg-black/50 border border-white/10 rounded-xl p-4 text-xs font-mono text-white/80 outline-none focus:border-[#d4af37] resize-none custom-scrollbar"
+                        value={generatedSql}
+                        readOnly
+                    />
+                </div>
             ) : (
                 <div className="flex-1 flex flex-col items-center justify-center space-y-6">
                     <div className="w-full max-w-md space-y-2">
@@ -291,13 +355,26 @@ const DataImportModal: React.FC<Props> = ({ onClose, onSuccess }) => {
             >
                 Cancelar
             </button>
+            
             {view === 'input' && (
+                <>
+
+                    <button 
+                        onClick={() => handleProcess('import')}
+                        disabled={!csvContent.trim()}
+                        className="bg-[#d4af37] text-black px-8 py-3 rounded-xl font-black uppercase text-xs tracking-widest hover:scale-105 transition-all shadow-lg flex items-center gap-2 disabled:opacity-50 disabled:scale-100 disabled:grayscale"
+                    >
+                        <Upload size={16} /> Importar Direto
+                    </button>
+                </>
+            )}
+
+            {view === 'sql' && (
                 <button 
-                    onClick={handleImport}
-                    disabled={!csvContent.trim()}
-                    className="bg-[#d4af37] text-black px-8 py-3 rounded-xl font-black uppercase text-xs tracking-widest hover:scale-105 transition-all shadow-lg flex items-center gap-2 disabled:opacity-50 disabled:scale-100 disabled:grayscale"
+                    onClick={() => { navigator.clipboard.writeText(generatedSql); alert('SQL Copiado!'); }}
+                    className="bg-[#d4af37] text-black px-8 py-3 rounded-xl font-black uppercase text-xs tracking-widest hover:scale-105 transition-all shadow-lg flex items-center gap-2"
                 >
-                    <Upload size={16} /> Importar Agora
+                    <Copy size={16} /> Copiar SQL
                 </button>
             )}
         </div>
