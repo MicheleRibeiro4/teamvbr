@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { ProtocolData } from '../types';
-import { LOGO_VBR_BLACK, ICON_MAN, ICON_WOMAN } from '../constants';
+import { LOGO_VBR_BLACK, ICON_MAN, ICON_WOMAN, EMPTY_DATA } from '../constants';
 import ProtocolPreview from './ProtocolPreview';
 import { 
   Users, 
@@ -20,8 +20,11 @@ import {
   Eye,
   ChevronLeft,
   Sparkles,
-  Lock
+  Lock,
+  Database
 } from 'lucide-react';
+
+import DataImportModal from './DataImportModal';
 
 interface Props {
   protocols: ProtocolData[];
@@ -37,24 +40,26 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [previewStudent, setPreviewStudent] = useState<ProtocolData | null>(null);
   const [dashboardView, setDashboardView] = useState<'default' | 'active_protocols' | 'financial'>('default');
+  const [showImportModal, setShowImportModal] = useState(false);
 
   const activeProtocols = protocols
-    .filter(p => p.contract.status === 'Ativo')
-    .sort((a, b) => a.clientName.localeCompare(b.clientName));
+    .filter(p => p.contract?.status === 'Ativo')
+    .sort((a, b) => (a.clientName || '').localeCompare(b.clientName || ''));
   const activeProtocolsCount = activeProtocols.length;
-  const pendingStudents = protocols.filter(p => p.contract.status === 'Aguardando');
+  const pendingStudents = protocols.filter(p => p.contract?.status === 'Aguardando');
   
-  const totalRevenue = protocols.reduce((acc, curr) => acc + (parseFloat(curr.contract.planValue.replace(',', '.')) || 0), 0);
+  const totalRevenue = protocols.reduce((acc, curr) => acc + (parseFloat(curr.contract?.planValue?.replace(',', '.') || '0') || 0), 0);
   
   // Get unique students
   const uniqueStudentsMap = new Map();
   protocols.forEach(p => {
-    if (!uniqueStudentsMap.has(p.clientName)) {
-        uniqueStudentsMap.set(p.clientName, p);
+    const name = p.clientName || 'Sem Nome';
+    if (!uniqueStudentsMap.has(name)) {
+        uniqueStudentsMap.set(name, p);
     } else {
-        const existing = uniqueStudentsMap.get(p.clientName);
+        const existing = uniqueStudentsMap.get(name);
         if (new Date(p.updatedAt) > new Date(existing.updatedAt)) {
-            uniqueStudentsMap.set(p.clientName, p);
+            uniqueStudentsMap.set(name, p);
         }
     }
   });
@@ -110,19 +115,19 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
 
     uniqueStudents.forEach((student: any) => {
         // Ignora Avulso
-        if (student.contract.planType === 'Avulso') return;
+        if (student.contract?.planType === 'Avulso') return;
 
         // Aguardando Avaliação:
         // 1. Status do contrato é 'Aguardando' (Solicitações)
         // 2. Status é 'Ativo' MAS não tem data de envio (Protocolo em criação/não enviado)
-        if (student.contract.status === 'Aguardando' || (student.contract.status === 'Ativo' && !student.lastSentDate)) {
+        if (student.contract?.status === 'Aguardando' || (student.contract?.status === 'Ativo' && !student.lastSentDate)) {
             pending.push(student);
             return;
         }
 
         // Agenda de Atualizações:
         // 1. Status 'Ativo' E tem data de envio
-        if (student.contract.status === 'Ativo' && student.lastSentDate) {
+        if (student.contract?.status === 'Ativo' && student.lastSentDate) {
             // Cálculo de Datas
             // Data Base: Último envio
             const [y, m, d] = student.lastSentDate.split('-');
@@ -316,8 +321,8 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
     <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 pr-2 h-full">
         {pendingEvaluationStudents.length > 0 ? (
             pendingEvaluationStudents.map((student: any) => {
-                const isRequest = student.contract.status === 'Aguardando';
-                const statusLabel = isRequest ? 'Solicitação de Cadastro' : 'Aguardando Envio';
+                const isRequest = student.contract?.status === 'Aguardando';
+                const statusLabel = isRequest ? 'Solicitação de Cadastro' : 'Protocolo Ativo - Envio Pendente';
                 const statusColor = isRequest ? 'text-blue-400 bg-blue-500/10 border-blue-500/20' : 'text-orange-400 bg-orange-500/10 border-orange-500/20';
 
                 return (
@@ -439,7 +444,8 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
             const updatedStudent = {
                 ...student,
                 contract: {
-                    ...student.contract,
+                    ...EMPTY_DATA.contract,
+                    ...(student.contract || {}),
                     status: 'Ativo' as const, 
                 }
             };
@@ -495,7 +501,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                             <div>
                                 <h3 className="text-lg font-black text-white uppercase tracking-tighter leading-tight mb-1">{student.clientName}</h3>
                                 <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest flex items-center gap-1">
-                                    <Target size={10} className="text-[#d4af37]" /> {student.protocolTitle || 'Sem Objetivo'}
+                                    <Target size={10} className="text-[#d4af37]" /> {student.protocolTitle || student.anamnesis?.mainObjective || 'Sem Objetivo'}
                                 </p>
                             </div>
                         </div>
@@ -544,9 +550,9 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                         {protocols.map((p) => (
                             <tr key={p.id} className="hover:bg-white/5 transition-colors group">
                                 <td className="p-5"><p className="font-bold text-white text-sm">{p.clientName}</p></td>
-                                <td className="p-5"><span className="px-3 py-1 bg-white/10 rounded-lg text-[10px] font-black uppercase text-white/60 group-hover:text-white group-hover:bg-white/20 transition-all">{p.contract.planType}</span></td>
-                                <td className="p-5 text-xs font-medium text-white/60 font-mono">{p.contract.startDate} — {p.contract.endDate}</td>
-                                <td className="p-5 text-right"><p className="font-black text-[#d4af37] text-sm">R$ {p.contract.planValue || '0,00'}</p></td>
+                                <td className="p-5"><span className="px-3 py-1 bg-white/10 rounded-lg text-[10px] font-black uppercase text-white/60 group-hover:text-white group-hover:bg-white/20 transition-all">{p.contract?.planType}</span></td>
+                                <td className="p-5 text-xs font-medium text-white/60 font-mono">{p.contract?.startDate} — {p.contract?.endDate}</td>
+                                <td className="p-5 text-right"><p className="font-black text-[#d4af37] text-sm">R$ {p.contract?.planValue || '0,00'}</p></td>
                             </tr>
                         ))}
                     </tbody>
@@ -579,6 +585,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
         </div>
         <div className="relative z-10 flex flex-wrap justify-center gap-2 w-full md:w-auto">
           <button onClick={() => onNew()} className="bg-[#d4af37] text-black px-4 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-[0.2em] hover:scale-105 transition-all shadow-[0_0_30px_rgba(212,175,55,0.2)] flex items-center justify-center gap-2 group"><UserPlus size={14}/> Novo Aluno</button>
+          <button onClick={() => setShowImportModal(true)} className="bg-white/5 border border-white/10 text-white px-4 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-[0.2em] hover:bg-white/10 transition-all flex items-center justify-center gap-2"><Database size={14}/> Importar</button>
           <button onClick={onList} className="bg-white/5 border border-white/10 text-white px-4 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-[0.2em] hover:bg-white/10 transition-all flex items-center justify-center gap-2"><Search size={14}/> Buscar</button>
           <button onClick={() => {
              const origin = typeof window !== 'undefined' ? window.location.origin : '';
@@ -590,7 +597,16 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
         </div>
       </div>
 
-      {/* PENDING REQUESTS REMOVED - INTEGRATED INTO TABS */}
+      {/* MODAL IMPORT */}
+      {showImportModal && (
+          <DataImportModal 
+              onClose={() => setShowImportModal(false)} 
+              onSuccess={() => {
+                  setShowImportModal(false);
+                  onList(); // Refresh list
+              }} 
+          />
+      )}
 
       {/* MODAL PREVIEW */}
       {previewStudent && (
@@ -610,9 +626,9 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                     <div className="space-y-4">
                          <h3 className="text-sm font-black text-[#d4af37] uppercase tracking-widest border-b border-[#d4af37]/20 pb-2 flex items-center gap-2">Dados Pessoais</h3>
                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                             <div><p className={previewLabel}>Telefone</p><div className={previewValue}>{previewStudent.contract.phone}</div></div>
-                             <div><p className={previewLabel}>CPF</p><div className={previewValue}>{previewStudent.contract.cpf}</div></div>
-                             <div><p className={previewLabel}>Email</p><div className={previewValue}>{previewStudent.contract.email || '-'}</div></div>
+                             <div><p className={previewLabel}>Telefone</p><div className={previewValue}>{previewStudent.contract?.phone}</div></div>
+                             <div><p className={previewLabel}>CPF</p><div className={previewValue}>{previewStudent.contract?.cpf}</div></div>
+                             <div><p className={previewLabel}>Email</p><div className={previewValue}>{previewStudent.contract?.email || '-'}</div></div>
                          </div>
                     </div>
                     <div className="space-y-4">
@@ -633,34 +649,34 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
       )}
 
       {/* GRID PRINCIPAL */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-full">
-        {/* METRICS */}
-        <div className="lg:col-span-1 flex flex-col gap-3 h-full">
+      <div className="flex flex-col gap-6 h-full">
+        {/* METRICS - Horizontal Row */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {metrics.map((s, i) => (
-            <button key={i} onClick={s.action} className={`bg-white/5 p-4 rounded-[1.5rem] border border-white/10 shadow-sm flex flex-col justify-between group hover:bg-white/[0.1] hover:border-[#d4af37]/30 transition-all text-left flex-1 min-h-[140px]`}>
-                <div className="flex justify-between items-start mb-3"><div className={`p-2 rounded-xl ${s.bg} ${s.color} border ${s.border}`}>{s.icon}</div><ChevronRight className="text-white/10 group-hover:text-[#d4af37] transition-all" size={16} /></div>
-                <div><p className="text-[9px] font-black text-white/30 uppercase tracking-widest mb-1">{s.label}</p><p className={`text-xl xl:text-2xl font-black ${s.color}`}>{s.val}</p></div>
+            <button key={i} onClick={s.action} className={`bg-white/5 p-6 rounded-[1.5rem] border border-white/10 shadow-sm flex flex-col justify-between group hover:bg-white/[0.1] hover:border-[#d4af37]/30 transition-all text-left min-h-[120px]`}>
+                <div className="flex justify-between items-start mb-3"><div className={`p-3 rounded-xl ${s.bg} ${s.color} border ${s.border}`}>{s.icon}</div><ChevronRight className="text-white/10 group-hover:text-[#d4af37] transition-all" size={20} /></div>
+                <div><p className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-1">{s.label}</p><p className={`text-2xl xl:text-3xl font-black ${s.color}`}>{s.val}</p></div>
             </button>
             ))}
         </div>
 
         {/* AGENDA & PENDING TABS */}
-        <div className="lg:col-span-3 w-full bg-[#111] border border-white/10 rounded-[2rem] p-6 flex flex-col min-h-[65vh] overflow-hidden">
+        <div className="w-full bg-[#111] border border-white/10 rounded-[2rem] p-6 flex flex-col min-h-[60vh] overflow-hidden flex-1 shadow-2xl">
           
           {/* TABS HEADER */}
           <div className="flex items-center gap-4 mb-6 border-b border-white/5 pb-4">
               <button 
                   onClick={() => setCurrentTab('agenda')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${currentTab === 'agenda' ? 'bg-[#d4af37] text-black shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                  className={`flex items-center gap-2 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${currentTab === 'agenda' ? 'bg-[#d4af37] text-black shadow-lg scale-105' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
               >
-                  <CalendarClock size={14} /> Agenda de Atualizações
+                  <CalendarClock size={16} /> Agenda de Atualizações
               </button>
               <button 
                   onClick={() => setCurrentTab('pending')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${currentTab === 'pending' ? 'bg-[#d4af37] text-black shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                  className={`flex items-center gap-2 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${currentTab === 'pending' ? 'bg-[#d4af37] text-black shadow-lg scale-105' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
               >
-                  <UserPlus size={14} /> Aguardando Avaliação
-                  {pendingEvaluationStudents.length > 0 && <span className="bg-red-500 text-white px-1.5 py-0.5 rounded text-[8px]">{pendingEvaluationStudents.length}</span>}
+                  <UserPlus size={16} /> Pendências
+                  {pendingEvaluationStudents.length > 0 && <span className="bg-red-500 text-white px-2 py-0.5 rounded-full text-[9px] ml-1">{pendingEvaluationStudents.length}</span>}
               </button>
           </div>
 

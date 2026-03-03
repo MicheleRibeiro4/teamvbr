@@ -8,7 +8,8 @@ import {
   Eye, 
   Clock, 
   CheckCircle2,
-  Lock
+  Lock,
+  X
 } from 'lucide-react';
 import ProtocolPreview from '../ProtocolPreview';
 

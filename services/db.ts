@@ -1,9 +1,11 @@
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { ProtocolData } from '../types';
+import { EMPTY_DATA } from '../constants';
 
-const SUPABASE_URL = "https://xqwzmvzfemjkvaquxedz.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhxd3ptdnpmZW1qa3ZhcXV4ZWR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5OTc1NjQsImV4cCI6MjA4NjU3MzU2NH0.R2MdOlktktHFuBe0JKbUwceqkrYIFsiphEThrYPWsZ8";
+// Tenta pegar das variáveis de ambiente (Vite) ou usa o fallback hardcoded
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://xqwzmvzfemjkvaquxedz.supabase.co";
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhxd3ptdnpmZW1qa3ZhcXV4ZWR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5OTc1NjQsImV4cCI6MjA4NjU3MzU2NH0.R2MdOlktktHFuBe0JKbUwceqkrYIFsiphEThrYPWsZ8";
 
 const getSupabaseClient = (): SupabaseClient | null => {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return null;
@@ -26,8 +28,8 @@ export const db = {
     return !!supabase;
   },
 
-  async getAll(): Promise<ProtocolData[]> {
-    if (!supabase) return [];
+  async getAll(): Promise<{ data: ProtocolData[], source: 'cloud' | 'cache' }> {
+    if (!supabase) return { data: [], source: 'cache' };
     
     try {
       const { data, error } = await supabase
@@ -37,27 +39,56 @@ export const db = {
 
       if (error) {
         console.error("Supabase Query Error:", error);
-        if (error.code === 'PGRST204' || error.message.includes('client_name') || error.message.includes('column')) {
-           throw new Error("Erro de Esquema: O Supabase ainda possui as tabelas antigas. Execute o Script de Reparo.");
+        if (error.code === '42501') {
+           throw new Error("Permissão negada (Erro 42501). Vá ao painel do Supabase > SQL Editor e execute o script 'database.sql' para corrigir as permissões.");
+        }
+        if (error.code === 'PGRST204' || error.code === 'PGRST205' || error.message.includes('client_name') || error.message.includes('column') || error.message.includes('relation "public.protocols" does not exist')) {
+           throw new Error("Erro de Esquema: Tabelas não encontradas. Execute o Script de Instalação.");
         }
         throw error;
       }
 
       if (data) {
-        const protocols = data.map(item => ({
-          ...item.data,
-          id: item.id,
-          updatedAt: item.updated_at
-        }));
+        const protocols = data.map(item => {
+          const itemData = (item.data && typeof item.data === 'object') ? item.data : {};
+          // Prefer name from JSON, fallback to column client_name, then empty string
+          const nameFromData = itemData.clientName;
+          const finalName = (typeof nameFromData === 'string' && nameFromData) 
+            ? nameFromData 
+            : (item.client_name || "");
+
+          return {
+            ...EMPTY_DATA,
+            ...itemData,
+            clientName: finalName,
+            contract: { ...EMPTY_DATA.contract, ...(itemData.contract || {}) },
+            id: item.id,
+            updatedAt: item.updated_at
+          };
+        });
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(protocols));
-        return protocols;
+        return { data: protocols, source: 'cloud' };
       }
-      return [];
+      return { data: [], source: 'cloud' };
     } catch (err: any) {
       console.warn("Status de Sincronização:", err.message);
       const cache = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (err.message.includes('Esquema') || err.message.includes('client_name')) throw err;
-      return cache ? JSON.parse(cache) : [];
+      if (err.message.includes('Esquema') || err.message.includes('client_name') || err.message.includes('Tabelas não encontradas')) throw err;
+      
+      if (cache) {
+        try {
+            const parsed = JSON.parse(cache);
+            if (Array.isArray(parsed)) {
+                return { 
+                    data: parsed.filter(p => p && typeof p === 'object'),
+                    source: 'cache'
+                };
+            }
+        } catch (e) {
+            console.error("Cache inválido", e);
+        }
+      }
+      return { data: [], source: 'cache' };
     }
   },
 
@@ -85,8 +116,45 @@ export const db = {
 
     if (error) {
       console.error("Supabase Save Error:", error);
-      if (error.code === 'PGRST204' || error.message.includes('client_name')) {
-        throw new Error("Mismatch de Esquema: A coluna 'client_name' não foi encontrada. Rode o SQL de reparo.");
+      if (error.code === '42501') {
+         throw new Error("Permissão negada (Erro 42501). Vá ao painel do Supabase > SQL Editor e execute o script 'database.sql' para corrigir as permissões.");
+      }
+      if (error.code === 'PGRST204' || error.code === 'PGRST205' || error.message.includes('client_name') || error.message.includes('relation "public.protocols" does not exist')) {
+        throw new Error("Mismatch de Esquema: Tabelas não encontradas. Rode o SQL de Instalação.");
+      }
+      throw new Error(error.message);
+    }
+  },
+
+  async importProtocol(protocol: ProtocolData): Promise<void> {
+    if (!supabase) throw new Error("Banco de dados não configurado.");
+
+    // Usa a data original se existir, senão usa a atual
+    const updatedAt = protocol.updatedAt || new Date().toISOString();
+    
+    // Mantém o objeto original (não sobrescreve updatedAt se já existir)
+    const protocolData = { ...protocol };
+    if (!protocolData.updatedAt) protocolData.updatedAt = updatedAt;
+
+    const payload: any = {
+      id: protocol.id,
+      client_name: protocol.clientName || 'Sem Nome',
+      updated_at: updatedAt,
+      data: protocolData
+    };
+
+    if (protocol.studentId) payload.student_id = protocol.studentId;
+    if (protocol.version) payload.version = protocol.version;
+    if (protocol.isOriginal !== undefined) payload.is_original = protocol.isOriginal;
+
+    const { error } = await supabase
+      .from('protocols')
+      .upsert(payload, { onConflict: 'id' });
+
+    if (error) {
+      console.error("Supabase Import Error:", error);
+      if (error.code === '42501') {
+         throw new Error("Permissão negada (Erro 42501). Vá ao painel do Supabase > SQL Editor e execute o script 'database.sql' para corrigir as permissões.");
       }
       throw new Error(error.message);
     }
@@ -190,14 +258,25 @@ export const db = {
         return [];
     }
 
-    return (data || []).map(item => ({
-        ...item.data,
-        id: item.id,
-        studentId: item.student_id,
-        version: item.version,
-        isOriginal: item.is_original,
-        updatedAt: item.updated_at
-    }));
+    return (data || []).map(item => {
+        const itemData = (item.data && typeof item.data === 'object') ? item.data : {};
+        const nameFromData = itemData.clientName;
+        const finalName = (typeof nameFromData === 'string' && nameFromData) 
+            ? nameFromData 
+            : (item.client_name || "");
+
+        return {
+            ...EMPTY_DATA,
+            ...itemData,
+            clientName: finalName,
+            contract: { ...EMPTY_DATA.contract, ...(itemData.contract || {}) },
+            id: item.id,
+            studentId: item.student_id,
+            version: item.version,
+            isOriginal: item.is_original,
+            updatedAt: item.updated_at
+        };
+    });
   },
 
   async deleteProtocol(id: string): Promise<void> {

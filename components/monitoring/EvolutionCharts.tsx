@@ -55,8 +55,24 @@ const EvolutionCharts: React.FC<Props> = ({ measurements, onUpdate, studentId })
 
     setIsSaving(true);
     try {
-      await db.saveMeasurement({
+      // Converte strings vazias para null ou número
+      const cleanEntry = {
         ...newEntry,
+        weight: newEntry.weight ? parseFloat(newEntry.weight) : null,
+        chest: newEntry.chest ? parseFloat(newEntry.chest) : null,
+        waist: newEntry.waist ? parseFloat(newEntry.waist) : null,
+        abdomen: newEntry.abdomen ? parseFloat(newEntry.abdomen) : null,
+        hip: newEntry.hip ? parseFloat(newEntry.hip) : null,
+        armRight: newEntry.armRight ? parseFloat(newEntry.armRight) : null,
+        armLeft: newEntry.armLeft ? parseFloat(newEntry.armLeft) : null,
+        thighRight: newEntry.thighRight ? parseFloat(newEntry.thighRight) : null,
+        thighLeft: newEntry.thighLeft ? parseFloat(newEntry.thighLeft) : null,
+        calf: newEntry.calf ? parseFloat(newEntry.calf) : null,
+        bodyFat: newEntry.bodyFat ? parseFloat(newEntry.bodyFat) : null,
+      };
+
+      await db.saveMeasurement({
+        ...cleanEntry,
         studentId,
         createdAt: new Date().toISOString()
       });
@@ -190,7 +206,7 @@ const EvolutionCharts: React.FC<Props> = ({ measurements, onUpdate, studentId })
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Weight Chart */}
-        <div className="bg-[#111] border border-white/10 rounded-[2rem] p-6 shadow-lg">
+        <div className="bg-[#111] border border-white/10 rounded-[2rem] p-6 shadow-lg min-w-0">
           <div className="flex items-center gap-3 mb-6">
             <div className="bg-blue-500/10 p-2 rounded-lg text-blue-500"><TrendingUp size={20} /></div>
             <h3 className="text-sm font-black text-white uppercase tracking-widest">Evolução de Peso</h3>
@@ -215,7 +231,7 @@ const EvolutionCharts: React.FC<Props> = ({ measurements, onUpdate, studentId })
         </div>
 
         {/* Body Fat Chart */}
-        <div className="bg-[#111] border border-white/10 rounded-[2rem] p-6 shadow-lg">
+        <div className="bg-[#111] border border-white/10 rounded-[2rem] p-6 shadow-lg min-w-0">
           <div className="flex items-center gap-3 mb-6">
             <div className="bg-[#d4af37]/10 p-2 rounded-lg text-[#d4af37]"><Activity size={20} /></div>
             <h3 className="text-sm font-black text-white uppercase tracking-widest">Percentual de Gordura</h3>
@@ -234,7 +250,7 @@ const EvolutionCharts: React.FC<Props> = ({ measurements, onUpdate, studentId })
         </div>
 
         {/* Measurements Chart */}
-        <div className="bg-[#111] border border-white/10 rounded-[2rem] p-6 shadow-lg lg:col-span-2">
+        <div className="bg-[#111] border border-white/10 rounded-[2rem] p-6 shadow-lg lg:col-span-2 min-w-0">
           <div className="flex items-center gap-3 mb-6">
             <div className="bg-purple-500/10 p-2 rounded-lg text-purple-500"><Ruler size={20} /></div>
             <h3 className="text-sm font-black text-white uppercase tracking-widest">Medidas Principais (Cintura e Abdômen)</h3>

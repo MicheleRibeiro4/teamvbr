@@ -56,6 +56,16 @@ const App: React.FC = () => {
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const MASTER_PASSWORD = "vbr-master-2025";
 
+  const generateUUID = () => {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+      return crypto.randomUUID();
+    }
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  };
+
   useEffect(() => {
     const handleHashChange = () => {
       setPageType(getPageType());
@@ -81,7 +91,9 @@ const App: React.FC = () => {
     setIsSyncing(true);
     try {
       // Busca aluno pelo telefone no banco de dados
-      const protocols = await db.getAll();
+      const result = await db.getAll();
+      const protocols = result.data;
+      
       const student = protocols.find(p => {
         const studentPhone = p.contract?.phone?.replace(/\D/g, '') || '';
         const searchPhone = phone.replace(/\D/g, '');
@@ -148,9 +160,15 @@ const App: React.FC = () => {
   const loadData = async () => {
     setIsSyncing(true);
     try {
-      const protocols = await db.getAll();
-      setSavedProtocols(protocols);
-      setCloudStatus('online');
+      const result = await db.getAll();
+      setSavedProtocols(result.data);
+      
+      if (result.source === 'cache') {
+          setCloudStatus('error');
+          if (!showToast) alert("⚠️ Modo Offline: Exibindo dados em cache. Verifique sua conexão ou configuração do Supabase.");
+      } else {
+          setCloudStatus('online');
+      }
     } catch (e: any) {
       setCloudStatus('error');
       console.error("Erro na carga inicial:", e);
@@ -169,8 +187,8 @@ const App: React.FC = () => {
     setIsSyncing(true);
     try {
       const currentId = (forceNewId) 
-        ? "vbr-" + Math.random().toString(36).substr(2, 9)
-        : (dataToSave.id || "vbr-" + Math.random().toString(36).substr(2, 9));
+        ? generateUUID()
+        : (dataToSave.id || generateUUID());
       
       const protocolToSave = { 
         ...JSON.parse(JSON.stringify(dataToSave)), 
@@ -239,17 +257,77 @@ const App: React.FC = () => {
     }
   };
 
-  const sqlRepairScript = `-- SCRIPT DE REPARO
-CREATE TABLE IF NOT EXISTS public.protocols (
+  const sqlRepairScript = `-- SCRIPT DE CONFIGURAÇÃO COMPLETA (SUPABASE)
+-- Copie e cole no SQL Editor do Supabase e clique em RUN.
+
+-- 1. Limpa tabelas existentes (CUIDADO: APAGA DADOS)
+DROP TABLE IF EXISTS public.body_measurements CASCADE;
+DROP TABLE IF EXISTS public.feedbacks CASCADE;
+DROP TABLE IF EXISTS public.students CASCADE;
+DROP TABLE IF EXISTS public.protocols CASCADE;
+
+-- 2. Cria tabelas
+CREATE TABLE public.protocols (
   id text NOT NULL PRIMARY KEY,
   client_name text NOT NULL,
   updated_at timestamp with time zone DEFAULT now(),
-  data jsonb NOT NULL
+  data jsonb NOT NULL,
+  student_id text,
+  version integer DEFAULT 1,
+  is_original boolean DEFAULT false
 );
+
+CREATE TABLE public.students (
+  id text NOT NULL PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  name text NOT NULL,
+  created_at timestamp with time zone DEFAULT now()
+);
+
+CREATE TABLE public.feedbacks (
+  id text NOT NULL PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  student_id text NOT NULL,
+  feedback_date date NOT NULL,
+  diet_adherence text,
+  training_adherence text,
+  sleep_quality text,
+  energy_level text,
+  notes text,
+  created_at timestamp with time zone DEFAULT now()
+);
+
+CREATE TABLE public.body_measurements (
+  id uuid NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id text NOT NULL,
+  weight numeric,
+  chest numeric,
+  waist numeric,
+  abdomen numeric,
+  hip numeric,
+  arm_right numeric,
+  arm_left numeric,
+  thigh_right numeric,
+  thigh_left numeric,
+  calf numeric,
+  body_fat numeric,
+  created_at timestamp with time zone DEFAULT now()
+);
+
+-- 3. Permissões
 ALTER TABLE public.protocols DISABLE ROW LEVEL SECURITY;
-GRANT ALL ON TABLE public.protocols TO anon;
-GRANT ALL ON TABLE public.protocols TO authenticated;
-GRANT ALL ON TABLE public.protocols TO service_role;`;
+ALTER TABLE public.students DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.feedbacks DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.body_measurements DISABLE ROW LEVEL SECURITY;
+
+GRANT ALL ON TABLE public.protocols TO anon, authenticated, service_role;
+GRANT ALL ON TABLE public.students TO anon, authenticated, service_role;
+GRANT ALL ON TABLE public.feedbacks TO anon, authenticated, service_role;
+GRANT ALL ON TABLE public.body_measurements TO anon, authenticated, service_role;
+
+-- 4. Índices
+CREATE INDEX IF NOT EXISTS idx_protocols_client_name ON public.protocols(client_name);
+CREATE INDEX IF NOT EXISTS idx_protocols_student_id ON public.protocols(student_id);
+CREATE INDEX IF NOT EXISTS idx_feedbacks_student_id ON public.feedbacks(student_id);
+CREATE INDEX IF NOT EXISTS idx_measurements_student_id ON public.body_measurements(student_id);`;
 
   // ROTA DE CADASTRO (NOVO ALUNO)
   if (pageType === 'register') {
@@ -322,7 +400,7 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
             <img src={LOGO_VBR_BLACK} alt="Team VBR" className="h-20 w-auto" />
           </button>
           
-          {activeView !== 'home' && activeView !== 'generator' && (
+          {activeView !== 'home' && activeView !== 'generator' && activeView !== 'manage' && (
             <button 
               onClick={() => setActiveView('home')}
               className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-[#d4af37] transition-colors"
@@ -355,8 +433,8 @@ GRANT ALL ON TABLE public.protocols TO service_role;`;
               <div className="flex items-center gap-4 text-left">
                 <AlertTriangle className="text-red-500 shrink-0" size={40} />
                 <div>
-                  <h4 className="font-black uppercase text-sm text-red-500">Erro de Banco de Dados</h4>
-                  <p className="text-xs text-white/60">Permissões ou tabela faltando. Copie o SQL.</p>
+                  <h4 className="font-black uppercase text-sm text-red-500">Instalação Necessária</h4>
+                  <p className="text-xs text-white/60">Tabelas não encontradas. Copie e execute o SQL no Supabase.</p>
                 </div>
               </div>
               <button 

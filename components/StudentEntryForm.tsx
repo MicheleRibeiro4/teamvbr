@@ -30,11 +30,21 @@ const StudentEntryForm: React.FC<Props> = ({ onCancel }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
+  const generateUUID = () => {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+      return crypto.randomUUID();
+    }
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  };
+
   // Inicialização segura do estado
   const [data, setData] = useState<ProtocolData>(() => {
     return {
         ...EMPTY_DATA,
-        id: "vbr-student-" + Date.now().toString(36),
+        id: generateUUID(),
         createdAt: new Date().toISOString(), // Data de inclusão fixa
         updatedAt: new Date().toISOString(),
         contract: {

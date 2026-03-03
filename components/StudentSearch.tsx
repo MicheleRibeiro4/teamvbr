@@ -18,9 +18,13 @@ const StudentSearch: React.FC<Props> = ({ protocols, onLoad, onDelete, onUpdate 
     const map = new Map<string, ProtocolData>();
     
     protocols.forEach(p => {
+      if (!p) return;
       // Normaliza o nome para evitar duplicatas por espaços extras
-      const name = p.clientName.trim();
+      const rawName = p.clientName;
+      const name = (typeof rawName === 'string' ? rawName : '').trim();
       
+      if (!name) return; // Pula registros sem nome se necessário, ou agrupa em "Sem Nome"
+
       if (!map.has(name)) {
         map.set(name, p);
       } else {
@@ -34,13 +38,13 @@ const StudentSearch: React.FC<Props> = ({ protocols, onLoad, onDelete, onUpdate 
 
     // Retorna array ordenado alfabeticamente pelo nome do aluno
     return Array.from(map.values()).sort((a, b) => 
-        a.clientName.localeCompare(b.clientName)
+        (a.clientName || '').localeCompare(b.clientName || '')
     );
   }, [protocols]);
 
   const filtered = uniqueStudents.filter(p => 
-    p.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.protocolTitle.toLowerCase().includes(searchTerm.toLowerCase())
+    (p.clientName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (p.protocolTitle || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const toggleStatus = (student: ProtocolData) => {
