@@ -16,84 +16,87 @@ const DataImportModal: React.FC<Props> = ({ onClose, onSuccess }) => {
 
   const parseCSV = (text: string) => {
     const lines = text.split('\n').filter(l => l.trim().length > 0);
+    if (lines.length === 0) return [];
+
     const parsedData: any[] = [];
     
-    // Detect header
-    const startIndex = lines[0].toLowerCase().startsWith('id,') ? 1 : 0;
+    // Helper to parse a single CSV line respecting quotes
+    const parseLine = (line: string) => {
+        const result: string[] = [];
+        let current = '';
+        let inQuotes = false;
+        
+        for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            if (char === '"') {
+                if (inQuotes && line[i + 1] === '"') {
+                    current += '"';
+                    i++; // Skip next quote
+                } else {
+                    inQuotes = !inQuotes;
+                }
+            } else if (char === ',' && !inQuotes) {
+                result.push(current.trim());
+                current = '';
+            } else {
+                current += char;
+            }
+        }
+        result.push(current.trim());
+        return result;
+    };
+
+    // Parse headers
+    const headers = parseLine(lines[0]).map(h => h.toLowerCase().replace(/['"]/g, '').trim());
+    
+    // Identify column indices
+    const idIndex = headers.findIndex(h => h === 'id');
+    const nameIndex = headers.findIndex(h => h === 'client_name' || h === 'name');
+    const dateIndex = headers.findIndex(h => h === 'updated_at' || h === 'date');
+    const dataIndex = headers.findIndex(h => h === 'data' || h === 'json');
+
+    // If we found at least 'id' or 'data' in headers, assume first row is header
+    const startIndex = (idIndex !== -1 || dataIndex !== -1) ? 1 : 0;
 
     for (let i = startIndex; i < lines.length; i++) {
-      const line = lines[i];
-      
-      // Basic CSV parsing for the specific format: id,name,date,"json"
-      // We assume the first 3 fields don't contain commas for now, or we find the 3rd comma.
-      // A more robust way is to find the index of the first quote of the JSON data.
-      
-      const firstQuoteIndex = line.indexOf('"');
-      if (firstQuoteIndex === -1) {
-          setLogs(prev => [...prev, `⚠️ Linha ${i + 1}: Formato inválido (JSON não encontrado)`]);
-          continue;
-      }
-      
-      // Everything before the quote is metadata
-      const metaPart = line.substring(0, firstQuoteIndex);
-      const metaParts = metaPart.split(',');
-      
-      // We expect at least 3 commas before the JSON, but the last comma is right before the quote usually?
-      // Actually the format is: id,name,date,"json"
-      // So metaParts should have id, name, date, and an empty string (due to trailing comma)
-      
-      // Let's try a different approach: find the first 3 commas.
-      let commaCount = 0;
-      let thirdCommaIndex = -1;
-      
-      for (let j = 0; j < line.length; j++) {
-          if (line[j] === ',') {
-              commaCount++;
-              if (commaCount === 3) {
-                  thirdCommaIndex = j;
-                  break;
-              }
-          }
-      }
-      
-      if (thirdCommaIndex === -1) {
-           setLogs(prev => [...prev, `⚠️ Linha ${i + 1}: Formato inválido (colunas insuficientes)`]);
-           continue;
-      }
-      
-      const id = line.substring(0, line.indexOf(',')).trim();
-      // Name might have commas? Unlikely but let's assume standard format provided.
-      // The provided format: id,client_name,updated_at,data
-      
-      // Let's rely on the structure provided by the user which seems consistent.
-      const meta = line.substring(0, thirdCommaIndex).split(',');
-      const rowId = meta[0];
-      const rowName = meta[1]; // If name has comma, this breaks. But let's assume it doesn't for now.
-      const rowDate = meta[2];
-      
-      let jsonRaw = line.substring(thirdCommaIndex + 1).trim();
-      
-      // Remove surrounding quotes
-      if (jsonRaw.startsWith('"') && jsonRaw.endsWith('"')) {
-          jsonRaw = jsonRaw.substring(1, jsonRaw.length - 1);
-      }
-      
-      // Unescape double quotes: "" -> "
-      jsonRaw = jsonRaw.replace(/""/g, '"');
-      
-      try {
-          const jsonData = JSON.parse(jsonRaw);
-          // Ensure the ID matches or use the one from JSON
-          if (!jsonData.id) jsonData.id = rowId;
-          
-          // Inject CSV metadata if missing in JSON
-          if (!jsonData.clientName && rowName) jsonData.clientName = rowName;
-          if (!jsonData.updatedAt && rowDate) jsonData.updatedAt = rowDate;
-          
-          parsedData.push(jsonData);
-      } catch (e) {
-          setLogs(prev => [...prev, `❌ Erro ao processar JSON da linha ${i + 1}: ${(e as Error).message}`]);
-      }
+        try {
+            const cols = parseLine(lines[i]);
+            
+            // If we found headers, use them. Otherwise assume default order: id, name, date, data
+            // Note: If no headers found, we assume the standard export format: id, client_name, updated_at, data
+            let rowId = (idIndex !== -1) ? cols[idIndex] : cols[0];
+            let rowName = (nameIndex !== -1) ? cols[nameIndex] : cols[1];
+            let rowDate = (dateIndex !== -1) ? cols[dateIndex] : cols[2];
+            let jsonDataRaw = (dataIndex !== -1) ? cols[dataIndex] : (cols.length > 3 ? cols[3] : null);
+
+            // If we still don't have json, try to find a column that looks like JSON
+            if (!jsonDataRaw) {
+                 const jsonCol = cols.find(c => c && c.trim().startsWith('{') && c.trim().endsWith('}'));
+                 if (jsonCol) jsonDataRaw = jsonCol;
+            }
+
+            if (!jsonDataRaw) {
+                setLogs(prev => [...prev, `⚠️ Linha ${i + 1}: Coluna de dados (JSON) não encontrada.`]);
+                continue;
+            }
+
+            // Clean up JSON string if needed (sometimes CSV export adds extra quotes)
+            let jsonClean = jsonDataRaw.trim();
+            if (jsonClean.startsWith('"{') && jsonClean.endsWith('}"')) {
+                jsonClean = jsonClean.substring(1, jsonClean.length - 1).replace(/""/g, '"');
+            }
+
+            const jsonData = JSON.parse(jsonClean);
+            
+            // Merge metadata
+            if (!jsonData.id && rowId) jsonData.id = rowId;
+            if (!jsonData.clientName && rowName) jsonData.clientName = rowName;
+            if (!jsonData.updatedAt && rowDate) jsonData.updatedAt = rowDate;
+
+            parsedData.push(jsonData);
+        } catch (e) {
+            setLogs(prev => [...prev, `❌ Erro na linha ${i + 1}: ${(e as Error).message}`]);
+        }
     }
     
     return parsedData;
