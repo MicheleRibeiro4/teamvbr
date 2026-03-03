@@ -14,6 +14,8 @@ const DataImportModal: React.FC<Props> = ({ onClose, onSuccess }) => {
   const [progress, setProgress] = useState({ current: 0, total: 0, success: 0, errors: 0 });
   const [logs, setLogs] = useState<string[]>([]);
 
+  const [view, setView] = useState<'input' | 'processing'>('input');
+
   const parseCSV = (text: string) => {
     const lines = text.split('\n').filter(l => l.trim().length > 0);
     if (lines.length === 0) return [];
@@ -76,7 +78,10 @@ const DataImportModal: React.FC<Props> = ({ onClose, onSuccess }) => {
             }
 
             if (!jsonDataRaw) {
-                setLogs(prev => [...prev, `⚠️ Linha ${i + 1}: Coluna de dados (JSON) não encontrada.`]);
+                // Only log if we really can't find anything, to avoid spamming logs for empty lines
+                if (cols.length > 1) {
+                    setLogs(prev => [...prev, `⚠️ Linha ${i + 1}: Coluna de dados (JSON) não encontrada.`]);
+                }
                 continue;
             }
 
@@ -102,54 +107,62 @@ const DataImportModal: React.FC<Props> = ({ onClose, onSuccess }) => {
     return parsedData;
   };
 
-  const handleImport = async () => {
+  const handleImport = () => {
     if (!csvContent.trim()) return;
     
+    console.log("Starting import process...");
+    setView('processing');
     setIsImporting(true);
     setLogs([]);
     
-    try {
-        const dataToImport = parseCSV(csvContent);
-        setProgress({ current: 0, total: dataToImport.length, success: 0, errors: 0 });
-        
-        if (dataToImport.length === 0) {
-            setLogs(prev => [...prev, "⚠️ Nenhum dado válido encontrado para importar."]);
-            setIsImporting(false);
-            return;
-        }
-
-        setLogs(prev => [...prev, `🚀 Iniciando importação de ${dataToImport.length} registros...`]);
-
-        for (let i = 0; i < dataToImport.length; i++) {
-            const protocol = dataToImport[i];
-            setProgress(prev => ({ ...prev, current: i + 1 }));
+    // Use setTimeout to allow the UI to render the 'processing' view before blocking the thread with parsing
+    setTimeout(async () => {
+        try {
+            console.log("Parsing CSV content...");
+            const dataToImport = parseCSV(csvContent);
+            console.log("Parsed data:", dataToImport.length, "records");
             
-            try {
-                // Use db.importProtocol which handles upsert and preserves dates
-                await db.importProtocol(protocol);
-                setProgress(prev => ({ ...prev, success: prev.success + 1 }));
-            } catch (err) {
-                console.error(err);
-                setProgress(prev => ({ ...prev, errors: prev.errors + 1 }));
-                setLogs(prev => [...prev, `❌ Falha ao salvar ${protocol.clientName || protocol.id}: ${(err as Error).message}`]);
+            setProgress({ current: 0, total: dataToImport.length, success: 0, errors: 0 });
+            
+            if (dataToImport.length === 0) {
+                setLogs(prev => [...prev, "⚠️ Nenhum dado válido encontrado para importar. Verifique o formato do CSV."]);
+                setIsImporting(false);
+                return;
             }
-        }
-        
-        setLogs(prev => [...prev, "✅ Processo finalizado!"]);
-        
-        if (progress.errors === 0) {
-            setTimeout(() => {
-                onSuccess();
-                onClose();
-            }, 2000);
-        }
 
-    } catch (error) {
-        console.error(error);
-        setLogs(prev => [...prev, `❌ Erro fatal: ${(error as Error).message}`]);
-    } finally {
-        setIsImporting(false);
-    }
+            setLogs(prev => [...prev, `🚀 Iniciando importação de ${dataToImport.length} registros...`]);
+
+            for (let i = 0; i < dataToImport.length; i++) {
+                const protocol = dataToImport[i];
+                setProgress(prev => ({ ...prev, current: i + 1 }));
+                
+                try {
+                    // Use db.importProtocol which handles upsert and preserves dates
+                    await db.importProtocol(protocol);
+                    setProgress(prev => ({ ...prev, success: prev.success + 1 }));
+                } catch (err) {
+                    console.error("Import error for item", i, err);
+                    setProgress(prev => ({ ...prev, errors: prev.errors + 1 }));
+                    setLogs(prev => [...prev, `❌ Falha ao salvar ${protocol.clientName || protocol.id}: ${(err as Error).message}`]);
+                }
+            }
+            
+            setLogs(prev => [...prev, "✅ Processo finalizado!"]);
+            
+            if (progress.errors === 0) {
+                setTimeout(() => {
+                    onSuccess();
+                    onClose();
+                }, 2000);
+            }
+
+        } catch (error) {
+            console.error("Fatal import error:", error);
+            setLogs(prev => [...prev, `❌ Erro fatal: ${(error as Error).message}`]);
+        } finally {
+            setIsImporting(false);
+        }
+    }, 100);
   };
 
   return (
@@ -174,7 +187,7 @@ const DataImportModal: React.FC<Props> = ({ onClose, onSuccess }) => {
 
         {/* Content */}
         <div className="p-6 flex-1 overflow-hidden flex flex-col gap-4">
-            {!isImporting && progress.total === 0 ? (
+            {view === 'input' ? (
                 <textarea 
                     className="w-full h-full bg-black/50 border border-white/10 rounded-xl p-4 text-xs font-mono text-white/80 outline-none focus:border-[#d4af37] resize-none custom-scrollbar"
                     placeholder="Cole aqui o conteúdo CSV (id,client_name,updated_at,data...)"
@@ -186,12 +199,12 @@ const DataImportModal: React.FC<Props> = ({ onClose, onSuccess }) => {
                     <div className="w-full max-w-md space-y-2">
                         <div className="flex justify-between text-xs font-bold uppercase text-white/60">
                             <span>Progresso</span>
-                            <span>{Math.round((progress.current / progress.total) * 100)}%</span>
+                            <span>{progress.total > 0 ? Math.round((progress.current / progress.total) * 100) : 0}%</span>
                         </div>
                         <div className="h-2 bg-white/10 rounded-full overflow-hidden">
                             <div 
                                 className="h-full bg-[#d4af37] transition-all duration-300"
-                                style={{ width: `${(progress.current / progress.total) * 100}%` }}
+                                style={{ width: `${progress.total > 0 ? (progress.current / progress.total) * 100 : 0}%` }}
                             />
                         </div>
                         <div className="flex justify-between text-[10px] font-bold uppercase text-white/40 mt-2">
@@ -205,6 +218,15 @@ const DataImportModal: React.FC<Props> = ({ onClose, onSuccess }) => {
                             <p key={i} className="text-[10px] font-mono mb-1 text-white/70 border-b border-white/5 pb-1 last:border-0">{log}</p>
                         ))}
                     </div>
+                    
+                    {!isImporting && (
+                        <button 
+                            onClick={() => setView('input')}
+                            className="text-xs text-[#d4af37] hover:underline uppercase font-bold tracking-widest"
+                        >
+                            Voltar e tentar novamente
+                        </button>
+                    )}
                 </div>
             )}
         </div>
@@ -218,7 +240,7 @@ const DataImportModal: React.FC<Props> = ({ onClose, onSuccess }) => {
             >
                 Cancelar
             </button>
-            {!isImporting && (
+            {view === 'input' && (
                 <button 
                     onClick={handleImport}
                     disabled={!csvContent.trim()}
