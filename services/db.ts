@@ -3,9 +3,9 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { ProtocolData } from '../types';
 import { EMPTY_DATA } from '../constants';
 
-// Tenta pegar das variáveis de ambiente (Vite) ou usa o fallback hardcoded
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://xqwzmvzfemjkvaquxedz.supabase.co";
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhxd3ptdnpmZW1qa3ZhcXV4ZWR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5OTc1NjQsImV4cCI6MjA4NjU3MzU2NH0.R2MdOlktktHFuBe0JKbUwceqkrYIFsiphEThrYPWsZ8";
+// Tenta pegar das variáveis de ambiente (Vite)
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "";
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
 
 const getSupabaseClient = (): SupabaseClient | null => {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return null;
@@ -98,17 +98,15 @@ export const db = {
     const updatedAt = new Date().toISOString();
     const updatedProtocol = { ...protocol, updatedAt };
 
-    // Prepara o objeto para salvar, incluindo os novos campos relacionais se existirem
+    // Prepara o objeto para salvar.
+    // NOTA: O esquema do banco fornecido pelo usuário possui apenas: id, client_name, updated_at, data.
+    // Campos como student_id, version, is_original devem ficar apenas dentro do JSONB 'data'.
     const payload: any = {
       id: protocol.id,
       client_name: protocol.clientName || 'Sem Nome',
       updated_at: updatedAt,
       data: updatedProtocol
     };
-
-    if (protocol.studentId) payload.student_id = protocol.studentId;
-    if (protocol.version) payload.version = protocol.version;
-    if (protocol.isOriginal !== undefined) payload.is_original = protocol.isOriginal;
 
     const { error } = await supabase
       .from('protocols')
@@ -142,10 +140,6 @@ export const db = {
       updated_at: updatedAt,
       data: protocolData
     };
-
-    if (protocol.studentId) payload.student_id = protocol.studentId;
-    if (protocol.version) payload.version = protocol.version;
-    if (protocol.isOriginal !== undefined) payload.is_original = protocol.isOriginal;
 
     const { error } = await supabase
       .from('protocols')
@@ -247,11 +241,13 @@ export const db = {
 
   async getProtocolVersions(studentId: string): Promise<ProtocolData[]> {
     if (!supabase) return [];
+    
+    // Ajuste para consultar dentro do JSONB 'data' já que as colunas não existem no esquema simplificado
     const { data, error } = await supabase
         .from('protocols')
         .select('*')
-        .eq('student_id', studentId)
-        .order('version', { ascending: false });
+        .eq('data->>studentId', studentId)
+        .order('data->>version', { ascending: false });
 
     if (error) {
         console.error("Erro ao buscar versões:", error);
@@ -271,9 +267,10 @@ export const db = {
             clientName: finalName,
             contract: { ...EMPTY_DATA.contract, ...(itemData.contract || {}) },
             id: item.id,
-            studentId: item.student_id,
-            version: item.version,
-            isOriginal: item.is_original,
+            // studentId, version, isOriginal vêm de itemData (JSONB)
+            studentId: itemData.studentId,
+            version: itemData.version,
+            isOriginal: itemData.isOriginal,
             updatedAt: item.updated_at
         };
     });

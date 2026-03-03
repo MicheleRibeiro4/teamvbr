@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Upload, Loader2, CheckCircle2, AlertTriangle, FileText } from 'lucide-react';
 import { db } from '../services/db';
 import { ProtocolData } from '../types';
+import Papa from 'papaparse';
 
 interface Props {
   onClose: () => void;
@@ -17,81 +18,123 @@ const DataImportModal: React.FC<Props> = ({ onClose, onSuccess }) => {
   const [view, setView] = useState<'input' | 'processing'>('input');
 
   const parseCSV = (text: string) => {
-    const lines = text.split('\n').filter(l => l.trim().length > 0);
-    if (lines.length === 0) return [];
+    const trimmed = text.trim();
+
+    // 1. Try parsing as a pure JSON array first (in case user pasted a JSON export)
+    if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+        try {
+            let jsonFull = JSON.parse(trimmed);
+            if (!Array.isArray(jsonFull)) {
+                jsonFull = [jsonFull]; // Convert single object to array
+            }
+
+            return jsonFull.map((item: any) => {
+                // If the item has a 'data' field that is a string/object, use it
+                // Otherwise, assume the item itself is the protocol data
+                let protocolData = item;
+                
+                // If there's a nested 'data' or 'json' field, try to use that
+                if (item.data || item.json) {
+                        const rawData = item.data || item.json;
+                        if (typeof rawData === 'object') {
+                            protocolData = { ...rawData, ...item }; // Merge metadata
+                        } else if (typeof rawData === 'string') {
+                            try {
+                                const parsed = JSON.parse(rawData);
+                                protocolData = { ...parsed, ...item };
+                            } catch (e) {
+                                // Keep item as is if parsing fails
+                            }
+                        }
+                }
+
+                return {
+                    ...protocolData,
+                    id: item.id || protocolData.id,
+                    clientName: item.client_name || item.name || protocolData.clientName || 'Sem Nome',
+                    updatedAt: item.updated_at || item.date || protocolData.updatedAt || new Date().toISOString()
+                };
+            });
+        } catch (e) {
+            const errorMsg = (e as Error).message;
+            if (errorMsg.includes('Unexpected end of JSON input') || errorMsg.includes('Unterminated string')) {
+                setLogs(prev => [...prev, `❌ Erro de JSON: O conteúdo parece estar incompleto (cortado). Verifique se copiou todo o texto.`]);
+            } else {
+                setLogs(prev => [...prev, `❌ Erro ao ler JSON: ${errorMsg}`]);
+            }
+            return []; // Stop processing if it looks like JSON but failed
+        }
+    }
+
+    // 2. Use Papa Parse for robust CSV parsing
+    const result = Papa.parse(text, {
+        header: true,
+        skipEmptyLines: true,
+        transformHeader: (header) => header.toLowerCase().trim().replace(/['"]/g, '')
+    });
+
+    if (result.errors.length > 0) {
+        result.errors.forEach(err => {
+             // Only log critical errors
+             if (err.type === 'Quotes' || err.type === 'Delimiter') {
+                setLogs(prev => [...prev, `⚠️ CSV Warning na linha ${err.row}: ${err.message}`]);
+             }
+        });
+    }
 
     const parsedData: any[] = [];
     
-    // Helper to parse a single CSV line respecting quotes
-    const parseLine = (line: string) => {
-        const result: string[] = [];
-        let current = '';
-        let inQuotes = false;
-        
-        for (let i = 0; i < line.length; i++) {
-            const char = line[i];
-            if (char === '"') {
-                if (inQuotes && line[i + 1] === '"') {
-                    current += '"';
-                    i++; // Skip next quote
-                } else {
-                    inQuotes = !inQuotes;
-                }
-            } else if (char === ',' && !inQuotes) {
-                result.push(current.trim());
-                current = '';
-            } else {
-                current += char;
-            }
-        }
-        result.push(current.trim());
-        return result;
-    };
-
-    // Parse headers
-    const headers = parseLine(lines[0]).map(h => h.toLowerCase().replace(/['"]/g, '').trim());
-    
-    // Identify column indices
-    const idIndex = headers.findIndex(h => h === 'id');
-    const nameIndex = headers.findIndex(h => h === 'client_name' || h === 'name');
-    const dateIndex = headers.findIndex(h => h === 'updated_at' || h === 'date');
-    const dataIndex = headers.findIndex(h => h === 'data' || h === 'json');
-
-    // If we found at least 'id' or 'data' in headers, assume first row is header
-    const startIndex = (idIndex !== -1 || dataIndex !== -1) ? 1 : 0;
-
-    for (let i = startIndex; i < lines.length; i++) {
+    result.data.forEach((row: any, index: number) => {
         try {
-            const cols = parseLine(lines[i]);
-            
-            // If we found headers, use them. Otherwise assume default order: id, name, date, data
-            // Note: If no headers found, we assume the standard export format: id, client_name, updated_at, data
-            let rowId = (idIndex !== -1) ? cols[idIndex] : cols[0];
-            let rowName = (nameIndex !== -1) ? cols[nameIndex] : cols[1];
-            let rowDate = (dateIndex !== -1) ? cols[dateIndex] : cols[2];
-            let jsonDataRaw = (dataIndex !== -1) ? cols[dataIndex] : (cols.length > 3 ? cols[3] : null);
+            // Normalize keys
+            const rowId = row['id'];
+            const rowName = row['client_name'] || row['name'];
+            const rowDate = row['updated_at'] || row['date'];
+            let jsonDataRaw = row['data'] || row['json'];
 
-            // If we still don't have json, try to find a column that looks like JSON
+            // If data column is missing, try to find it in other columns
             if (!jsonDataRaw) {
-                 const jsonCol = cols.find(c => c && c.trim().startsWith('{') && c.trim().endsWith('}'));
-                 if (jsonCol) jsonDataRaw = jsonCol;
+                 // Fallback: check if any value looks like JSON
+                 const values = Object.values(row);
+                 const jsonVal = values.find((v: any) => typeof v === 'string' && v.trim().startsWith('{') && v.trim().endsWith('}'));
+                 if (jsonVal) jsonDataRaw = jsonVal;
             }
 
             if (!jsonDataRaw) {
-                // Only log if we really can't find anything, to avoid spamming logs for empty lines
-                if (cols.length > 1) {
-                    setLogs(prev => [...prev, `⚠️ Linha ${i + 1}: Coluna de dados (JSON) não encontrada.`]);
+                if (Object.keys(row).length > 1) {
+                    setLogs(prev => [...prev, `⚠️ Linha ${index + 1}: Coluna de dados (JSON) não encontrada.`]);
                 }
-                continue;
+                return;
             }
 
-            // Clean up JSON string if needed (sometimes CSV export adds extra quotes)
-            let jsonClean = jsonDataRaw.trim();
-            if (jsonClean.startsWith('"{') && jsonClean.endsWith('}"')) {
-                jsonClean = jsonClean.substring(1, jsonClean.length - 1).replace(/""/g, '"');
+            // Robust JSON Parsing Strategy
+            let jsonData: any = null;
+            let parseError: Error | null = null;
+            
+            const attempts = [
+                () => typeof jsonDataRaw === 'object' ? jsonDataRaw : JSON.parse(jsonDataRaw), // 1. Direct
+                () => JSON.parse(jsonDataRaw.replace(/""/g, '"')), // 2. Fix CSV double escaping
+                () => { // 3. Handle wrapped quotes: "{...}" -> {...}
+                    let s = jsonDataRaw.trim();
+                    if (s.startsWith('"') && s.endsWith('"')) s = s.slice(1, -1);
+                    return JSON.parse(s.replace(/""/g, '"'));
+                },
+                () => JSON.parse(jsonDataRaw.replace(/'/g, '"')), // 4. Replace single quotes (common in Python/JS dumps)
+                () => JSON.parse(jsonDataRaw.replace(/\\"/g, '"')) // 5. Unescape backslashes
+            ];
+
+            for (const attempt of attempts) {
+                try {
+                    jsonData = attempt();
+                    if (jsonData && typeof jsonData === 'object') break;
+                } catch (e) {
+                    parseError = e as Error;
+                }
             }
 
-            const jsonData = JSON.parse(jsonClean);
+            if (!jsonData) {
+                throw new Error(`Falha ao ler JSON: ${parseError?.message || 'Formato inválido'}`);
+            }
             
             // Merge metadata
             if (!jsonData.id && rowId) jsonData.id = rowId;
@@ -100,14 +143,14 @@ const DataImportModal: React.FC<Props> = ({ onClose, onSuccess }) => {
 
             parsedData.push(jsonData);
         } catch (e) {
-            setLogs(prev => [...prev, `❌ Erro na linha ${i + 1}: ${(e as Error).message}`]);
+            setLogs(prev => [...prev, `❌ Erro na linha ${index + 1}: ${(e as Error).message}`]);
         }
-    }
+    });
     
     return parsedData;
   };
 
-  const handleImport = () => {
+  const handleImport = async () => {
     if (!csvContent.trim()) return;
     
     console.log("Starting import process...");
@@ -115,54 +158,62 @@ const DataImportModal: React.FC<Props> = ({ onClose, onSuccess }) => {
     setIsImporting(true);
     setLogs([]);
     
-    // Use setTimeout to allow the UI to render the 'processing' view before blocking the thread with parsing
-    setTimeout(async () => {
-        try {
-            console.log("Parsing CSV content...");
-            const dataToImport = parseCSV(csvContent);
-            console.log("Parsed data:", dataToImport.length, "records");
-            
-            setProgress({ current: 0, total: dataToImport.length, success: 0, errors: 0 });
-            
-            if (dataToImport.length === 0) {
-                setLogs(prev => [...prev, "⚠️ Nenhum dado válido encontrado para importar. Verifique o formato do CSV."]);
-                setIsImporting(false);
-                return;
-            }
+    // Allow UI to update before blocking
+    await new Promise(resolve => setTimeout(resolve, 100));
 
-            setLogs(prev => [...prev, `🚀 Iniciando importação de ${dataToImport.length} registros...`]);
-
-            for (let i = 0; i < dataToImport.length; i++) {
-                const protocol = dataToImport[i];
-                setProgress(prev => ({ ...prev, current: i + 1 }));
-                
-                try {
-                    // Use db.importProtocol which handles upsert and preserves dates
-                    await db.importProtocol(protocol);
-                    setProgress(prev => ({ ...prev, success: prev.success + 1 }));
-                } catch (err) {
-                    console.error("Import error for item", i, err);
-                    setProgress(prev => ({ ...prev, errors: prev.errors + 1 }));
-                    setLogs(prev => [...prev, `❌ Falha ao salvar ${protocol.clientName || protocol.id}: ${(err as Error).message}`]);
-                }
-            }
-            
-            setLogs(prev => [...prev, "✅ Processo finalizado!"]);
-            
-            if (progress.errors === 0) {
-                setTimeout(() => {
-                    onSuccess();
-                    onClose();
-                }, 2000);
-            }
-
-        } catch (error) {
-            console.error("Fatal import error:", error);
-            setLogs(prev => [...prev, `❌ Erro fatal: ${(error as Error).message}`]);
-        } finally {
+    try {
+        console.log("Parsing CSV content...");
+        const dataToImport = parseCSV(csvContent);
+        console.log("Parsed data:", dataToImport.length, "records");
+        
+        setProgress({ current: 0, total: dataToImport.length, success: 0, errors: 0 });
+        
+        if (dataToImport.length === 0) {
+            setLogs(prev => [...prev, "⚠️ Nenhum dado válido encontrado para importar. Verifique o formato do CSV."]);
             setIsImporting(false);
+            return;
         }
-    }, 100);
+
+        setLogs(prev => [...prev, `🚀 Iniciando importação de ${dataToImport.length} registros...`]);
+
+        let successCount = 0;
+        let errorCount = 0;
+
+        for (let i = 0; i < dataToImport.length; i++) {
+            const protocol = dataToImport[i];
+            setProgress(prev => ({ ...prev, current: i + 1 }));
+            
+            try {
+                // Use db.importProtocol which handles upsert and preserves dates
+                await db.importProtocol(protocol);
+                successCount++;
+                setProgress(prev => ({ ...prev, success: successCount }));
+            } catch (err) {
+                console.error("Import error for item", i, err);
+                errorCount++;
+                setProgress(prev => ({ ...prev, errors: errorCount }));
+                setLogs(prev => [...prev, `❌ Falha ao salvar ${protocol.clientName || protocol.id}: ${(err as Error).message}`]);
+            }
+        }
+        
+        setLogs(prev => [...prev, "✅ Processo finalizado!"]);
+        
+        if (errorCount === 0) {
+            setTimeout(() => {
+                onSuccess();
+                // onClose is called by parent after onSuccess logic if needed, or we can call it here.
+                // But in MainDashboard, onSuccess calls onClose. So we don't need to call onClose here if onSuccess handles it.
+                // However, the original code called onClose inside setTimeout.
+                // Let's keep it consistent with the prop definition.
+            }, 2000);
+        }
+
+    } catch (error) {
+        console.error("Fatal import error:", error);
+        setLogs(prev => [...prev, `❌ Erro fatal: ${(error as Error).message}`]);
+    } finally {
+        setIsImporting(false);
+    }
   };
 
   return (

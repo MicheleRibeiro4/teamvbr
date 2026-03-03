@@ -33,9 +33,10 @@ interface Props {
   onLoadStudent: (student: ProtocolData, view: 'manage' | 'student-dashboard') => void;
   onUpdateStudent: (student: ProtocolData) => Promise<void>;
   onDeleteStudent: (id: string) => Promise<void>;
+  onReload: () => Promise<void>;
 }
 
-const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStudent, onUpdateStudent, onDeleteStudent }) => {
+const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStudent, onUpdateStudent, onDeleteStudent, onReload }) => {
   
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [previewStudent, setPreviewStudent] = useState<ProtocolData | null>(null);
@@ -601,9 +602,10 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
       {showImportModal && (
           <DataImportModal 
               onClose={() => setShowImportModal(false)} 
-              onSuccess={() => {
+              onSuccess={async () => {
                   setShowImportModal(false);
-                  onList(); // Refresh list
+                  await onReload(); // Refresh data
+                  onList(); // Go to list view
               }} 
           />
       )}
