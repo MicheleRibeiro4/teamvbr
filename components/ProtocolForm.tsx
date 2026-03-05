@@ -447,6 +447,13 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
   };
 
   useEffect(() => {
+    // Garante que o objeto de medidas exista (correção para dados antigos)
+    if (data.physicalData && !data.physicalData.measurements) {
+        handleChange('physicalData.measurements', {});
+    }
+  }, [data.physicalData]);
+
+  useEffect(() => {
     // Cálculo inicial de água caso esteja vazio ao carregar, baseado no peso
     const weight = parseFloat(data.physicalData.weight.replace(',', '.'));
     if (!isNaN(weight) && weight > 0 && (!data.waterGoal || data.waterGoal === '')) {
@@ -822,7 +829,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                           <label className={labelClass}>{label}</label>
                           <input 
                             className={inputClass} 
-                            value={(data.physicalData.measurements as any)[key] || ''} 
+                            value={(data.physicalData?.measurements as any)?.[key] || ''} 
                             onChange={(e) => handleChange(`physicalData.measurements.${key}`, e.target.value)} 
                           />
                       </div>
