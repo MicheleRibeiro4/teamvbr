@@ -182,8 +182,29 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
                     {/* DADOS E ESTRATÉGIA */}
                     <div className="mb-8">
                         {renderHeader("Dados Físicos & Estratégia")}
-                        {/* <div className={sectionTitleStyle}>DADOS FÍSICOS — {physical.date}</div> - Removed redundant title */}
                         
+                        <div className="flex justify-between items-center mb-6 avoid-page-break">
+                            <div className="bg-gray-100 px-4 py-2 rounded-lg border border-gray-200">
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mr-2">DATA DA AVALIAÇÃO:</span>
+                                <span className="text-sm font-black text-gray-900">
+                              {physical.date ? (() => {
+                                if (physical.date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                                  const [year, month, day] = physical.date.split('-');
+                                  return `${day}/${month}/${year}`;
+                                }
+                                if (physical.date.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+                                  return physical.date;
+                                }
+                                try {
+                                  return new Date(physical.date).toLocaleDateString('pt-BR');
+                                } catch (e) {
+                                  return physical.date;
+                                }
+                              })() : 'N/A'}
+                            </span>
+                            </div>
+                        </div>
+
                         <div className="grid grid-cols-3 gap-4 mb-8">
                         <div className={cardDataStyle}>
                             <span className={labelStyle}>PESO ATUAL</span>
@@ -224,10 +245,19 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
                     
                     <div className="bg-gray-100 p-4 rounded-lg border-l-4 border-gray-300 mb-8 avoid-page-break">
                         <span className="font-bold text-gray-900 text-xs uppercase block mb-2">Observação:</span>
-                        <p className="text-sm text-gray-700 leading-relaxed text-justify">
+                        <p className="text-sm text-gray-700 leading-relaxed text-justify whitespace-pre-wrap">
                             {safeData.nutritionalStrategy || "Estratégia personalizada de acordo com anamnese e objetivos."}
                         </p>
                     </div>
+
+                    {safeData.generalObservations && (
+                        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-8 avoid-page-break">
+                            <span className="font-bold text-gray-900 text-xs uppercase block mb-2">Observações Gerais & Feedback:</span>
+                            <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                                {safeData.generalObservations}
+                            </p>
+                        </div>
+                    )}
                     
                     <div className="bg-[#111] text-center p-8 rounded-xl mb-10 mx-auto w-full avoid-page-break">
                         <p className="text-[10px] font-black text-white uppercase tracking-[0.2em] mb-2">META DIÁRIA (FOCO EM {protocolTitle})</p>
@@ -240,18 +270,18 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
                     <div className="grid grid-cols-3 gap-6 mb-8">
                         <div className="text-center p-4 border border-gray-100 rounded-lg shadow-sm avoid-page-break">
                             <p className="text-[#d4af37] font-black text-[10px] uppercase tracking-widest mb-1">PROTEÍNAS</p>
-                            <p className="text-3xl font-black text-gray-900">{macros.protein?.value || '0'}g</p>
-                            <p className="text-[9px] text-gray-400 font-bold">{macros.protein?.ratio || '0'}g/kg</p>
+                            <p className="text-3xl font-black text-gray-900">{(macros.protein?.value || '0').replace(/g/gi, '')}g</p>
+                            <p className="text-[9px] text-gray-400 font-bold">{(macros.protein?.ratio || '0').replace(/g\/kg/gi, '')}g/kg</p>
                         </div>
                         <div className="text-center p-4 border border-gray-100 rounded-lg shadow-sm avoid-page-break">
                             <p className="text-[#d4af37] font-black text-[10px] uppercase tracking-widest mb-1">CARBOIDRATOS</p>
-                            <p className="text-3xl font-black text-gray-900">{macros.carbs?.value || '0'}g</p>
-                            <p className="text-[9px] text-gray-400 font-bold">{macros.carbs?.ratio || '0'}g/kg</p>
+                            <p className="text-3xl font-black text-gray-900">{(macros.carbs?.value || '0').replace(/g/gi, '')}g</p>
+                            <p className="text-[9px] text-gray-400 font-bold">{(macros.carbs?.ratio || '0').replace(/g\/kg/gi, '')}g/kg</p>
                         </div>
                         <div className="text-center p-4 border border-gray-100 rounded-lg shadow-sm avoid-page-break">
                             <p className="text-[#d4af37] font-black text-[10px] uppercase tracking-widest mb-1">GORDURAS</p>
-                            <p className="text-3xl font-black text-gray-900">{macros.fats?.value || '0'}g</p>
-                            <p className="text-[9px] text-gray-400 font-bold">{macros.fats?.ratio || '0'}g/kg</p>
+                            <p className="text-3xl font-black text-gray-900">{(macros.fats?.value || '0').replace(/g/gi, '')}g</p>
+                            <p className="text-[9px] text-gray-400 font-bold">{(macros.fats?.ratio || '0').replace(/g\/kg/gi, '')}g/kg</p>
                         </div>
                     </div>
                     
@@ -280,6 +310,12 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
                                         <div className="col-span-10">
                                             <p className="font-bold text-gray-900 text-sm mb-1 uppercase">{meal.name}</p>
                                             <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">{meal.details}</p>
+                                            {meal.substitutions && (
+                                                <div className="mt-2 pt-2 border-t border-gray-200/50">
+                                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Opções de Substituição:</p>
+                                                    <p className="text-xs text-gray-500 italic leading-relaxed whitespace-pre-wrap">{meal.substitutions}</p>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 ))}

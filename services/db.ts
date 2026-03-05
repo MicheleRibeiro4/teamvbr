@@ -158,7 +158,7 @@ export const db = {
 
   async getStudent(studentId: string): Promise<any> {
     if (!supabase) return null;
-    const { data, error } = await supabase.from('students').select('*').eq('id', studentId).single();
+    const { data, error } = await supabase.from('students').select('*').eq('id', studentId).maybeSingle();
     if (error) console.error("Erro ao buscar aluno:", error);
     return data;
   },
@@ -185,7 +185,15 @@ export const db = {
         console.error("Erro ao buscar feedbacks:", error);
         return [];
     }
-    return data || [];
+    return (data || []).map(item => ({
+        ...item,
+        date: item.feedback_date, // Map DB column to frontend prop
+        dietAdherence: item.diet_adherence,
+        trainingAdherence: item.training_adherence,
+        sleepQuality: item.sleep_quality,
+        energyLevel: item.energy_level,
+        createdAt: item.created_at
+    }));
   },
 
   async saveFeedback(feedback: any): Promise<void> {
@@ -204,6 +212,18 @@ export const db = {
     if (error) throw error;
   },
 
+  async deleteFeedback(id: string): Promise<void> {
+    if (!supabase) return;
+    const { error } = await supabase.from('feedbacks').delete().eq('id', id);
+    if (error) throw error;
+  },
+
+  async deleteMeasurement(id: string): Promise<void> {
+    if (!supabase) return;
+    const { error } = await supabase.from('body_measurements').delete().eq('id', id);
+    if (error) throw error;
+  },
+
   async getMeasurements(studentId: string): Promise<any[]> {
     if (!supabase) return [];
     const { data, error } = await supabase
@@ -216,7 +236,16 @@ export const db = {
         console.error("Erro ao buscar medidas:", error);
         return [];
     }
-    return data || [];
+    return (data || []).map(item => ({
+        ...item,
+        date: item.created_at, // Map created_at to date as fallback or primary if no specific date col
+        armRight: item.arm_right,
+        armLeft: item.arm_left,
+        thighRight: item.thigh_right,
+        thighLeft: item.thigh_left,
+        bodyFat: item.body_fat,
+        createdAt: item.created_at
+    }));
   },
 
   async saveMeasurement(measurement: any): Promise<void> {
@@ -243,11 +272,12 @@ export const db = {
     if (!supabase) return [];
     
     // Ajuste para consultar dentro do JSONB 'data' já que as colunas não existem no esquema simplificado
+    // Busca tanto o protocolo original (pelo ID) quanto as versões (pelo studentId no JSON)
     const { data, error } = await supabase
         .from('protocols')
         .select('*')
-        .eq('data->>studentId', studentId)
-        .order('data->>version', { ascending: false });
+        .or(`id.eq.${studentId},data->>studentId.eq.${studentId}`)
+        .order('updated_at', { ascending: false }); // Ordena por data de atualização para mostrar o mais recente primeiro
 
     if (error) {
         console.error("Erro ao buscar versões:", error);

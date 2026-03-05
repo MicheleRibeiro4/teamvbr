@@ -224,7 +224,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                "fats": { "value": "gramas totais", "ratio": "g/kg" }
             },
             "meals": [
-              { "time": "08:00", "name": "Café da Manhã", "details": "Alimentos e quantidades detalhadas" }
+              { "time": "08:00", "name": "Café da Manhã", "details": "Alimentos e quantidades detalhadas", "substitutions": "Opções de substituição para esta refeição" }
             ],
             "supplements": [
               { "name": "Nome", "dosage": "Dose", "timing": "Horário" }
@@ -261,7 +261,8 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                                 properties: {
                                     time: { type: Type.STRING },
                                     name: { type: Type.STRING },
-                                    details: { type: Type.STRING }
+                                    details: { type: Type.STRING },
+                                    substitutions: { type: Type.STRING }
                                 },
                                 required: ["time", "name", "details"]
                             }
@@ -576,11 +577,13 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
     }
   }, [data.contract.planValue]);
 
-  const addMeal = () => handleChange('meals', [...data.meals, { id: Date.now().toString(), time: '', name: '', details: '' }]);
+  const generateId = () => Math.random().toString(36).substr(2, 9);
+
+  const addMeal = () => handleChange('meals', [...data.meals, { id: generateId(), time: '', name: '', details: '' }]);
   const removeMeal = (index: number) => { const newMeals = [...data.meals]; newMeals.splice(index, 1); handleChange('meals', newMeals); };
   const updateMeal = (index: number, field: keyof Meal, val: string) => { const newMeals = [...data.meals]; newMeals[index] = { ...newMeals[index], [field]: val }; handleChange('meals', newMeals); };
 
-  const addSupplement = () => handleChange('supplements', [...data.supplements, { id: Date.now().toString(), name: '', dosage: '', timing: '' }]);
+  const addSupplement = () => handleChange('supplements', [...data.supplements, { id: generateId(), name: '', dosage: '', timing: '' }]);
   const removeSupplement = (index: number) => { const newSupps = [...data.supplements]; newSupps.splice(index, 1); handleChange('supplements', newSupps); };
   const updateSupplement = (index: number, field: keyof Supplement, val: string) => { const newSupps = [...data.supplements]; newSupps[index] = { ...newSupps[index], [field]: val }; handleChange('supplements', newSupps); };
 
@@ -588,10 +591,10 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
   const removeTip = (index: number) => { const newTips = [...(data.tips || [])]; newTips.splice(index, 1); handleChange('tips', newTips); };
   const updateTip = (index: number, val: string) => { const newTips = [...(data.tips || [])]; newTips[index] = val; handleChange('tips', newTips); };
 
-  const addTrainingDay = () => handleChange('trainingDays', [...data.trainingDays, { id: Date.now().toString(), title: '', focus: '', exercises: [] }]);
+  const addTrainingDay = () => handleChange('trainingDays', [...(data.trainingDays || []), { id: generateId(), title: '', focus: '', exercises: [] }]);
   const removeTrainingDay = (index: number) => { const newDays = [...data.trainingDays]; newDays.splice(index, 1); handleChange('trainingDays', newDays); };
   const updateTrainingDay = (index: number, field: keyof TrainingDay, val: any) => { const newDays = [...data.trainingDays]; newDays[index] = { ...newDays[index], [field]: val }; handleChange('trainingDays', newDays); };
-  const addExercise = (dayIndex: number) => { const newDays = [...data.trainingDays]; newDays[dayIndex].exercises.push({ id: Date.now().toString(), name: '', sets: '' }); handleChange('trainingDays', newDays); };
+  const addExercise = (dayIndex: number) => { const newDays = [...data.trainingDays]; newDays[dayIndex].exercises.push({ id: generateId(), name: '', sets: '' }); handleChange('trainingDays', newDays); };
   const removeExercise = (dayIndex: number, exIndex: number) => { const newDays = [...data.trainingDays]; newDays[dayIndex].exercises.splice(exIndex, 1); handleChange('trainingDays', newDays); };
   const updateExercise = (dayIndex: number, exIndex: number, field: keyof Exercise, val: string) => { const newDays = [...data.trainingDays]; newDays[dayIndex].exercises[exIndex] = { ...newDays[dayIndex].exercises[exIndex], [field]: val }; handleChange('trainingDays', newDays); };
 
@@ -807,7 +810,24 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                     ))}
                 </select>
               </div>
-              <div><label className={labelClass}>Data Avaliação</label><input className={inputClass} value={data.physicalData.date} onChange={(e) => handleDateInput('physicalData.date', e.target.value)} placeholder="DD/MM/AAAA" maxLength={10} /></div>
+              <div>
+                <label className={labelClass}>Data Avaliação</label>
+                <input 
+                  type="date" 
+                  className={inputClass} 
+                  value={(() => {
+                    const val = data.physicalData.date;
+                    if (!val) return '';
+                    if (val.match(/^\d{4}-\d{2}-\d{2}$/)) return val;
+                    if (val.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+                      const [day, month, year] = val.split('/');
+                      return `${year}-${month}-${day}`;
+                    }
+                    return val;
+                  })()} 
+                  onChange={(e) => handleChange('physicalData.date', e.target.value)} 
+                />
+              </div>
               <div><label className={labelClass}>Idade</label><input className={inputClass} value={data.physicalData.age} onChange={(e) => handleChange('physicalData.age', e.target.value)} /></div>
             </div>
 
@@ -926,7 +946,14 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
               {data.meals.map((meal, index) => (
                 <div key={meal.id} className="bg-white/5 p-4 rounded-xl border border-white/5 flex flex-col md:flex-row gap-4 items-start group">
                     <div className="w-full md:w-1/4"><label className={labelClass}>Horário</label><input className={inputClass} value={meal.time} onChange={(e) => updateMealTime(index, e.target.value)} placeholder="08:00" maxLength={5}/></div>
-                    <div className="flex-1 w-full"><label className={labelClass}>Nome</label><input className={inputClass + " mb-2"} value={meal.name} onChange={(e) => updateMeal(index, 'name', e.target.value)} /><textarea className={inputClass + " min-h-[60px]"} value={meal.details} onChange={(e) => updateMeal(index, 'details', e.target.value)} /></div>
+                    <div className="flex-1 w-full">
+                        <label className={labelClass}>Nome</label>
+                        <input className={inputClass + " mb-2"} value={meal.name} onChange={(e) => updateMeal(index, 'name', e.target.value)} />
+                        <label className={labelClass}>Alimentos</label>
+                        <textarea className={inputClass + " min-h-[60px] mb-2"} value={meal.details} onChange={(e) => updateMeal(index, 'details', e.target.value)} placeholder="Lista de alimentos..." />
+                        <label className={labelClass}>Substituições (Opcional)</label>
+                        <textarea className={inputClass + " min-h-[40px] text-xs opacity-80"} value={meal.substitutions || ''} onChange={(e) => updateMeal(index, 'substitutions', e.target.value)} placeholder="Opções de troca..." />
+                    </div>
                     <button onClick={() => removeMeal(index)} className="mt-0 md:mt-6 w-full md:w-auto p-2 text-red-500 hover:text-red-500 transition-colors flex justify-center items-center"><Trash2 size={18} /></button>
                 </div>
               ))}

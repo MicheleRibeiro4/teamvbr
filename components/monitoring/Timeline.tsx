@@ -5,7 +5,8 @@ import {
   MessageSquare, 
   Activity, 
   FileText, 
-  UserPlus 
+  UserPlus,
+  Trash2
 } from 'lucide-react';
 
 interface Props {
@@ -13,12 +14,20 @@ interface Props {
   measurements: BodyMeasurementEntry[];
   versions: ProtocolData[];
   student: Student | null;
+  onDelete: (type: 'feedback' | 'measurement' | 'protocol', id: string) => void;
 }
 
-const Timeline: React.FC<Props> = ({ feedbacks, measurements, versions, student }) => {
+const Timeline: React.FC<Props> = ({ feedbacks, measurements, versions, student, onDelete }) => {
   
+  const handleDelete = (type: 'feedback' | 'measurement' | 'protocol', id: string) => {
+    if (confirm('Tem certeza que deseja excluir este item do histórico? Esta ação não pode ser desfeita.')) {
+      onDelete(type, id);
+    }
+  };
+
   const events = [
     ...(student ? [{
+      id: student.id,
       type: 'register',
       date: new Date(student.createdAt),
       title: 'Início da Consultoria',
@@ -29,6 +38,7 @@ const Timeline: React.FC<Props> = ({ feedbacks, measurements, versions, student 
       border: 'border-blue-500/30'
     }] : []),
     ...feedbacks.map(f => ({
+      id: f.id,
       type: 'feedback',
       date: new Date(f.date),
       title: 'Feedback Registrado',
@@ -39,6 +49,7 @@ const Timeline: React.FC<Props> = ({ feedbacks, measurements, versions, student 
       border: 'border-green-500/30'
     })),
     ...measurements.map(m => ({
+      id: m.id,
       type: 'measurement',
       date: new Date(m.date),
       title: 'Atualização de Medidas',
@@ -49,6 +60,7 @@ const Timeline: React.FC<Props> = ({ feedbacks, measurements, versions, student 
       border: 'border-purple-500/30'
     })),
     ...versions.map(v => ({
+      id: v.id,
       type: 'protocol',
       date: new Date(v.updatedAt),
       title: `Protocolo v${v.version || 1}: ${v.protocolTitle}`,
@@ -74,7 +86,7 @@ const Timeline: React.FC<Props> = ({ feedbacks, measurements, versions, student 
           <div key={index} className="relative animate-in slide-in-from-left-4 duration-500" style={{ animationDelay: `${index * 100}ms` }}>
             <div className={`absolute -left-[41px] top-0 w-5 h-5 rounded-full border-4 border-[#0a0a0a] ${event.bg.replace('/10', '')}`}></div>
             
-            <div className={`bg-[#111] border rounded-2xl p-6 ${event.border}`}>
+            <div className={`bg-[#111] border rounded-2xl p-6 ${event.border} group`}>
               <div className="flex justify-between items-start mb-2">
                 <div className="flex items-center gap-3">
                   <div className={`p-2 rounded-lg ${event.bg} ${event.color}`}>
@@ -84,9 +96,20 @@ const Timeline: React.FC<Props> = ({ feedbacks, measurements, versions, student 
                     {event.title}
                   </h3>
                 </div>
-                <span className="text-[10px] font-bold text-white/30 uppercase tracking-widest">
-                  {event.date.toLocaleDateString('pt-BR')}
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className="text-[10px] font-bold text-white/30 uppercase tracking-widest">
+                    {event.date.toLocaleDateString('pt-BR')}
+                  </span>
+                  {event.type !== 'register' && (
+                    <button 
+                      onClick={() => handleDelete(event.type as any, event.id!)}
+                      className="text-white/20 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                      title="Excluir evento"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                </div>
               </div>
               <p className="text-sm text-white/60 leading-relaxed pl-[52px]">
                 {event.details}

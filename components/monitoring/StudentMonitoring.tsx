@@ -2,18 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { ProtocolData, Feedback, BodyMeasurementEntry, Student } from '../../types';
 import { db } from '../../services/db';
 import { 
-  Activity, 
-  MessageSquare, 
-  FileText, 
   Clock, 
-  User, 
   Loader2,
-  Plus
+  ClipboardCheck
 } from 'lucide-react';
-import FeedbackList from './FeedbackList';
-import EvolutionCharts from './EvolutionCharts';
-import ProtocolVersions from './ProtocolVersions';
 import Timeline from './Timeline';
+import CheckInForm from './CheckInForm';
 
 interface Props {
   studentId: string;
@@ -23,7 +17,7 @@ interface Props {
 }
 
 const StudentMonitoring: React.FC<Props> = ({ studentId, currentProtocol, onUpdateProtocol, onBack }) => {
-  const [activeTab, setActiveTab] = useState<'evolution' | 'feedbacks' | 'protocols' | 'timeline'>('evolution');
+  const [activeTab, setActiveTab] = useState<'checkin' | 'timeline'>('checkin');
   const [loading, setLoading] = useState(true);
   const [student, setStudent] = useState<Student | null>(null);
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
@@ -61,6 +55,22 @@ const StudentMonitoring: React.FC<Props> = ({ studentId, currentProtocol, onUpda
     loadData();
   };
 
+  const handleDelete = async (type: 'feedback' | 'measurement' | 'protocol', id: string) => {
+    try {
+      if (type === 'feedback') {
+        await db.deleteFeedback(id);
+      } else if (type === 'measurement') {
+        await db.deleteMeasurement(id);
+      } else if (type === 'protocol') {
+        await db.deleteProtocol(id);
+      }
+      handleRefresh();
+    } catch (error) {
+      console.error("Erro ao excluir item:", error);
+      alert("Erro ao excluir item. Tente novamente.");
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-96 text-white/50">
@@ -77,10 +87,8 @@ const StudentMonitoring: React.FC<Props> = ({ studentId, currentProtocol, onUpda
         <div className="flex justify-center relative z-10">
           <div className="flex flex-wrap justify-center gap-2 bg-black/40 p-1.5 rounded-xl border border-white/5">
             {[
-              { id: 'evolution', label: 'Evolução', icon: Activity },
-              { id: 'feedbacks', label: 'Feedbacks', icon: MessageSquare },
-              { id: 'protocols', label: 'Protocolos', icon: FileText },
-              { id: 'timeline', label: 'Histórico', icon: Clock },
+              { id: 'checkin', label: 'Acompanhamento', icon: ClipboardCheck },
+              { id: 'timeline', label: 'Histórico Completo', icon: Clock },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -101,29 +109,12 @@ const StudentMonitoring: React.FC<Props> = ({ studentId, currentProtocol, onUpda
 
       {/* Content */}
       <div className="min-h-[500px]">
-        {activeTab === 'evolution' && (
-          <EvolutionCharts 
-            measurements={measurements} 
-            onUpdate={handleRefresh} 
+        {activeTab === 'checkin' && (
+          <CheckInForm 
             studentId={studentId}
-          />
-        )}
-        
-        {activeTab === 'feedbacks' && (
-          <FeedbackList 
-            feedbacks={feedbacks} 
-            onUpdate={handleRefresh} 
-            studentId={studentId}
-          />
-        )}
-
-        {activeTab === 'protocols' && (
-          <ProtocolVersions 
-            versions={versions} 
             currentProtocol={currentProtocol}
-            onUpdate={handleRefresh}
-            onSelectProtocol={onUpdateProtocol}
-            studentId={studentId}
+            onUpdateProtocol={onUpdateProtocol}
+            onSuccess={handleRefresh}
           />
         )}
 
@@ -133,6 +124,7 @@ const StudentMonitoring: React.FC<Props> = ({ studentId, currentProtocol, onUpda
             measurements={measurements} 
             versions={versions} 
             student={student}
+            onDelete={handleDelete}
           />
         )}
       </div>

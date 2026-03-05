@@ -40,6 +40,7 @@ export interface Meal {
   time: string;
   name: string;
   details: string;
+  substitutions?: string; // Opções de substituição
 }
 
 export interface Supplement {
