@@ -451,7 +451,11 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
     if (data.physicalData && !data.physicalData.measurements) {
         handleChange('physicalData.measurements', {});
     }
-  }, [data.physicalData]);
+    // Garante que o array de treinos exista
+    if (!data.trainingDays) {
+        handleChange('trainingDays', []);
+    }
+  }, [data.physicalData, data.trainingDays]);
 
   useEffect(() => {
     // Cálculo inicial de água caso esteja vazio ao carregar, baseado no peso
@@ -1026,7 +1030,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                 />
             </div>
             <div className="space-y-8">
-              {data.trainingDays.map((day, dIndex) => (
+              {(data.trainingDays || []).map((day, dIndex) => (
                 <div key={day.id} className="bg-white/5 p-6 rounded-2xl border border-white/10">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 border-b border-white/5 pb-4 gap-4 md:gap-0">
                       <div className="flex flex-col md:flex-row gap-4 flex-1 w-full">
@@ -1036,7 +1040,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                       <button onClick={() => removeTrainingDay(dIndex)} className="ml-0 md:ml-4 p-2 text-red-500 hover:text-red-500 w-full md:w-auto flex justify-center"><Trash2 size={20} /></button>
                     </div>
                     <div className="space-y-2 pl-0 md:pl-4 border-l-0 md:border-l-2 border-white/5">
-                      {day.exercises.map((ex, exIndex) => (
+                      {(day.exercises || []).map((ex, exIndex) => (
                         <div key={ex.id} className="flex gap-2 md:gap-4 items-center">
                             <input className={inputClass + " py-2 text-xs"} value={ex.name} onChange={(e) => updateExercise(dIndex, exIndex, 'name', e.target.value)} placeholder="Exercício" />
                             <input className={inputClass + " py-2 text-xs w-20 md:w-32"} value={ex.sets} onChange={(e) => updateExercise(dIndex, exIndex, 'sets', e.target.value)} placeholder="Séries" />

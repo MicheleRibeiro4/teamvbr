@@ -350,7 +350,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
                                         <div className="border border-gray-200 border-t-0 rounded-b-lg overflow-hidden bg-white">
                                             <table className="w-full text-left text-xs">
                                                 <tbody className="divide-y divide-gray-100">
-                                                    {day.exercises.map((ex, eIdx) => (
+                                                    {(day.exercises || []).map((ex, eIdx) => (
                                                         <tr key={eIdx} className="hover:bg-gray-50">
                                                             <td className="p-3 font-bold text-gray-800 uppercase">{ex.name}</td>
                                                             <td className="p-3 text-right font-black text-gray-900 w-24">{ex.sets}</td>
