@@ -470,12 +470,22 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
   useEffect(() => {
     if (!data.contract.startDate || !data.contract.planType) return;
 
-    const parts = data.contract.startDate.split('/');
-    if (parts.length !== 3) return;
-
-    const day = parseInt(parts[0]);
-    const month = parseInt(parts[1]) - 1;
-    const year = parseInt(parts[2]);
+    let day, month, year;
+    if (data.contract.startDate.includes('/')) {
+      const parts = data.contract.startDate.split('/');
+      if (parts.length !== 3) return;
+      day = parseInt(parts[0]);
+      month = parseInt(parts[1]) - 1;
+      year = parseInt(parts[2]);
+    } else if (data.contract.startDate.includes('-')) {
+      const parts = data.contract.startDate.split('-');
+      if (parts.length !== 3) return;
+      year = parseInt(parts[0]);
+      month = parseInt(parts[1]) - 1;
+      day = parseInt(parts[2]);
+    } else {
+      return;
+    }
     
     // Validação básica de data
     if (day < 1 || day > 31 || month < 0 || month > 11 || isNaN(year)) return;
@@ -721,8 +731,42 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
               </div>
               <div className="col-span-2 hidden lg:block"></div>
 
-              <div><label className={labelClass}>Início</label><input className={inputClass} value={data.contract.startDate} onChange={(e) => handleDateInput('contract.startDate', e.target.value)} placeholder="DD/MM/AAAA" maxLength={10} /></div>
-              <div><label className={labelClass}>Término</label><input className={inputClass + " opacity-60"} value={data.contract.endDate} readOnly /></div>
+              <div>
+                <label className={labelClass}>Início</label>
+                <input 
+                  type="date" 
+                  className={inputClass} 
+                  value={(() => {
+                    const val = data.contract.startDate;
+                    if (!val) return '';
+                    if (val.match(/^\d{4}-\d{2}-\d{2}$/)) return val;
+                    if (val.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+                      const [day, month, year] = val.split('/');
+                      return `${year}-${month}-${day}`;
+                    }
+                    return val;
+                  })()} 
+                  onChange={(e) => handleChange('contract.startDate', e.target.value)} 
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Término</label>
+                <input 
+                  type="date" 
+                  className={inputClass} 
+                  value={(() => {
+                    const val = data.contract.endDate;
+                    if (!val) return '';
+                    if (val.match(/^\d{4}-\d{2}-\d{2}$/)) return val;
+                    if (val.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+                      const [day, month, year] = val.split('/');
+                      return `${year}-${month}-${day}`;
+                    }
+                    return val;
+                  })()} 
+                  onChange={(e) => handleChange('contract.endDate', e.target.value)} 
+                />
+              </div>
               
               <div className="col-span-1 md:col-span-2"><label className={labelClass}>Valor (R$)</label><input className={inputClass} value={data.contract.planValue} onChange={(e) => handleChange('contract.planValue', e.target.value)} placeholder="0,00" /></div>
               <div className="col-span-1 md:col-span-4"><label className={labelClass}>Extenso</label><input className={inputClass + " opacity-60 italic bg-transparent border-none"} value={data.contract.planValueWords} readOnly /></div>
