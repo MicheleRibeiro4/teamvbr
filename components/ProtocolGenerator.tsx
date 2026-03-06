@@ -90,59 +90,78 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
         `;
 
         let aiData: any;
+        let response;
+        let retries = 0;
+        const maxRetries = 2;
 
-        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-        const response = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
-            contents: prompt,
-            config: {
-                responseMimeType: 'application/json',
-                responseSchema: {
-                    type: Type.OBJECT,
-                    properties: {
-                        nutritionalStrategy: { type: Type.STRING },
-                        kcalGoal: { type: Type.STRING },
-                        waterGoal: { type: Type.STRING },
-                        macros: {
+        while (retries <= maxRetries) {
+            try {
+                const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+                response = await ai.models.generateContent({
+                    model: 'gemini-3-flash-preview',
+                    contents: prompt,
+                    config: {
+                        responseMimeType: 'application/json',
+                        responseSchema: {
                             type: Type.OBJECT,
                             properties: {
-                                protein: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } }, required: ["value", "ratio"] },
-                                carbs: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } }, required: ["value", "ratio"] },
-                                fats: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } }, required: ["value", "ratio"] }
+                                nutritionalStrategy: { type: Type.STRING },
+                                kcalGoal: { type: Type.STRING },
+                                waterGoal: { type: Type.STRING },
+                                macros: {
+                                    type: Type.OBJECT,
+                                    properties: {
+                                        protein: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } }, required: ["value", "ratio"] },
+                                        carbs: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } }, required: ["value", "ratio"] },
+                                        fats: { type: Type.OBJECT, properties: { value: { type: Type.STRING }, ratio: { type: Type.STRING } }, required: ["value", "ratio"] }
+                                    },
+                                    required: ["protein", "carbs", "fats"]
+                                },
+                                meals: {
+                                    type: Type.ARRAY,
+                                    items: {
+                                        type: Type.OBJECT,
+                                        properties: {
+                                            time: { type: Type.STRING },
+                                            name: { type: Type.STRING },
+                                            details: { type: Type.STRING }
+                                        },
+                                        required: ["time", "name", "details"]
+                                    }
+                                },
+                                supplements: {
+                                    type: Type.ARRAY,
+                                    items: {
+                                        type: Type.OBJECT,
+                                        properties: {
+                                            name: { type: Type.STRING },
+                                            dosage: { type: Type.STRING },
+                                            timing: { type: Type.STRING }
+                                        },
+                                        required: ["name", "dosage", "timing"]
+                                    }
+                                },
+                                tips: { type: Type.ARRAY, items: { type: Type.STRING } }
                             },
-                            required: ["protein", "carbs", "fats"]
-                        },
-                        meals: {
-                            type: Type.ARRAY,
-                            items: {
-                                type: Type.OBJECT,
-                                properties: {
-                                    time: { type: Type.STRING },
-                                    name: { type: Type.STRING },
-                                    details: { type: Type.STRING }
-                                },
-                                required: ["time", "name", "details"]
-                            }
-                        },
-                        supplements: {
-                            type: Type.ARRAY,
-                            items: {
-                                type: Type.OBJECT,
-                                properties: {
-                                    name: { type: Type.STRING },
-                                    dosage: { type: Type.STRING },
-                                    timing: { type: Type.STRING }
-                                },
-                                required: ["name", "dosage", "timing"]
-                            }
-                        },
-                        tips: { type: Type.ARRAY, items: { type: Type.STRING } }
-                    },
-                    required: ["nutritionalStrategy", "kcalGoal", "macros", "meals", "supplements", "tips"]
+                            required: ["nutritionalStrategy", "kcalGoal", "macros", "meals", "supplements", "tips"]
+                        }
+                    }
+                });
+                break; // Sucesso, sai do loop
+            } catch (aiErr: any) {
+                if (aiErr.message?.includes('503') || aiErr.message?.includes('high demand')) {
+                    retries++;
+                    if (retries <= maxRetries) {
+                        // Espera um pouco antes de tentar novamente (1s, 2s)
+                        await new Promise(resolve => setTimeout(resolve, 1000 * retries));
+                        continue;
+                    }
                 }
+                throw aiErr; // Se não for 503 ou acabaram as tentativas, joga o erro
             }
-        });
-        let jsonStr = response.text || "{}";
+        }
+
+        let jsonStr = response?.text || "{}";
         jsonStr = jsonStr.trim();
         if (jsonStr.startsWith('```json')) {
             jsonStr = jsonStr.replace(/^```json/, '').replace(/```$/, '');
@@ -209,7 +228,13 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
 
     } catch (err: any) {
         console.error(err);
-        setError("Erro ao gerar protocolo com IA. Tente novamente ou preencha manualmente. Detalhes: " + err.message);
+        let userMessage = "Erro ao gerar protocolo com IA. Tente novamente ou preencha manualmente.";
+        if (err.message?.includes('503') || err.message?.includes('high demand')) {
+            userMessage = "O serviço de IA está com alta demanda no momento. Por favor, aguarde alguns segundos e tente novamente ou use o preenchimento manual.";
+        } else {
+            userMessage += " Detalhes: " + err.message;
+        }
+        setError(userMessage);
     } finally {
         setLoading(false);
     }
