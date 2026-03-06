@@ -467,81 +467,59 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
     }
   }, [data.physicalData.weight]);
 
-  useEffect(() => {
-    if (!data.contract.startDate || !data.contract.planType) return;
+  const calculateEndDate = (startDateStr: string, planType: string) => {
+    if (!startDateStr || !planType) return null;
 
     let day, month, year;
-    if (data.contract.startDate.includes('/')) {
-      const parts = data.contract.startDate.split('/');
-      if (parts.length !== 3) return;
+    if (startDateStr.includes('/')) {
+      const parts = startDateStr.split('/');
+      if (parts.length !== 3) return null;
       day = parseInt(parts[0]);
       month = parseInt(parts[1]) - 1;
       year = parseInt(parts[2]);
-    } else if (data.contract.startDate.includes('-')) {
-      const parts = data.contract.startDate.split('-');
-      if (parts.length !== 3) return;
+    } else if (startDateStr.includes('-')) {
+      const parts = startDateStr.split('-');
+      if (parts.length !== 3) return null;
       year = parseInt(parts[0]);
       month = parseInt(parts[1]) - 1;
       day = parseInt(parts[2]);
     } else {
-      return;
+      return null;
     }
     
-    // Validação básica de data
-    if (day < 1 || day > 31 || month < 0 || month > 11 || isNaN(year)) return;
+    if (day < 1 || day > 31 || month < 0 || month > 11 || isNaN(year)) return null;
 
     const startDate = new Date(year, month, day);
-    if (isNaN(startDate.getTime())) return;
+    if (isNaN(startDate.getTime())) return null;
 
     let monthsToAdd = 0;
-
-    switch (data.contract.planType) {
-        case 'Avulso':
-            monthsToAdd = 1;
-            break;
-        case 'Trimestral':
-            monthsToAdd = 3;
-            break;
-        case 'Semestral':
-            monthsToAdd = 6;
-            break;
-        case 'Anual':
-            monthsToAdd = 12;
-            break;
-        default:
-            return;
+    switch (planType) {
+        case 'Avulso': monthsToAdd = 1; break;
+        case 'Trimestral': monthsToAdd = 3; break;
+        case 'Semestral': monthsToAdd = 6; break;
+        case 'Anual': monthsToAdd = 12; break;
+        default: return null;
     }
 
     const endDate = new Date(startDate);
     endDate.setMonth(endDate.getMonth() + monthsToAdd);
-    
-    // Subtrai 1 dia para fechar o ciclo (ex: 01/01 a 31/01)
     endDate.setDate(endDate.getDate() - 1);
 
     const endDay = String(endDate.getDate()).padStart(2, '0');
     const endMonth = String(endDate.getMonth() + 1).padStart(2, '0');
     const endYear = endDate.getFullYear();
-    const formattedEndDate = `${endDay}/${endMonth}/${endYear}`;
+    
+    // Retorna no formato YYYY-MM-DD para o input type="date"
+    const formattedEndDate = `${endYear}-${endMonth}-${endDay}`;
 
-    // Cálculo de dias totais
     const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
-    // Adiciona 1 dia pois a diferença de tempo entre 00:00 do mesmo dia é 0, mas conta como 1 dia de contrato
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; 
     
-    const finalDuration = String(diffDays);
-
-    if (data.contract.endDate !== formattedEndDate || data.contract.durationDays !== finalDuration) {
-         const newData = {
-             ...data,
-             contract: {
-                 ...data.contract,
-                 endDate: formattedEndDate,
-                 durationDays: finalDuration
-             }
-         };
-         onChange(newData);
-    }
-  }, [data.contract.startDate, data.contract.planType]);
+    return {
+      endDate: formattedEndDate,
+      durationDays: String(diffDays)
+    };
+  };
 
   useEffect(() => {
     const w = parseFloat(data.physicalData.weight.replace(',', '.'));
@@ -721,6 +699,14 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                     const newData = JSON.parse(JSON.stringify(data));
                     newData.contract.planType = val;
                     newData.contract.planValue = price;
+                    
+                    // Calcula nova data de término
+                    const calc = calculateEndDate(data.contract.startDate, val);
+                    if (calc) {
+                      newData.contract.endDate = calc.endDate;
+                      newData.contract.durationDays = calc.durationDays;
+                    }
+                    
                     onChange(newData);
                 }}>
                   <option value="Avulso">Avulso (1 Mês)</option>
@@ -746,7 +732,20 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                     }
                     return val;
                   })()} 
-                  onChange={(e) => handleChange('contract.startDate', e.target.value)} 
+                  onChange={(e) => {
+                    const newVal = e.target.value;
+                    const newData = JSON.parse(JSON.stringify(data));
+                    newData.contract.startDate = newVal;
+                    
+                    // Calcula nova data de término
+                    const calc = calculateEndDate(newVal, data.contract.planType);
+                    if (calc) {
+                      newData.contract.endDate = calc.endDate;
+                      newData.contract.durationDays = calc.durationDays;
+                    }
+                    
+                    onChange(newData);
+                  }} 
                 />
               </div>
               <div>

@@ -25,6 +25,15 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
   const contract = safeData.contract || EMPTY_DATA.contract;
   const clientName = safeData.clientName || '____________________';
 
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return '__________';
+    if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const [year, month, day] = dateStr.split('-');
+      return `${day}/${month}/${year}`;
+    }
+    return dateStr;
+  };
+
   const getCleanContractText = () => {
     let text = contract.contractBody;
     
@@ -35,8 +44,8 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
     const paymentMethodDisplay = contract.paymentMethod === 'Pix' ? 'Pix (à vista)' : (contract.paymentMethod || '__________');
 
     const map = {
-      '[START_DATE]': contract.startDate || '__________',
-      '[END_DATE]': contract.endDate || '__________',
+      '[START_DATE]': formatDate(contract.startDate),
+      '[END_DATE]': formatDate(contract.endDate),
       '[VALUE]': contract.planValue || '0,00',
       '[VALUE_WORDS]': contract.planValueWords || '__________',
       '[DURATION]': contract.durationDays || '0',
