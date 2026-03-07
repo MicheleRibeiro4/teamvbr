@@ -44,6 +44,15 @@ const StudentPortal: React.FC<StudentPortalProps> = ({ studentData, onLogout }) 
     return today > endDate;
   };
 
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return '...';
+    if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const [year, month, day] = dateStr.split('-');
+      return `${day}/${month}/${year}`;
+    }
+    return dateStr;
+  };
+
   const isExpired = checkPlanExpiration();
   const isAvulso = studentData.contract.planType === 'Avulso';
 
@@ -95,7 +104,7 @@ const StudentPortal: React.FC<StudentPortalProps> = ({ studentData, onLogout }) 
             
             <h2 className="text-2xl font-black uppercase text-white mb-2">Acesso Expirado</h2>
             <p className="text-white/40 text-sm font-medium mb-8">
-              Seu plano encerrou em <span className="text-white font-bold">{studentData.contract.endDate}</span>.
+              Seu plano encerrou em <span className="text-white font-bold">{formatDate(studentData.contract.endDate)}</span>.
               <br/>Para continuar acessando seu protocolo e evoluindo, renove sua consultoria.
             </p>
 

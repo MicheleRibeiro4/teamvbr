@@ -888,6 +888,13 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
               <div className="col-span-2 md:col-span-1"><label className={labelClass}>IMC</label><input className={inputClass + " opacity-60"} value={data.physicalData.imc} readOnly /></div>
             </div>
 
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              <div><label className={labelClass}>Massa Muscular (kg)</label><input className={inputClass} value={data.physicalData.muscleMass} onChange={(e) => handleChange('physicalData.muscleMass', e.target.value)} placeholder="00,0" /></div>
+              <div><label className={labelClass}>Gordura Corporal (%)</label><input className={inputClass} value={data.physicalData.bodyFat} onChange={(e) => handleChange('physicalData.bodyFat', e.target.value)} placeholder="00,0" /></div>
+              <div><label className={labelClass}>Gordura Visceral</label><input className={inputClass} value={data.physicalData.visceralFat} onChange={(e) => handleChange('physicalData.visceralFat', e.target.value)} placeholder="0" /></div>
+              <div><label className={labelClass}>Água Corporal (%)</label><input className={inputClass} value={data.physicalData.waterPercentage} onChange={(e) => handleChange('physicalData.waterPercentage', e.target.value)} placeholder="00,0" /></div>
+            </div>
+
             <div className="bg-white/5 p-6 rounded-2xl border border-white/5">
               <div className="flex items-center gap-2 mb-6"><Ruler className="text-[#d4af37]" size={16} /><h3 className="text-sm font-black text-white uppercase tracking-widest">Medidas (cm)</h3></div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

@@ -76,6 +76,24 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
     const clientName = safeData.clientName || "ALUNO";
     const firstName = clientName.split(' ')[0];
 
+    const formatDate = (dateStr: string) => {
+      if (!dateStr) return '...';
+      if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        const [year, month, day] = dateStr.split('-');
+        return `${day}/${month}/${year}`;
+      }
+      if (dateStr.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+        return dateStr;
+      }
+      try {
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return dateStr;
+        return date.toLocaleDateString('pt-BR');
+      } catch (e) {
+        return dateStr;
+      }
+    };
+
     // Configuração de Estilo para Página A4
     const pageStyle = (isFirst: boolean = false): React.CSSProperties => ({
         width: '794px', 
@@ -169,7 +187,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
 
                     <div className="mt-12 px-10 py-4 rounded-full border border-[#d4af37]/30 bg-[#d4af37]/10">
                         <p className="text-xl font-bold text-[#d4af37] uppercase tracking-widest">
-                            PERÍODO: {contract.startDate || '...'} — {contract.endDate || '...'}
+                            PERÍODO: {formatDate(contract.startDate)} — {formatDate(contract.endDate)}
                         </p>
                     </div>
                 </div>
@@ -319,10 +337,6 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
                                         </div>
                                     </div>
                                 ))}
-                            </div>
-
-                            <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center mt-4 mb-4 avoid-page-break">
-                                <p className="text-gray-500 text-sm italic font-medium">Lembre-se de manter a hidratação ao longo do dia (mínimo {safeData.waterGoal || '3.5'}L de água).</p>
                             </div>
                         </div>
                     )}
