@@ -268,15 +268,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
                         </p>
                     </div>
 
-                    {safeData.generalObservations && (
-                        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-8 avoid-page-break">
-                            <span className="font-bold text-gray-900 text-xs uppercase block mb-2">Observações Gerais & Feedback:</span>
-                            <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
-                                {safeData.generalObservations}
-                            </p>
-                        </div>
-                    )}
-                    
+
                     <div className="bg-[#111] text-center p-8 rounded-xl mb-10 mx-auto w-full avoid-page-break">
                         <p className="text-[10px] font-black text-white uppercase tracking-[0.2em] mb-2">META DIÁRIA (FOCO EM {protocolTitle})</p>
                         <p className="text-5xl font-black text-[#d4af37] whitespace-nowrap leading-none">
