@@ -40,11 +40,34 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
   const [dashboardView, setDashboardView] = useState<'default' | 'active_protocols' | 'financial'>('default');
   const [financialMonth, setFinancialMonth] = useState<string>('all');
 
-  const activeProtocols = protocols
-    .filter(p => p.contract?.status === 'Ativo')
-    .sort((a, b) => (a.clientName || '').localeCompare(b.clientName || ''));
+  // Helper to normalize name to UPPERCASE
+  const toUpper = (str: string) => str.toUpperCase();
+
+  // Normalize all protocols names to uppercase
+  const normalizedProtocols = protocols.map(p => ({
+    ...p,
+    clientName: toUpper((p.clientName || 'SEM NOME').trim())
+  }));
+
+  const activeProtocolsRaw = normalizedProtocols.filter(p => p.contract?.status === 'Ativo');
+  
+  // Deduplicate activeProtocols
+  const activeProtocolsMap = new Map();
+  activeProtocolsRaw.forEach(p => {
+    if (!activeProtocolsMap.has(p.clientName)) {
+      activeProtocolsMap.set(p.clientName, p);
+    } else {
+      const existing = activeProtocolsMap.get(p.clientName);
+      if (new Date(p.updatedAt) > new Date(existing.updatedAt)) {
+        activeProtocolsMap.set(p.clientName, p);
+      }
+    }
+  });
+  const activeProtocols = Array.from(activeProtocolsMap.values())
+    .sort((a, b) => a.clientName.localeCompare(b.clientName));
+
   const activeProtocolsCount = activeProtocols.filter(p => p.isActiveProtocol !== false).length;
-  const pendingStudents = protocols.filter(p => p.contract?.status === 'Aguardando');
+  const pendingStudents = normalizedProtocols.filter(p => p.contract?.status === 'Aguardando');
   
   const getMonthYear = (dateString?: string) => {
     if (!dateString) return null;
@@ -61,12 +84,29 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
 
   const currentMonthYear = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit' }).format(new Date()).substring(0, 7);
 
-  const validProtocols = protocols.filter(p => {
+  const validProtocolsRaw = normalizedProtocols.filter(p => {
       const isMarcelo = p.clientName?.trim().toLowerCase() === 'marcelo alves canedo';
       const isZeroValue = !p.contract?.planValue || p.contract?.planValue === '0,00' || p.contract?.planValue === '0';
       const hasNoEndDate = !p.contract?.endDate;
       return !(isMarcelo && isZeroValue && hasNoEndDate);
   });
+
+  // Deduplicate validProtocols by student name (uppercase)
+  const validProtocolsMap = new Map();
+  validProtocolsRaw.forEach(p => {
+    const normalizedName = p.clientName;
+    
+    if (!validProtocolsMap.has(normalizedName)) {
+        validProtocolsMap.set(normalizedName, p);
+    } else {
+        const existing = validProtocolsMap.get(normalizedName);
+        if (new Date(p.updatedAt) > new Date(existing.updatedAt)) {
+            validProtocolsMap.set(normalizedName, p);
+        }
+    }
+  });
+
+  const validProtocols = Array.from(validProtocolsMap.values());
 
   const totalRevenue = validProtocols
     .reduce((acc, curr) => acc + (parseFloat(curr.contract?.planValue?.replace(',', '.') || '0') || 0), 0);
@@ -75,21 +115,17 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
     .filter(p => getMonthYear(p.contract?.startDate) === currentMonthYear)
     .reduce((acc, curr) => acc + (parseFloat(curr.contract?.planValue?.replace(',', '.') || '0') || 0), 0);
   
-  // Helper to normalize name to UPPERCASE
-  const toUpper = (str: string) => str.toUpperCase();
-
   // Get unique students
   const uniqueStudentsMap = new Map();
-  protocols.forEach(p => {
-    const rawName = p.clientName || 'SEM NOME';
-    const normalizedName = toUpper(rawName.trim());
+  normalizedProtocols.forEach(p => {
+    const normalizedName = p.clientName;
     
     if (!uniqueStudentsMap.has(normalizedName)) {
-        uniqueStudentsMap.set(normalizedName, { ...p, clientName: normalizedName });
+        uniqueStudentsMap.set(normalizedName, p);
     } else {
         const existing = uniqueStudentsMap.get(normalizedName);
         if (new Date(p.updatedAt) > new Date(existing.updatedAt)) {
-            uniqueStudentsMap.set(normalizedName, { ...p, clientName: normalizedName });
+            uniqueStudentsMap.set(normalizedName, p);
         }
     }
   });
