@@ -58,7 +58,7 @@ const CheckInForm: React.FC<Props> = ({ studentId, currentProtocol, onUpdateProt
         const prompt = `
           Aja como um nutricionista e treinador de elite do 'Team VBR'.
           O aluno realizou um CHECK-IN de acompanhamento.
-          Gere um NOVO protocolo (Dieta e Treino) ajustado com base no feedback e novas medidas.
+          Gere um NOVO protocolo (Dieta e Treino) ajustado com base no feedback, novas medidas e no protocolo atual.
 
           DADOS DO ALUNO:
           - Nome: ${baseProtocol.clientName}
@@ -66,6 +66,12 @@ const CheckInForm: React.FC<Props> = ({ studentId, currentProtocol, onUpdateProt
           - Peso Anterior: ${baseProtocol.physicalData.weight}kg
           - Peso ATUAL (Check-in): ${measurements.weight}kg
           - Objetivo: ${baseProtocol.protocolTitle}
+
+          PROTOCOLO ATUAL (USE COMO BASE PARA O NOVO):
+          - Estratégia Nutricional Atual: ${baseProtocol.nutritionalStrategy || 'Não informada'}
+          - Refeições Atuais: ${JSON.stringify(baseProtocol.meals || [])}
+          - Treino Atual: ${JSON.stringify(baseProtocol.trainingDays || [])}
+          - Observações Gerais / Anamnese: ${JSON.stringify(baseProtocol.anamnesis || {})}
 
           FEEDBACK DO CHECK-IN:
           - Adesão à Dieta: ${feedback.dietAdherence}
@@ -75,10 +81,12 @@ const CheckInForm: React.FC<Props> = ({ studentId, currentProtocol, onUpdateProt
           - Observações do Aluno: "${feedback.notes}"
 
           DIRETRIZES:
-          1. Se a adesão foi BAIXA, simplifique a dieta e o treino.
-          2. Se o peso estagnou e o objetivo é emagrecer, reduza levemente as calorias.
-          3. Se o peso subiu e o objetivo é ganho de massa, mantenha ou ajuste conforme adesão.
-          4. Mantenha a estrutura de refeições mas varie os alimentos para não enjoar.
+          1. Utilize o PROTOCOLO ATUAL como base. Faça ajustes apenas onde for necessário com base no feedback e nas novas medidas.
+          2. Se a adesão foi BAIXA, simplifique a dieta e o treino.
+          3. Se o peso estagnou e o objetivo é emagrecer, reduza levemente as calorias.
+          4. Se o peso subiu e o objetivo é ganho de massa, mantenha ou ajuste conforme adesão.
+          5. Mantenha a estrutura de refeições mas varie os alimentos para não enjoar.
+          6. Leve em consideração as Observações Gerais / Anamnese para restrições e preferências.
 
           Gere um JSON com a seguinte estrutura (apenas os campos que devem ser atualizados):
           {

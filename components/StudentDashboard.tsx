@@ -2,7 +2,7 @@
 import React from 'react';
 import { ProtocolData } from '../types';
 import { Calendar, ArrowRight, Settings2, TrendingUp, Activity } from 'lucide-react';
-import { ICON_MAN, ICON_WOMAN } from '../constants';
+import { ICON_MAN, ICON_WOMAN, getDisplayDate } from '../constants';
 
 interface Props {
   data: ProtocolData;
@@ -55,7 +55,7 @@ const StudentDashboard: React.FC<Props> = ({ data, setView }) => {
               </span>
               <span className="flex items-center gap-2 text-white/40 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">
                 <Calendar size={12} />
-                Atualizado em: {new Date(data.updatedAt).toLocaleDateString('pt-BR')}
+                Atualizado em: {getDisplayDate(data)}
               </span>
             </div>
           </div>

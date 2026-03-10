@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { ProtocolData } from '../types';
-import { LOGO_VBR_BLACK, ICON_MAN, ICON_WOMAN, EMPTY_DATA } from '../constants';
+import { LOGO_VBR_BLACK, ICON_MAN, ICON_WOMAN, EMPTY_DATA, getDisplayDate } from '../constants';
 import ProtocolPreview from './ProtocolPreview';
 import { 
   Users, 
@@ -334,7 +334,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-1">
                                     <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border ${statusColor}`}>{statusLabel}</span>
                                     <span className="text-[10px] font-bold text-white/40 uppercase">
-                                        Desde: {new Date(student.createdAt).toLocaleDateString('pt-BR')}
+                                        Desde: {getDisplayDate(student.createdAt)}
                                     </span>
                                 </div>
                             </div>
@@ -602,7 +602,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                         <div className="w-12 h-12 bg-[#d4af37] text-black rounded-xl flex items-center justify-center font-black"><FileText size={24} /></div>
                         <div>
                             <h2 className="text-xl font-black uppercase tracking-tighter text-white">{previewStudent.clientName}</h2>
-                            <p className="text-xs text-white/40 font-bold uppercase tracking-widest">Solicitado em: {new Date(previewStudent.createdAt).toLocaleDateString('pt-BR')}</p>
+                            <p className="text-xs text-white/40 font-bold uppercase tracking-widest">Solicitado em: {getDisplayDate(previewStudent.createdAt)}</p>
                         </div>
                     </div>
                     <button onClick={() => setPreviewStudent(null)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60 hover:text-white"><X size={24} /></button>

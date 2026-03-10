@@ -12,6 +12,7 @@ import {
   X
 } from 'lucide-react';
 import ProtocolPreview from '../ProtocolPreview';
+import { getDisplayDate } from '../../constants';
 
 interface Props {
   versions: ProtocolData[];
@@ -81,7 +82,7 @@ const ProtocolVersions: React.FC<Props> = ({ versions, currentProtocol, onUpdate
                       {protocol.protocolTitle}
                     </h3>
                     <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-white/40 mt-1">
-                      <span className="flex items-center gap-1"><Clock size={12} /> {new Date(protocol.updatedAt).toLocaleDateString('pt-BR')}</span>
+                      <span className="flex items-center gap-1"><Clock size={12} /> {getDisplayDate(protocol)}</span>
                       {protocol.isOriginal && <span className="flex items-center gap-1 text-blue-400"><Lock size={12} /> Original</span>}
                       {isCurrent && <span className="flex items-center gap-1 text-green-400"><CheckCircle2 size={12} /> Ativo</span>}
                     </div>

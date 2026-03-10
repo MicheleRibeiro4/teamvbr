@@ -1,5 +1,6 @@
 import React from 'react';
 import { Feedback, BodyMeasurementEntry, ProtocolData, Student } from '../../types';
+import { getSafeDateObject } from '../../constants';
 import { 
   Clock, 
   MessageSquare, 
@@ -40,7 +41,7 @@ const Timeline: React.FC<Props> = ({ feedbacks, measurements, versions, student,
     ...feedbacks.map(f => ({
       id: f.id,
       type: 'feedback',
-      date: new Date(f.date),
+      date: getSafeDateObject(f.date),
       title: 'Feedback Registrado',
       details: f.notes,
       icon: MessageSquare,
@@ -51,7 +52,7 @@ const Timeline: React.FC<Props> = ({ feedbacks, measurements, versions, student,
     ...measurements.map(m => ({
       id: m.id,
       type: 'measurement',
-      date: new Date(m.date),
+      date: getSafeDateObject(m.date),
       title: 'Atualização de Medidas',
       details: `Peso: ${m.weight}kg • Gordura: ${m.bodyFat}%`,
       icon: Activity,
@@ -62,7 +63,7 @@ const Timeline: React.FC<Props> = ({ feedbacks, measurements, versions, student,
     ...versions.map(v => ({
       id: v.id,
       type: 'protocol',
-      date: new Date(v.updatedAt),
+      date: getSafeDateObject(v.updatedAt),
       title: `Protocolo v${v.version || 1}: ${v.protocolTitle}`,
       details: v.privateNotes || 'Atualização de protocolo',
       icon: FileText,

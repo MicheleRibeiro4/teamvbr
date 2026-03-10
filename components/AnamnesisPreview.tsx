@@ -1,7 +1,7 @@
 import React, { useRef, useState, useImperativeHandle, forwardRef } from 'react';
 import { createPortal } from 'react-dom';
 import { ProtocolData } from '../types';
-import { EMPTY_DATA } from '../constants';
+import { EMPTY_DATA, getDisplayDate } from '../constants';
 import { Loader2, FileText, X, FileDown, Activity } from 'lucide-react';
 
 const LOGO_ANAMNESIS = "https://xqwzmvzfemjkvaquxedz.supabase.co/storage/v1/object/public/LOGO/DOURADO.png";
@@ -66,7 +66,7 @@ const AnamnesisPreview = React.memo(forwardRef<AnamnesisPreviewHandle, Props>(({
         rightCalf: "-", leftCalf: "-"
     };
     const anamnesis = safeData.anamnesis || { mainObjective: "", routine: "", trainingHistory: "", foodPreferences: "", ergogenics: "" };
-    const registrationDate = new Date(safeData.createdAt || safeData.updatedAt || Date.now()).toLocaleDateString('pt-BR');
+    const registrationDate = getDisplayDate(safeData);
     const clientName = safeData.clientName || "Aluno";
 
     const pageStyle = (isFirst: boolean = false, isLast: boolean = false): React.CSSProperties => ({ 

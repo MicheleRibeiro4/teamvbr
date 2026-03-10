@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { BodyMeasurementEntry } from '../../types';
 import { db } from '../../services/db';
+import { getSafeDateObject } from '../../constants';
 import { 
   LineChart, 
   Line, 
@@ -102,7 +103,7 @@ const EvolutionCharts: React.FC<Props> = ({ measurements, onUpdate, studentId })
 
   const chartData = measurements.map(m => ({
     ...m,
-    dateFormatted: new Date(m.date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+    dateFormatted: getSafeDateObject(m.date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
     weightNum: parseFloat(m.weight || '0'),
     bodyFatNum: parseFloat(m.bodyFat || '0'),
     waistNum: parseFloat(m.waist || '0'),

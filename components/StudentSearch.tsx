@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { ProtocolData } from '../types';
 import { Search, Trash2, ChevronRight, Calendar, Target, FileText, User, ToggleLeft, ToggleRight, Settings2 } from 'lucide-react';
-import { ICON_MAN, ICON_WOMAN } from '../constants';
+import { ICON_MAN, ICON_WOMAN, getDisplayDate } from '../constants';
 
 interface Props {
   protocols: ProtocolData[];
@@ -119,7 +119,7 @@ const StudentSearch: React.FC<Props> = ({ protocols, onLoad, onDelete, onUpdate 
                       <span className="hidden md:block w-1 h-1 bg-white/10 rounded-full"></span>
                       <span className="flex items-center gap-1">
                         <Calendar size={12} />
-                        {new Date(p.updatedAt).toLocaleDateString('pt-BR')}
+                        {getDisplayDate(p)}
                       </span>
                     </div>
                   </div>

@@ -23,7 +23,7 @@ import {
   Eye,
   Sparkles
 } from 'lucide-react';
-import { LOGO_VBR_BLACK, MEASUREMENT_LABELS } from '../constants';
+import { LOGO_VBR_BLACK, MEASUREMENT_LABELS, getSafeDateObject, getDisplayDate } from '../constants';
 import ProtocolPreview from './ProtocolPreview';
 import { GoogleGenAI, Type } from "@google/genai";
 
@@ -41,9 +41,9 @@ interface Props {
 
 const EvolutionChart = ({ history }: { history: ProtocolData[] }) => {
     const dataPoints = useMemo(() => {
-        const sorted = [...history].sort((a, b) => new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime());
+        const sorted = [...history].sort((a, b) => getSafeDateObject(a.physicalData?.date || a.updatedAt).getTime() - getSafeDateObject(b.physicalData?.date || b.updatedAt).getTime());
         return sorted.map(p => ({
-            date: new Date(p.updatedAt).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+            date: getDisplayDate(p, { day: '2-digit', month: '2-digit' }),
             weight: parseFloat(p.physicalData.weight.replace(',', '.') || '0'),
         })).filter(p => p.weight > 0);
     }, [history]);
@@ -124,7 +124,7 @@ const EvolutionTracker: React.FC<Props> = ({
     const uniqueMap = new Map();
     [...history, currentProtocol].forEach(p => uniqueMap.set(p.id, p));
     return Array.from(uniqueMap.values())
-      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+      .sort((a, b) => getSafeDateObject(b.physicalData?.date || b.updatedAt).getTime() - getSafeDateObject(a.physicalData?.date || a.updatedAt).getTime());
   }, [history, currentProtocol]);
 
   const startSnapshot = useMemo(() => {
@@ -389,7 +389,7 @@ const EvolutionTracker: React.FC<Props> = ({
   const isEditing = mode !== 'view';
   const displayData = isEditing ? editData : currentProtocol.physicalData;
 
-  const startDate = new Date(startSnapshot.createdAt || startSnapshot.updatedAt);
+  const startDate = getSafeDateObject(startSnapshot.physicalData?.date || startSnapshot.createdAt || startSnapshot.updatedAt);
   const diffTime = Math.abs(new Date().getTime() - startDate.getTime());
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
   const startWeight = parseFloat(startSnapshot.physicalData.weight?.replace(',', '.') || '0');
@@ -423,7 +423,7 @@ const EvolutionTracker: React.FC<Props> = ({
                 <tbody>
                     {sortedHistory.map((p, i) => (
                         <tr key={p.id} className={i % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-                            <td className="p-4 font-bold border-b border-gray-200">{new Date(p.updatedAt).toLocaleDateString('pt-BR')}</td>
+                            <td className="p-4 font-bold border-b border-gray-200">{getDisplayDate(p)}</td>
                             <td className="p-4 text-center border-b border-gray-200 font-medium">{p.physicalData.weight}</td>
                             <td className="p-4 text-center border-b border-gray-200">{p.physicalData.bodyFat || '-'}</td>
                             <td className="p-4 text-center border-b border-gray-200">{p.physicalData.muscleMass || '-'}</td>
@@ -482,7 +482,7 @@ const EvolutionTracker: React.FC<Props> = ({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
               {!isEditing && (
-                  <div className="bg-[#111] p-6 rounded-[2rem] border border-white/10 shadow-lg flex flex-col md:flex-row justify-between items-center gap-6 relative overflow-hidden"><div className="absolute left-0 top-0 bottom-0 w-1 bg-[#d4af37]"></div><div className="flex items-center gap-5"><div className="w-14 h-14 bg-[#d4af37]/10 rounded-2xl flex items-center justify-center border border-[#d4af37]/20 text-[#d4af37]"><FileText size={24} /></div><div><h3 className="text-lg font-black text-white uppercase tracking-tighter">Protocolo Ativo</h3><p className="text-xs text-white/50 font-bold uppercase">{currentProtocol.protocolTitle}</p><div className="flex items-center gap-3 mt-1"><span className="text-[10px] font-bold uppercase bg-green-500/20 text-green-500 px-2 py-0.5 rounded animate-pulse">Em Execução</span><span className="text-[10px] text-white/40 font-bold uppercase flex items-center gap-1"><Calendar size={10} /> {new Date(currentProtocol.updatedAt).toLocaleDateString('pt-BR')}</span></div></div></div>{onOpenEditor && <button onClick={onOpenEditor} className="px-6 py-3 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white border border-white/5 rounded-xl font-black uppercase text-[10px] tracking-widest flex items-center gap-2 transition-all w-full md:w-auto justify-center">Ver Dieta & Treino <ChevronRight size={14} /></button>}</div>
+                  <div className="bg-[#111] p-6 rounded-[2rem] border border-white/10 shadow-lg flex flex-col md:flex-row justify-between items-center gap-6 relative overflow-hidden"><div className="absolute left-0 top-0 bottom-0 w-1 bg-[#d4af37]"></div><div className="flex items-center gap-5"><div className="w-14 h-14 bg-[#d4af37]/10 rounded-2xl flex items-center justify-center border border-[#d4af37]/20 text-[#d4af37]"><FileText size={24} /></div><div><h3 className="text-lg font-black text-white uppercase tracking-tighter">Protocolo Ativo</h3><p className="text-xs text-white/50 font-bold uppercase">{currentProtocol.protocolTitle}</p><div className="flex items-center gap-3 mt-1"><span className="text-[10px] font-bold uppercase bg-green-500/20 text-green-500 px-2 py-0.5 rounded animate-pulse">Em Execução</span><span className="text-[10px] text-white/40 font-bold uppercase flex items-center gap-1"><Calendar size={10} /> {getDisplayDate(currentProtocol)}</span></div></div></div>{onOpenEditor && <button onClick={onOpenEditor} className="px-6 py-3 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white border border-white/5 rounded-xl font-black uppercase text-[10px] tracking-widest flex items-center gap-2 transition-all w-full md:w-auto justify-center">Ver Dieta & Treino <ChevronRight size={14} /></button>}</div>
               )}
               <div className="bg-[#111] p-8 rounded-[2rem] border border-white/10 shadow-lg relative overflow-hidden"><div className="flex justify-between items-center mb-8"><h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2"><TrendingUp className="text-[#d4af37]" size={16} /> Curva de Peso</h3></div><EvolutionChart history={sortedHistory} /></div>
               {isEditing && (
@@ -511,7 +511,7 @@ const EvolutionTracker: React.FC<Props> = ({
               )}
           </div>
           <div className="lg:col-span-1">
-              <div className="bg-[#111] p-6 rounded-[2rem] border border-white/10 h-full max-h-[800px] overflow-hidden flex flex-col"><h3 className="text-sm font-black text-white uppercase tracking-widest mb-6 flex items-center gap-2 shrink-0"><History size={16} className="text-[#d4af37]" /> Histórico</h3><div className="overflow-y-auto custom-scrollbar pr-2 space-y-4 relative flex-1"><div className="absolute left-[19px] top-2 bottom-2 w-0.5 bg-white/5 z-0 rounded-full"></div>{sortedHistory.map((p, idx) => { const isActive = p.id === currentProtocol.id; const isNewProtocol = p.privateNotes?.includes('Novo Protocolo') || p.privateNotes?.includes('Início') || idx === sortedHistory.length - 1; return (<div key={p.id} className="relative z-10 group"><div className={`w-full text-left p-4 pl-12 rounded-2xl border transition-all relative ${isActive ? 'bg-[#d4af37] border-[#d4af37] text-black shadow-lg scale-[1.02]' : 'bg-[#1a1a1a] border-white/5 text-white/60 hover:bg-white/5 hover:border-white/10'}`}><div className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 ${isActive ? 'bg-black border-black' : isNewProtocol ? 'bg-blue-500 border-blue-500' : 'bg-[#111] border-white/20'}`}></div><div className="flex justify-between items-start"><div><span className="text-[10px] font-black uppercase tracking-widest block mb-0.5">{new Date(p.updatedAt).toLocaleDateString('pt-BR')}</span><span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${isNewProtocol ? 'bg-blue-500/20 text-blue-500' : 'bg-white/10 text-white/40'}`}>{isNewProtocol ? 'Novo Protocolo' : 'Evolução'}</span></div><div className="flex flex-col items-end gap-1"><p className="text-sm font-black">{p.physicalData.weight || '-'} <span className="text-[9px]">kg</span></p><button onClick={(e) => { e.stopPropagation(); setHistoryPreview(p); }} className="p-1.5 bg-white/10 rounded-lg hover:bg-white/20 text-white transition-all flex items-center gap-1"><Eye size={12} /></button></div></div></div>{onDeleteHistory && !isActive && mode === 'view' && (<button onClick={(e) => { e.stopPropagation(); if(confirm("Excluir registro?")) onDeleteHistory(p.id); }} className="absolute top-2 right-14 p-2 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/10 rounded-lg"><Trash2 size={14} /></button>)}</div>); })}</div></div>
+              <div className="bg-[#111] p-6 rounded-[2rem] border border-white/10 h-full max-h-[800px] overflow-hidden flex flex-col"><h3 className="text-sm font-black text-white uppercase tracking-widest mb-6 flex items-center gap-2 shrink-0"><History size={16} className="text-[#d4af37]" /> Histórico</h3><div className="overflow-y-auto custom-scrollbar pr-2 space-y-4 relative flex-1"><div className="absolute left-[19px] top-2 bottom-2 w-0.5 bg-white/5 z-0 rounded-full"></div>{sortedHistory.map((p, idx) => { const isActive = p.id === currentProtocol.id; const isNewProtocol = p.privateNotes?.includes('Novo Protocolo') || p.privateNotes?.includes('Início') || idx === sortedHistory.length - 1; return (<div key={p.id} className="relative z-10 group"><div className={`w-full text-left p-4 pl-12 rounded-2xl border transition-all relative ${isActive ? 'bg-[#d4af37] border-[#d4af37] text-black shadow-lg scale-[1.02]' : 'bg-[#1a1a1a] border-white/5 text-white/60 hover:bg-white/5 hover:border-white/10'}`}><div className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 ${isActive ? 'bg-black border-black' : isNewProtocol ? 'bg-blue-500 border-blue-500' : 'bg-[#111] border-white/20'}`}></div><div className="flex justify-between items-start"><div><span className="text-[10px] font-black uppercase tracking-widest block mb-0.5">{getDisplayDate(p)}</span><span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${isNewProtocol ? 'bg-blue-500/20 text-blue-500' : 'bg-white/10 text-white/40'}`}>{isNewProtocol ? 'Novo Protocolo' : 'Evolução'}</span></div><div className="flex flex-col items-end gap-1"><p className="text-sm font-black">{p.physicalData.weight || '-'} <span className="text-[9px]">kg</span></p><button onClick={(e) => { e.stopPropagation(); setHistoryPreview(p); }} className="p-1.5 bg-white/10 rounded-lg hover:bg-white/20 text-white transition-all flex items-center gap-1"><Eye size={12} /></button></div></div></div>{onDeleteHistory && !isActive && mode === 'view' && (<button onClick={(e) => { e.stopPropagation(); if(confirm("Excluir registro?")) onDeleteHistory(p.id); }} className="absolute top-2 right-14 p-2 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/10 rounded-lg"><Trash2 size={14} /></button>)}</div>); })}</div></div>
           </div>
       </div>
       {showReportModal && (
@@ -521,7 +521,7 @@ const EvolutionTracker: React.FC<Props> = ({
       )}
       {historyPreview && (
           <div className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
-              <div className="w-full max-w-5xl h-[90vh] relative"><button onClick={() => setHistoryPreview(null)} className="absolute -top-10 right-0 text-white flex items-center gap-2 font-bold uppercase text-xs">Fechar <X size={20} /></button><div className="bg-[#111] rounded-[2rem] h-full overflow-hidden border border-white/10 shadow-2xl flex flex-col"><div className="bg-[#d4af37] p-4"><h3 className="text-black font-black uppercase tracking-tighter">Histórico: {new Date(historyPreview.updatedAt).toLocaleDateString('pt-BR')}</h3></div><div className="flex-1 overflow-y-auto p-4 custom-scrollbar bg-white"><ProtocolPreview data={historyPreview} customTrigger={<div className="w-full h-full flex flex-col items-center justify-center text-black py-20"><button className="bg-[#d4af37] px-6 py-3 rounded-xl font-black uppercase shadow-lg">Ver Visualização</button></div>} /></div></div></div>
+              <div className="w-full max-w-5xl h-[90vh] relative"><button onClick={() => setHistoryPreview(null)} className="absolute -top-10 right-0 text-white flex items-center gap-2 font-bold uppercase text-xs">Fechar <X size={20} /></button><div className="bg-[#111] rounded-[2rem] h-full overflow-hidden border border-white/10 shadow-2xl flex flex-col"><div className="bg-[#d4af37] p-4"><h3 className="text-black font-black uppercase tracking-tighter">Histórico: {getDisplayDate(historyPreview)}</h3></div><div className="flex-1 overflow-y-auto p-4 custom-scrollbar bg-white"><ProtocolPreview data={historyPreview} customTrigger={<div className="w-full h-full flex flex-col items-center justify-center text-black py-20"><button className="bg-[#d4af37] px-6 py-3 rounded-xl font-black uppercase shadow-lg">Ver Visualização</button></div>} /></div></div></div>
           </div>
       )}
       <div style={{ position: 'absolute', left: 0, top: 0, zIndex: -9999, opacity: 0, pointerEvents: 'none' }}>

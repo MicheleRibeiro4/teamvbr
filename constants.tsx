@@ -12,6 +12,23 @@ export const CONSULTANT_DEFAULT = {
   consultantAddress: "Rua Serra da Boa Esperança, 540, Serra Dourada, Vespasiano - Minas Gerais",
 };
 
+export const getSafeDateObject = (dateStr: string) => {
+    if (!dateStr) return new Date();
+    let parsedDateStr = dateStr;
+    if (parsedDateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        parsedDateStr = `${parsedDateStr}T12:00:00`;
+    } else if (parsedDateStr.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+        const [day, month, year] = parsedDateStr.split('/');
+        parsedDateStr = `${year}-${month}-${day}T12:00:00`;
+    }
+    return new Date(parsedDateStr);
+};
+
+export const getDisplayDate = (p: ProtocolData | string, options?: Intl.DateTimeFormatOptions) => {
+    const dateStr = typeof p === 'string' ? p : (p.physicalData?.date || p.updatedAt || p.createdAt);
+    return getSafeDateObject(dateStr).toLocaleDateString('pt-BR', options);
+};
+
 export const MEASUREMENT_LABELS: Record<string, string> = {
   thorax: 'Tórax',
   waist: 'Cintura',
