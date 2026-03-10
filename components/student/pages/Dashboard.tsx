@@ -22,7 +22,9 @@ const StudentDashboard: React.FC<Props> = ({ data, onNavigate }) => {
     const nextDate = new Date(lastDate);
     nextDate.setDate(lastDate.getDate() + 15); // Ciclo de 15 dias
 
-    const today = new Date();
+    const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+    const [ty, tm, td] = todayStr.split('-');
+    const today = new Date(parseInt(ty), parseInt(tm)-1, parseInt(td));
     today.setHours(0,0,0,0);
     nextDate.setHours(0,0,0,0);
 

@@ -13,7 +13,11 @@ export const CONSULTANT_DEFAULT = {
 };
 
 export const getSafeDateObject = (dateStr: string) => {
-    if (!dateStr) return new Date();
+    if (!dateStr) {
+        const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+        const [ty, tm, td] = todayStr.split('-');
+        return new Date(parseInt(ty), parseInt(tm)-1, parseInt(td));
+    }
     let parsedDateStr = dateStr;
     if (parsedDateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
         parsedDateStr = `${parsedDateStr}T12:00:00`;

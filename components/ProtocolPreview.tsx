@@ -88,7 +88,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
       try {
         const date = new Date(dateStr);
         if (isNaN(date.getTime())) return dateStr;
-        return date.toLocaleDateString('pt-BR');
+        return date.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
       } catch (e) {
         return dateStr;
       }
@@ -214,7 +214,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
                                   return physical.date;
                                 }
                                 try {
-                                  return new Date(physical.date).toLocaleDateString('pt-BR');
+                                  return new Date(physical.date).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
                                 } catch (e) {
                                   return physical.date;
                                 }

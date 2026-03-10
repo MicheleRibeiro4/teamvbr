@@ -138,7 +138,9 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
             const baseDate = new Date(parseInt(y), parseInt(m)-1, parseInt(d));
             baseDate.setHours(0,0,0,0);
 
-            const today = new Date();
+            const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+            const [ty, tm, td] = todayStr.split('-');
+            const today = new Date(parseInt(ty), parseInt(tm)-1, parseInt(td));
             today.setHours(0,0,0,0);
 
             // Ciclo de 15 dias
@@ -244,7 +246,9 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                     const { daysLeft, status, statusColor, nextDate } = student.schedule;
                     
                     // Lógica de Botão de Confirmação (Mantida e Ajustada)
-                    const updatedAtDate = new Date(student.updatedAt);
+                    const updatedAtStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(student.updatedAt));
+                    const [uy, um, ud] = updatedAtStr.split('-');
+                    const updatedAtDate = new Date(parseInt(uy), parseInt(um)-1, parseInt(ud));
                     updatedAtDate.setHours(0,0,0,0);
                     
                     let lastSentDate = null;
@@ -402,10 +406,13 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
   const getLocalDateFromISO = (isoStr: string) => {
       if (!isoStr) return '';
       const date = new Date(isoStr);
-      // Subtrai o offset do timezone para garantir que pegamos o dia local correto
-      const userTimezoneOffset = date.getTimezoneOffset() * 60000;
-      const localDate = new Date(date.getTime() - userTimezoneOffset);
-      return localDate.toISOString().split('T')[0];
+      const formatter = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'America/Sao_Paulo',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+      });
+      return formatter.format(date);
   };
 
   const handleConfirmSend = async (student: ProtocolData) => {

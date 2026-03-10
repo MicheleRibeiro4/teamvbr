@@ -40,7 +40,9 @@ const StudentPortal: React.FC<StudentPortalProps> = ({ studentData, onLogout }) 
     const endDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
     endDate.setHours(23, 59, 59, 999); // Final do dia de vencimento
 
-    const today = new Date();
+    const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+    const [ty, tm, td] = todayStr.split('-');
+    const today = new Date(parseInt(ty), parseInt(tm)-1, parseInt(td));
     return today > endDate;
   };
 

@@ -161,7 +161,7 @@ const DataImportModal: React.FC<Props> = ({ onClose, onSuccess }) => {
   const generateSQL = (data: any[]) => {
       if (!data || data.length === 0) return '';
       
-      let sql = `-- SCRIPT DE IMPORTAÇÃO GERADO EM ${new Date().toLocaleString()}\n`;
+      let sql = `-- SCRIPT DE IMPORTAÇÃO GERADO EM ${new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}\n`;
       sql += `-- Execute este script no SQL Editor do Supabase\n\n`;
       sql += `INSERT INTO public.protocols (id, client_name, updated_at, data)\nVALUES\n`;
       

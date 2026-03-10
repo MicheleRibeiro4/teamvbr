@@ -103,7 +103,7 @@ const EvolutionCharts: React.FC<Props> = ({ measurements, onUpdate, studentId })
 
   const chartData = measurements.map(m => ({
     ...m,
-    dateFormatted: getSafeDateObject(m.date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+    dateFormatted: getSafeDateObject(m.date).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit' }),
     weightNum: parseFloat(m.weight || '0'),
     bodyFatNum: parseFloat(m.bodyFat || '0'),
     waistNum: parseFloat(m.waist || '0'),

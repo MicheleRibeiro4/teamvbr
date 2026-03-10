@@ -390,7 +390,10 @@ const EvolutionTracker: React.FC<Props> = ({
   const displayData = isEditing ? editData : currentProtocol.physicalData;
 
   const startDate = getSafeDateObject(startSnapshot.physicalData?.date || startSnapshot.createdAt || startSnapshot.updatedAt);
-  const diffTime = Math.abs(new Date().getTime() - startDate.getTime());
+  const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+  const [ty, tm, td] = todayStr.split('-');
+  const today = new Date(parseInt(ty), parseInt(tm)-1, parseInt(td));
+  const diffTime = Math.abs(today.getTime() - startDate.getTime());
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
   const startWeight = parseFloat(startSnapshot.physicalData.weight?.replace(',', '.') || '0');
   const currentWeight = parseFloat(displayData.weight?.replace(',', '.') || '0');

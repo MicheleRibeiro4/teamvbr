@@ -184,7 +184,7 @@ const FeedbackList: React.FC<Props> = ({ feedbacks, onUpdate, studentId }) => {
                   <Calendar size={20} />
                 </div>
                 <div>
-                  <p className="text-sm font-black text-white uppercase tracking-widest">{getSafeDateObject(feedback.date).toLocaleDateString('pt-BR')}</p>
+                  <p className="text-sm font-black text-white uppercase tracking-widest">{getSafeDateObject(feedback.date).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</p>
                   <p className="text-[10px] text-white/40 font-bold uppercase mt-0.5">Peso: {feedback.weight}kg</p>
                 </div>
               </div>

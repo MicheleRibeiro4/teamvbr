@@ -99,7 +99,7 @@ const Timeline: React.FC<Props> = ({ feedbacks, measurements, versions, student,
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-[10px] font-bold text-white/30 uppercase tracking-widest">
-                    {event.date.toLocaleDateString('pt-BR')}
+                    {event.date.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
                   </span>
                   {event.type !== 'register' && (
                     <button 
