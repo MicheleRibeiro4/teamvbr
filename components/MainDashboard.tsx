@@ -75,16 +75,14 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
     .filter(p => getMonthYear(p.contract?.startDate) === currentMonthYear)
     .reduce((acc, curr) => acc + (parseFloat(curr.contract?.planValue?.replace(',', '.') || '0') || 0), 0);
   
-  // Helper to normalize name to Title Case
-  const toTitleCase = (str: string) => {
-    return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-  };
+  // Helper to normalize name to UPPERCASE
+  const toUpper = (str: string) => str.toUpperCase();
 
   // Get unique students
   const uniqueStudentsMap = new Map();
   protocols.forEach(p => {
-    const rawName = p.clientName || 'Sem Nome';
-    const normalizedName = toTitleCase(rawName.trim());
+    const rawName = p.clientName || 'SEM NOME';
+    const normalizedName = toUpper(rawName.trim());
     
     if (!uniqueStudentsMap.has(normalizedName)) {
         uniqueStudentsMap.set(normalizedName, { ...p, clientName: normalizedName });

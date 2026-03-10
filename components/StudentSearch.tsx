@@ -17,16 +17,14 @@ const StudentSearch: React.FC<Props> = ({ protocols, onLoad, onDelete, onUpdate 
   const uniqueStudents = useMemo(() => {
     const map = new Map<string, ProtocolData>();
     
-    // Helper to normalize name to Title Case
-    const toTitleCase = (str: string) => {
-      return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-    };
+    // Helper to normalize name to UPPERCASE
+    const toUpper = (str: string) => str.toUpperCase();
 
     protocols.forEach(p => {
       if (!p) return;
       
-      const rawName = p.clientName || 'Sem Nome';
-      const normalizedName = toTitleCase(rawName.trim());
+      const rawName = p.clientName || 'SEM NOME';
+      const normalizedName = toUpper(rawName.trim());
       
       if (!map.has(normalizedName)) {
         map.set(normalizedName, { ...p, clientName: normalizedName });
