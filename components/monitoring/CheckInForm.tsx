@@ -64,7 +64,7 @@ const CheckInForm: React.FC<Props> = ({ studentId, currentProtocol, onUpdateProt
           - Nome: ${baseProtocol.clientName}
           - Idade: ${baseProtocol.physicalData.age}
           - Peso Anterior: ${baseProtocol.physicalData.weight}kg
-          - Peso ATUAL (Check-in): ${measurements.weight}kg
+          - Peso ATUAL (Check-in): ${measurements.weight ? `${measurements.weight}kg` : 'Não informado'}
           - Objetivo: ${baseProtocol.protocolTitle}
 
           PROTOCOLO ATUAL (USE COMO BASE PARA O NOVO):
@@ -188,33 +188,32 @@ const CheckInForm: React.FC<Props> = ({ studentId, currentProtocol, onUpdateProt
   };
 
   const handleSave = async () => {
-    if (!measurements.weight) {
-      alert("Peso é obrigatório para o check-in.");
-      return;
-    }
-
     setIsSaving(true);
     try {
-      // 1. Salvar Medidas
-      const cleanMeasurements = {
-        ...measurements,
-        date: checkInDate,
-        studentId,
-        weight: measurements.weight ? parseFloat(measurements.weight) : null,
-        chest: measurements.chest ? parseFloat(measurements.chest) : null,
-        waist: measurements.waist ? parseFloat(measurements.waist) : null,
-        abdomen: measurements.abdomen ? parseFloat(measurements.abdomen) : null,
-        hip: measurements.hip ? parseFloat(measurements.hip) : null,
-        armRight: measurements.armRight ? parseFloat(measurements.armRight) : null,
-        armLeft: measurements.armLeft ? parseFloat(measurements.armLeft) : null,
-        thighRight: measurements.thighRight ? parseFloat(measurements.thighRight) : null,
-        thighLeft: measurements.thighLeft ? parseFloat(measurements.thighLeft) : null,
-        calf: measurements.calf ? parseFloat(measurements.calf) : null,
-        bodyFat: measurements.bodyFat ? parseFloat(measurements.bodyFat) : null,
-        createdAt: new Date().toISOString()
-      };
+      // 1. Salvar Medidas (se houver alguma preenchida)
+      const hasAnyMeasurement = Object.values(measurements).some(val => val !== '' && val !== null && val !== undefined);
       
-      await db.saveMeasurement(cleanMeasurements);
+      if (hasAnyMeasurement) {
+        const cleanMeasurements = {
+          ...measurements,
+          date: checkInDate,
+          studentId,
+          weight: measurements.weight ? parseFloat(measurements.weight) : null,
+          chest: measurements.chest ? parseFloat(measurements.chest) : null,
+          waist: measurements.waist ? parseFloat(measurements.waist) : null,
+          abdomen: measurements.abdomen ? parseFloat(measurements.abdomen) : null,
+          hip: measurements.hip ? parseFloat(measurements.hip) : null,
+          armRight: measurements.armRight ? parseFloat(measurements.armRight) : null,
+          armLeft: measurements.armLeft ? parseFloat(measurements.armLeft) : null,
+          thighRight: measurements.thighRight ? parseFloat(measurements.thighRight) : null,
+          thighLeft: measurements.thighLeft ? parseFloat(measurements.thighLeft) : null,
+          calf: measurements.calf ? parseFloat(measurements.calf) : null,
+          bodyFat: measurements.bodyFat ? parseFloat(measurements.bodyFat) : null,
+          createdAt: new Date().toISOString()
+        };
+        
+        await db.saveMeasurement(cleanMeasurements);
+      }
 
       // 2. Salvar Feedback (se houver observações ou dados preenchidos)
       if (feedback.notes || feedback.sleepQuality || feedback.energyLevel) {
@@ -351,7 +350,7 @@ const CheckInForm: React.FC<Props> = ({ studentId, currentProtocol, onUpdateProt
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-[10px] font-bold text-white/40 uppercase block mb-2">Peso (kg) *</label>
+                <label className="text-[10px] font-bold text-white/40 uppercase block mb-2">Peso (kg)</label>
                 <input 
                   type="number" 
                   className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white font-bold focus:border-[#d4af37] outline-none"

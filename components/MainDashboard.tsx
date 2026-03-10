@@ -38,6 +38,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [previewStudent, setPreviewStudent] = useState<ProtocolData | null>(null);
   const [dashboardView, setDashboardView] = useState<'default' | 'active_protocols' | 'financial'>('default');
+  const [financialMonth, setFinancialMonth] = useState<string>('all');
 
   const activeProtocols = protocols
     .filter(p => p.contract?.status === 'Ativo')
@@ -45,25 +46,52 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
   const activeProtocolsCount = activeProtocols.filter(p => p.isActiveProtocol !== false).length;
   const pendingStudents = protocols.filter(p => p.contract?.status === 'Aguardando');
   
-  const totalRevenue = protocols
-    .filter(p => {
-        const isMarcelo = p.clientName?.trim().toLowerCase() === 'marcelo alves canedo';
-        const isZeroValue = !p.contract?.planValue || p.contract?.planValue === '0,00' || p.contract?.planValue === '0';
-        const hasNoEndDate = !p.contract?.endDate;
-        return !(isMarcelo && isZeroValue && hasNoEndDate);
-    })
+  const getMonthYear = (dateString?: string) => {
+    if (!dateString) return null;
+    if (dateString.includes('/')) {
+        const parts = dateString.split('/');
+        if (parts.length === 3) return `${parts[2]}-${parts[1]}`;
+    }
+    if (dateString.includes('-')) {
+        const parts = dateString.split('-');
+        if (parts.length === 3) return `${parts[0]}-${parts[1]}`;
+    }
+    return null;
+  };
+
+  const currentMonthYear = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit' }).format(new Date()).substring(0, 7);
+
+  const validProtocols = protocols.filter(p => {
+      const isMarcelo = p.clientName?.trim().toLowerCase() === 'marcelo alves canedo';
+      const isZeroValue = !p.contract?.planValue || p.contract?.planValue === '0,00' || p.contract?.planValue === '0';
+      const hasNoEndDate = !p.contract?.endDate;
+      return !(isMarcelo && isZeroValue && hasNoEndDate);
+  });
+
+  const totalRevenue = validProtocols
+    .reduce((acc, curr) => acc + (parseFloat(curr.contract?.planValue?.replace(',', '.') || '0') || 0), 0);
+
+  const monthlyRevenue = validProtocols
+    .filter(p => getMonthYear(p.contract?.startDate) === currentMonthYear)
     .reduce((acc, curr) => acc + (parseFloat(curr.contract?.planValue?.replace(',', '.') || '0') || 0), 0);
   
+  // Helper to normalize name to Title Case
+  const toTitleCase = (str: string) => {
+    return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  };
+
   // Get unique students
   const uniqueStudentsMap = new Map();
   protocols.forEach(p => {
-    const name = p.clientName || 'Sem Nome';
-    if (!uniqueStudentsMap.has(name)) {
-        uniqueStudentsMap.set(name, p);
+    const rawName = p.clientName || 'Sem Nome';
+    const normalizedName = toTitleCase(rawName.trim());
+    
+    if (!uniqueStudentsMap.has(normalizedName)) {
+        uniqueStudentsMap.set(normalizedName, { ...p, clientName: normalizedName });
     } else {
-        const existing = uniqueStudentsMap.get(name);
+        const existing = uniqueStudentsMap.get(normalizedName);
         if (new Date(p.updatedAt) > new Date(existing.updatedAt)) {
-            uniqueStudentsMap.set(name, p);
+            uniqueStudentsMap.set(normalizedName, { ...p, clientName: normalizedName });
         }
     }
   });
@@ -95,7 +123,11 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
     },
     {
       label: 'Faturamento Total',
-      val: `R$ ${totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      val: (
+        <div className="flex flex-col">
+          <span className="text-2xl xl:text-3xl font-black">R$ {totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+        </div>
+      ),
       icon: <DollarSign size={20} />,
       bg: 'bg-[#d4af37]/10',
       color: 'text-[#d4af37]',
@@ -610,13 +642,45 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
     return dateString;
   };
 
-  const renderFinancial = () => (
+  const renderFinancial = () => {
+    const availableMonths = Array.from(new Set(
+        validProtocols
+            .map(p => getMonthYear(p.contract?.startDate))
+            .filter(Boolean) as string[]
+    )).sort().reverse();
+
+    const filteredProtocols = validProtocols.filter(p => {
+        if (financialMonth !== 'all') {
+            const my = getMonthYear(p.contract?.startDate);
+            if (my !== financialMonth) return false;
+        }
+        return true;
+    });
+
+    const filteredTotal = filteredProtocols.reduce((acc, curr) => acc + (parseFloat(curr.contract?.planValue?.replace(',', '.') || '0') || 0), 0);
+
+    return (
     <div className="animate-in fade-in slide-in-from-right-10 duration-500">
-        <div className="flex items-center gap-4 mb-8">
-            <button onClick={() => setDashboardView('default')} className="p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors">
-                <ChevronLeft size={20} />
-            </button>
-            <h2 className="text-2xl font-black uppercase text-white tracking-tighter">Relatório Financeiro</h2>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <div className="flex items-center gap-4">
+                <button onClick={() => setDashboardView('default')} className="p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors">
+                    <ChevronLeft size={20} />
+                </button>
+                <h2 className="text-2xl font-black uppercase text-white tracking-tighter">Relatório Financeiro</h2>
+            </div>
+            <select 
+                value={financialMonth} 
+                onChange={(e) => setFinancialMonth(e.target.value)}
+                className="bg-[#111] border border-white/10 text-white text-sm rounded-xl px-4 py-2 focus:outline-none focus:border-[#d4af37]"
+            >
+                <option value="all">Todos os Meses</option>
+                {availableMonths.map(m => {
+                    const [y, mo] = m.split('-');
+                    const date = new Date(parseInt(y), parseInt(mo) - 1, 1);
+                    const label = date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+                    return <option key={m} value={m}>{label.charAt(0).toUpperCase() + label.slice(1)}</option>;
+                })}
+            </select>
         </div>
         <div className="bg-[#111] rounded-[2rem] border border-white/10 overflow-hidden shadow-2xl">
             <div className="overflow-x-auto">
@@ -630,14 +694,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
-                        {protocols
-                            .filter(p => {
-                                const isMarcelo = p.clientName?.trim().toLowerCase() === 'marcelo alves canedo';
-                                const isZeroValue = !p.contract?.planValue || p.contract?.planValue === '0,00' || p.contract?.planValue === '0';
-                                const hasNoEndDate = !p.contract?.endDate;
-                                return !(isMarcelo && isZeroValue && hasNoEndDate);
-                            })
-                            .map((p) => (
+                        {filteredProtocols.map((p) => (
                             <tr key={p.id} className="hover:bg-white/5 transition-colors group">
                                 <td className="p-5"><p className="font-bold text-white text-sm">{p.clientName}</p></td>
                                 <td className="p-5"><span className="px-3 py-1 bg-white/10 rounded-lg text-[10px] font-black uppercase text-white/60 group-hover:text-white group-hover:bg-white/20 transition-all">{p.contract?.planType}</span></td>
@@ -648,15 +705,15 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                     </tbody>
                     <tfoot className="bg-white/5 border-t border-white/10">
                         <tr>
-                            <td colSpan={3} className="p-5 text-right font-black uppercase text-xs tracking-widest text-white/40">Total Arrecadado</td>
-                            <td className="p-5 text-right font-black text-xl text-green-500">R$ {totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                            <td colSpan={3} className="p-5 text-right font-black uppercase text-xs tracking-widest text-white/40">Total do Período</td>
+                            <td className="p-5 text-right font-black text-xl text-green-500">R$ {filteredTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                         </tr>
                     </tfoot>
                 </table>
             </div>
         </div>
     </div>
-  );
+  )};
 
   if (dashboardView === 'active_protocols') return renderActiveProtocols();
   if (dashboardView === 'financial') return renderFinancial();
@@ -733,7 +790,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
             {metrics.map((s, i) => (
             <button key={i} onClick={s.action} className={`bg-white/5 p-6 rounded-[1.5rem] border border-white/10 shadow-sm flex flex-col justify-between group hover:bg-white/[0.1] hover:border-[#d4af37]/30 transition-all text-left min-h-[120px]`}>
                 <div className="flex justify-between items-start mb-3"><div className={`p-3 rounded-xl ${s.bg} ${s.color} border ${s.border}`}>{s.icon}</div><ChevronRight className="text-white/10 group-hover:text-[#d4af37] transition-all" size={20} /></div>
-                <div><p className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-1">{s.label}</p><p className={`text-2xl xl:text-3xl font-black ${s.color}`}>{s.val}</p></div>
+                <div><p className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-1">{s.label}</p><div className={`text-2xl xl:text-3xl font-black ${s.color}`}>{s.val}</div></div>
             </button>
             ))}
         </div>

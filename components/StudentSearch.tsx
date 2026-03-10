@@ -17,21 +17,24 @@ const StudentSearch: React.FC<Props> = ({ protocols, onLoad, onDelete, onUpdate 
   const uniqueStudents = useMemo(() => {
     const map = new Map<string, ProtocolData>();
     
+    // Helper to normalize name to Title Case
+    const toTitleCase = (str: string) => {
+      return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    };
+
     protocols.forEach(p => {
       if (!p) return;
-      // Normaliza o nome para evitar duplicatas por espaços extras
-      const rawName = p.clientName;
-      const name = (typeof rawName === 'string' ? rawName : '').trim();
       
-      if (!name) return; // Pula registros sem nome se necessário, ou agrupa em "Sem Nome"
-
-      if (!map.has(name)) {
-        map.set(name, p);
+      const rawName = p.clientName || 'Sem Nome';
+      const normalizedName = toTitleCase(rawName.trim());
+      
+      if (!map.has(normalizedName)) {
+        map.set(normalizedName, { ...p, clientName: normalizedName });
       } else {
-        const existing = map.get(name)!;
+        const existing = map.get(normalizedName)!;
         // Se o protocolo atual (p) for mais novo que o existente no mapa, substitui
         if (new Date(p.updatedAt) > new Date(existing.updatedAt)) {
-          map.set(name, p);
+          map.set(normalizedName, { ...p, clientName: normalizedName });
         }
       }
     });

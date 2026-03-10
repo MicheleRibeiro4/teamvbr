@@ -179,7 +179,7 @@ const EvolutionTracker: React.FC<Props> = ({
             O aluno ${currentProtocol.clientName} está iniciando uma nova fase.
             
             DADOS ATUAIS:
-            - Peso Atual: ${editData.weight}kg
+            - Peso Atual: ${editData.weight ? `${editData.weight}kg` : 'Não informado'}
             - Peso Anterior: ${currentProtocol.physicalData.weight}kg
             - Objetivo da Nova Fase: ${editTitle}
             
@@ -245,7 +245,7 @@ const EvolutionTracker: React.FC<Props> = ({
             O aluno ${currentProtocol.clientName} está iniciando uma nova fase.
             
             DADOS ATUAIS:
-            - Peso Atual: ${editData.weight}kg
+            - Peso Atual: ${editData.weight ? `${editData.weight}kg` : 'Não informado'}
             - Objetivo da Nova Fase: ${editTitle}
             
             Gere uma sugestão de novo Treino.
@@ -324,7 +324,6 @@ const EvolutionTracker: React.FC<Props> = ({
   };
 
   const handleSave = async () => {
-    if (!editData.weight) { alert("⚠️ Por favor, informe o Peso Atual."); return; }
     setIsSaving(true);
     try {
         const timestamp = new Date().toISOString();
