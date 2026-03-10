@@ -67,12 +67,12 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
           Gere um JSON com a seguinte estrutura estrita:
           {
             "nutritionalStrategy": "Texto curto descrevendo a estratégia da dieta",
-            "kcalGoal": "Ex: 2500 kcal",
+            "kcalGoal": "Ex: 2500",
             "waterGoal": "Ex: ${calculatedWater}", 
             "macros": {
-               "protein": { "value": "gramas totais", "ratio": "g/kg" },
-               "carbs": { "value": "gramas totais", "ratio": "g/kg" },
-               "fats": { "value": "gramas totais", "ratio": "g/kg" }
+               "protein": { "value": "180", "ratio": "2.0" },
+               "carbs": { "value": "250", "ratio": "3.0" },
+               "fats": { "value": "60", "ratio": "0.8" }
             },
             "meals": [
               { "time": "08:00", "name": "Café da Manhã", "details": "Alimentos e quantidades detalhadas" }
@@ -86,7 +86,8 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
           Regras:
           1. Use português do Brasil.
           2. Seja específico nas quantidades dos alimentos.
-          3. O campo waterGoal deve ser APENAS O NÚMERO em Litros (ex: "3,5").
+          3. O campo waterGoal deve ser APENAS O NÚMERO em Litros (ex: "3,5"). NÃO inclua "L" ou "litros".
+          4. Os campos kcalGoal e macros (value e ratio) devem ser APENAS O NÚMERO. NÃO inclua "kcal", "g" ou "g/kg".
         `;
 
         let aiData: any;
@@ -168,7 +169,39 @@ const ProtocolGenerator: React.FC<Props> = ({ onGenerate, onCancel }) => {
         } else if (jsonStr.startsWith('```')) {
             jsonStr = jsonStr.replace(/^```/, '').replace(/```$/, '');
         }
-        aiData = JSON.parse(jsonStr);
+        const aiDataRaw = JSON.parse(jsonStr);
+        
+        // Sanitização para remover unidades repetidas caso a IA ignore as regras
+        const sanitize = (val: any) => {
+            if (typeof val !== 'string') return val;
+            return val.replace(/kcal/gi, '')
+                      .replace(/g\/kg/gi, '')
+                      .replace(/g/gi, '')
+                      .replace(/litros/gi, '')
+                      .replace(/litro/gi, '')
+                      .replace(/ L/gi, '')
+                      .trim();
+        };
+
+        aiData = {
+            ...aiDataRaw,
+            kcalGoal: sanitize(aiDataRaw.kcalGoal),
+            waterGoal: sanitize(aiDataRaw.waterGoal),
+            macros: {
+                protein: { 
+                    value: sanitize(aiDataRaw.macros?.protein?.value), 
+                    ratio: sanitize(aiDataRaw.macros?.protein?.ratio) 
+                },
+                carbs: { 
+                    value: sanitize(aiDataRaw.macros?.carbs?.value), 
+                    ratio: sanitize(aiDataRaw.macros?.carbs?.ratio) 
+                },
+                fats: { 
+                    value: sanitize(aiDataRaw.macros?.fats?.value), 
+                    ratio: sanitize(aiDataRaw.macros?.fats?.ratio) 
+                }
+            }
+        };
 
 
         const timestamp = new Date().toISOString();

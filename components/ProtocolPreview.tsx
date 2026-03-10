@@ -155,6 +155,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
     const valueStyle = "text-xl font-black text-gray-900 leading-none";
 
     const kcalValue = (safeData.kcalGoal || "0").toString().replace(/kcal/gi, '').trim();
+    const waterValue = (safeData.waterGoal || "0").toString().replace(/litros/gi, '').replace(/litro/gi, '').replace(/L/gi, '').trim();
 
     const renderHeader = (title: string) => (
         <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4 avoid-page-break">
@@ -226,11 +227,11 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
                         <div className="grid grid-cols-3 gap-4 mb-8">
                         <div className={cardDataStyle}>
                             <span className={labelStyle}>PESO ATUAL</span>
-                            <span className={valueStyle}>{physical.weight || '-'} kg</span>
+                            <span className={valueStyle}>{(physical.weight || '-').toString().replace(/kg/gi, '').trim()} kg</span>
                         </div>
                         <div className={cardDataStyle}>
                             <span className={labelStyle}>ALTURA</span>
-                            <span className={valueStyle}>{physical.height || '-'} m</span>
+                            <span className={valueStyle}>{(physical.height || '-').toString().replace(/m/gi, '').trim()} m</span>
                         </div>
                         <div className={cardDataStyle}>
                             <span className={labelStyle}>IDADE</span>
@@ -280,18 +281,18 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
                     <div className="grid grid-cols-3 gap-6 mb-8">
                         <div className="text-center p-4 border border-gray-100 rounded-lg shadow-sm avoid-page-break">
                             <p className="text-[#d4af37] font-black text-[10px] uppercase tracking-widest mb-1">PROTEÍNAS</p>
-                            <p className="text-3xl font-black text-gray-900">{(macros.protein?.value || '0').replace(/g/gi, '')}g</p>
-                            <p className="text-[9px] text-gray-400 font-bold">{(macros.protein?.ratio || '0').replace(/g\/kg/gi, '')}g/kg</p>
+                            <p className="text-3xl font-black text-gray-900">{(macros.protein?.value || '0').toString().replace(/g/gi, '').trim()}g</p>
+                            <p className="text-[9px] text-gray-400 font-bold">{(macros.protein?.ratio || '0').toString().replace(/g\/kg/gi, '').trim()}g/kg</p>
                         </div>
                         <div className="text-center p-4 border border-gray-100 rounded-lg shadow-sm avoid-page-break">
                             <p className="text-[#d4af37] font-black text-[10px] uppercase tracking-widest mb-1">CARBOIDRATOS</p>
-                            <p className="text-3xl font-black text-gray-900">{(macros.carbs?.value || '0').replace(/g/gi, '')}g</p>
-                            <p className="text-[9px] text-gray-400 font-bold">{(macros.carbs?.ratio || '0').replace(/g\/kg/gi, '')}g/kg</p>
+                            <p className="text-3xl font-black text-gray-900">{(macros.carbs?.value || '0').toString().replace(/g/gi, '').trim()}g</p>
+                            <p className="text-[9px] text-gray-400 font-bold">{(macros.carbs?.ratio || '0').toString().replace(/g\/kg/gi, '').trim()}g/kg</p>
                         </div>
                         <div className="text-center p-4 border border-gray-100 rounded-lg shadow-sm avoid-page-break">
                             <p className="text-[#d4af37] font-black text-[10px] uppercase tracking-widest mb-1">GORDURAS</p>
-                            <p className="text-3xl font-black text-gray-900">{(macros.fats?.value || '0').replace(/g/gi, '')}g</p>
-                            <p className="text-[9px] text-gray-400 font-bold">{(macros.fats?.ratio || '0').replace(/g\/kg/gi, '')}g/kg</p>
+                            <p className="text-3xl font-black text-gray-900">{(macros.fats?.value || '0').toString().replace(/g/gi, '').trim()}g</p>
+                            <p className="text-[9px] text-gray-400 font-bold">{(macros.fats?.ratio || '0').toString().replace(/g\/kg/gi, '').trim()}g/kg</p>
                         </div>
                     </div>
                     

@@ -28,12 +28,19 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
     const keys = path.split('.');
     const newData = { ...data };
     let current: any = newData;
+
+    // Enforce uppercase for client name
+    let finalValue = value;
+    if (path === 'clientName' && typeof value === 'string') {
+        finalValue = value.toUpperCase();
+    }
+
     for (let i = 0; i < keys.length - 1; i++) {
         const key = keys[i];
         current[key] = Array.isArray(current[key]) ? [...current[key]] : { ...current[key] };
         current = current[key];
     }
-    current[keys[keys.length - 1]] = value;
+    current[keys[keys.length - 1]] = finalValue;
     onChange(newData);
   };
 
@@ -46,7 +53,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
     if (!goalVal) return;
 
     const currentTips = data.tips || [];
-    const waterTipText = `Beber no mínimo ${data.waterGoal}L de água por dia.`;
+    const waterTipText = `Beber no mínimo ${goalVal}L de água por dia.`;
     
     // Procura se já existe uma dica de água
     const waterTipIndex = currentTips.findIndex(t => 
@@ -216,12 +223,12 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
           Gere um JSON com a seguinte estrutura:
           {
             "nutritionalStrategy": "Texto curto e direto sobre a estratégia",
-            "kcalGoal": "Ex: 2500 kcal",
+            "kcalGoal": "Ex: 2500",
             "waterGoal": "Ex: 3,5", 
             "macros": {
-               "protein": { "value": "gramas totais", "ratio": "g/kg" },
-               "carbs": { "value": "gramas totais", "ratio": "g/kg" },
-               "fats": { "value": "gramas totais", "ratio": "g/kg" }
+               "protein": { "value": "180", "ratio": "2.0" },
+               "carbs": { "value": "250", "ratio": "3.0" },
+               "fats": { "value": "60", "ratio": "0.8" }
             },
             "meals": [
               { "time": "08:00", "name": "Café da Manhã", "details": "Alimentos e quantidades detalhadas", "substitutions": "Opções de substituição para esta refeição" }
@@ -231,6 +238,11 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
             ],
             "tips": ["Dica 1", "Dica 2"]
           }
+
+          REGRAS:
+          1. NÃO inclua unidades de medida (g, kcal, L, g/kg) nos campos numéricos de macros, calorias e água. Retorne APENAS o número.
+          2. O campo waterGoal deve ser APENAS O NÚMERO (ex: "3,5").
+          3. Seja específico nas quantidades dos alimentos.
         `;
 
         const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
@@ -291,7 +303,40 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
         if (jsonStr.startsWith('```json')) jsonStr = jsonStr.replace(/^```json/, '').replace(/```$/, '');
         else if (jsonStr.startsWith('```')) jsonStr = jsonStr.replace(/^```/, '').replace(/```$/, '');
         
-        const aiData = JSON.parse(jsonStr);
+        const aiDataRaw = JSON.parse(jsonStr);
+        
+        // Sanitização para remover unidades repetidas caso a IA ignore as regras
+        const sanitize = (val: any) => {
+            if (typeof val !== 'string') return val;
+            return val.replace(/kcal/gi, '')
+                      .replace(/g\/kg/gi, '')
+                      .replace(/g/gi, '')
+                      .replace(/litros/gi, '')
+                      .replace(/litro/gi, '')
+                      .replace(/ L/gi, '')
+                      .trim();
+        };
+
+        const aiData = {
+            ...aiDataRaw,
+            kcalGoal: sanitize(aiDataRaw.kcalGoal),
+            waterGoal: sanitize(aiDataRaw.waterGoal),
+            macros: {
+                protein: { 
+                    value: sanitize(aiDataRaw.macros?.protein?.value), 
+                    ratio: sanitize(aiDataRaw.macros?.protein?.ratio) 
+                },
+                carbs: { 
+                    value: sanitize(aiDataRaw.macros?.carbs?.value), 
+                    ratio: sanitize(aiDataRaw.macros?.carbs?.ratio) 
+                },
+                fats: { 
+                    value: sanitize(aiDataRaw.macros?.fats?.value), 
+                    ratio: sanitize(aiDataRaw.macros?.fats?.ratio) 
+                }
+            }
+        };
+
         const newData = { ...data };
         
         if (aiData.nutritionalStrategy) {
