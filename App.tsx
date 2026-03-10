@@ -234,7 +234,21 @@ const App: React.FC = () => {
     setActiveView('generator');
   };
 
-  const handleGeneratedProtocol = (generatedData: ProtocolData) => {
+  const handleGeneratedProtocol = async (generatedData: ProtocolData) => {
+      // Find the last active protocol for this user and deactivate it
+      const lastActive = savedProtocols.find(p => p.clientName === generatedData.clientName && p.contract?.status === 'Ativo');
+      
+      if (lastActive) {
+          const updatedLastActive = {
+              ...lastActive,
+              contract: {
+                  ...lastActive.contract,
+                  status: 'Inativo'
+              }
+          };
+          await handleSave(true, updatedLastActive);
+      }
+
       setData(generatedData);
       setActiveView('manage');
       handleSave(true, generatedData, true);

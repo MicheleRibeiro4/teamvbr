@@ -511,6 +511,22 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                                     </button>
                                 }
                             />
+                            <button 
+                                onClick={() => {
+                                    if (confirm('Deseja desativar este protocolo?')) {
+                                        onUpdateStudent({
+                                            ...student,
+                                            contract: {
+                                                ...student.contract,
+                                                status: 'Inativo'
+                                            }
+                                        });
+                                    }
+                                }}
+                                className="w-full py-3 mt-2 bg-red-500/10 text-red-500 rounded-xl font-black uppercase text-xs tracking-widest hover:bg-red-500/20 transition-all shadow-lg flex items-center justify-center gap-2"
+                            >
+                                <X size={16} /> Desativar Protocolo
+                            </button>
                         </div>
                     </div>
                 );
