@@ -24,9 +24,24 @@ export const getSafeDateObject = (dateStr: string) => {
     return new Date(parsedDateStr);
 };
 
+export const getLocalDateString = () => {
+    const date = new Date();
+    const formatter = new Intl.DateTimeFormat('pt-BR', {
+        timeZone: 'America/Sao_Paulo',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    });
+    const parts = formatter.formatToParts(date);
+    const day = parts.find(p => p.type === 'day')?.value;
+    const month = parts.find(p => p.type === 'month')?.value;
+    const year = parts.find(p => p.type === 'year')?.value;
+    return `${year}-${month}-${day}`;
+};
+
 export const getDisplayDate = (p: ProtocolData | string, options?: Intl.DateTimeFormatOptions) => {
     const dateStr = typeof p === 'string' ? p : (p.physicalData?.date || p.updatedAt || p.createdAt);
-    return getSafeDateObject(dateStr).toLocaleDateString('pt-BR', options);
+    return getSafeDateObject(dateStr).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo', ...options });
 };
 
 export const MEASUREMENT_LABELS: Record<string, string> = {
@@ -182,7 +197,7 @@ export const EMPTY_DATA: ProtocolData = {
   totalPeriod: "",
   ...CONSULTANT_DEFAULT,
   physicalData: {
-    date: new Date().toLocaleDateString('pt-BR'),
+    date: new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
     weight: "",
     height: "",
     age: "",
@@ -249,14 +264,14 @@ export const EMPTY_DATA: ProtocolData = {
     city: "",
     state: "",
     planType: 'Trimestral',
-    startDate: new Date().toLocaleDateString('pt-BR'),
+    startDate: new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
     endDate: "",
     durationDays: "90",
     planValue: "",
     planValueWords: "",
     paymentMethod: 'Pix',
     installments: "1",
-    contractDate: new Date().toLocaleDateString('pt-BR'),
+    contractDate: new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
     status: 'Aguardando',
     contractBody: CONTRACT_TEMPLATE
   }

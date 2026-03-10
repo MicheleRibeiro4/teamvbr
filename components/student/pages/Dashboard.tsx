@@ -30,7 +30,7 @@ const StudentDashboard: React.FC<Props> = ({ data, onNavigate }) => {
     const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
     return {
-      date: nextDate.toLocaleDateString('pt-BR'),
+      date: nextDate.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
       daysLeft: daysLeft
     };
   };

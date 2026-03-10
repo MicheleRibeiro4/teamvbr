@@ -22,7 +22,7 @@ import {
   Ruler, 
   TrendingUp 
 } from 'lucide-react';
-import { MEASUREMENT_LABELS } from '../../constants';
+import { MEASUREMENT_LABELS, getLocalDateString } from '../../constants';
 
 interface Props {
   measurements: BodyMeasurementEntry[];
@@ -34,7 +34,7 @@ const EvolutionCharts: React.FC<Props> = ({ measurements, onUpdate, studentId })
   const [isAdding, setIsAdding] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [newEntry, setNewEntry] = useState<Partial<BodyMeasurementEntry>>({
-    date: new Date().toISOString().split('T')[0],
+    date: getLocalDateString(),
     weight: '',
     chest: '',
     waist: '',
@@ -79,7 +79,7 @@ const EvolutionCharts: React.FC<Props> = ({ measurements, onUpdate, studentId })
       });
       setIsAdding(false);
       setNewEntry({
-        date: new Date().toISOString().split('T')[0],
+        date: getLocalDateString(),
         weight: '',
         chest: '',
         waist: '',

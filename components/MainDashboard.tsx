@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { ProtocolData } from '../types';
-import { LOGO_VBR_BLACK, ICON_MAN, ICON_WOMAN, EMPTY_DATA, getDisplayDate } from '../constants';
+import { LOGO_VBR_BLACK, ICON_MAN, ICON_WOMAN, EMPTY_DATA, getDisplayDate, getLocalDateString } from '../constants';
 import ProtocolPreview from './ProtocolPreview';
 import { 
   Users, 
@@ -99,7 +99,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
 
   const [currentTab, setCurrentTab] = useState<'agenda' | 'pending'>('agenda');
   const [confirmSendId, setConfirmSendId] = useState<string | null>(null);
-  const [sendDate, setSendDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [sendDate, setSendDate] = useState<string>(getLocalDateString());
 
   // --- LÓGICA DE FILTRAGEM E CLASSIFICAÇÃO ---
   const { agendaStudents, pendingEvaluationStudents, summary } = useMemo(() => {
@@ -174,8 +174,8 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                 ...student,
                 schedule: {
                     daysLeft,
-                    nextDate: nextDate.toLocaleDateString('pt-BR'),
-                    baseDate: baseDate.toLocaleDateString('pt-BR'),
+                    nextDate: nextDate.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+                    baseDate: baseDate.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
                     status,
                     statusColor,
                     nextDateObj: nextDate // Para ordenação
@@ -284,7 +284,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                                         </div>
                                     ) : (
                                         <button 
-                                            onClick={(e) => { e.stopPropagation(); setConfirmSendId(student.id); setSendDate(new Date().toISOString().split('T')[0]); }}
+                                            onClick={(e) => { e.stopPropagation(); setConfirmSendId(student.id); setSendDate(getLocalDateString()); }}
                                             className="px-4 py-2 bg-[#d4af37] text-black rounded-xl font-black uppercase text-[10px] tracking-widest hover:scale-105 transition-all shadow-lg flex items-center gap-2"
                                             title="Confirmar que enviou a atualização"
                                         >
@@ -368,7 +368,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                                             </div>
                                         ) : (
                                             <button 
-                                                onClick={(e) => { e.stopPropagation(); setConfirmSendId(student.id); setSendDate(new Date().toISOString().split('T')[0]); }}
+                                                onClick={(e) => { e.stopPropagation(); setConfirmSendId(student.id); setSendDate(getLocalDateString()); }}
                                                 className="px-4 py-2 bg-green-500/10 text-green-500 border border-green-500/20 rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-green-500 hover:text-white transition-all flex items-center gap-2"
                                                 title="Marcar como Enviado"
                                             >

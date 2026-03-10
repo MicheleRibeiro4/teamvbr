@@ -154,7 +154,7 @@ const ContractPreview = React.memo(forwardRef<ContractPreviewHandle, Props>(({ d
 
             <div className="signature-block avoid-page-break mt-6" style={{ pageBreakInside: 'avoid' }}>
                 <p className="mb-8">E, por estarem justas e contratadas, as partes assinam o presente instrumento em 2 (duas) vias de igual teor e forma.</p>
-                <div className="mb-8"><p>Vespasiano, Minas Gerais</p><p>Data: {new Date().toLocaleDateString('pt-BR')}</p></div>
+                <div className="mb-8"><p>Vespasiano, Minas Gerais</p><p>Data: {new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</p></div>
                 <div className="mt-12 space-y-12">
                     <div><p className="font-bold mb-6">CONTRATANTE:</p><div className="border-b border-black w-2/3 mb-1"></div><p className="text-sm">Assinatura</p><p className="text-sm">Nome: {clientName}</p><p className="text-sm">CPF: {contract.cpf}</p></div>
                     <div><p className="font-bold mb-6">CONTRATADO:</p><div className="border-b border-black w-2/3 mb-1"></div><p className="text-sm">Assinatura</p><p className="text-sm">{CONSULTANT_DEFAULT.consultantName}</p></div>

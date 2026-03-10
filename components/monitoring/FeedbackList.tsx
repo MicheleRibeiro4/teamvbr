@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Feedback } from '../../types';
 import { db } from '../../services/db';
-import { getSafeDateObject } from '../../constants';
+import { getSafeDateObject, getLocalDateString } from '../../constants';
 import { 
   MessageSquare, 
   Plus, 
@@ -26,7 +26,7 @@ const FeedbackList: React.FC<Props> = ({ feedbacks, onUpdate, studentId }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [newFeedback, setNewFeedback] = useState<Partial<Feedback>>({
-    date: new Date().toISOString().split('T')[0],
+    date: getLocalDateString(),
     dietAdherence: 'Boa',
     trainingAdherence: 'Boa',
     sleepQuality: '',
@@ -50,7 +50,7 @@ const FeedbackList: React.FC<Props> = ({ feedbacks, onUpdate, studentId }) => {
       });
       setIsAdding(false);
       setNewFeedback({
-        date: new Date().toISOString().split('T')[0],
+        date: getLocalDateString(),
         dietAdherence: 'Boa',
         trainingAdherence: 'Boa',
         sleepQuality: '',

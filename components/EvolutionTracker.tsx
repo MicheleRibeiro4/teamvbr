@@ -157,7 +157,7 @@ const EvolutionTracker: React.FC<Props> = ({
   const handleStartNewCheckin = () => {
       setEditData({ 
           ...currentProtocol.physicalData, 
-          date: new Date().toLocaleDateString('pt-BR')
+          date: new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })
       });
       setMode('new_checkin');
   };
@@ -165,7 +165,7 @@ const EvolutionTracker: React.FC<Props> = ({
   const handleStartNewProtocol = () => {
       setEditData({ 
           ...currentProtocol.physicalData, 
-          date: new Date().toLocaleDateString('pt-BR') 
+          date: new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }) 
       });
       setEditTitle(currentProtocol.protocolTitle); 
       setMode('new_protocol');
@@ -408,11 +408,11 @@ const EvolutionTracker: React.FC<Props> = ({
                 <div className="text-right">
                     <h1 className="text-4xl font-black uppercase tracking-tighter mb-1">Relatório de Evolução</h1>
                     <p className="text-xl font-medium text-gray-600">{currentProtocol.clientName}</p>
-                    <p className="text-sm text-gray-400 font-bold uppercase mt-2">Gerado em {new Date().toLocaleDateString('pt-BR')}</p>
+                    <p className="text-sm text-gray-400 font-bold uppercase mt-2">Gerado em {new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</p>
                 </div>
             </div>
             <div className="grid grid-cols-4 gap-4 mb-10">
-                <div className="bg-gray-100 p-4 rounded-lg text-center"><p className="text-xs font-bold text-gray-500 uppercase">Início</p><p className="text-lg font-black">{startDate.toLocaleDateString('pt-BR')}</p></div>
+                <div className="bg-gray-100 p-4 rounded-lg text-center"><p className="text-xs font-bold text-gray-500 uppercase">Início</p><p className="text-lg font-black">{startDate.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</p></div>
                 <div className="bg-gray-100 p-4 rounded-lg text-center"><p className="text-xs font-bold text-gray-500 uppercase">Duração</p><p className="text-lg font-black">{diffDays} dias</p></div>
                 <div className="bg-gray-100 p-4 rounded-lg text-center"><p className="text-xs font-bold text-gray-500 uppercase">Peso Inicial</p><p className="text-lg font-black">{startWeight.toFixed(1)} kg</p></div>
                 <div className="bg-black text-white p-4 rounded-lg text-center"><p className="text-xs font-bold text-[#d4af37] uppercase">Resultado</p><p className="text-lg font-black">{weightChange > 0 ? '+' : ''}{weightChange.toFixed(1)} kg</p></div>
@@ -447,7 +447,7 @@ const EvolutionTracker: React.FC<Props> = ({
           <div className="flex flex-col md:flex-row justify-between items-end md:items-center mb-8 border-b border-white/5 pb-6 relative z-10">
               <div>
                   <h2 className="text-2xl font-black text-white uppercase tracking-tighter flex items-center gap-3"><div className="bg-[#d4af37] text-black p-2 rounded-lg"><Target size={20} /></div>{mode === 'new_protocol' ? 'Iniciando Novo Protocolo' : 'Resumo do Progresso'}</h2>
-                  <p className="text-white/40 text-xs font-bold uppercase tracking-widest mt-2 pl-1">{mode === 'new_protocol' ? 'Defina o objetivo e os dados iniciais.' : `Acompanhamento iniciado em ${startDate.toLocaleDateString('pt-BR')} • ${diffDays} dias`}</p>
+                  <p className="text-white/40 text-xs font-bold uppercase tracking-widest mt-2 pl-1">{mode === 'new_protocol' ? 'Defina o objetivo e os dados iniciais.' : `Acompanhamento iniciado em ${startDate.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })} • ${diffDays} dias`}</p>
               </div>
               <div className="flex flex-wrap gap-2 mt-4 md:mt-0 justify-end">
                   {mode === 'view' ? (

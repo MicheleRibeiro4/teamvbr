@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ProtocolData, BodyMeasurementEntry, Feedback } from '../../types';
 import { db } from '../../services/db';
-import { MEASUREMENT_LABELS } from '../../constants';
+import { MEASUREMENT_LABELS, getLocalDateString } from '../../constants';
 import { GoogleGenAI, Type } from "@google/genai";
 import { 
   Save, 
@@ -29,7 +29,7 @@ const CheckInForm: React.FC<Props> = ({ studentId, currentProtocol, onUpdateProt
   const [generateNewProtocol, setGenerateNewProtocol] = useState(false);
   
   // Estado unificado para o check-in
-  const [checkInDate, setCheckInDate] = useState(new Date().toISOString().split('T')[0]);
+  const [checkInDate, setCheckInDate] = useState(getLocalDateString());
   
   const [measurements, setMeasurements] = useState<Partial<BodyMeasurementEntry>>({
     weight: '',
