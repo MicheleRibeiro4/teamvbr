@@ -71,14 +71,15 @@ const CheckInForm: React.FC<Props> = ({ studentId, currentProtocol, onUpdateProt
           - Estratégia Nutricional Atual: ${baseProtocol.nutritionalStrategy || 'Não informada'}
           - Refeições Atuais: ${JSON.stringify(baseProtocol.meals || [])}
           - Treino Atual: ${JSON.stringify(baseProtocol.trainingDays || [])}
-          - Observações Gerais / Anamnese: ${JSON.stringify(baseProtocol.anamnesis || {})}
+          - Anamnese: ${JSON.stringify(baseProtocol.anamnesis || {})}
+          - Observações Gerais do Protocolo: ${baseProtocol.generalObservations || 'Nenhuma'}
 
-          FEEDBACK DO CHECK-IN:
+          FEEDBACK DO CHECK-IN (ACOMPANHAMENTO 360):
           - Adesão à Dieta: ${feedback.dietAdherence}
           - Adesão ao Treino: ${feedback.trainingAdherence}
           - Qualidade do Sono: ${feedback.sleepQuality}
           - Nível de Energia: ${feedback.energyLevel}
-          - Observações do Aluno: "${feedback.notes}"
+          - Observações Gerais do Acompanhamento 360: "${feedback.notes}"
 
           DIRETRIZES:
           1. Utilize o PROTOCOLO ATUAL como base. Faça ajustes apenas onde for necessário com base no feedback e nas novas medidas.
@@ -86,7 +87,7 @@ const CheckInForm: React.FC<Props> = ({ studentId, currentProtocol, onUpdateProt
           3. Se o peso estagnou e o objetivo é emagrecer, reduza levemente as calorias.
           4. Se o peso subiu e o objetivo é ganho de massa, mantenha ou ajuste conforme adesão.
           5. Mantenha a estrutura de refeições mas varie os alimentos para não enjoar.
-          6. Leve em consideração as Observações Gerais / Anamnese para restrições e preferências.
+          6. Leve em consideração a Anamnese e as Observações Gerais para restrições e preferências.
 
           Gere um JSON com a seguinte estrutura (apenas os campos que devem ser atualizados):
           {
