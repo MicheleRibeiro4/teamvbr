@@ -174,4 +174,5 @@ export interface ProtocolData {
   generalObservations: string;
   contract: ContractInfo;
   lastSentDate?: string; // Data do último envio confirmado
+  isActiveProtocol?: boolean; // Se é o protocolo ativo atual do aluno
 }

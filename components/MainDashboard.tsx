@@ -42,10 +42,17 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
   const activeProtocols = protocols
     .filter(p => p.contract?.status === 'Ativo')
     .sort((a, b) => (a.clientName || '').localeCompare(b.clientName || ''));
-  const activeProtocolsCount = activeProtocols.length;
+  const activeProtocolsCount = activeProtocols.filter(p => p.isActiveProtocol !== false).length;
   const pendingStudents = protocols.filter(p => p.contract?.status === 'Aguardando');
   
-  const totalRevenue = protocols.reduce((acc, curr) => acc + (parseFloat(curr.contract?.planValue?.replace(',', '.') || '0') || 0), 0);
+  const totalRevenue = protocols
+    .filter(p => {
+        const isMarcelo = p.clientName?.trim().toLowerCase() === 'marcelo alves canedo';
+        const isZeroValue = !p.contract?.planValue || p.contract?.planValue === '0,00' || p.contract?.planValue === '0';
+        const hasNoEndDate = !p.contract?.endDate;
+        return !(isMarcelo && isZeroValue && hasNoEndDate);
+    })
+    .reduce((acc, curr) => acc + (parseFloat(curr.contract?.planValue?.replace(',', '.') || '0') || 0), 0);
   
   // Get unique students
   const uniqueStudentsMap = new Map();
@@ -485,60 +492,116 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
             <h2 className="text-2xl font-black uppercase text-white tracking-tighter">Protocolos Ativos</h2>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {activeProtocols.map(student => {
-                const isFemale = student.physicalData.gender === 'Feminino';
-                const icon = isFemale ? ICON_WOMAN : ICON_MAN;
-                return (
-                    <div key={student.id} className="bg-[#111] p-6 rounded-[2rem] border border-white/10 flex flex-col justify-between hover:border-[#d4af37]/30 transition-all shadow-lg group">
-                        <div className="flex items-center gap-4 mb-6">
-                            <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center border-b-4 border-[#d4af37] overflow-hidden shrink-0">
-                                <img src={icon} alt="" className="w-full h-full object-cover" />
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-black text-white uppercase tracking-tighter leading-tight mb-1">{student.clientName}</h3>
-                                <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest flex items-center gap-1">
-                                    <Target size={10} className="text-[#d4af37]" /> {student.protocolTitle || student.anamnesis?.mainObjective || 'Sem Objetivo'}
-                                </p>
-                            </div>
-                        </div>
-                        <div className="mt-auto pt-4 border-t border-white/5">
-                            <ProtocolPreview 
-                                data={student} 
-                                customTrigger={
-                                    <button className="w-full py-3 bg-[#d4af37] text-black rounded-xl font-black uppercase text-xs tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg flex items-center justify-center gap-2">
-                                        <FileText size={16} /> Visualizar Protocolo
-                                    </button>
-                                }
-                            />
-                            <button 
-                                onClick={() => {
-                                    if (confirm('Deseja desativar este protocolo?')) {
-                                        onUpdateStudent({
-                                            ...student,
-                                            contract: {
-                                                ...student.contract,
-                                                status: 'Inativo'
-                                            }
-                                        });
-                                    }
-                                }}
-                                className="w-full py-3 mt-2 bg-red-500/10 text-red-500 rounded-xl font-black uppercase text-xs tracking-widest hover:bg-red-500/20 transition-all shadow-lg flex items-center justify-center gap-2"
-                            >
-                                <X size={16} /> Desativar Protocolo
-                            </button>
-                        </div>
-                    </div>
-                );
-            })}
-            {activeProtocols.length === 0 && (
-                <div className="col-span-full text-center py-20 bg-white/5 rounded-[2rem]">
-                    <p className="text-white/20 font-black uppercase tracking-widest">Nenhum protocolo ativo encontrado</p>
-                </div>
-            )}
+        <div className="bg-[#111] rounded-[2rem] border border-white/10 overflow-hidden shadow-2xl">
+            <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                    <thead>
+                        <tr className="bg-[#d4af37] text-black">
+                            <th className="p-5 font-black uppercase text-xs tracking-widest">Aluno</th>
+                            <th className="p-5 font-black uppercase text-xs tracking-widest">Objetivo</th>
+                            <th className="p-5 font-black uppercase text-xs tracking-widest">Data</th>
+                            <th className="p-5 font-black uppercase text-xs tracking-widest text-center">Status</th>
+                            <th className="p-5 font-black uppercase text-xs tracking-widest text-right">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                        {activeProtocols.map(student => {
+                            const isFemale = student.physicalData.gender === 'Feminino';
+                            const icon = isFemale ? ICON_WOMAN : ICON_MAN;
+                            const isActive = student.isActiveProtocol !== false;
+                            
+                            return (
+                                <tr key={student.id} className="hover:bg-white/5 transition-colors group">
+                                    <td className="p-5">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center border-b-2 border-[#d4af37] overflow-hidden shrink-0">
+                                                <img src={icon} alt="" className="w-full h-full object-cover" />
+                                            </div>
+                                            <p className="font-bold text-white text-sm uppercase">{student.clientName}</p>
+                                        </div>
+                                    </td>
+                                    <td className="p-5">
+                                        <span className="text-xs text-white/60 uppercase font-bold">
+                                            {student.protocolTitle || student.anamnesis?.mainObjective || 'Sem Objetivo'}
+                                        </span>
+                                    </td>
+                                    <td className="p-5">
+                                        <span className="text-xs text-white/60 font-bold">
+                                            {getDisplayDate(student.updatedAt)}
+                                        </span>
+                                    </td>
+                                    <td className="p-5 text-center">
+                                        <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase ${isActive ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                                            {isActive ? 'Ativo' : 'Inativo'}
+                                        </span>
+                                    </td>
+                                    <td className="p-5">
+                                        <div className="flex items-center justify-end gap-2">
+                                            <ProtocolPreview 
+                                                data={student} 
+                                                customTrigger={
+                                                    <button className="px-4 py-2 bg-[#d4af37] text-black rounded-lg font-black uppercase text-[10px] tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center gap-2">
+                                                        <FileText size={14} /> Ver
+                                                    </button>
+                                                }
+                                            />
+                                            {isActive ? (
+                                                <button 
+                                                    onClick={() => {
+                                                        if (confirm('Deseja desativar este protocolo?')) {
+                                                            onUpdateStudent({
+                                                                ...student,
+                                                                isActiveProtocol: false
+                                                            });
+                                                        }
+                                                    }}
+                                                    className="px-4 py-2 bg-red-500/10 text-red-500 rounded-lg font-black uppercase text-[10px] tracking-widest hover:bg-red-500/20 transition-all flex items-center gap-2"
+                                                >
+                                                    <X size={14} /> Desativar
+                                                </button>
+                                            ) : (
+                                                <button 
+                                                    onClick={() => {
+                                                        if (confirm('Deseja ativar este protocolo?')) {
+                                                            onUpdateStudent({
+                                                                ...student,
+                                                                isActiveProtocol: true
+                                                            });
+                                                        }
+                                                    }}
+                                                    className="px-4 py-2 bg-green-500/10 text-green-500 rounded-lg font-black uppercase text-[10px] tracking-widest hover:bg-green-500/20 transition-all flex items-center gap-2"
+                                                >
+                                                    <Check size={14} /> Ativar
+                                                </button>
+                                            )}
+                                        </div>
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                        {activeProtocols.length === 0 && (
+                            <tr>
+                                <td colSpan={5} className="text-center py-20">
+                                    <p className="text-white/20 font-black uppercase tracking-widest">Nenhum protocolo ativo encontrado</p>
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
   );
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '';
+    if (dateString.includes('/')) return dateString;
+    const parts = dateString.split('-');
+    if (parts.length === 3) {
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+    return dateString;
+  };
 
   const renderFinancial = () => (
     <div className="animate-in fade-in slide-in-from-right-10 duration-500">
@@ -560,11 +623,18 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
-                        {protocols.map((p) => (
+                        {protocols
+                            .filter(p => {
+                                const isMarcelo = p.clientName?.trim().toLowerCase() === 'marcelo alves canedo';
+                                const isZeroValue = !p.contract?.planValue || p.contract?.planValue === '0,00' || p.contract?.planValue === '0';
+                                const hasNoEndDate = !p.contract?.endDate;
+                                return !(isMarcelo && isZeroValue && hasNoEndDate);
+                            })
+                            .map((p) => (
                             <tr key={p.id} className="hover:bg-white/5 transition-colors group">
                                 <td className="p-5"><p className="font-bold text-white text-sm">{p.clientName}</p></td>
                                 <td className="p-5"><span className="px-3 py-1 bg-white/10 rounded-lg text-[10px] font-black uppercase text-white/60 group-hover:text-white group-hover:bg-white/20 transition-all">{p.contract?.planType}</span></td>
-                                <td className="p-5 text-xs font-medium text-white/60 font-mono">{p.contract?.startDate} — {p.contract?.endDate}</td>
+                                <td className="p-5 text-xs font-medium text-white/60 font-mono">{formatDate(p.contract?.startDate)} — {formatDate(p.contract?.endDate)}</td>
                                 <td className="p-5 text-right"><p className="font-black text-[#d4af37] text-sm">R$ {p.contract?.planValue || '0,00'}</p></td>
                             </tr>
                         ))}

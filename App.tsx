@@ -236,22 +236,24 @@ const App: React.FC = () => {
 
   const handleGeneratedProtocol = async (generatedData: ProtocolData) => {
       // Find the last active protocol for this user and deactivate it
-      const lastActive = savedProtocols.find(p => p.clientName === generatedData.clientName && p.contract?.status === 'Ativo');
+      const lastActive = savedProtocols.find(p => p.clientName === generatedData.clientName && p.isActiveProtocol !== false);
       
       if (lastActive) {
           const updatedLastActive = {
               ...lastActive,
-              contract: {
-                  ...lastActive.contract,
-                  status: 'Inativo'
-              }
+              isActiveProtocol: false
           };
           await handleSave(true, updatedLastActive);
       }
 
-      setData(generatedData);
+      const newProtocol = {
+          ...generatedData,
+          isActiveProtocol: true
+      };
+
+      setData(newProtocol);
       setActiveView('manage');
-      handleSave(true, generatedData, true);
+      handleSave(true, newProtocol, true);
   };
 
   const loadStudent = (student: ProtocolData, view: ViewMode = 'student-dashboard') => {
