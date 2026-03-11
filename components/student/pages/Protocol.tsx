@@ -15,7 +15,7 @@ const StudentProtocol: React.FC<Props> = ({ data }) => {
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
         <div>
           <h1 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter mb-2">
-            Meu Protocolo
+            Minha Dieta
           </h1>
           <p className="text-white/40 text-sm font-medium">
             Siga o plano alimentar para alcançar seus objetivos.
@@ -73,6 +73,18 @@ const StudentProtocol: React.FC<Props> = ({ data }) => {
                   {meal.details}
                 </p>
               </div>
+
+              {meal.substitutions && (
+                <div className="mt-4 bg-[#d4af37]/5 border border-[#d4af37]/10 rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-2 text-[#d4af37]">
+                    <AlertCircle size={14} />
+                    <span className="text-[10px] font-black uppercase tracking-widest">Substituições Disponíveis</span>
+                  </div>
+                  <p className="text-white/60 text-xs whitespace-pre-wrap leading-relaxed italic">
+                    {meal.substitutions}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         ))}

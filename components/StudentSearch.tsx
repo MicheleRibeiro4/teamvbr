@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { ProtocolData } from '../types';
-import { Search, Trash2, ChevronRight, Calendar, Target, FileText, User, ToggleLeft, ToggleRight, Settings2 } from 'lucide-react';
+import { Search, Trash2, ChevronRight, Calendar, Target, FileText, User, ToggleLeft, ToggleRight, Settings2, TrendingUp } from 'lucide-react';
 import { ICON_MAN, ICON_WOMAN, getDisplayDate } from '../constants';
 
 interface Props {

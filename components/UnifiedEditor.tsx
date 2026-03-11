@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { ProtocolData } from '../types';
 import ProtocolForm from './ProtocolForm';
-import { ChevronLeft, Settings2, FileText, Activity, Dumbbell } from 'lucide-react';
+import { ChevronLeft, Settings2, FileText, Activity, Dumbbell, TrendingUp } from 'lucide-react';
 import StudentMonitoring from './monitoring/StudentMonitoring';
 
 interface Props {
@@ -58,6 +58,9 @@ const UnifiedEditor: React.FC<Props> = ({
         <div className="flex items-center gap-3 bg-white/5 px-4 py-2 rounded-xl border border-white/10 self-start md:self-auto">
           <Settings2 size={14} className="text-[#d4af37]" />
           <span className="text-[9px] font-black uppercase tracking-widest text-white/60">Editor de Protocolo</span>
+        </div>
+
+        <div className="flex items-center gap-2">
         </div>
       </div>
 

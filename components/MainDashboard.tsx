@@ -20,7 +20,9 @@ import {
   Eye,
   ChevronLeft,
   Sparkles,
-  Lock
+  Lock,
+  TrendingUp,
+  Settings2
 } from 'lucide-react';
 
 interface Props {
@@ -368,6 +370,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                                             <CheckCircle2 size={14} /> Confirmar
                                         </button>
                                     )}
+
 
                                     <button 
                                         onClick={() => onLoadStudent(student, 'manage')}

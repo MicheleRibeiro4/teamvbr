@@ -8,7 +8,6 @@ import MainDashboard from './components/MainDashboard';
 import StudentSearch from './components/StudentSearch';
 import StudentDashboard from './components/StudentDashboard';
 import StudentEntryForm from './components/StudentEntryForm';
-import EvolutionTracker from './components/EvolutionTracker';
 import ProtocolGenerator from './components/ProtocolGenerator';
 import StudentLogin from './components/student/StudentLogin';
 import StudentPortal from './components/student/StudentPortal';
@@ -25,7 +24,7 @@ import {
 
 import StudentMonitoring from './components/monitoring/StudentMonitoring';
 
-type ViewMode = 'home' | 'search' | 'manage' | 'settings' | 'student-dashboard' | 'evolution' | 'generator' | 'monitoring';
+type ViewMode = 'home' | 'search' | 'manage' | 'settings' | 'student-dashboard' | 'generator' | 'monitoring';
 
 const App: React.FC = () => {
   const getPageType = () => {
@@ -40,6 +39,7 @@ const App: React.FC = () => {
   const [pageType, setPageType] = useState(getPageType);
   const [data, setData] = useState<ProtocolData>(EMPTY_DATA);
   const [activeView, setActiveView] = useState<ViewMode>('home');
+  const [monitoringTab, setMonitoringTab] = useState<'checkin'>('checkin');
   const [savedProtocols, setSavedProtocols] = useState<ProtocolData[]>([]);
   const [isSyncing, setIsSyncing] = useState(false);
   const [cloudStatus, setCloudStatus] = useState<'online' | 'error'>('online');
@@ -256,9 +256,10 @@ const App: React.FC = () => {
       handleSave(true, newProtocol, true);
   };
 
-  const loadStudent = (student: ProtocolData, view: ViewMode = 'student-dashboard') => {
+  const loadStudent = (student: ProtocolData, view: ViewMode = 'student-dashboard', tab: 'checkin' = 'checkin') => {
     setData(student);
     setActiveView(view);
+    setMonitoringTab(tab);
   };
 
   const deleteStudent = async (id: string) => {
@@ -421,15 +422,6 @@ VALUES
           <button onClick={() => setActiveView('home')} className="hover:scale-105 transition-transform">
             <img src={LOGO_VBR_BLACK} alt="Team VBR" className="h-20 w-auto" />
           </button>
-          
-          {activeView !== 'home' && activeView !== 'generator' && activeView !== 'manage' && (
-            <button 
-              onClick={() => setActiveView('home')}
-              className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-[#d4af37] transition-colors"
-            >
-              <ChevronLeft size={16} /> Voltar
-            </button>
-          )}
         </div>
 
         <div className="flex items-center gap-4">
@@ -474,7 +466,7 @@ VALUES
             protocols={savedProtocols} 
             onNew={handleNew} 
             onList={() => setActiveView('search')} 
-            onLoadStudent={(p, view) => loadStudent(p, view)} 
+            onLoadStudent={(p, view) => loadStudent(p, view)}
             onUpdateStudent={(p) => handleSave(true, p)} 
             onDeleteStudent={(id) => deleteStudent(id)} 
             onReload={loadData}
@@ -491,14 +483,20 @@ VALUES
         {activeView === 'search' && (
           <StudentSearch 
             protocols={savedProtocols} 
-            onLoad={(p, view) => loadStudent(p, view)} 
+            onLoad={(p, view) => loadStudent(p, view)}
             onDelete={deleteStudent} 
             onUpdate={(p) => handleSave(true, p)} 
           />
         )}
 
         {activeView === 'student-dashboard' && (
-          <StudentDashboard data={data} setView={(v) => setActiveView(v as ViewMode)} />
+          <StudentDashboard 
+            data={data} 
+            setView={(v, tab) => { 
+              setActiveView(v as ViewMode); 
+              if (tab) setMonitoringTab(tab as any);
+            }} 
+          />
         )}
 
         {activeView === 'manage' && (
@@ -506,17 +504,7 @@ VALUES
             data={data} 
             onChange={(newData) => setData(newData)} 
             onBack={() => setActiveView('student-dashboard')} 
-          />
-        )}
-
-        {activeView === 'evolution' && (
-          <EvolutionTracker 
-              currentProtocol={data} 
-              history={savedProtocols.filter(p => p.clientName === data.clientName)} 
-              onNotesChange={(n) => setData({...data, privateNotes: n})} 
-              onUpdateData={(newData, createHistory) => handleSave(false, newData, createHistory)}
-              onDeleteHistory={(id) => deleteStudent(id)}
-              onOpenEditor={() => setActiveView('manage')}
+            onUpdateData={(newData, createHistory, forceNewId) => handleSave(false, newData, forceNewId)}
           />
         )}
 
@@ -526,6 +514,7 @@ VALUES
               currentProtocol={data}
               onUpdateProtocol={(p) => { setData(p); handleSave(true, p); }}
               onBack={() => setActiveView('student-dashboard')}
+              initialTab={monitoringTab}
            />
         )}
 

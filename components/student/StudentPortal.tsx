@@ -18,14 +18,13 @@ import { ProtocolData } from '../../types';
 import StudentDashboard from './pages/Dashboard';
 import StudentProtocol from './pages/Protocol';
 import StudentWorkout from './pages/Workout';
-import StudentEvolution from './pages/Evolution';
 
 interface StudentPortalProps {
   studentData: ProtocolData;
   onLogout: () => void;
 }
 
-type Page = 'dashboard' | 'protocol' | 'workout' | 'evolution';
+type Page = 'dashboard' | 'protocol' | 'workout';
 
 const StudentPortal: React.FC<StudentPortalProps> = ({ studentData, onLogout }) => {
   const [activePage, setActivePage] = useState<Page>('dashboard');
@@ -126,9 +125,8 @@ const StudentPortal: React.FC<StudentPortalProps> = ({ studentData, onLogout }) 
 
   const menuItems = [
     { id: 'dashboard', label: 'Meu Painel', icon: LayoutDashboard },
-    { id: 'protocol', label: 'Meu Protocolo', icon: Utensils },
+    { id: 'protocol', label: 'Minha Dieta', icon: Utensils },
     { id: 'workout', label: 'Meu Treino', icon: Dumbbell },
-    { id: 'evolution', label: 'Evolução', icon: TrendingUp },
   ];
 
   const renderPage = () => {
@@ -136,7 +134,6 @@ const StudentPortal: React.FC<StudentPortalProps> = ({ studentData, onLogout }) 
       case 'dashboard': return <StudentDashboard data={studentData} onNavigate={(page) => setActivePage(page as Page)} />;
       case 'protocol': return <StudentProtocol data={studentData} />;
       case 'workout': return <StudentWorkout data={studentData} />;
-      case 'evolution': return <StudentEvolution data={studentData} />;
       default: return <StudentDashboard data={studentData} onNavigate={(page) => setActivePage(page as Page)} />;
     }
   };

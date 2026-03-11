@@ -4,20 +4,31 @@ import { db } from '../../services/db';
 import { 
   Clock, 
   Loader2,
-  ClipboardCheck
+  ClipboardCheck,
+  TrendingUp,
+  History,
+  Ruler,
+  FileText,
+  MessageSquare,
+  ChevronLeft,
+  Sparkles
 } from 'lucide-react';
 import Timeline from './Timeline';
 import CheckInForm from './CheckInForm';
+import MeasurementsManager from './MeasurementsManager';
+import ProtocolsManager from './ProtocolsManager';
+import FeedbackManager from './FeedbackManager';
 
 interface Props {
   studentId: string;
   currentProtocol: ProtocolData;
   onUpdateProtocol: (protocol: ProtocolData) => void;
   onBack: () => void;
+  initialTab?: 'timeline' | 'medidas' | 'protocolos' | 'feedback' | 'checkin';
 }
 
-const StudentMonitoring: React.FC<Props> = ({ studentId, currentProtocol, onUpdateProtocol, onBack }) => {
-  const [activeTab, setActiveTab] = useState<'checkin' | 'timeline'>('checkin');
+const StudentMonitoring: React.FC<Props> = ({ studentId, currentProtocol, onBack, initialTab = 'timeline' }) => {
+  const [activeTab, setActiveTab] = useState<'timeline' | 'medidas' | 'protocolos' | 'feedback' | 'checkin'>(initialTab);
   const [loading, setLoading] = useState(true);
   const [student, setStudent] = useState<Student | null>(null);
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
@@ -71,24 +82,71 @@ const StudentMonitoring: React.FC<Props> = ({ studentId, currentProtocol, onUpda
     }
   };
 
+  const handleUpdateProtocol = (newProtocol: ProtocolData) => {
+    // Aqui poderíamos chamar o onUpdateProtocol do pai se necessário, 
+    // mas o ProtocolsManager e CheckInForm já lidam com o db.saveProtocol via onUpdateProtocol
+    // Vamos garantir que a lista local seja atualizada
+    handleRefresh();
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-96 text-white/50">
         <Loader2 size={40} className="animate-spin mb-4 text-[#d4af37]" />
-        <p className="text-xs font-black uppercase tracking-widest">Carregando dados do aluno...</p>
+        <p className="text-xs font-black uppercase tracking-widest">Carregando painel de acompanhamento...</p>
       </div>
     );
   }
 
+  const latestMeasurement = measurements[measurements.length - 1];
+  const latestFeedback = feedbacks[0];
+
   return (
-    <div className="animate-in fade-in duration-500">
-      {/* Header */}
-      <div className="bg-[#111] border border-white/10 rounded-[2.5rem] p-4 mb-8 shadow-2xl relative overflow-hidden">
+    <div className="animate-in fade-in duration-500 space-y-8">
+      
+      {/* Quick Stats Header */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 no-print">
+        <div className="bg-[#111] border border-white/10 rounded-2xl p-6 flex items-center gap-4">
+          <div className="bg-[#d4af37]/10 text-[#d4af37] p-3 rounded-xl">
+            <Ruler size={20} />
+          </div>
+          <div>
+            <p className="text-[9px] font-black text-white/30 uppercase tracking-widest">Último Peso</p>
+            <p className="text-xl font-black text-white">{latestMeasurement?.weight || '--'}<span className="text-xs text-white/40 ml-1">kg</span></p>
+          </div>
+        </div>
+        <div className="bg-[#111] border border-white/10 rounded-2xl p-6 flex items-center gap-4">
+          <div className="bg-blue-500/10 text-blue-400 p-3 rounded-xl">
+            <FileText size={20} />
+          </div>
+          <div>
+            <p className="text-[9px] font-black text-white/30 uppercase tracking-widest">Protocolo Atual</p>
+            <p className="text-xl font-black text-white">v{versions[0]?.version || 1}</p>
+          </div>
+        </div>
+        <div className="bg-[#111] border border-white/10 rounded-2xl p-6 flex items-center gap-4">
+          <div className="bg-green-500/10 text-green-400 p-3 rounded-xl">
+            <TrendingUp size={20} />
+          </div>
+          <div>
+            <p className="text-[9px] font-black text-white/30 uppercase tracking-widest">Última Atualização</p>
+            <p className="text-sm font-black text-white">
+              {versions[0] ? new Date(versions[0].updatedAt).toLocaleDateString('pt-BR') : '--'}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Navigation Tabs */}
+      <div className="bg-[#111] border border-white/10 rounded-[2rem] p-4 shadow-2xl relative overflow-hidden no-print">
         <div className="flex justify-center relative z-10">
           <div className="flex flex-wrap justify-center gap-2 bg-black/40 p-1.5 rounded-xl border border-white/5">
             {[
-              { id: 'checkin', label: 'Acompanhamento', icon: ClipboardCheck },
-              { id: 'timeline', label: 'Histórico Completo', icon: Clock },
+              { id: 'timeline', label: 'Histórico', icon: Clock },
+              { id: 'medidas', label: 'Medidas', icon: Ruler },
+              { id: 'protocolos', label: 'Protocolos', icon: FileText },
+              { id: 'feedback', label: 'Feedback', icon: MessageSquare },
+              { id: 'checkin', label: 'Novo Check-in', icon: Sparkles },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -107,24 +165,55 @@ const StudentMonitoring: React.FC<Props> = ({ studentId, currentProtocol, onUpda
         </div>
       </div>
 
-      {/* Content */}
+      {/* Content Area */}
       <div className="min-h-[500px]">
+        {activeTab === 'timeline' && (
+          <Timeline 
+            feedbacks={feedbacks}
+            measurements={measurements}
+            versions={versions}
+            student={student}
+            onDelete={handleDelete}
+          />
+        )}
+
+        {activeTab === 'medidas' && (
+          <MeasurementsManager 
+            studentId={studentId}
+            measurements={measurements}
+            onRefresh={handleRefresh}
+          />
+        )}
+
+        {activeTab === 'protocolos' && (
+          <ProtocolsManager 
+            studentId={studentId}
+            versions={versions}
+            onRefresh={handleRefresh}
+            onGenerateNew={() => setActiveTab('checkin')}
+          />
+        )}
+
+        {activeTab === 'feedback' && (
+          <FeedbackManager 
+            studentId={studentId}
+            feedbacks={feedbacks}
+            onRefresh={handleRefresh}
+          />
+        )}
+
         {activeTab === 'checkin' && (
           <CheckInForm 
             studentId={studentId}
             currentProtocol={currentProtocol}
-            onUpdateProtocol={onUpdateProtocol}
+            onUpdateProtocol={(p) => {
+              // Salva o protocolo e recarrega
+              db.saveProtocol(p).then(() => {
+                handleRefresh();
+                setActiveTab('protocolos');
+              });
+            }}
             onSuccess={handleRefresh}
-          />
-        )}
-
-        {activeTab === 'timeline' && (
-          <Timeline 
-            feedbacks={feedbacks} 
-            measurements={measurements} 
-            versions={versions} 
-            student={student}
-            onDelete={handleDelete}
           />
         )}
       </div>

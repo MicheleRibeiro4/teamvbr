@@ -60,7 +60,7 @@ const StudentDashboard: React.FC<Props> = ({ data, onNavigate }) => {
             <div className="w-12 h-12 rounded-2xl bg-[#d4af37]/10 flex items-center justify-center text-[#d4af37] mb-4">
               <Trophy size={24} />
             </div>
-            <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-1">Protocolo Ativo</p>
+            <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-1">Dieta Ativa</p>
             <h3 className="text-xl font-bold text-white">{data.protocolTitle || 'Hipertrofia'}</h3>
             <div className="mt-4 flex items-center gap-2 text-xs text-green-500 font-bold">
               <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
