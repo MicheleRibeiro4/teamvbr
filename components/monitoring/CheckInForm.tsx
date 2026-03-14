@@ -31,6 +31,8 @@ const CheckInForm: React.FC<Props> = ({ studentId, currentProtocol, onUpdateProt
   // Estado unificado para o check-in
   const [checkInDate, setCheckInDate] = useState(getLocalDateString());
   
+  const [protocolTitle, setProtocolTitle] = useState(currentProtocol.protocolTitle || '');
+  
   const [measurements, setMeasurements] = useState<Partial<BodyMeasurementEntry>>({
     weight: '',
     chest: '',
@@ -240,6 +242,7 @@ const CheckInForm: React.FC<Props> = ({ studentId, currentProtocol, onUpdateProt
           updatedAt: new Date().toISOString(),
           isOriginal: false,
           version: (currentProtocol.version || 1) + 1,
+          protocolTitle: protocolTitle || `Protocolo v${(currentProtocol.version || 1) + 1}`,
           physicalData: {
             ...currentProtocol.physicalData,
             date: checkInDate,
@@ -447,6 +450,19 @@ const CheckInForm: React.FC<Props> = ({ studentId, currentProtocol, onUpdateProt
                 <p className="text-[10px] text-white/40 font-bold uppercase tracking-wider select-none">Criar nova versão com base nestes dados</p>
               </div>
             </div>
+
+            {generateNewProtocol && (
+              <div className="mb-6 animate-in fade-in slide-in-from-top-2 duration-300">
+                <label className="text-[10px] font-bold text-white/40 uppercase block mb-2">Título do Novo Protocolo</label>
+                <input 
+                  type="text" 
+                  className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white font-bold focus:border-[#d4af37] outline-none"
+                  value={protocolTitle}
+                  onChange={e => setProtocolTitle(e.target.value)}
+                  placeholder="Ex: Fase de Cutting, Hipertrofia v2..."
+                />
+              </div>
+            )}
 
             {!generateNewProtocol && (
               <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-start gap-3">

@@ -64,7 +64,7 @@ const ProtocolsManager: React.FC<Props> = ({ studentId, versions, onRefresh, onG
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="text-lg font-black text-white uppercase tracking-tighter">
-                        Versão {protocol.version || (sortedVersions.length - index)}
+                        {protocol.protocolTitle || `Protocolo v${protocol.version || (sortedVersions.length - index)}`}
                       </h3>
                       {isActive ? (
                         <span className="bg-[#d4af37]/20 text-[#d4af37] text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest">Ativo</span>

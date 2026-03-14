@@ -45,10 +45,14 @@ const StudentMonitoring: React.FC<Props> = ({ studentId, currentProtocol, onBack
         db.getProtocolVersions(studentId)
       ]);
 
+      const uniqueFeedbacks = feedbacksData.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
+      const uniqueMeasurements = measurementsData.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
+      const uniqueVersions = versionsData.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
+
       setStudent(studentData);
-      setFeedbacks(feedbacksData);
-      setMeasurements(measurementsData);
-      setVersions(versionsData);
+      setFeedbacks(uniqueFeedbacks);
+      setMeasurements(uniqueMeasurements);
+      setVersions(uniqueVersions);
     } catch (error) {
       console.error("Erro ao carregar dados do aluno:", error);
     } finally {

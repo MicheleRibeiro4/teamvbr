@@ -43,7 +43,7 @@ const StudentProtocol: React.FC<Props> = ({ data }) => {
         <div>
           <h3 className="text-blue-400 font-black uppercase text-sm tracking-wide mb-1">Meta de Hidratação</h3>
           <p className="text-white text-lg font-medium">
-            Consumir no mínimo <span className="font-bold text-2xl">{data.waterGoal || '3.0'} Litros</span> de água por dia.
+            Consumir no mínimo <span className="font-bold">{data.waterGoal || '3.0'} Litros</span> de água por dia.
           </p>
         </div>
       </div>

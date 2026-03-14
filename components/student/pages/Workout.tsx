@@ -8,6 +8,8 @@ interface Props {
 
 const StudentWorkout: React.FC<Props> = ({ data }) => {
   const [activeDay, setActiveDay] = useState(0);
+  const [checkedExercises, setCheckedExercises] = useState<Set<number>>(new Set());
+  const [isConfirmed, setIsConfirmed] = useState(false);
 
   if (!data.trainingDays || data.trainingDays.length === 0) {
     return (
@@ -20,15 +22,43 @@ const StudentWorkout: React.FC<Props> = ({ data }) => {
 
   const currentWorkout = data.trainingDays[activeDay];
 
+  const toggleExercise = (idx: number) => {
+    const newChecked = new Set(checkedExercises);
+    if (newChecked.has(idx)) {
+      newChecked.delete(idx);
+    } else {
+      newChecked.add(idx);
+    }
+    setCheckedExercises(newChecked);
+  };
+
+  const handleConfirmWorkout = () => {
+    if (checkedExercises.size === 0) {
+      alert("Marque pelo menos um exercício concluído!");
+      return;
+    }
+    setIsConfirmed(true);
+    // Reset after some time or keep it confirmed for the session
+    setTimeout(() => setIsConfirmed(false), 5000);
+    setCheckedExercises(new Set());
+  };
+
   return (
     <div className="space-y-8">
-      <header className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter mb-2">
-          Meu Treino
-        </h1>
-        <p className="text-white/40 text-sm font-medium">
-          Foco: <span className="text-[#d4af37] font-bold uppercase">{currentWorkout.focus}</span>
-        </p>
+      <header className="mb-8 flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter mb-2">
+            Meu Treino
+          </h1>
+          <p className="text-white/40 text-sm font-medium">
+            Foco: <span className="text-[#d4af37] font-bold uppercase">{currentWorkout.focus}</span>
+          </p>
+        </div>
+        {isConfirmed && (
+          <div className="bg-green-500 text-black px-4 py-2 rounded-xl font-black uppercase text-[10px] tracking-widest animate-bounce">
+            Treino Concluído! 🔥
+          </div>
+        )}
       </header>
 
       {data.trainingReasoning && (
@@ -63,14 +93,28 @@ const StudentWorkout: React.FC<Props> = ({ data }) => {
         
         <div className="space-y-4 relative z-10">
           {currentWorkout.exercises.map((exercise, idx) => {
+            const isChecked = checkedExercises.has(idx);
             return (
               <div 
                 key={idx}
-                className="p-5 rounded-2xl border transition-all duration-300 bg-black/40 border-white/5 hover:border-[#d4af37]/30 hover:bg-white/5"
+                onClick={() => toggleExercise(idx)}
+                className={`p-5 rounded-2xl border transition-all duration-300 cursor-pointer ${
+                  isChecked 
+                    ? 'bg-[#d4af37]/10 border-[#d4af37]/50' 
+                    : 'bg-black/40 border-white/5 hover:border-[#d4af37]/30 hover:bg-white/5'
+                }`}
               >
                 <div className="flex items-center gap-5">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+                    isChecked ? 'bg-[#d4af37] text-black' : 'bg-white/5 text-white/20'
+                  }`}>
+                    {isChecked ? <CheckCircle2 size={20} /> : <Circle size={20} />}
+                  </div>
+
                   <div className="flex-1">
-                    <h4 className="text-base font-bold uppercase mb-2 text-white">
+                    <h4 className={`text-base font-bold uppercase mb-2 transition-all ${
+                      isChecked ? 'text-[#d4af37]' : 'text-white'
+                    }`}>
                       {exercise.name}
                     </h4>
                     
@@ -79,7 +123,6 @@ const StudentWorkout: React.FC<Props> = ({ data }) => {
                         <Repeat size={12} />
                         <span className="font-medium">{exercise.sets}</span>
                       </div>
-                      {/* Placeholder for future data like Rest or Load */}
                       <div className="flex items-center gap-1.5 text-white/50 bg-white/5 px-2 py-1 rounded-md">
                         <Clock size={12} />
                         <span className="font-medium">Descanso: 60s</span>
@@ -90,6 +133,22 @@ const StudentWorkout: React.FC<Props> = ({ data }) => {
               </div>
             );
           })}
+        </div>
+
+        <div className="mt-10 relative z-10">
+          <button
+            onClick={handleConfirmWorkout}
+            disabled={checkedExercises.size === 0}
+            className={`
+              w-full py-5 rounded-2xl font-black uppercase text-xs tracking-[0.2em] transition-all flex items-center justify-center gap-3 shadow-xl
+              ${checkedExercises.size > 0 
+                ? 'bg-[#d4af37] text-black hover:scale-[1.02] active:scale-95' 
+                : 'bg-white/5 text-white/20 cursor-not-allowed'}
+            `}
+          >
+            <CheckCircle2 size={20} />
+            Confirmar Treino Feito
+          </button>
         </div>
       </div>
     </div>
