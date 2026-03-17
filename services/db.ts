@@ -328,15 +328,30 @@ export const db = {
   },
 
   async saveWorkoutLog(log: any): Promise<void> {
-    if (!supabase) return;
-    const { error } = await supabase.from('workout_logs').insert({
+    if (!supabase) throw new Error("Banco de dados não configurado.");
+    
+    const logData = {
         student_id: log.studentId,
         workout_id: log.workoutId,
         workout_title: log.workoutTitle,
         workout_focus: log.workoutFocus,
         completed_at: new Date().toISOString()
-    });
-    if (error) throw error;
+    };
+
+    console.log("Saving workout log:", logData);
+
+    const { error } = await supabase.from('workout_logs').insert(logData);
+
+    if (error) {
+      console.error("Supabase Workout Log Error:", error);
+      if (error.code === '42P01' || error.message.includes('relation "public.workout_logs" does not exist')) {
+        throw new Error("Tabela de logs não encontrada. O administrador precisa executar o script de atualização do banco de dados.");
+      }
+      if (error.code === '42501' || error.message.includes('permission denied')) {
+        throw new Error("Permissão negada. O administrador precisa desativar o RLS na tabela de logs.");
+      }
+      throw new Error(error.message);
+    }
   },
 
   async deleteWorkoutLog(id: string): Promise<void> {

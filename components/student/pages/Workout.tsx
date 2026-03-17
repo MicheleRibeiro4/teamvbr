@@ -38,7 +38,16 @@ const StudentWorkout: React.FC<Props> = ({ data }) => {
   const handleConfirmWorkout = async () => {
     setLoading(true);
     try {
+      const currentWorkout = data.trainingDays[activeDay];
+      if (!currentWorkout) {
+        throw new Error("Treino não encontrado.");
+      }
+
       const studentId = data.studentId || data.id;
+      if (!studentId) {
+        throw new Error("ID do aluno não encontrado. Recarregue a página.");
+      }
+      
       await db.saveWorkoutLog({
         studentId: studentId,
         workoutId: currentWorkout.id,
@@ -51,9 +60,9 @@ const StudentWorkout: React.FC<Props> = ({ data }) => {
       
       // Reset success message after some time
       setTimeout(() => setIsConfirmed(false), 5000);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao confirmar treino:", error);
-      alert("Erro ao confirmar treino. Tente novamente.");
+      alert(error.message || "Erro ao confirmar treino. Tente novamente.");
     } finally {
       setLoading(false);
     }
