@@ -80,7 +80,7 @@ const StudentMonitoring: React.FC<Props> = ({ studentId, currentProtocol, onBack
     loadData();
   };
 
-  const handleDelete = async (type: 'feedback' | 'measurement' | 'protocol' | 'workout', id: string) => {
+  const handleDelete = async (type: 'feedback' | 'measurement' | 'protocol' | 'workout' | 'activity', id: string) => {
     try {
       if (type === 'feedback') {
         await db.deleteFeedback(id);
@@ -90,6 +90,8 @@ const StudentMonitoring: React.FC<Props> = ({ studentId, currentProtocol, onBack
         await db.deleteProtocol(id);
       } else if (type === 'workout') {
         await db.deleteWorkoutLog(id);
+      } else if (type === 'activity') {
+        await db.deleteActivityLog(id);
       }
       handleRefresh();
     } catch (error) {
@@ -192,6 +194,7 @@ const StudentMonitoring: React.FC<Props> = ({ studentId, currentProtocol, onBack
             measurements={measurements}
             versions={versions}
             workoutLogs={workoutLogs}
+            activityLogs={activityLogs}
             student={student}
             onDelete={handleDelete}
           />

@@ -16,13 +16,14 @@ interface Props {
   measurements: BodyMeasurementEntry[];
   versions: ProtocolData[];
   workoutLogs?: any[];
+  activityLogs?: any[];
   student: Student | null;
-  onDelete: (type: 'feedback' | 'measurement' | 'protocol' | 'workout', id: string) => void;
+  onDelete: (type: 'feedback' | 'measurement' | 'protocol' | 'workout' | 'activity', id: string) => void;
 }
 
-const Timeline: React.FC<Props> = ({ feedbacks, measurements, versions, workoutLogs = [], student, onDelete }) => {
+const Timeline: React.FC<Props> = ({ feedbacks, measurements, versions, workoutLogs = [], activityLogs = [], student, onDelete }) => {
   
-  const handleDelete = (type: 'feedback' | 'measurement' | 'protocol' | 'workout', id: string) => {
+  const handleDelete = (type: 'feedback' | 'measurement' | 'protocol' | 'workout' | 'activity', id: string) => {
     if (confirm('Tem certeza que deseja excluir este item do histórico? Esta ação não pode ser desfeita.')) {
       onDelete(type, id);
     }
@@ -83,6 +84,17 @@ const Timeline: React.FC<Props> = ({ feedbacks, measurements, versions, workoutL
       color: 'text-orange-400',
       bg: 'bg-orange-500/10',
       border: 'border-orange-500/30'
+    })),
+    ...activityLogs.map(a => ({
+      id: a.id,
+      type: 'activity',
+      date: new Date(a.created_at),
+      title: a.activity_type === 'portal_access' ? 'Acesso ao Portal' : 'Download de Protocolo',
+      details: a.activity_type === 'portal_access' ? 'O aluno acessou a plataforma' : `Download do protocolo v${versions.find(v => v.id === a.details)?.version || '?'}`,
+      icon: a.activity_type === 'portal_access' ? Clock : FileText,
+      color: a.activity_type === 'portal_access' ? 'text-blue-400' : 'text-green-400',
+      bg: a.activity_type === 'portal_access' ? 'bg-blue-500/10' : 'bg-green-500/10',
+      border: a.activity_type === 'portal_access' ? 'border-blue-500/30' : 'border-green-500/30'
     }))
   ].sort((a, b) => b.date.getTime() - a.date.getTime());
 

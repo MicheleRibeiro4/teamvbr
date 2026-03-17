@@ -384,5 +384,11 @@ export const db = {
       return [];
     }
     return data || [];
+  },
+
+  async deleteActivityLog(id: string): Promise<void> {
+    if (!supabase) return;
+    const { error } = await supabase.from('activity_logs').delete().eq('id', id);
+    if (error) throw error;
   }
 };
