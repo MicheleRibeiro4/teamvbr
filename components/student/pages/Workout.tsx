@@ -15,11 +15,12 @@ const StudentWorkout: React.FC<Props> = ({ data }) => {
 
   useEffect(() => {
     loadWorkoutLogs();
-  }, [data.studentId]);
+  }, [data.studentId, data.id]);
 
   const loadWorkoutLogs = async () => {
-    if (!data.studentId) return;
-    const logs = await db.getWorkoutLogs(data.studentId);
+    const studentId = data.studentId || data.id;
+    if (!studentId) return;
+    const logs = await db.getWorkoutLogs(studentId);
     setWorkoutLogs(logs);
   };
 
@@ -37,8 +38,9 @@ const StudentWorkout: React.FC<Props> = ({ data }) => {
   const handleConfirmWorkout = async () => {
     setLoading(true);
     try {
+      const studentId = data.studentId || data.id;
       await db.saveWorkoutLog({
-        studentId: data.studentId,
+        studentId: studentId,
         workoutId: currentWorkout.id,
         workoutTitle: currentWorkout.title,
         workoutFocus: currentWorkout.focus
