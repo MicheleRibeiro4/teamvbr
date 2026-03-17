@@ -310,5 +310,38 @@ export const db = {
     if (!supabase) return;
     const { error } = await supabase.from('protocols').delete().eq('id', id);
     if (error) throw error;
+  },
+
+  async getWorkoutLogs(studentId: string): Promise<any[]> {
+    if (!supabase) return [];
+    const { data, error } = await supabase
+        .from('workout_logs')
+        .select('*')
+        .eq('student_id', studentId)
+        .order('completed_at', { ascending: false });
+    
+    if (error) {
+        console.error("Erro ao buscar logs de treino:", error);
+        return [];
+    }
+    return data || [];
+  },
+
+  async saveWorkoutLog(log: any): Promise<void> {
+    if (!supabase) return;
+    const { error } = await supabase.from('workout_logs').insert({
+        student_id: log.studentId,
+        workout_id: log.workoutId,
+        workout_title: log.workoutTitle,
+        workout_focus: log.workoutFocus,
+        completed_at: new Date().toISOString()
+    });
+    if (error) throw error;
+  },
+
+  async deleteWorkoutLog(id: string): Promise<void> {
+    if (!supabase) return;
+    const { error } = await supabase.from('workout_logs').delete().eq('id', id);
+    if (error) throw error;
   }
 };

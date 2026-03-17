@@ -12,8 +12,8 @@ interface Props {
   data: ProtocolData;
   onChange: (data: ProtocolData) => void;
   onBack?: () => void;
-  activeTab: 'identificacao' | 'anamnese' | 'medidas' | 'nutricao' | 'treino';
-  onTabChange: (tab: 'identificacao' | 'anamnese' | 'medidas' | 'nutricao' | 'treino') => void;
+  activeTab: 'identificacao' | 'anamnese' | 'medidas' | 'nutricao' | 'treino' | 'ergogenicos';
+  onTabChange: (tab: 'identificacao' | 'anamnese' | 'medidas' | 'nutricao' | 'treino' | 'ergogenicos') => void;
   hideTabs?: boolean;
 }
 
@@ -631,6 +631,10 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
   const removeExercise = (dayIndex: number, exIndex: number) => { const newDays = [...data.trainingDays]; newDays[dayIndex].exercises.splice(exIndex, 1); handleChange('trainingDays', newDays); };
   const updateExercise = (dayIndex: number, exIndex: number, field: keyof Exercise, val: string) => { const newDays = [...data.trainingDays]; newDays[dayIndex].exercises[exIndex] = { ...newDays[dayIndex].exercises[exIndex], [field]: val }; handleChange('trainingDays', newDays); };
 
+  const addErgogenic = () => handleChange('ergogenics', [...(data.ergogenics || []), { id: generateId(), name: '', dosage: '', timing: '' }]);
+  const removeErgogenic = (index: number) => { const newErgs = [...(data.ergogenics || [])]; newErgs.splice(index, 1); handleChange('ergogenics', newErgs); };
+  const updateErgogenic = (index: number, field: any, val: string) => { const newErgs = [...(data.ergogenics || [])]; newErgs[index] = { ...newErgs[index], [field]: val }; handleChange('ergogenics', newErgs); };
+
   const labelClass = "block text-[9px] font-black text-white/40 mb-1.5 uppercase tracking-widest";
   const inputClass = "w-full p-4 bg-[#111] border border-white/5 rounded-xl focus:ring-1 focus:ring-[#d4af37] outline-none font-bold text-white text-sm transition-all";
   const selectClass = "w-full p-4 bg-[#111] border border-white/5 rounded-xl focus:ring-1 focus:ring-[#d4af37] outline-none font-bold text-white text-sm transition-all appearance-none cursor-pointer";
@@ -667,6 +671,7 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
             <TabButton id="medidas" label="Medidas" icon={Ruler} />
             <TabButton id="nutricao" label="Nutrição" icon={Utensils} />
             <TabButton id="treino" label="Treino" icon={Dumbbell} />
+            <TabButton id="ergogenicos" label="Ergogênicos" icon={Pill} />
         </div>
       )}
 
@@ -1174,6 +1179,56 @@ const ProtocolForm: React.FC<Props> = ({ data, onChange, onBack, activeTab, onTa
                 </div>
               ))}
               <button onClick={addTrainingDay} className={addButtonClass}><Plus size={16} /> Novo Bloco de Treino</button>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {activeTab === 'ergogenicos' && (
+        <div className="animate-in fade-in slide-in-from-right-4 duration-300 space-y-8">
+          <section>
+            <div className="bg-[#d4af37]/10 p-6 rounded-[2rem] border border-[#d4af37]/20 flex flex-col md:flex-row justify-between items-center gap-6 mb-8 relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-10 opacity-10 pointer-events-none"><Pill size={120} /></div>
+                <div className="flex items-center gap-4 relative z-10">
+                    <div className="w-16 h-16 bg-[#d4af37] rounded-2xl flex items-center justify-center text-black shadow-lg"><Pill size={32} strokeWidth={2.5} /></div>
+                    <div>
+                        <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Recursos Ergogênicos</h2>
+                        <p className="text-xs font-bold text-[#d4af37] uppercase tracking-widest mt-1">Itens, Dosagens e Posologia</p>
+                    </div>
+                </div>
+                <div className="relative z-10 flex gap-2 items-center">
+                    <button onClick={() => protocolRef.current?.download()} className={btnPdfClass}>
+                        <FileDown size={14} /> Salvar PDF
+                    </button>
+                    <ProtocolPreview ref={protocolRef} data={data} customTrigger={
+                        <button className={btnVisualizarClass}>
+                            <FileText size={18} /> Visualizar
+                        </button>
+                    } />
+                </div>
+            </div>
+
+            <div className="space-y-4">
+              {(data.ergogenics || []).map((erg, index) => (
+                <div key={erg.id} className="bg-white/5 p-4 rounded-xl border border-white/5 flex flex-col md:flex-row gap-4 items-end group">
+                    <div className="flex-1 w-full"><label className={labelClass}>Item / Substância</label><input className={inputClass} value={erg.name} onChange={(e) => updateErgogenic(index, 'name', e.target.value)} placeholder="Ex: Enantato de Testosterona" /></div>
+                    <div className="w-full md:w-1/4"><label className={labelClass}>Dosagem</label><input className={inputClass} value={erg.dosage} onChange={(e) => updateErgogenic(index, 'dosage', e.target.value)} placeholder="Ex: 250mg" /></div>
+                    <div className="w-full md:w-1/3"><label className={labelClass}>Posologia / Horário</label><input className={inputClass} value={erg.timing} onChange={(e) => updateErgogenic(index, 'timing', e.target.value)} placeholder="Ex: 1ml por semana" /></div>
+                    <button onClick={() => removeErgogenic(index)} className="w-full md:w-auto p-3 text-red-500 hover:text-red-500 transition-colors flex justify-center"><Trash2 size={18} /></button>
+                </div>
+              ))}
+              <button onClick={addErgogenic} className={addButtonClass}><Plus size={16} /> Adicionar Item Ergogênico</button>
+            </div>
+
+            <div className="bg-red-500/5 border border-red-500/10 p-6 rounded-2xl mt-12">
+              <div className="flex items-center gap-3 mb-3 text-red-500">
+                <AlertCircle size={20} />
+                <h4 className="font-black uppercase text-xs tracking-widest">Aviso de Segurança</h4>
+              </div>
+              <p className="text-white/40 text-xs leading-relaxed italic">
+                A prescrição de ergogênicos é de responsabilidade técnica. Certifique-se de que o aluno está ciente dos riscos e benefícios. 
+                Este campo é destinado apenas para organização do protocolo.
+              </p>
             </div>
           </section>
         </div>

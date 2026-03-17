@@ -247,6 +247,7 @@ export const EMPTY_DATA: ProtocolData = {
   },
   meals: [],
   supplements: [],
+  ergogenics: [],
   // DICAS PADRÃO INSERIDAS AQUI PARA TODOS OS NOVOS ALUNOS
   tips: [
     "Mantenha a hidratação constante.",

@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { ProtocolData } from '../types';
-import { LOGO_VBR_BLACK, ICON_MAN, ICON_WOMAN, EMPTY_DATA, getDisplayDate, getLocalDateString } from '../constants';
+import { LOGO_VBR_BLACK, ICON_MAN, ICON_WOMAN, EMPTY_DATA, getDisplayDate, getLocalDateString, getSafeDateObject } from '../constants';
 import ProtocolPreview from './ProtocolPreview';
 import { 
   Users, 
@@ -22,7 +22,8 @@ import {
   Sparkles,
   Lock,
   TrendingUp,
-  Settings2
+  Settings2,
+  Clock
 } from 'lucide-react';
 
 interface Props {
@@ -218,6 +219,22 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
             const nextDate = new Date(baseDate);
             nextDate.setDate(baseDate.getDate() + checkinInterval);
             
+            // Ajuste para o próximo dia útil se for fim de semana (Sábado ou Domingo)
+            if (nextDate.getDay() === 6) { // Sábado
+                nextDate.setDate(nextDate.getDate() + 2);
+            } else if (nextDate.getDay() === 0) { // Domingo
+                nextDate.setDate(nextDate.getDate() + 1);
+            }
+            
+            // Cálculo de tempo para encerramento do contrato
+            let contractDaysLeft = null;
+            if (student.contract?.endDate) {
+                const contractEnd = getSafeDateObject(student.contract.endDate);
+                contractEnd.setHours(0,0,0,0);
+                const contractDiff = contractEnd.getTime() - today.getTime();
+                contractDaysLeft = Math.ceil(contractDiff / (1000 * 60 * 60 * 24));
+            }
+
             // Dias restantes = Próxima - Hoje
             const diffTime = nextDate.getTime() - today.getTime();
             const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -247,7 +264,7 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                 countThisWeek++;
             }
 
-            agenda.push({
+                    agenda.push({
                 ...student,
                 schedule: {
                     daysLeft,
@@ -255,7 +272,8 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                     baseDate: baseDate.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
                     status,
                     statusColor,
-                    nextDateObj: nextDate // Para ordenação
+                    nextDateObj: nextDate, // Para ordenação
+                    contractDaysLeft
                 }
             });
         }
@@ -345,6 +363,11 @@ const MainDashboard: React.FC<Props> = ({ protocols, onNew, onList, onLoadStuden
                                         <span className="text-[10px] font-bold text-white/40 uppercase flex items-center gap-1">
                                             <CalendarClock size={10} /> Próxima: {nextDate}
                                         </span>
+                                        {student.schedule.contractDaysLeft !== null && (
+                                            <span className={`text-[10px] font-bold uppercase flex items-center gap-1 ${student.schedule.contractDaysLeft <= 7 ? 'text-red-400' : 'text-white/40'}`}>
+                                                <Clock size={10} /> {student.schedule.contractDaysLeft <= 0 ? 'Contrato Encerrado' : 'Encerramento do Contrato ' + formatDate(student.contract?.endDate)}
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
 

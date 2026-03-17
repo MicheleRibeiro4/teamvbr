@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ProtocolData } from '../../../types';
-import { CheckCircle2, Circle, Clock, Repeat, Dumbbell } from 'lucide-react';
+import { CheckCircle2, Clock, Repeat, Dumbbell, History, Calendar } from 'lucide-react';
+import { db } from '../../../services/db';
 
 interface Props {
   data: ProtocolData;
@@ -8,8 +9,19 @@ interface Props {
 
 const StudentWorkout: React.FC<Props> = ({ data }) => {
   const [activeDay, setActiveDay] = useState(0);
-  const [checkedExercises, setCheckedExercises] = useState<Set<number>>(new Set());
   const [isConfirmed, setIsConfirmed] = useState(false);
+  const [workoutLogs, setWorkoutLogs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    loadWorkoutLogs();
+  }, [data.studentId]);
+
+  const loadWorkoutLogs = async () => {
+    if (!data.studentId) return;
+    const logs = await db.getWorkoutLogs(data.studentId);
+    setWorkoutLogs(logs);
+  };
 
   if (!data.trainingDays || data.trainingDays.length === 0) {
     return (
@@ -22,25 +34,27 @@ const StudentWorkout: React.FC<Props> = ({ data }) => {
 
   const currentWorkout = data.trainingDays[activeDay];
 
-  const toggleExercise = (idx: number) => {
-    const newChecked = new Set(checkedExercises);
-    if (newChecked.has(idx)) {
-      newChecked.delete(idx);
-    } else {
-      newChecked.add(idx);
+  const handleConfirmWorkout = async () => {
+    setLoading(true);
+    try {
+      await db.saveWorkoutLog({
+        studentId: data.studentId,
+        workoutId: currentWorkout.id,
+        workoutTitle: currentWorkout.title,
+        workoutFocus: currentWorkout.focus
+      });
+      
+      setIsConfirmed(true);
+      await loadWorkoutLogs();
+      
+      // Reset success message after some time
+      setTimeout(() => setIsConfirmed(false), 5000);
+    } catch (error) {
+      console.error("Erro ao confirmar treino:", error);
+      alert("Erro ao confirmar treino. Tente novamente.");
+    } finally {
+      setLoading(false);
     }
-    setCheckedExercises(newChecked);
-  };
-
-  const handleConfirmWorkout = () => {
-    if (checkedExercises.size === 0) {
-      alert("Marque pelo menos um exercício concluído!");
-      return;
-    }
-    setIsConfirmed(true);
-    // Reset after some time or keep it confirmed for the session
-    setTimeout(() => setIsConfirmed(false), 5000);
-    setCheckedExercises(new Set());
   };
 
   return (
@@ -93,28 +107,18 @@ const StudentWorkout: React.FC<Props> = ({ data }) => {
         
         <div className="space-y-4 relative z-10">
           {currentWorkout.exercises.map((exercise, idx) => {
-            const isChecked = checkedExercises.has(idx);
             return (
               <div 
                 key={idx}
-                onClick={() => toggleExercise(idx)}
-                className={`p-5 rounded-2xl border transition-all duration-300 cursor-pointer ${
-                  isChecked 
-                    ? 'bg-[#d4af37]/10 border-[#d4af37]/50' 
-                    : 'bg-black/40 border-white/5 hover:border-[#d4af37]/30 hover:bg-white/5'
-                }`}
+                className="p-5 rounded-2xl border transition-all duration-300 bg-black/40 border-white/5 hover:border-[#d4af37]/30 hover:bg-white/5"
               >
                 <div className="flex items-center gap-5">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
-                    isChecked ? 'bg-[#d4af37] text-black' : 'bg-white/5 text-white/20'
-                  }`}>
-                    {isChecked ? <CheckCircle2 size={20} /> : <Circle size={20} />}
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/5 text-white/20">
+                    <Dumbbell size={20} />
                   </div>
 
                   <div className="flex-1">
-                    <h4 className={`text-base font-bold uppercase mb-2 transition-all ${
-                      isChecked ? 'text-[#d4af37]' : 'text-white'
-                    }`}>
+                    <h4 className="text-base font-bold uppercase mb-2 text-white">
                       {exercise.name}
                     </h4>
                     
@@ -138,18 +142,56 @@ const StudentWorkout: React.FC<Props> = ({ data }) => {
         <div className="mt-10 relative z-10">
           <button
             onClick={handleConfirmWorkout}
-            disabled={checkedExercises.size === 0}
+            disabled={loading}
             className={`
               w-full py-5 rounded-2xl font-black uppercase text-xs tracking-[0.2em] transition-all flex items-center justify-center gap-3 shadow-xl
-              ${checkedExercises.size > 0 
+              ${!loading 
                 ? 'bg-[#d4af37] text-black hover:scale-[1.02] active:scale-95' 
                 : 'bg-white/5 text-white/20 cursor-not-allowed'}
             `}
           >
-            <CheckCircle2 size={20} />
-            Confirmar Treino Feito
+            {loading ? (
+              <div className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full animate-spin"></div>
+            ) : (
+              <CheckCircle2 size={20} />
+            )}
+            {loading ? 'Confirmando...' : 'Confirmar Treino Feito'}
           </button>
         </div>
+      </div>
+
+      {/* Workout History */}
+      <div className="mt-12">
+        <div className="flex items-center gap-3 mb-6">
+          <History className="text-[#d4af37]" size={24} />
+          <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Histórico de Treinos</h2>
+        </div>
+
+        {workoutLogs.length === 0 ? (
+          <div className="bg-[#111] border border-white/5 rounded-2xl p-8 text-center">
+            <Calendar size={32} className="mx-auto text-white/10 mb-3" />
+            <p className="text-white/40 text-sm">Nenhum treino registrado ainda.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {workoutLogs.map((log) => (
+              <div key={log.id} className="bg-[#111] border border-white/5 p-5 rounded-2xl flex items-center justify-between group hover:border-[#d4af37]/30 transition-all">
+                <div>
+                  <h4 className="text-white font-bold uppercase text-sm mb-1">{log.workout_title}</h4>
+                  <p className="text-white/40 text-[10px] uppercase tracking-widest">{log.workout_focus}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[#d4af37] font-black text-xs">
+                    {new Date(log.completed_at).toLocaleDateString('pt-BR')}
+                  </p>
+                  <p className="text-white/20 text-[10px]">
+                    {new Date(log.completed_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

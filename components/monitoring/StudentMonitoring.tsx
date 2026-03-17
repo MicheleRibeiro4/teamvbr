@@ -11,7 +11,10 @@ import {
   FileText,
   MessageSquare,
   ChevronLeft,
-  Sparkles
+  Sparkles,
+  Dumbbell,
+  Calendar,
+  Pill
 } from 'lucide-react';
 import Timeline from './Timeline';
 import CheckInForm from './CheckInForm';
@@ -28,21 +31,23 @@ interface Props {
 }
 
 const StudentMonitoring: React.FC<Props> = ({ studentId, currentProtocol, onBack, initialTab = 'timeline' }) => {
-  const [activeTab, setActiveTab] = useState<'timeline' | 'medidas' | 'protocolos' | 'feedback' | 'checkin'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'timeline' | 'medidas' | 'protocolos' | 'feedback' | 'checkin' | 'treinos' | 'ergogenicos'>(initialTab);
   const [loading, setLoading] = useState(true);
   const [student, setStudent] = useState<Student | null>(null);
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [measurements, setMeasurements] = useState<BodyMeasurementEntry[]>([]);
   const [versions, setVersions] = useState<ProtocolData[]>([]);
+  const [workoutLogs, setWorkoutLogs] = useState<any[]>([]);
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const [studentData, feedbacksData, measurementsData, versionsData] = await Promise.all([
+      const [studentData, feedbacksData, measurementsData, versionsData, workoutLogsData] = await Promise.all([
         db.getStudent(studentId),
         db.getFeedbacks(studentId),
         db.getMeasurements(studentId),
-        db.getProtocolVersions(studentId)
+        db.getProtocolVersions(studentId),
+        db.getWorkoutLogs(studentId)
       ]);
 
       const uniqueFeedbacks = feedbacksData.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
@@ -53,6 +58,7 @@ const StudentMonitoring: React.FC<Props> = ({ studentId, currentProtocol, onBack
       setFeedbacks(uniqueFeedbacks);
       setMeasurements(uniqueMeasurements);
       setVersions(uniqueVersions);
+      setWorkoutLogs(workoutLogsData);
     } catch (error) {
       console.error("Erro ao carregar dados do aluno:", error);
     } finally {
@@ -70,7 +76,7 @@ const StudentMonitoring: React.FC<Props> = ({ studentId, currentProtocol, onBack
     loadData();
   };
 
-  const handleDelete = async (type: 'feedback' | 'measurement' | 'protocol', id: string) => {
+  const handleDelete = async (type: 'feedback' | 'measurement' | 'protocol' | 'workout', id: string) => {
     try {
       if (type === 'feedback') {
         await db.deleteFeedback(id);
@@ -78,6 +84,8 @@ const StudentMonitoring: React.FC<Props> = ({ studentId, currentProtocol, onBack
         await db.deleteMeasurement(id);
       } else if (type === 'protocol') {
         await db.deleteProtocol(id);
+      } else if (type === 'workout') {
+        await db.deleteWorkoutLog(id);
       }
       handleRefresh();
     } catch (error) {
@@ -149,6 +157,8 @@ const StudentMonitoring: React.FC<Props> = ({ studentId, currentProtocol, onBack
               { id: 'timeline', label: 'Histórico', icon: Clock },
               { id: 'medidas', label: 'Medidas', icon: Ruler },
               { id: 'protocolos', label: 'Protocolos', icon: FileText },
+              { id: 'treinos', label: 'Treinos', icon: Dumbbell },
+              { id: 'ergogenicos', label: 'Ergogênicos', icon: Pill },
               { id: 'feedback', label: 'Feedback', icon: MessageSquare },
               { id: 'checkin', label: 'Novo Check-in', icon: Sparkles },
             ].map((tab) => (
@@ -176,6 +186,7 @@ const StudentMonitoring: React.FC<Props> = ({ studentId, currentProtocol, onBack
             feedbacks={feedbacks}
             measurements={measurements}
             versions={versions}
+            workoutLogs={workoutLogs}
             student={student}
             onDelete={handleDelete}
           />
@@ -204,6 +215,80 @@ const StudentMonitoring: React.FC<Props> = ({ studentId, currentProtocol, onBack
             feedbacks={feedbacks}
             onRefresh={handleRefresh}
           />
+        )}
+
+        {activeTab === 'treinos' && (
+          <div className="space-y-6">
+            <div className="flex items-center gap-3 mb-2">
+              <Dumbbell className="text-[#d4af37]" size={24} />
+              <h2 className="text-xl font-black text-white uppercase tracking-tighter">Histórico de Treinos</h2>
+            </div>
+            
+            {workoutLogs.length === 0 ? (
+              <div className="bg-[#111] border border-white/5 rounded-2xl p-12 text-center">
+                <Calendar size={48} className="mx-auto text-white/10 mb-4" />
+                <p className="text-white/40 text-sm font-medium">O aluno ainda não registrou nenhum treino.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {workoutLogs.map((log) => (
+                  <div key={log.id} className="bg-[#111] border border-white/10 p-5 rounded-2xl flex items-center justify-between group hover:border-[#d4af37]/30 transition-all">
+                    <div>
+                      <h4 className="text-white font-bold uppercase text-sm mb-1">{log.workout_title}</h4>
+                      <p className="text-white/40 text-[10px] uppercase tracking-widest">{log.workout_focus}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[#d4af37] font-black text-xs">
+                        {new Date(log.completed_at).toLocaleDateString('pt-BR')}
+                      </p>
+                      <p className="text-white/20 text-[10px]">
+                        {new Date(log.completed_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'ergogenicos' && (
+          <div className="space-y-6">
+            <div className="flex items-center gap-3 mb-2">
+              <Pill className="text-[#d4af37]" size={24} />
+              <h2 className="text-xl font-black text-white uppercase tracking-tighter">Protocolo de Ergogênicos</h2>
+            </div>
+            
+            {!currentProtocol.ergogenics || currentProtocol.ergogenics.length === 0 ? (
+              <div className="bg-[#111] border border-white/5 rounded-2xl p-12 text-center">
+                <Pill size={48} className="mx-auto text-white/10 mb-4" />
+                <p className="text-white/40 text-sm font-medium">Nenhum ergogênico registrado no protocolo atual.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {currentProtocol.ergogenics.map((erg) => (
+                  <div key={erg.id} className="bg-[#111] border border-white/10 p-6 rounded-2xl hover:border-[#d4af37]/30 transition-all group">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="bg-[#d4af37]/10 text-[#d4af37] p-3 rounded-xl group-hover:bg-[#d4af37] group-hover:text-black transition-all">
+                        <Pill size={20} />
+                      </div>
+                      <h4 className="text-white font-black uppercase text-lg">{erg.name}</h4>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center py-2 border-b border-white/5">
+                        <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">Dosagem</span>
+                        <span className="text-sm font-bold text-white">{erg.dosage}</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2">
+                        <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">Posologia</span>
+                        <span className="text-sm font-bold text-white">{erg.timing}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         )}
 
         {activeTab === 'checkin' && (

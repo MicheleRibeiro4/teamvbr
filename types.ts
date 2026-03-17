@@ -50,6 +50,13 @@ export interface Supplement {
   timing: string;
 }
 
+export interface Ergogenic {
+  id: string;
+  name: string;
+  dosage: string;
+  timing: string;
+}
+
 export interface Exercise {
   id: string;
   name: string;
@@ -167,6 +174,7 @@ export interface ProtocolData {
   macros: Macronutrients;
   meals: Meal[];
   supplements: Supplement[];
+  ergogenics?: Ergogenic[]; // Novo campo para ergogênicos
   tips: string[];
   trainingFrequency: string;
   trainingReasoning: string; // Novo campo

@@ -69,6 +69,7 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
     const macros = safeData.macros || { protein: { value: '0', ratio: '' }, carbs: { value: '0', ratio: '' }, fats: { value: '0', ratio: '' } };
     const meals = (safeData.meals || []).filter(m => m.name || m.details || m.time);
     const supplements = (safeData.supplements || []).filter(s => s.name || s.dosage || s.timing);
+    const ergogenics = (safeData.ergogenics || []).filter(e => e.name || e.dosage || e.timing);
     const trainingDays = (safeData.trainingDays || []).filter(d => d.title || d.focus || (d.exercises && d.exercises.length > 0));
     const tips = (safeData.tips || []).filter(t => t.trim() !== '');
     
@@ -370,6 +371,35 @@ const ProtocolPreview = React.memo(forwardRef<ProtocolPreviewHandle, Props>(({ d
                                         <p className="text-sm font-medium text-gray-800 leading-relaxed">{tip}</p>
                                     </div>
                                 ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ERGOGÊNICOS */}
+                    {ergogenics.length > 0 && (
+                        <div style={{ pageBreakBefore: 'always', paddingTop: '20mm' }}>
+                            {renderHeader("Recursos Ergogênicos")}
+                            
+                            <div className="space-y-4 mb-10">
+                                {ergogenics.map((e, idx) => (
+                                    <div key={idx} className="bg-red-600 text-white p-4 rounded-xl flex items-center justify-between shadow-sm avoid-page-break" style={{ pageBreakInside: 'avoid' }}>
+                                        <div>
+                                            <p className="font-black text-lg uppercase leading-none mb-1">{e.name}</p>
+                                            <p className="text-xs font-medium opacity-90">{e.dosage}</p>
+                                        </div>
+                                        <div className="text-right bg-black/20 px-3 py-2 rounded text-[10px] font-bold uppercase tracking-wider min-w-[120px]">
+                                            {e.timing}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="bg-red-50 p-4 rounded-lg border border-red-200 avoid-page-break">
+                                <p className="text-[10px] font-black text-red-600 uppercase tracking-widest mb-2">Aviso Importante:</p>
+                                <p className="text-xs text-red-800 italic leading-relaxed">
+                                    O uso de substâncias ergogênicas deve ser feito sob estrita orientação. 
+                                    Não altere dosagens ou horários sem consultar seu preparador.
+                                </p>
                             </div>
                         </div>
                     )}

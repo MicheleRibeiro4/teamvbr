@@ -9,7 +9,8 @@ import {
   LogOut, 
   Menu, 
   X,
-  ChevronRight
+  ChevronRight,
+  Pill
 } from 'lucide-react';
 import { LOGO_VBR_BLACK } from '../../constants';
 import { ProtocolData } from '../../types';
@@ -18,13 +19,14 @@ import { ProtocolData } from '../../types';
 import StudentDashboard from './pages/Dashboard';
 import StudentProtocol from './pages/Protocol';
 import StudentWorkout from './pages/Workout';
+import StudentErgogenics from './pages/Ergogenics';
 
 interface StudentPortalProps {
   studentData: ProtocolData;
   onLogout: () => void;
 }
 
-type Page = 'dashboard' | 'protocol' | 'workout';
+type Page = 'dashboard' | 'protocol' | 'workout' | 'ergogenics';
 
 const StudentPortal: React.FC<StudentPortalProps> = ({ studentData, onLogout }) => {
   const [activePage, setActivePage] = useState<Page>('dashboard');
@@ -127,6 +129,7 @@ const StudentPortal: React.FC<StudentPortalProps> = ({ studentData, onLogout }) 
     { id: 'dashboard', label: 'Meu Painel', icon: LayoutDashboard },
     { id: 'protocol', label: 'Minha Dieta', icon: Utensils },
     { id: 'workout', label: 'Meu Treino', icon: Dumbbell },
+    { id: 'ergogenics', label: 'Ergogênicos', icon: Pill },
   ];
 
   const renderPage = () => {
@@ -134,6 +137,7 @@ const StudentPortal: React.FC<StudentPortalProps> = ({ studentData, onLogout }) 
       case 'dashboard': return <StudentDashboard data={studentData} onNavigate={(page) => setActivePage(page as Page)} />;
       case 'protocol': return <StudentProtocol data={studentData} />;
       case 'workout': return <StudentWorkout data={studentData} />;
+      case 'ergogenics': return <StudentErgogenics data={studentData} />;
       default: return <StudentDashboard data={studentData} onNavigate={(page) => setActivePage(page as Page)} />;
     }
   };

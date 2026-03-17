@@ -4,6 +4,7 @@
 
 -- 1. Limpa tabelas existentes para garantir uma instalação limpa (CUIDADO: ISSO APAGA TODOS OS DADOS)
 DROP TABLE IF EXISTS public.body_measurements CASCADE;
+DROP TABLE IF EXISTS public.workout_logs CASCADE;
 DROP TABLE IF EXISTS public.feedbacks CASCADE;
 DROP TABLE IF EXISTS public.students CASCADE;
 DROP TABLE IF EXISTS public.protocols CASCADE;
@@ -55,11 +56,22 @@ CREATE TABLE public.body_measurements (
   created_at timestamp with time zone DEFAULT now()
 );
 
--- 6. Desabilita RLS (Row Level Security) para acesso simplificado via API Key pública
+-- 6. Cria a tabela 'workout_logs'
+CREATE TABLE public.workout_logs (
+  id uuid NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id text NOT NULL,
+  workout_id text,
+  workout_title text,
+  workout_focus text,
+  completed_at timestamp with time zone DEFAULT now()
+);
+
+-- 7. Desabilita RLS (Row Level Security) para acesso simplificado via API Key pública
 ALTER TABLE public.protocols DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.students DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.feedbacks DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.body_measurements DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.workout_logs DISABLE ROW LEVEL SECURITY;
 
 -- 7. Concede permissões
 GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
@@ -72,6 +84,7 @@ CREATE INDEX IF NOT EXISTS idx_protocols_client_name ON public.protocols(client_
 CREATE INDEX IF NOT EXISTS idx_protocols_student_id ON public.protocols((data->>'studentId'));
 CREATE INDEX IF NOT EXISTS idx_feedbacks_student_id ON public.feedbacks(student_id);
 CREATE INDEX IF NOT EXISTS idx_measurements_student_id ON public.body_measurements(student_id);
+CREATE INDEX IF NOT EXISTS idx_workout_logs_student_id ON public.workout_logs(student_id);
 
 -- 9. Inserção de Dados Iniciais (Exemplo)
 INSERT INTO public.protocols (id, client_name, updated_at, data)

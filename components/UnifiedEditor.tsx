@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { ProtocolData } from '../types';
 import ProtocolForm from './ProtocolForm';
-import { ChevronLeft, Settings2, FileText, Activity, Dumbbell, TrendingUp } from 'lucide-react';
+import { ChevronLeft, Settings2, FileText, Activity, Dumbbell, TrendingUp, Pill } from 'lucide-react';
 import StudentMonitoring from './monitoring/StudentMonitoring';
 
 interface Props {
@@ -23,7 +23,7 @@ const UnifiedEditor: React.FC<Props> = ({
   onSelectHistory = () => {},
   onDeleteHistory = () => {}
 }) => {
-  const [activeTab, setActiveTab] = useState<'identificacao' | 'anamnese' | 'medidas' | 'nutricao' | 'treino' | 'acompanhamento'>('identificacao');
+  const [activeTab, setActiveTab] = useState<'identificacao' | 'anamnese' | 'medidas' | 'nutricao' | 'treino' | 'acompanhamento' | 'ergogenicos'>('identificacao');
   const [localData, setLocalData] = useState<ProtocolData>(data);
   const localDataRef = useRef(data);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -76,6 +76,7 @@ const UnifiedEditor: React.FC<Props> = ({
                     { id: 'medidas', label: 'Medidas', fullLabel: 'Medidas', icon: Dumbbell },
                     { id: 'nutricao', label: 'Dieta', fullLabel: 'Nutrição', icon: Activity },
                     { id: 'treino', label: 'Treino', fullLabel: 'Treino', icon: Dumbbell },
+                    { id: 'ergogenicos', label: 'Ergo', fullLabel: 'Ergogênicos', icon: Pill },
                     { id: 'acompanhamento', label: '360º', fullLabel: 'Acompanhamento', icon: Activity },
                 ].map((tab) => (
                     <button 
