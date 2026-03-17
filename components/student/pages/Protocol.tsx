@@ -2,6 +2,7 @@ import React from 'react';
 import { ProtocolData } from '../../../types';
 import { FileDown, Droplets, AlertCircle } from 'lucide-react';
 import ProtocolPreview from '../../ProtocolPreview';
+import { db } from '../../../services/db';
 
 interface Props {
   data: ProtocolData;
@@ -9,6 +10,14 @@ interface Props {
 
 const StudentProtocol: React.FC<Props> = ({ data }) => {
   const previewRef = React.useRef<any>(null);
+
+  const handleDownload = async () => {
+    const studentId = data.studentId || data.id;
+    if (studentId) {
+      await db.saveActivityLog(studentId, 'protocol_download', data.id);
+    }
+    previewRef.current?.download();
+  };
 
   return (
     <div className="space-y-8">
@@ -22,7 +31,7 @@ const StudentProtocol: React.FC<Props> = ({ data }) => {
           </p>
         </div>
         <button 
-          onClick={() => previewRef.current?.download()}
+          onClick={handleDownload}
           className="bg-[#d4af37] text-black px-6 py-3 rounded-xl font-black uppercase text-xs tracking-widest hover:bg-[#b5952f] transition-all flex items-center gap-2 shadow-lg active:scale-95"
         >
           <FileDown size={18} />

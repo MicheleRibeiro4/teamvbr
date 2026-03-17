@@ -58,8 +58,6 @@ const StudentWorkout: React.FC<Props> = ({ data }) => {
       setIsConfirmed(true);
       await loadWorkoutLogs();
       
-      // Reset success message after some time
-      setTimeout(() => setIsConfirmed(false), 5000);
     } catch (error: any) {
       console.error("Erro ao confirmar treino:", error);
       alert(error.message || "Erro ao confirmar treino. Tente novamente.");
@@ -79,11 +77,6 @@ const StudentWorkout: React.FC<Props> = ({ data }) => {
             Foco: <span className="text-[#d4af37] font-bold uppercase">{currentWorkout.focus}</span>
           </p>
         </div>
-        {isConfirmed && (
-          <div className="bg-green-500 text-black px-4 py-2 rounded-xl font-black uppercase text-[10px] tracking-widest animate-bounce">
-            Treino Concluído! 🔥
-          </div>
-        )}
       </header>
 
       {data.trainingReasoning && (
@@ -204,6 +197,34 @@ const StudentWorkout: React.FC<Props> = ({ data }) => {
           </div>
         )}
       </div>
+
+      {/* Popup de Confirmação */}
+      {isConfirmed && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-[#111] border border-green-500/30 p-8 md:p-12 rounded-[3rem] shadow-2xl max-w-sm w-full text-center animate-in zoom-in-95 duration-300 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1 bg-green-500"></div>
+            
+            <div className="w-24 h-24 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-8 border border-green-500/30 shadow-[0_0_30px_rgba(34,197,94,0.2)]">
+              <CheckCircle2 size={48} className="text-green-500" />
+            </div>
+            
+            <h3 className="text-3xl font-black text-white uppercase tracking-tighter mb-4">
+              Treino Concluído!
+            </h3>
+            
+            <p className="text-white/60 text-sm leading-relaxed mb-10">
+              Excelente trabalho! Seu progresso foi registrado no seu histórico. Continue focado nos seus objetivos! 🔥
+            </p>
+            
+            <button 
+              onClick={() => setIsConfirmed(false)}
+              className="w-full bg-green-500 hover:bg-green-400 text-black font-black uppercase py-5 rounded-2xl transition-all shadow-xl shadow-green-500/20 active:scale-95"
+            >
+              Continuar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

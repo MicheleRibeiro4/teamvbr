@@ -278,6 +278,8 @@ const App: React.FC = () => {
 -- Copie e cole no SQL Editor do Supabase e clique em RUN.
 
 -- 1. Limpa tabelas existentes (CUIDADO: APAGA DADOS)
+DROP TABLE IF EXISTS public.activity_logs CASCADE;
+DROP TABLE IF EXISTS public.workout_logs CASCADE;
 DROP TABLE IF EXISTS public.body_measurements CASCADE;
 DROP TABLE IF EXISTS public.feedbacks CASCADE;
 DROP TABLE IF EXISTS public.students CASCADE;
@@ -330,22 +332,47 @@ CREATE TABLE public.body_measurements (
   created_at timestamp with time zone DEFAULT now()
 );
 
--- 6. Permissões
+-- 6. Cria a tabela 'workout_logs'
+CREATE TABLE public.workout_logs (
+  id uuid NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id text NOT NULL,
+  workout_id text,
+  workout_title text,
+  workout_focus text,
+  completed_at timestamp with time zone DEFAULT now()
+);
+
+-- 7. Cria a tabela 'activity_logs'
+CREATE TABLE public.activity_logs (
+  id uuid NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id text NOT NULL,
+  activity_type text NOT NULL,
+  details text,
+  created_at timestamp with time zone DEFAULT now()
+);
+
+-- 8. Permissões
 ALTER TABLE public.protocols DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.students DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.feedbacks DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.body_measurements DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.workout_logs DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.activity_logs DISABLE ROW LEVEL SECURITY;
 
 GRANT ALL ON TABLE public.protocols TO anon, authenticated, service_role;
 GRANT ALL ON TABLE public.students TO anon, authenticated, service_role;
 GRANT ALL ON TABLE public.feedbacks TO anon, authenticated, service_role;
 GRANT ALL ON TABLE public.body_measurements TO anon, authenticated, service_role;
+GRANT ALL ON TABLE public.workout_logs TO anon, authenticated, service_role;
+GRANT ALL ON TABLE public.activity_logs TO anon, authenticated, service_role;
 
--- 7. Índices
+-- 9. Índices
 CREATE INDEX IF NOT EXISTS idx_protocols_client_name ON public.protocols(client_name);
 CREATE INDEX IF NOT EXISTS idx_protocols_student_id ON public.protocols((data->>'studentId'));
 CREATE INDEX IF NOT EXISTS idx_feedbacks_student_id ON public.feedbacks(student_id);
 CREATE INDEX IF NOT EXISTS idx_measurements_student_id ON public.body_measurements(student_id);
+CREATE INDEX IF NOT EXISTS idx_workout_logs_student_id ON public.workout_logs(student_id);
+CREATE INDEX IF NOT EXISTS idx_activity_logs_student_id ON public.activity_logs(student_id);
 
 -- 9. Inserção de Dados Iniciais (Exemplo)
 INSERT INTO public.protocols (id, client_name, updated_at, data)

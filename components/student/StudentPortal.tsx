@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, 
   Utensils, 
@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { LOGO_VBR_BLACK } from '../../constants';
 import { ProtocolData } from '../../types';
+import { db } from '../../services/db';
 
 // Sub-pages imports (will be created next)
 import StudentDashboard from './pages/Dashboard';
@@ -31,6 +32,16 @@ type Page = 'dashboard' | 'protocol' | 'workout' | 'ergogenics';
 const StudentPortal: React.FC<StudentPortalProps> = ({ studentData, onLogout }) => {
   const [activePage, setActivePage] = useState<Page>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    const logAccess = async () => {
+      const studentId = studentData.studentId || studentData.id;
+      if (studentId) {
+        await db.saveActivityLog(studentId, 'portal_access');
+      }
+    };
+    logAccess();
+  }, [studentData.id, studentData.studentId]);
 
   // Verificação de Vencimento do Plano
   const checkPlanExpiration = () => {

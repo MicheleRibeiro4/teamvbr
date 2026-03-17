@@ -3,6 +3,7 @@
 -- Copie e cole este código no SQL Editor do seu projeto Supabase e clique em RUN.
 
 -- 1. Limpa tabelas existentes para garantir uma instalação limpa (CUIDADO: ISSO APAGA TODOS OS DADOS)
+DROP TABLE IF EXISTS public.activity_logs CASCADE;
 DROP TABLE IF EXISTS public.body_measurements CASCADE;
 DROP TABLE IF EXISTS public.workout_logs CASCADE;
 DROP TABLE IF EXISTS public.feedbacks CASCADE;
@@ -66,25 +67,36 @@ CREATE TABLE public.workout_logs (
   completed_at timestamp with time zone DEFAULT now()
 );
 
--- 7. Desabilita RLS (Row Level Security) para acesso simplificado via API Key pública
+-- 7. Cria a tabela 'activity_logs'
+CREATE TABLE public.activity_logs (
+  id uuid NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id text NOT NULL,
+  activity_type text NOT NULL,
+  details text,
+  created_at timestamp with time zone DEFAULT now()
+);
+
+-- 8. Desabilita RLS (Row Level Security) para acesso simplificado via API Key pública
 ALTER TABLE public.protocols DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.students DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.feedbacks DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.body_measurements DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.workout_logs DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.activity_logs DISABLE ROW LEVEL SECURITY;
 
--- 7. Concede permissões
+-- 9. Concede permissões
 GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
 GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
 GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
 GRANT ALL ON ALL ROUTINES IN SCHEMA public TO anon, authenticated, service_role;
 
--- 8. Índices para performance
+-- 10. Índices para performance
 CREATE INDEX IF NOT EXISTS idx_protocols_client_name ON public.protocols(client_name);
 CREATE INDEX IF NOT EXISTS idx_protocols_student_id ON public.protocols((data->>'studentId'));
 CREATE INDEX IF NOT EXISTS idx_feedbacks_student_id ON public.feedbacks(student_id);
 CREATE INDEX IF NOT EXISTS idx_measurements_student_id ON public.body_measurements(student_id);
 CREATE INDEX IF NOT EXISTS idx_workout_logs_student_id ON public.workout_logs(student_id);
+CREATE INDEX IF NOT EXISTS idx_activity_logs_student_id ON public.activity_logs(student_id);
 
 -- 9. Inserção de Dados Iniciais (Exemplo)
 INSERT INTO public.protocols (id, client_name, updated_at, data)

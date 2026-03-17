@@ -358,5 +358,31 @@ export const db = {
     if (!supabase) return;
     const { error } = await supabase.from('workout_logs').delete().eq('id', id);
     if (error) throw error;
+  },
+
+  async saveActivityLog(studentId: string, type: 'portal_access' | 'protocol_download', details?: string): Promise<void> {
+    if (!supabase) return;
+    const { error } = await supabase.from('activity_logs').insert({
+      student_id: studentId,
+      activity_type: type,
+      details: details,
+      created_at: new Date().toISOString()
+    });
+    if (error) console.error("Erro ao salvar log de atividade:", error);
+  },
+
+  async getActivityLogs(studentId: string): Promise<any[]> {
+    if (!supabase) return [];
+    const { data, error } = await supabase
+      .from('activity_logs')
+      .select('*')
+      .eq('student_id', studentId)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error("Erro ao buscar logs de atividade:", error);
+      return [];
+    }
+    return data || [];
   }
 };
